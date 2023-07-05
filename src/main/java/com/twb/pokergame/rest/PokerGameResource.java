@@ -1,0 +1,33 @@
+package com.twb.pokergame.rest;
+
+
+import com.twb.pokergame.domain.Card;
+import com.twb.pokergame.domain.DeckOfCardsFactory;
+import com.twb.pokergame.domain.Hand;
+import com.twb.pokergame.rest.dto.CardRequest;
+import com.twb.pokergame.rest.dto.HandRankRequest;
+import com.twb.pokergame.rest.dto.HandRankResponse;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@RestController
+@RequestMapping("/poker-game")
+public class PokerGameResource {
+
+    @PostMapping("/rank")
+    public HandRankResponse getHandRank(@RequestBody HandRankRequest request) {
+        List<Card> cards = new ArrayList<>();
+
+        for (CardRequest cardRequest : request.getCardList()) {
+            Card card = DeckOfCardsFactory.findCard(cardRequest.getRank(), cardRequest.getSuit());
+            cards.add(card);
+        }
+
+        Hand hand = new Hand(cards);
+        hand.calculateRank();
+        return new HandRankResponse(hand.getRank());
+    }
+
+}

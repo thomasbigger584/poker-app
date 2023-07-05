@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: technical-challenge-palindrome
+
+app:
+  cache-type: default
+  datastore-type: fileSystem

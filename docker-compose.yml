@@ -1,0 +1,11 @@
+version: '2.4'
+services:
+  poker-game-backend:
+    build: .
+    container_name: poker-game-backend
+    restart: always
+    ports:
+      - 8080:8080
+    logging:
+      options:
+        max-size: 1g
