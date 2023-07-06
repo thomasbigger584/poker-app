@@ -3,5 +3,5 @@
 ## Usage
 
 ```shell
-docker-compose up --build
+docker-compose up --build --remove-orphans
 ```

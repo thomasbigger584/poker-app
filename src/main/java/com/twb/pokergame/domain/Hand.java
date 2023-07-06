@@ -1,6 +1,5 @@
 package com.twb.pokergame.domain;
 
-import com.twb.pokergame.eval.SevenCardHandEvaluator;
 import lombok.Getter;
 
 import java.util.*;
@@ -38,7 +37,7 @@ public class Hand extends ArrayList<Card> implements Comparable<Hand> {
     }
 
     public void calculateRank() {
-        this.rank = SevenCardHandEvaluator.getRank(this);
+//        this.rank = SevenCardHandEvaluator.getRank(this);
     }
 
     public void update(Card card) {

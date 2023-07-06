@@ -1,19 +1,20 @@
-package com.twb.pokergame.eval;
+package com.twb.pokergame.eval.impl;
 
 import com.twb.pokergame.domain.Card;
 import com.twb.pokergame.domain.Hand;
+import com.twb.pokergame.eval.HandEvaluator;
+import org.springframework.stereotype.Component;
 
-public class SevenCardHandEvaluator {
+@Component
+public class SevenCardHandEvaluator implements HandEvaluator {
     static {
         System.load(System.getenv("EVALUATOR_SO_PATH"));
     }
 
-    private SevenCardHandEvaluator() {
-    }
-
     static native int getRank(int i, int j, int k, int m, int n, int p, int q);
 
-    public static int getRank(Hand hand) {
+    @Override
+    public int getRank(Hand hand) {
         if (hand.size() != 7) {
             throw new IllegalArgumentException("Not enough cards in hand: " + hand.size());
         }
@@ -26,7 +27,8 @@ public class SevenCardHandEvaluator {
                 hand.get(6).getRankValue());
     }
 
-    public static int getRank(Card[] cards) {
+    @Override
+    public int getRank(Card[] cards) {
         if (cards.length != 7) {
             throw new IllegalArgumentException("Not enough cards in hand: " + cards.length);
         }
