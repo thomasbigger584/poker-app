@@ -36,8 +36,8 @@ public class Hand extends ArrayList<Card> implements Comparable<Hand> {
         }
     }
 
-    public void calculateRank() {
-//        this.rank = SevenCardHandEvaluator.getRank(this);
+    public void setRank(Integer rank) {
+        this.rank = rank;
     }
 
     public void update(Card card) {

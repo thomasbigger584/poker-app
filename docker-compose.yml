@@ -1,8 +1,18 @@
 version: '2.4'
 services:
+  rabbitmq:
+    image: itzg/rabbitmq-stomp
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - 5672:5672
+      - 15672:15672
+      - 61613:61613
   app:
     build: .
     container_name: app
     restart: always
     ports:
       - 8080:8080
+    depends_on:
+      - rabbitmq

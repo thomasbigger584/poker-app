@@ -1,7 +1,8 @@
 spring:
   application:
-    name: technical-challenge-palindrome
+    name: poker-game-backend
 
 app:
-  cache-type: default
-  datastore-type: fileSystem
+  cors:
+    allow-origins: http://localhost:63342
+    allow-credentials: true
