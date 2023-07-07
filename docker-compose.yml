@@ -13,8 +13,6 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:latest
     container_name: keycloak
-    ports:
-      - 8080:8080
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
@@ -47,7 +45,10 @@ services:
       - keycloak
       - app
     networks:
-      - backend
+      backend:
+        aliases:
+          - keycloak.pokerapp.local
+          - api.pokerapp.local
 networks:
   backend:
     name: backend

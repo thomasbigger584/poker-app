@@ -741,10 +741,10 @@
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "http://localhost:8081/*"
+        "http://api.pokerapp.local/*"
       ],
       "webOrigins": [
-        "http://localhost:8081"
+        "http://api.pokerapp.local"
       ],
       "notBefore": 0,
       "bearerOnly": false,
