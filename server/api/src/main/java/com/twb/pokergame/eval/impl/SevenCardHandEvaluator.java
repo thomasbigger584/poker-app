@@ -3,7 +3,6 @@ package com.twb.pokergame.eval.impl;
 import com.twb.pokergame.domain.Card;
 import com.twb.pokergame.domain.Hand;
 import com.twb.pokergame.eval.HandEvaluator;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component

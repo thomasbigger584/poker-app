@@ -29,13 +29,13 @@ services:
       - start-dev
       - --import-realm
     volumes:
-      - ./keycloak/keycloak-realm.json:/opt/keycloak/data/import/realm.json
-      - ./keycloak/keycloak-to-rabbit-3.0.2.jar:/opt/keycloak/providers/keycloak-to-rabbit-3.0.2.jar
+      - ./server/keycloak/keycloak-realm.json:/opt/keycloak/data/import/realm.json
+      - ./server/keycloak/keycloak-to-rabbit-3.0.2.jar:/opt/keycloak/providers/keycloak-to-rabbit-3.0.2.jar
     networks:
       - backend
-  app:
-    build: .
-    container_name: app
+  api:
+    build: server/api/.
+    container_name: api
     restart: always
     depends_on:
       - rabbitmq
@@ -47,12 +47,12 @@ services:
     image: nginx:alpine
     restart: always
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./server/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
       - 80:80
     depends_on:
       - keycloak
-      - app
+      - api
     networks:
       backend:
         aliases:

@@ -7,8 +7,8 @@ WORKDIR /app
 COPY . .
 
 ENV EVALUATOR_SO_PATH=/app/src/main/cpp/evaluator.so
-
 RUN g++ -shared -o $EVALUATOR_SO_PATH /app/src/main/cpp/* -I $JAVA_HOME/include -I $JAVA_HOME/include/linux
-RUN --mount=type=cache,target=/root/.m2 ./mvnw package
+
+RUN ./mvnw package
 
 CMD ["java", "-jar", "target/poker-game-backend-0.0.1-SNAPSHOT.jar"]
