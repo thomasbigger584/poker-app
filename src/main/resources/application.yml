@@ -1,6 +1,25 @@
 spring:
   application:
     name: poker-game-backend
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8080/realms/poker-game-realm
+          jwk-set-uri: http://keycloak:8080/realms/poker-game-realm/protocol/openid-connect/certs
+jwt:
+  auth:
+    converter:
+      resource-id: poker-game-keycloak-resource
+      principal-attribute: preferred_username
+
+server:
+  port:
+    8081
+
+logging:
+  level:
+    org.springframework.security: DEBUG
 
 app:
   cors:
