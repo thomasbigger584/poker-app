@@ -204,6 +204,7 @@ fabric.properties
 
 # Package Files #
 *.jar
+!keycloak/*.jar
 *.war
 *.nar
 *.ear

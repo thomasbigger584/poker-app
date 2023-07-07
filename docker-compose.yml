@@ -16,11 +16,21 @@ services:
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
+      KK_TO_RMQ_URL: rabbitmq
+      KK_TO_RMQ_PORT: 5672
+      KK_TO_RMQ_VHOST: rabbitmq
+      KK_TO_RMQ_EXCHANGE: amq.topic
+      KK_TO_RMQ_USERNAME: guest
+      KK_TO_RMQ_PASSWORD: guest
+      KK_TO_RMQ_USE_TLS: false
+    depends_on:
+      - rabbitmq
     command:
       - start-dev
       - --import-realm
     volumes:
       - ./keycloak/keycloak-realm.json:/opt/keycloak/data/import/realm.json
+      - ./keycloak/keycloak-to-rabbit-3.0.2.jar:/opt/keycloak/providers/keycloak-to-rabbit-3.0.2.jar
     networks:
       - backend
   app:
@@ -37,8 +47,7 @@ services:
     image: nginx:alpine
     restart: always
     volumes:
-      - ./nginx/html:/etc/nginx/html:ro
-      - ./nginx/conf/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     ports:
       - 80:80
     depends_on:
