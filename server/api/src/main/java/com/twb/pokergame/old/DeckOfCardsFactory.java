@@ -1,4 +1,4 @@
-package com.twb.pokergame.domain;
+package com.twb.pokergame.old;
 
 import java.util.ArrayList;
 import java.util.Collections;

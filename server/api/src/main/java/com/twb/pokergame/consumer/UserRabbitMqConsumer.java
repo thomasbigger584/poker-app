@@ -2,6 +2,8 @@ package com.twb.pokergame.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.keycloak.events.admin.AdminEvent;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.amqp.core.Message;
@@ -17,6 +19,7 @@ public class UserRabbitMqConsumer {
     public void onUserCreate(Message message) throws Exception {
         AdminEvent adminEvent = objectMapper.readValue(message.getBody(), AdminEvent.class);
         UserRepresentation user = objectMapper.readValue(adminEvent.getRepresentation(), UserRepresentation.class);
-        System.out.println("user = " + user);
+
+        System.out.println("user = " + ReflectionToStringBuilder.toString(user, ToStringStyle.JSON_STYLE));
     }
 }

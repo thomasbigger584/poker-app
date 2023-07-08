@@ -1,4 +1,4 @@
-package com.twb.pokergame.domain;
+package com.twb.pokergame.old;
 
 /**
  * Lookup tables for making calculations faster.

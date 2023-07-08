@@ -1,9 +1,9 @@
 package com.twb.pokergame.rest;
 
 
-import com.twb.pokergame.domain.Card;
-import com.twb.pokergame.domain.DeckOfCardsFactory;
-import com.twb.pokergame.domain.Hand;
+import com.twb.pokergame.old.Card;
+import com.twb.pokergame.old.DeckOfCardsFactory;
+import com.twb.pokergame.old.Hand;
 import com.twb.pokergame.eval.HandEvaluator;
 import com.twb.pokergame.rest.dto.CardRequest;
 import com.twb.pokergame.rest.dto.HandRankRequest;

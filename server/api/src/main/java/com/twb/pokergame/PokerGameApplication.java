@@ -1,6 +1,6 @@
 package com.twb.pokergame;
 
-import com.twb.pokergame.domain.Tables;
+import com.twb.pokergame.old.Tables;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 

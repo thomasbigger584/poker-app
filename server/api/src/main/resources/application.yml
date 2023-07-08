@@ -12,21 +12,30 @@ spring:
     port: 5672
     username: admin
     password: admin
-
+  datasource:
+    url: jdbc:postgresql://postgres:5432/db
+    driver-class-name: org.postgresql.Driver
+    username: root
+    password: password
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  hibernate:
+    dll-auto: none
+  liquibase:
+    change-log: classpath:liquibase/master.xml
 jwt:
   auth:
     converter:
       resource-id: poker-game-keycloak-client
       principal-attribute: preferred_username
-
 server:
   port:
     8081
-
 logging:
   level:
     org.springframework.security: DEBUG
-
 app:
   cors:
     allow-origins: http://localhost:63342

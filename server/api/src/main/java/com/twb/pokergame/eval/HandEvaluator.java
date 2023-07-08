@@ -1,7 +1,7 @@
 package com.twb.pokergame.eval;
 
-import com.twb.pokergame.domain.Card;
-import com.twb.pokergame.domain.Hand;
+import com.twb.pokergame.old.Card;
+import com.twb.pokergame.old.Hand;
 
 public interface HandEvaluator {
     int getRank(Hand hand);
