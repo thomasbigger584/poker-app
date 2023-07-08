@@ -7,6 +7,12 @@ spring:
         jwt:
           issuer-uri: http://keycloak.pokerapp.local/realms/poker-game-realm
           jwk-set-uri: http://keycloak.pokerapp.local/realms/poker-game-realm/protocol/openid-connect/certs
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: admin
+    password: admin
+
 jwt:
   auth:
     converter:

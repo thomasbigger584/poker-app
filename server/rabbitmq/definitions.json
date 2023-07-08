@@ -1,0 +1,45 @@
+{
+  "users": [
+    {
+      "name": "admin",
+      "password_hash": "6pu6t5LDIp61JKYlBqvrFSFh/hZaySg5pAcez91qe1gpYt0W",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": "administrator"
+    }
+  ],
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "admin",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "exchanges": [
+  ],
+  "queues": [
+    {
+      "name": "app.keycloak.queue",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "amq.topic",
+      "vhost": "/",
+      "destination": "app.keycloak.queue",
+      "destination_type": "queue",
+      "routing_key": "KK.EVENT.#",
+      "arguments": {}
+    }
+  ]
+}
