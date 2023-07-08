@@ -25,7 +25,7 @@
   ],
   "queues": [
     {
-      "name": "app.keycloak.queue",
+      "name": "app.keycloak.user.create",
       "vhost": "/",
       "durable": true,
       "auto_delete": false,
@@ -36,9 +36,9 @@
     {
       "source": "amq.topic",
       "vhost": "/",
-      "destination": "app.keycloak.queue",
+      "destination": "app.keycloak.user.create",
       "destination_type": "queue",
-      "routing_key": "KK.EVENT.#",
+      "routing_key": "KK.EVENT.ADMIN.8abbdabe-7af5-4190-bcbe-3163236e121b.SUCCESS.USER.CREATE",
       "arguments": {}
     }
   ]
