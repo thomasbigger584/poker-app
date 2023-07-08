@@ -5,13 +5,27 @@
 
     <changeSet author="tbigg" id="1">
         <createTable tableName="app_user">
-            <column name="id" type="BIGINT">
+            <column name="id" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="username" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="first_name" type="text"/>
+            <column name="last_name" type="text"/>
+            <column name="email" type="text"/>
+            <column name="email_verified" type="boolean" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enabled" type="boolean" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="groups" type="jsonb">
                 <constraints nullable="false"/>
             </column>
         </createTable>
 
-        <addPrimaryKey columnNames="id" constraintName="pk_user" tableName="app_user"/>
-
+        <addPrimaryKey columnNames="id" constraintName="pk_app_user" tableName="app_user"/>
     </changeSet>
 
 </databaseChangeLog>
