@@ -1,4 +1,4 @@
-package com.twb.pokergame.websocket.dto;
+package com.twb.pokergame.web.websocket.dto;
 
 import lombok.Data;
 

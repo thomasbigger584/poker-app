@@ -1,4 +1,4 @@
-package com.twb.pokergame.rest.dto;
+package com.twb.pokergame.web.rest.dto;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

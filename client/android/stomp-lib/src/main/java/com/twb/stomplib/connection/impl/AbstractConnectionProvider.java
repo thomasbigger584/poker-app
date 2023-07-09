@@ -1,6 +1,9 @@
-package com.twb.stomplib;
+package com.twb.stomplib.connection.impl;
 
 import android.util.Log;
+
+import com.twb.stomplib.event.LifecycleEvent;
+import com.twb.stomplib.connection.ConnectionProvider;
 
 import io.reactivex.Completable;
 import io.reactivex.Observable;
@@ -10,8 +13,7 @@ import io.reactivex.subjects.PublishSubject;
  * <p>
  * Created because there was a lot of shared code between JWS and OkHttp connection providers.
  */
-abstract class AbstractConnectionProvider implements ConnectionProvider {
-
+public abstract class AbstractConnectionProvider implements ConnectionProvider {
     private static final String TAG = AbstractConnectionProvider.class.getSimpleName();
 
     private final PublishSubject<LifecycleEvent> mLifecycleStream;

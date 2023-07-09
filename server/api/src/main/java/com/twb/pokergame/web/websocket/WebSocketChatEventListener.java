@@ -1,6 +1,6 @@
-package com.twb.pokergame.websocket;
+package com.twb.pokergame.web.websocket;
 
-import com.twb.pokergame.websocket.dto.WebSocketChatMessage;
+import com.twb.pokergame.web.websocket.dto.WebSocketChatMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;

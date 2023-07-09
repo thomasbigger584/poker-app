@@ -37,7 +37,7 @@ public class WebsocketConfiguration implements WebSocketMessageBrokerConfigurer 
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/websocketApp")
+        registry.addEndpoint("/poker-app-ws")
                 .setAllowedOrigins(allowOrigins)
                 .withSockJS();
     }

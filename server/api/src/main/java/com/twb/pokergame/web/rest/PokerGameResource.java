@@ -1,13 +1,13 @@
-package com.twb.pokergame.rest;
+package com.twb.pokergame.web.rest;
 
 
 import com.twb.pokergame.old.Card;
 import com.twb.pokergame.old.DeckOfCardsFactory;
 import com.twb.pokergame.old.Hand;
 import com.twb.pokergame.eval.HandEvaluator;
-import com.twb.pokergame.rest.dto.CardRequest;
-import com.twb.pokergame.rest.dto.HandRankRequest;
-import com.twb.pokergame.rest.dto.HandRankResponse;
+import com.twb.pokergame.web.rest.dto.CardRequest;
+import com.twb.pokergame.web.rest.dto.HandRankRequest;
+import com.twb.pokergame.web.rest.dto.HandRankResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

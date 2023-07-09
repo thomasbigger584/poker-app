@@ -1,4 +1,6 @@
-package com.twb.stomplib;
+package com.twb.stomplib.connection;
+
+import com.twb.stomplib.event.LifecycleEvent;
 
 import io.reactivex.Completable;
 import io.reactivex.Observable;

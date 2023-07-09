@@ -60,6 +60,8 @@ services:
       - rabbitmq
       - keycloak
       - postgres
+    ports:
+      - 8081:8081 # Exposing only for websocket testing
     networks:
       - backend
   nginx:

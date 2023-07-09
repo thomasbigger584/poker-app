@@ -1,4 +1,4 @@
-package com.twb.pokergame.rest;
+package com.twb.pokergame.web.rest;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;

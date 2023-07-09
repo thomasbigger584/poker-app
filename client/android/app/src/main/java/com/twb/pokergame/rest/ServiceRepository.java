@@ -8,5 +8,4 @@ public interface ServiceRepository {
 
     @POST("hello-convert-and-send")
     Completable sendRestEcho(@Query("msg") String message);
-
 }

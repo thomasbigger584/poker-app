@@ -4,16 +4,16 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingBottom="8dp"
     android:paddingLeft="16dp"
+    android:paddingTop="8dp"
     android:paddingRight="16dp"
-    android:paddingTop="8dp">
+    android:paddingBottom="8dp">
 
     <TextView
         android:id="@+id/text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-        tools:text="Simple text"/>
+        tools:text="Simple text" />
 
 </LinearLayout>

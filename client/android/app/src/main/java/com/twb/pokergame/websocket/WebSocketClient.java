@@ -3,12 +3,13 @@ package com.twb.pokergame.websocket;
 import android.util.Log;
 
 import com.twb.pokergame.rest.RestClient;
-import com.twb.stomplib.LifecycleEvent;
-import com.twb.stomplib.Stomp;
 import com.twb.stomplib.client.StompClient;
+import com.twb.stomplib.client.StompClientFactory;
 import com.twb.stomplib.client.StompMessage;
+import com.twb.stomplib.event.LifecycleEvent;
 
 import java.util.Date;
+import java.util.HashMap;
 
 import io.reactivex.CompletableTransformer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -23,21 +24,20 @@ import io.reactivex.schedulers.Schedulers;
  */
 public class WebSocketClient {
     private static final String TAG = WebSocketClient.class.getSimpleName();
-
-    private static final String WEBSOCKET_ENDPOINT = "/websocket/tracker/websocket";
-    private static final String WEBSOCKET_TOPIC = "/topic/venue";
+    private static final String WEBSOCKET_ENDPOINT = "/poker-app-ws/websocket";
+    private static final String WEBSOCKET_TOPIC = "/topic/poker-app-events";
 
     private static final Object lock = new Object();
 
     private static WebSocketClient instance;
 
-    private StompClient mStompClient;
+    private final StompClient stopClient;
 
     private Disposable mRestPingDisposable;
 
     private WebSocketClient() {
         String url = getWebSocketUrl(WEBSOCKET_ENDPOINT, RestClient.TOKEN);
-        mStompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, url);
+        stopClient = StompClientFactory.createClient(url, new HashMap<>());
     }
 
     public static WebSocketClient getInstance() {
@@ -62,7 +62,7 @@ public class WebSocketClient {
     }
 
     public void connect(int connectId, WebSocketLifecycleListener listener) {
-        mStompClient.lifecycle()
+        stopClient.lifecycle()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(lifecycleEvent -> {
@@ -81,23 +81,23 @@ public class WebSocketClient {
                 });
 
         String topicUrl = WEBSOCKET_TOPIC;
-        if (connectId > 0) {
-            topicUrl += "/" + connectId;
-        }
+//        if (connectId > 0) {
+//            topicUrl += "/" + connectId;
+//        }
 
         // Receive events
-        mStompClient.topic(topicUrl)
+        stopClient.topic(topicUrl)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(listener::onMessage);
 
-        mStompClient.connect();
+        stopClient.connect();
     }
 
     private boolean checkStompClient() {
-        return (mStompClient != null &&
-                !(mStompClient.isConnecting() ||
-                        mStompClient.isConnected()));
+        return (stopClient != null &&
+                !(stopClient.isConnecting() ||
+                        stopClient.isConnected()));
     }
 
     public void sendViaWebSocket(RequestListener listener) {
@@ -105,7 +105,7 @@ public class WebSocketClient {
             listener.onFailure(new InstantiationException("Client Not Instantiated"));
             return;
         }
-        mStompClient.send("/topic/hello-msg-mapping", "Echo STOMP " + new Date())
+        stopClient.send("/topic/hello-msg-mapping", "Echo STOMP " + new Date())
                 .compose(applySchedulers())
                 .subscribe(listener::onSuccess, listener::onFailure);
     }
@@ -125,8 +125,8 @@ public class WebSocketClient {
     }
 
     public void disconnect() {
-        if (mStompClient != null) {
-            mStompClient.disconnect();
+        if (stopClient != null) {
+            stopClient.disconnect();
         }
         if (mRestPingDisposable != null) {
             mRestPingDisposable.dispose();

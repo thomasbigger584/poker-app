@@ -5,7 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 public class SharedPreferencesUtil {
-    private static final String KEY_PREVIOUS_ID = "ua.naiksoftware.stompclientexample.previousId";
+    private static final String KEY_PREVIOUS_ID = "com.twb.pokergame.previousId";
 
     private SharedPreferencesUtil() {
 

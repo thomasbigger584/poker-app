@@ -1,6 +1,8 @@
-package com.twb.stomplib;
+package com.twb.stomplib.connection.impl;
 
 import android.util.Log;
+
+import com.twb.stomplib.event.LifecycleEvent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,41 +16,39 @@ import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 import okio.ByteString;
 
-class OkHttpConnectionProvider extends AbstractConnectionProvider {
-    private final String mUri;
+public class OkHttpConnectionProvider extends AbstractConnectionProvider {
+    private final String TAG = OkHttpConnectionProvider.class.getSimpleName();
+    private final String uri;
+    private final Map<String, String> headers;
+    private final OkHttpClient okHttpClient;
+    private WebSocket websocket;
 
-    private final Map<String, String> mConnectHttpHeaders;
-    private final OkHttpClient mOkHttpClient;
-    private final String tag = OkHttpConnectionProvider.class.getSimpleName();
-
-    private WebSocket openedSocked;
-
-    OkHttpConnectionProvider(String uri, Map<String, String> connectHttpHeaders, OkHttpClient okHttpClient) {
+    OkHttpConnectionProvider(String uri, Map<String, String> headers,
+                             OkHttpClient okHttpClient) {
         super();
-        mUri = uri;
-        mConnectHttpHeaders = connectHttpHeaders != null ? connectHttpHeaders : new HashMap<>();
-        mOkHttpClient = okHttpClient;
+        this.uri = uri;
+        this.headers = headers != null ? headers : new HashMap<>();
+        this.okHttpClient = okHttpClient;
     }
 
     @Override
     public void rawDisconnect() {
-        if (openedSocked != null) {
-            openedSocked.close(1000, "");
+        if (websocket != null) {
+            websocket.close(1000, "");
         }
     }
 
     @Override
     void createWebSocketConnection() {
         Request.Builder requestBuilder = new Request.Builder()
-                .url(mUri);
+                .url(uri);
 
-        addConnectionHeadersToBuilder(requestBuilder, mConnectHttpHeaders);
+        addConnectionHeadersToBuilder(requestBuilder);
 
-        openedSocked = mOkHttpClient.newWebSocket(requestBuilder.build(),
-                new WebSocketListener() {
+        websocket = okHttpClient.newWebSocket(requestBuilder.build(), new WebSocketListener() {
                     @Override
                     public void onOpen(WebSocket webSocket, Response response) {
-                        LifecycleEvent openEvent = new LifecycleEvent(LifecycleEvent.Type.OPENED);
+                        LifecycleEvent openEvent = new LifecycleEvent(LifecycleEvent.EventType.OPENED);
 
                         TreeMap<String, String> headersAsMap = headersAsMap(response);
 
@@ -58,10 +58,11 @@ class OkHttpConnectionProvider extends AbstractConnectionProvider {
 
                     @Override
                     public void onMessage(WebSocket webSocket, String text) {
-                        if (text.equals("\n"))
-                            Log.d(tag, "RECEIVED HEARTBEAT");
-                        else
+                        if (text.equals("\n")) {
+                            Log.d(TAG, "RECEIVED HEARTBEAT");
+                        } else {
                             emitMessage(text);
+                        }
                     }
 
                     @Override
@@ -71,16 +72,16 @@ class OkHttpConnectionProvider extends AbstractConnectionProvider {
 
                     @Override
                     public void onClosed(WebSocket webSocket, int code, String reason) {
-                        openedSocked = null;
-                        emitLifecycleEvent(new LifecycleEvent(LifecycleEvent.Type.CLOSED));
+                        websocket = null;
+                        emitLifecycleEvent(new LifecycleEvent(LifecycleEvent.EventType.CLOSED));
                     }
 
                     @Override
                     public void onFailure(WebSocket webSocket, Throwable t, Response response) {
                         // in OkHttp, a Failure is equivalent to a JWS-Error *and* a JWS-Close
-                        emitLifecycleEvent(new LifecycleEvent(LifecycleEvent.Type.ERROR, new Exception(t)));
-                        openedSocked = null;
-                        emitLifecycleEvent(new LifecycleEvent(LifecycleEvent.Type.CLOSED));
+                        emitLifecycleEvent(new LifecycleEvent(LifecycleEvent.EventType.ERROR, new Exception(t)));
+                        websocket = null;
+                        emitLifecycleEvent(new LifecycleEvent(LifecycleEvent.EventType.CLOSED));
                     }
 
                     @Override
@@ -88,18 +89,17 @@ class OkHttpConnectionProvider extends AbstractConnectionProvider {
                         webSocket.close(code, reason);
                     }
                 }
-
         );
     }
 
     @Override
     void rawSend(String stompMessage) {
-        openedSocked.send(stompMessage);
+        websocket.send(stompMessage);
     }
 
     @Override
     Object getSocket() {
-        return openedSocked;
+        return websocket;
     }
 
     private TreeMap<String, String> headersAsMap(Response response) {
@@ -111,8 +111,8 @@ class OkHttpConnectionProvider extends AbstractConnectionProvider {
         return headersAsMap;
     }
 
-    private void addConnectionHeadersToBuilder(Request.Builder requestBuilder, Map<String, String> mConnectHttpHeaders) {
-        for (Map.Entry<String, String> headerEntry : mConnectHttpHeaders.entrySet()) {
+    private void addConnectionHeadersToBuilder(Request.Builder requestBuilder) {
+        for (Map.Entry<String, String> headerEntry : headers.entrySet()) {
             requestBuilder.addHeader(headerEntry.getKey(), headerEntry.getValue());
         }
     }

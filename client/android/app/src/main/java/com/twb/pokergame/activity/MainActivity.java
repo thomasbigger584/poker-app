@@ -14,8 +14,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.twb.pokergame.R;
 import com.twb.pokergame.util.SharedPreferencesUtil;
 import com.twb.pokergame.websocket.WebSocketClient;
-import com.twb.stomplib.LifecycleEvent;
 import com.twb.stomplib.client.StompMessage;
+import com.twb.stomplib.event.LifecycleEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,8 +24,8 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private final WebSocketClient webSocketClient = WebSocketClient.getInstance();
+    private final List<String> dataset = new ArrayList<>();
     private SimpleAdapter mAdapter;
-    private List<String> mDataSet = new ArrayList<>();
     private RecyclerView mRecyclerView;
     private NumberPicker idNumberPicker;
 
@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
-        mAdapter = new SimpleAdapter(mDataSet);
+        mAdapter = new SimpleAdapter(dataset);
         mAdapter.setHasStableIds(true);
 
         mRecyclerView.setAdapter(mAdapter);
@@ -121,13 +121,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void addItem(String payload) {
-        mDataSet.add(payload);
+        dataset.add(payload);
         mAdapter.notifyDataSetChanged();
-        mRecyclerView.smoothScrollToPosition(mDataSet.size() - 1);
+        mRecyclerView.smoothScrollToPosition(dataset.size() - 1);
     }
 
     private void clearAdapter() {
-        mDataSet.clear();
+        dataset.clear();
         mAdapter.notifyDataSetChanged();
     }
 

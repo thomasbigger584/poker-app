@@ -17,9 +17,8 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.BehaviorSubject;
 import io.reactivex.subjects.PublishSubject;
 
-import com.twb.stomplib.ConnectionProvider;
-import com.twb.stomplib.LifecycleEvent;
-import com.twb.stomplib.StompHeader;
+import com.twb.stomplib.connection.ConnectionProvider;
+import com.twb.stomplib.event.LifecycleEvent;
 
 public class StompClient {
     public static final String SUPPORTED_VERSIONS = "1.1,1.0";

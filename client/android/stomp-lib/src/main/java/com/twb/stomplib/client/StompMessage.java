@@ -7,8 +7,6 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.twb.stomplib.StompHeader;
-
 public class StompMessage {
     public static final String TERMINATE_MESSAGE_SYMBOL = "\u0000";
 

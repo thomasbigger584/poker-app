@@ -1,4 +1,4 @@
-package com.twb.stomplib;
+package com.twb.stomplib.client;
 
 public class StompHeader {
 
