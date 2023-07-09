@@ -20,6 +20,7 @@ public class UserRabbitMqConsumer {
         AdminEvent adminEvent = objectMapper.readValue(message.getBody(), AdminEvent.class);
         UserRepresentation representation = objectMapper.readValue(adminEvent.getRepresentation(), UserRepresentation.class);
         representation.setId(adminEvent.getResourcePath().replace("users/", ""));
+
         userService.create(representation);
     }
 }

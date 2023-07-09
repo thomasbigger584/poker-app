@@ -1,6 +1,6 @@
 package com.twb.pokergame.web.websocket;
 
-import com.twb.pokergame.web.websocket.dto.WebSocketChatMessage;
+import com.twb.pokergame.web.websocket.dto.PokerAppWebSocketMessage;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -10,23 +10,28 @@ import org.springframework.stereotype.Controller;
 import java.util.Map;
 
 @Controller
-public class WebSocketChatController {
+public class PokerAppWebSocketController {
 
-    @MessageMapping("/chat.sendMessage") // send message endpoint
+    /*
+     * Generic message sent to the subscriber
+     */
+    @MessageMapping("/ws.sendMessage") // send message endpoint
     @SendTo("/topic/poker-app-events") // clients subscription endpoint
-    public WebSocketChatMessage sendMessage(@Payload WebSocketChatMessage message) {
+    public PokerAppWebSocketMessage sendMessage(@Payload PokerAppWebSocketMessage message) {
         System.out.println("WebSocketChatController.sendMessage");
         System.out.println("message = " + message);
         return message;
     }
 
 
+    /*
+     * Specific handlers for message sent to the subscriber
+     */
 
-
-    @MessageMapping("/chat.newUser")
-    @SendTo("/topic/javainuse")
-    public WebSocketChatMessage newUser(@Payload WebSocketChatMessage message,
-                                        SimpMessageHeaderAccessor headerAccessor) {
+    @MessageMapping("/ws.newUser")
+    @SendTo("/topic/poker-app-events") // clients subscription endpoint
+    public PokerAppWebSocketMessage newUser(@Payload PokerAppWebSocketMessage message,
+                                            SimpMessageHeaderAccessor headerAccessor) {
         System.out.println("WebSocketChatController.newUser");
         System.out.println("message = " + message);
 

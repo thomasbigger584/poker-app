@@ -16,7 +16,7 @@ public class RestClient {
     private static final String TAG = RestClient.class.getSimpleName();
     private static final Object lock = new Object();
     private static RestClient instance;
-    private final ServiceRepository mServiceRepository;
+    private final ServiceRepository serviceRepository;
 
     private RestClient() {
 
@@ -32,7 +32,7 @@ public class RestClient {
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .client(okHttpClient)
                 .build();
-        mServiceRepository = retrofit.create(ServiceRepository.class);
+        serviceRepository = retrofit.create(ServiceRepository.class);
     }
 
     public static RestClient getInstance() {
@@ -49,6 +49,6 @@ public class RestClient {
     }
 
     public ServiceRepository getServiceRepository() {
-        return mServiceRepository;
+        return serviceRepository;
     }
 }

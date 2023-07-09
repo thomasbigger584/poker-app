@@ -25,6 +25,13 @@
   ],
   "queues": [
     {
+      "name": "app.keycloak",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
       "name": "app.keycloak.user.create",
       "vhost": "/",
       "durable": true,
@@ -33,6 +40,14 @@
     }
   ],
   "bindings": [
+    {
+      "source": "amq.topic",
+      "vhost": "/",
+      "destination": "app.keycloak",
+      "destination_type": "queue",
+      "routing_key": "KK.EVENT.#",
+      "arguments": {}
+    },
     {
       "source": "amq.topic",
       "vhost": "/",

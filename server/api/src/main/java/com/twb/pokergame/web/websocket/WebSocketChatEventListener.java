@@ -1,6 +1,6 @@
 package com.twb.pokergame.web.websocket;
 
-import com.twb.pokergame.web.websocket.dto.WebSocketChatMessage;
+import com.twb.pokergame.web.websocket.dto.PokerAppWebSocketMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
@@ -39,7 +39,7 @@ public class WebSocketChatEventListener {
         if (sessionAttributes.containsKey("username")) {
             String username = (String) sessionAttributes.get("username");
 
-            WebSocketChatMessage chatMessage = new WebSocketChatMessage();
+            PokerAppWebSocketMessage chatMessage = new PokerAppWebSocketMessage();
             chatMessage.setType("Leave");
             chatMessage.setSender(username);
             messagingTemplate.convertAndSend("/topic/public", chatMessage);
