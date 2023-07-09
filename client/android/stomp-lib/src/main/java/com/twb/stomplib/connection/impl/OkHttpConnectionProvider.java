@@ -23,8 +23,11 @@ public class OkHttpConnectionProvider extends AbstractConnectionProvider {
     private final OkHttpClient okHttpClient;
     private WebSocket websocket;
 
-    OkHttpConnectionProvider(String uri, Map<String, String> headers,
-                             OkHttpClient okHttpClient) {
+    public OkHttpConnectionProvider(String uri, OkHttpClient okHttpClient) {
+        this(uri, null, okHttpClient);
+    }
+
+    public OkHttpConnectionProvider(String uri, Map<String, String> headers, OkHttpClient okHttpClient) {
         super();
         this.uri = uri;
         this.headers = headers != null ? headers : new HashMap<>();
@@ -45,14 +48,14 @@ public class OkHttpConnectionProvider extends AbstractConnectionProvider {
 
         addConnectionHeadersToBuilder(requestBuilder);
 
-        websocket = okHttpClient.newWebSocket(requestBuilder.build(), new WebSocketListener() {
+        Request request = requestBuilder.build();
+
+        websocket = okHttpClient.newWebSocket(request, new WebSocketListener() {
                     @Override
                     public void onOpen(WebSocket webSocket, Response response) {
                         LifecycleEvent openEvent = new LifecycleEvent(LifecycleEvent.EventType.OPENED);
+                        openEvent.setHandshakeResponseHeaders(headersAsMap(response));
 
-                        TreeMap<String, String> headersAsMap = headersAsMap(response);
-
-                        openEvent.setHandshakeResponseHeaders(headersAsMap);
                         emitLifecycleEvent(openEvent);
                     }
 
@@ -102,9 +105,10 @@ public class OkHttpConnectionProvider extends AbstractConnectionProvider {
         return websocket;
     }
 
-    private TreeMap<String, String> headersAsMap(Response response) {
-        TreeMap<String, String> headersAsMap = new TreeMap<>();
+    private Map<String, String> headersAsMap(Response response) {
         Headers headers = response.headers();
+
+        Map<String, String> headersAsMap = new TreeMap<>();
         for (String key : headers.names()) {
             headersAsMap.put(key, headers.get(key));
         }

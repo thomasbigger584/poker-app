@@ -1,5 +1,6 @@
 package com.twb.stomplib.event;
 
+import java.util.Map;
 import java.util.TreeMap;
 
 public class LifecycleEvent {
@@ -8,7 +9,7 @@ public class LifecycleEvent {
     private Exception exception;
     //Nullable
     private String message;
-    private TreeMap<String, String> handshakeResponseHeaders = new TreeMap<>();
+    private Map<String, String> handshakeResponseHeaders = new TreeMap<>();
 
     public LifecycleEvent(EventType type) {
         this.type = type;
@@ -36,11 +37,11 @@ public class LifecycleEvent {
         return this.message;
     }
 
-    public TreeMap<String, String> getHandshakeResponseHeaders() {
+    public Map<String, String> getHandshakeResponseHeaders() {
         return this.handshakeResponseHeaders;
     }
 
-    public void setHandshakeResponseHeaders(TreeMap<String, String> handshakeResponseHeaders) {
+    public void setHandshakeResponseHeaders(Map<String, String> handshakeResponseHeaders) {
         this.handshakeResponseHeaders = handshakeResponseHeaders;
     }
 

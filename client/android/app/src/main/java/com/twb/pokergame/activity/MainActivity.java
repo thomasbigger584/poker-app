@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.twb.pokergame.R;
 import com.twb.pokergame.util.SharedPreferencesUtil;
 import com.twb.pokergame.websocket.WebSocketClient;
-import com.twb.stomplib.client.StompMessage;
+import com.twb.stomplib.stomp.StompMessage;
 import com.twb.stomplib.event.LifecycleEvent;
 
 import java.util.ArrayList;

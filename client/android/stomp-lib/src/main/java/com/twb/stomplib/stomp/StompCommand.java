@@ -1,4 +1,4 @@
-package com.twb.stomplib.client;
+package com.twb.stomplib.stomp;
 
 public class StompCommand {
     public static final String CONNECT = "CONNECT";
@@ -7,6 +7,5 @@ public class StompCommand {
     public static final String MESSAGE = "MESSAGE";
     public static final String SUBSCRIBE = "SUBSCRIBE";
     public static final String UNSUBSCRIBE = "UNSUBSCRIBE";
-
     public static final String UNKNOWN = "UNKNOWN";
 }

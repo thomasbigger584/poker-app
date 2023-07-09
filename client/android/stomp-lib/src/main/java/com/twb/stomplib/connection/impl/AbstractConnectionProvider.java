@@ -2,8 +2,8 @@ package com.twb.stomplib.connection.impl;
 
 import android.util.Log;
 
-import com.twb.stomplib.event.LifecycleEvent;
 import com.twb.stomplib.connection.ConnectionProvider;
+import com.twb.stomplib.event.LifecycleEvent;
 
 import io.reactivex.Completable;
 import io.reactivex.Observable;
@@ -16,17 +16,17 @@ import io.reactivex.subjects.PublishSubject;
 public abstract class AbstractConnectionProvider implements ConnectionProvider {
     private static final String TAG = AbstractConnectionProvider.class.getSimpleName();
 
-    private final PublishSubject<LifecycleEvent> mLifecycleStream;
-    private final PublishSubject<String> mMessagesStream;
+    private final PublishSubject<LifecycleEvent> lifecycleStream;
+    private final PublishSubject<String> messagesStream;
 
     AbstractConnectionProvider() {
-        mLifecycleStream = PublishSubject.create();
-        mMessagesStream = PublishSubject.create();
+        this.lifecycleStream = PublishSubject.create();
+        this.messagesStream = PublishSubject.create();
     }
 
     @Override
     public Observable<String> messages() {
-        return mMessagesStream.startWith(initSocket().toObservable());
+        return messagesStream.startWith(initSocket().toObservable());
     }
 
     /**
@@ -41,13 +41,11 @@ public abstract class AbstractConnectionProvider implements ConnectionProvider {
 
     @Override
     public Completable disconnect() {
-        return Completable
-                .fromAction(this::rawDisconnect);
+        return Completable.fromAction(this::rawDisconnect);
     }
 
     private Completable initSocket() {
-        return Completable
-                .fromAction(this::createWebSocketConnection);
+        return Completable.fromAction(this::createWebSocketConnection);
     }
 
     // Doesn't do anything at all, only here as a stub
@@ -100,16 +98,16 @@ public abstract class AbstractConnectionProvider implements ConnectionProvider {
 
     void emitLifecycleEvent(LifecycleEvent lifecycleEvent) {
         Log.d(TAG, "Emit lifecycle event: " + lifecycleEvent.getType().name());
-        mLifecycleStream.onNext(lifecycleEvent);
+        lifecycleStream.onNext(lifecycleEvent);
     }
 
     void emitMessage(String stompMessage) {
         Log.d(TAG, "Emit STOMP message: " + stompMessage);
-        mMessagesStream.onNext(stompMessage);
+        messagesStream.onNext(stompMessage);
     }
 
     @Override
     public Observable<LifecycleEvent> lifecycle() {
-        return mLifecycleStream;
+        return lifecycleStream;
     }
 }

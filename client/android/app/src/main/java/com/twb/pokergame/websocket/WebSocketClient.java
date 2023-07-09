@@ -1,15 +1,15 @@
 package com.twb.pokergame.websocket;
 
+import android.annotation.SuppressLint;
 import android.util.Log;
 
 import com.twb.pokergame.rest.RestClient;
-import com.twb.stomplib.client.StompClient;
-import com.twb.stomplib.client.StompClientFactory;
-import com.twb.stomplib.client.StompMessage;
 import com.twb.stomplib.event.LifecycleEvent;
+import com.twb.stomplib.stomp.StompClient;
+import com.twb.stomplib.stomp.StompClientFactory;
+import com.twb.stomplib.stomp.StompMessage;
 
 import java.util.Date;
-import java.util.HashMap;
 
 import io.reactivex.CompletableTransformer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -22,6 +22,8 @@ import io.reactivex.schedulers.Schedulers;
  * To connect adding /websocket to the end of the endpoint url works
  * I.E. Endpoint '/websocket/incident-wall' and append /websocket
  */
+@SuppressLint("CheckResult")
+@SuppressWarnings("ResultOfMethodCallIgnored")
 public class WebSocketClient {
     private static final String TAG = WebSocketClient.class.getSimpleName();
     private static final String WEBSOCKET_ENDPOINT = "/poker-app-ws/websocket";
@@ -31,15 +33,16 @@ public class WebSocketClient {
 
     private static WebSocketClient instance;
 
-    private final StompClient stopClient;
+    private final StompClient stompClient;
 
-    private Disposable mRestPingDisposable;
+    private Disposable restPingDisposable;
 
     private WebSocketClient() {
         String url = getWebSocketUrl(WEBSOCKET_ENDPOINT, RestClient.TOKEN);
-        stopClient = StompClientFactory.createClient(url, new HashMap<>());
+        stompClient = StompClientFactory.createClient(url);
     }
 
+    // todo: consider dependency injecting this with dagger instead
     public static WebSocketClient getInstance() {
         WebSocketClient instance = WebSocketClient.instance;
         if (instance == null) {
@@ -53,16 +56,15 @@ public class WebSocketClient {
         return instance;
     }
 
-    private static String getWebSocketUrl(String endpointUrl, String accessToken) {
+    private String getWebSocketUrl(String endpointUrl, String accessToken) {
         if (accessToken == null) {
             return String.format("ws://%s:%s%s", RestClient.URL, RestClient.SERVER_PORT, endpointUrl);
-        } else {
-            return String.format("ws://%s:%s%s?access_token=%s", RestClient.URL, RestClient.SERVER_PORT, endpointUrl, accessToken);
         }
+        return String.format("ws://%s:%s%s?access_token=%s", RestClient.URL, RestClient.SERVER_PORT, endpointUrl, accessToken);
     }
 
     public void connect(int connectId, WebSocketLifecycleListener listener) {
-        stopClient.lifecycle()
+        stompClient.lifecycle()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(lifecycleEvent -> {
@@ -80,24 +82,25 @@ public class WebSocketClient {
                     }
                 });
 
+        // todo: add the poker table ID here
         String topicUrl = WEBSOCKET_TOPIC;
 //        if (connectId > 0) {
 //            topicUrl += "/" + connectId;
 //        }
 
         // Receive events
-        stopClient.topic(topicUrl)
+        stompClient.topic(topicUrl)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(listener::onMessage);
 
-        stopClient.connect();
+        stompClient.connect();
     }
 
     private boolean checkStompClient() {
-        return (stopClient != null &&
-                !(stopClient.isConnecting() ||
-                        stopClient.isConnected()));
+        return (stompClient != null &&
+                !(stompClient.isConnecting() ||
+                        stompClient.isConnected()));
     }
 
     public void sendViaWebSocket(RequestListener listener) {
@@ -105,13 +108,15 @@ public class WebSocketClient {
             listener.onFailure(new InstantiationException("Client Not Instantiated"));
             return;
         }
-        stopClient.send("/topic/hello-msg-mapping", "Echo STOMP " + new Date())
+
+        //todo: update for sending requests client-> server
+        stompClient.send("/topic/hello-msg-mapping", "Echo STOMP " + new Date())
                 .compose(applySchedulers())
                 .subscribe(listener::onSuccess, listener::onFailure);
     }
 
     public void sendViaRest(RequestListener listener) {
-        mRestPingDisposable = RestClient.getInstance().getServiceRepository()
+        restPingDisposable = RestClient.getInstance().getServiceRepository()
                 .sendRestEcho("Echo REST " + new Date())
                 .compose(applySchedulers())
                 .subscribe(listener::onSuccess, listener::onFailure);
@@ -125,11 +130,11 @@ public class WebSocketClient {
     }
 
     public void disconnect() {
-        if (stopClient != null) {
-            stopClient.disconnect();
+        if (stompClient != null) {
+            stompClient.disconnect();
         }
-        if (mRestPingDisposable != null) {
-            mRestPingDisposable.dispose();
+        if (restPingDisposable != null) {
+            restPingDisposable.dispose();
         }
     }
 

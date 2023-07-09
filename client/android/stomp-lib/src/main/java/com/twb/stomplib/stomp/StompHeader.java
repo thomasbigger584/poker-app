@@ -1,7 +1,6 @@
-package com.twb.stomplib.client;
+package com.twb.stomplib.stomp;
 
 public class StompHeader {
-
     public static final String VERSION = "version";
     public static final String HEART_BEAT = "heart-beat";
     public static final String DESTINATION = "destination";
@@ -10,19 +9,19 @@ public class StompHeader {
     public static final String ID = "id";
     public static final String ACK = "ack";
 
-    private final String mKey;
-    private final String mValue;
+    private final String key;
+    private final String value;
 
     public StompHeader(String key, String value) {
-        mKey = key;
-        mValue = value;
+        this.key = key;
+        this.value = value;
     }
 
     public String getKey() {
-        return mKey;
+        return key;
     }
 
     public String getValue() {
-        return mValue;
+        return value;
     }
 }
