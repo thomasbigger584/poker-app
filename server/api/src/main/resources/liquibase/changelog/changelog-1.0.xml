@@ -27,4 +27,19 @@
         <addPrimaryKey columnNames="id" constraintName="pk_app_user" tableName="app_user"/>
     </changeSet>
 
+    <changeSet author="tbigg" id="2">
+        <createTable tableName="poker_table">
+            <column name="id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="game_type" type="text">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="pk_poker_table" tableName="poker_table"/>
+    </changeSet>
+
 </databaseChangeLog>

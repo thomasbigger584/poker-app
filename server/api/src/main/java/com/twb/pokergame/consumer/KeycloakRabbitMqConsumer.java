@@ -13,7 +13,7 @@ public class KeycloakRabbitMqConsumer {
     private static final Logger logger = LoggerFactory.getLogger(KeycloakRabbitMqConsumer.class);
 
     @RabbitListener(queues = {"app.keycloak"})
-    public void onUserCreate(Message message) {
+    public void onAnyEvent(Message message) {
         try {
             logger.info("***************************************");
             logger.info("Props: {}", message.getMessageProperties());
