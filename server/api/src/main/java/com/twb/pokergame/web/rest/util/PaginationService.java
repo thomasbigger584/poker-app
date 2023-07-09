@@ -6,10 +6,9 @@ import org.springframework.stereotype.Component;
 
 
 @Component
-@SuppressWarnings("rawtypes")
 public class PaginationService {
 
-    public HttpHeaders createHeaders(Page page) {
+    public HttpHeaders createHeaders(Page<?> page) {
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", Long.toString(page.getTotalElements()));
         return headers;

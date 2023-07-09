@@ -2,6 +2,8 @@ package com.twb.pokergame.web.websocket;
 
 import com.twb.pokergame.web.websocket.dto.PokerAppWebSocketMessage;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
@@ -13,26 +15,27 @@ import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
-public class WebSocketChatEventListener {
-    private final SimpMessageSendingOperations messagingTemplate;
+public class PokerAppWebSocketEventListener {
+    private static final Logger logger = LoggerFactory.getLogger(PokerAppWebSocketEventListener.class);
 
+    private final SimpMessageSendingOperations messagingTemplate;
 
     @EventListener
     public void handleWebSocketConnectListener(SessionConnectedEvent event) {
-        System.out.println("WebSocketChatEventListener.handleWebSocketConnectListener");
-        System.out.println("event = " + event);
-        System.out.println("Received a new web socket connection");
+        logger.info("WebSocketChatEventListener.handleWebSocketConnectListener");
+        logger.info("Received a new web socket connection");
+        logger.info("event = " + event);
     }
 
     @EventListener
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
-        System.out.println("WebSocketChatEventListener.handleWebSocketDisconnectListener");
-        System.out.println("event = " + event);
+        logger.info("WebSocketChatEventListener.handleWebSocketDisconnectListener");
+        logger.info("event = " + event);
 
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
         Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
         if (sessionAttributes == null) {
-            System.out.println("Session Attributes is null");
+            logger.info("Session Attributes is null");
             return;
         }
 
@@ -42,6 +45,8 @@ public class WebSocketChatEventListener {
             PokerAppWebSocketMessage chatMessage = new PokerAppWebSocketMessage();
             chatMessage.setType("Leave");
             chatMessage.setSender(username);
+
+            //todo: what is this being sent to ? revise
             messagingTemplate.convertAndSend("/topic/public", chatMessage);
         }
     }
