@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -17,9 +18,11 @@ import java.util.UUID;
 public class User {
 
     @Id
+    @NotNull
     @Column(name = "id")
     private UUID id;
 
+    @NotNull
     @Column(name = "username")
     private String username;
 
@@ -38,6 +41,7 @@ public class User {
     @Column(name = "enabled")
     private boolean enabled;
 
+    @NotNull
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "groups", columnDefinition = "jsonb")
     private List<String> groups;
