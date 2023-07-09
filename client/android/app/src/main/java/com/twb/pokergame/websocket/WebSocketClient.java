@@ -1,7 +1,8 @@
-package com.twb.pokergame;
+package com.twb.pokergame.websocket;
 
 import android.util.Log;
 
+import com.twb.pokergame.rest.RestClient;
 import com.twb.stomplib.LifecycleEvent;
 import com.twb.stomplib.Stomp;
 import com.twb.stomplib.client.StompClient;

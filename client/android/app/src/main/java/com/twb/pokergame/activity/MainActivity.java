@@ -1,6 +1,5 @@
-package com.twb.pokergame;
+package com.twb.pokergame.activity;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -12,6 +11,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.twb.pokergame.R;
+import com.twb.pokergame.util.SharedPreferencesUtil;
+import com.twb.pokergame.websocket.WebSocketClient;
 import com.twb.stomplib.LifecycleEvent;
 import com.twb.stomplib.client.StompMessage;
 

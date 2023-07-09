@@ -1,4 +1,4 @@
-package com.twb.pokergame;
+package com.twb.pokergame.rest;
 
 import android.util.Log;
 

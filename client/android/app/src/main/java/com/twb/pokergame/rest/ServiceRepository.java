@@ -1,4 +1,4 @@
-package com.twb.pokergame;
+package com.twb.pokergame.rest;
 
 import io.reactivex.Completable;
 import retrofit2.http.POST;
