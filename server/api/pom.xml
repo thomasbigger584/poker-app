@@ -9,10 +9,10 @@
         <relativePath/>
     </parent>
     <groupId>com.twb</groupId>
-    <artifactId>poker-game-backend</artifactId>
+    <artifactId>api</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>poker-game-backend</name>
-    <description>Poker Game Backend</description>
+    <name>api</name>
+    <description>API</description>
     <properties>
         <java.version>17</java.version>
         <org.projectlombok.version>1.18.28</org.projectlombok.version>
