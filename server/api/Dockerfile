@@ -11,4 +11,4 @@ RUN g++ -shared -o $EVALUATOR_SO_PATH /app/src/main/cpp/* -I $JAVA_HOME/include 
 
 RUN --mount=type=cache,target=/root/.m2 ./mvnw package
 
-CMD ["java", "-jar", "target/poker-game-backend-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-jar", "target/api-0.0.1-SNAPSHOT.jar"]
