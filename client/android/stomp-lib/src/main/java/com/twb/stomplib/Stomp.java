@@ -1,8 +1,5 @@
 package com.twb.stomplib;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
 import java.util.Map;
 
 import okhttp3.OkHttpClient;
@@ -17,11 +14,10 @@ import com.twb.stomplib.client.StompClient;
  * You can add own relay, just implement ConnectionProvider for you stomp transport,
  * such as web socket.
  * <p>
- * Created by naik on 05.05.16.
  */
 public class Stomp {
 
-    public static StompClient over(@NonNull ConnectionProvider connectionProvider, String uri) {
+    public static StompClient over(ConnectionProvider connectionProvider, String uri) {
         return over(connectionProvider, uri, null, null);
     }
 
@@ -31,7 +27,9 @@ public class Stomp {
      * @param connectHttpHeaders HTTP headers, will be passed with handshake query, may be null
      * @return StompClient for receiving and sending messages. Call #StompClient.connect
      */
-    public static StompClient over(@NonNull ConnectionProvider connectionProvider, String uri, Map<String, String> connectHttpHeaders) {
+    public static StompClient over(ConnectionProvider connectionProvider, String uri,
+                                   Map<String, String> connectHttpHeaders) {
+
         return over(connectionProvider, uri, connectHttpHeaders, null);
     }
 
@@ -48,7 +46,9 @@ public class Stomp {
      * @param okHttpClient       Existing client that will be used to open the WebSocket connection, may be null to use default client
      * @return StompClient for receiving and sending messages. Call #StompClient.connect
      */
-    public static StompClient over(@NonNull ConnectionProvider connectionProvider, String uri, @Nullable Map<String, String> connectHttpHeaders, @Nullable OkHttpClient okHttpClient) {
+    public static StompClient over(ConnectionProvider connectionProvider, String uri,
+                                   Map<String, String> connectHttpHeaders, OkHttpClient okHttpClient) {
+
         if (connectionProvider == ConnectionProvider.JWS) {
             if (okHttpClient != null) {
                 throw new IllegalArgumentException("You cannot pass an OkHttpClient when using JWS. Use null instead.");
@@ -57,7 +57,8 @@ public class Stomp {
         }
 
         if (connectionProvider == ConnectionProvider.OKHTTP) {
-            return createStompClient(new OkHttpConnectionProvider(uri, connectHttpHeaders, (okHttpClient == null) ? new OkHttpClient() : okHttpClient));
+            return createStompClient(new OkHttpConnectionProvider(uri, connectHttpHeaders,
+                    (okHttpClient == null) ? new OkHttpClient() : okHttpClient));
         }
 
         throw new IllegalArgumentException("ConnectionProvider type not supported: " + connectionProvider.toString());

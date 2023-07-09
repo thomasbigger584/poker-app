@@ -1,7 +1,6 @@
 package com.twb.stomplib.client;
 
 public class StompCommand {
-
     public static final String CONNECT = "CONNECT";
     public static final String CONNECTED = "CONNECTED";
     public static final String SEND = "SEND";

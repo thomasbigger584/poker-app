@@ -1,8 +1,6 @@
 package com.twb.stomplib.client;
 
 import android.annotation.SuppressLint;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -18,15 +16,12 @@ import io.reactivex.Flowable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.BehaviorSubject;
 import io.reactivex.subjects.PublishSubject;
+
 import com.twb.stomplib.ConnectionProvider;
 import com.twb.stomplib.LifecycleEvent;
 import com.twb.stomplib.StompHeader;
 
-/**
- * Created by naik on 05.05.16.
- */
 public class StompClient {
-
     public static final String SUPPORTED_VERSIONS = "1.1,1.0";
     public static final String DEFAULT_ACK = "auto";
     private static final String TAG = StompClient.class.getSimpleName();
@@ -92,10 +87,12 @@ public class StompClient {
      *
      * @param _headers HTTP headers to send in the INITIAL REQUEST, i.e. during the protocol upgrade
      */
-    public void connect(@Nullable List<StompHeader> _headers) {
+    public void connect(List<StompHeader> _headers) {
         mHeaders = _headers;
 
-        if (mConnected) return;
+        if (mConnected) {
+            return;
+        }
         mLifecycleDisposable = mConnectionProvider.lifecycle()
                 .subscribe(lifecycleEvent -> {
                     switch (lifecycleEvent.getType()) {
@@ -153,7 +150,7 @@ public class StompClient {
                 data));
     }
 
-    public Completable send(@NonNull StompMessage stompMessage) {
+    public Completable send(StompMessage stompMessage) {
         Completable completable = mConnectionProvider.send(stompMessage.compile(legacyWhitespace));
         CompletableSource connectionComplete = mConnectionStream
                 .filter(isConnected -> isConnected)
@@ -190,7 +187,7 @@ public class StompClient {
         return topic(destinationPath, null);
     }
 
-    public Flowable<StompMessage> topic(@NonNull String destPath, List<StompHeader> headerList) {
+    public Flowable<StompMessage> topic(String destPath, List<StompHeader> headerList) {
         if (!mStreamMap.containsKey(destPath))
             mStreamMap.put(destPath,
                     mMessageStream
@@ -270,7 +267,7 @@ public class StompClient {
         return ret;
     }
 
-    private Completable subscribePath(String destinationPath, @Nullable List<StompHeader> headerList) {
+    private Completable subscribePath(String destinationPath, List<StompHeader> headerList) {
         String topicId = UUID.randomUUID().toString();
 
         if (mTopics == null) mTopics = new ConcurrentHashMap<>();
