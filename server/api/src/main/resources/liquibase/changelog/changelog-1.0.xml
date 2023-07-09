@@ -5,7 +5,7 @@
 
     <changeSet author="tbigg" id="1">
         <createTable tableName="app_user">
-            <column name="id" type="text">
+            <column name="id" type="uuid">
                 <constraints nullable="false"/>
             </column>
             <column name="username" type="text">
@@ -24,7 +24,6 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-
         <addPrimaryKey columnNames="id" constraintName="pk_app_user" tableName="app_user"/>
     </changeSet>
 

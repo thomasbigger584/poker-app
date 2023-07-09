@@ -1,12 +1,15 @@
 package com.twb.pokergame.domain;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Data;
-import org.antlr.v4.runtime.misc.NotNull;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @Entity
@@ -14,11 +17,9 @@ import java.util.List;
 public class User {
 
     @Id
-    @NotNull
     @Column(name = "id")
-    private String id;
+    private UUID id;
 
-    @NotNull
     @Column(name = "username")
     private String username;
 
@@ -37,8 +38,7 @@ public class User {
     @Column(name = "enabled")
     private boolean enabled;
 
-    @NotNull
-    @Column(name = "groups", columnDefinition = "jsonb")
     @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "groups", columnDefinition = "jsonb")
     private List<String> groups;
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Component
 @Transactional
@@ -19,7 +20,7 @@ public class UserService {
 
         //todo: mapstruct
         User user = new User();
-        user.setId(representation.getId());
+        user.setId(UUID.fromString(representation.getId()));
         user.setUsername(representation.getUsername());
         user.setFirstName(representation.getFirstName());
         user.setLastName(representation.getLastName());
