@@ -9,6 +9,7 @@ import lombok.Data;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -44,5 +45,5 @@ public class User {
     @NotNull
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "groups", columnDefinition = "jsonb")
-    private List<String> groups;
+    private List<String> groups = new ArrayList<>();
 }
