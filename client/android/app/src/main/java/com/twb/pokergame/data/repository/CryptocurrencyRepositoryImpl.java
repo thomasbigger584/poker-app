@@ -9,7 +9,7 @@ public class CryptocurrencyRepositoryImpl implements CryptocurrencyRepository {
     @Override
     public List<Cryptocurrency> getCryptocurrency() {
         return List.of(
-                new Cryptocurrency("BitCoin", "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/BTC_Logo.svg/1200px-BTC_Logo.svg.png"),
+                new Cryptocurrency("BitCoin", "https://upload.wikimedia.org/wikipedia/commons/5/50/Bitcoin.png"),
                 new Cryptocurrency("Ethereum", "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Ethereum_logo_translucent.svg/1200px-Ethereum_logo_translucent.svg.png"),
                 new Cryptocurrency("Binance", "https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Binance_logo.svg/1920px-Binance_logo.svg.png"),
                 new Cryptocurrency("DogeCoin", "https://upload.wikimedia.org/wikipedia/en/d/d0/Dogecoin_Logo.png"),
