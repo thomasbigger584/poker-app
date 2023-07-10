@@ -1,7 +1,7 @@
-package com.twb.pokergame.di;
+package com.twb.pokergame.di.application.network;
 
-import com.twb.pokergame.data.repository.CryptocurrencyRepository;
-import com.twb.pokergame.data.repository.CryptocurrencyRepositoryImpl;
+import com.twb.pokergame.data.repository.PokerTableRepository;
+import com.twb.pokergame.data.retrofit.api.PokerTableApi;
 
 import javax.inject.Singleton;
 
@@ -15,13 +15,13 @@ import dagger.hilt.components.SingletonComponent;
 // @InstallIn(SingletonComponent::class) this will make
 // this class to inject dependencies across the entire application.
 
-@Module
+@Module(includes = {RetrofitApiModule.class})
 @InstallIn(SingletonComponent.class)
-public class AppModule {
+public class RepositoryModule {
 
     @Provides
     @Singleton
-    public CryptocurrencyRepository cryptocurrencyRepository() {
-        return new CryptocurrencyRepositoryImpl();
+    public PokerTableRepository pokerTableRepository(PokerTableApi api) {
+        return new PokerTableRepository(api);
     }
 }

@@ -17,9 +17,9 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="34">
         <activity
-            android:name=".ui.crypto.CryptoActivity"
+            android:name=".ui.pokertable.PokerTableActivity"
             android:exported="true"
-            android:label="@string/title_activity_crypto"
+            android:label="@string/title_activity_poker_table"
             android:theme="@style/Theme.Pokergame">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

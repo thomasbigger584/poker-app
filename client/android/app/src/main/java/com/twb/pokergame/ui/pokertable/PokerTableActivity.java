@@ -1,6 +1,7 @@
-package com.twb.pokergame.ui.crypto;
+package com.twb.pokergame.ui.pokertable;
 
 import android.os.Bundle;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,9 +14,9 @@ import com.twb.pokergame.R;
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
-public class CryptoActivity extends AppCompatActivity {
+public class PokerTableActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
-    private CryptoViewModel viewModel;
+    private PokerTableViewModel viewModel;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -25,9 +26,12 @@ public class CryptoActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        viewModel = new ViewModelProvider(this).get(CryptoViewModel.class);
-        viewModel.cryptoLiveData.observe(this, dataset -> {
-            recyclerView.setAdapter(new CryptoAdapter(dataset));
+        viewModel = new ViewModelProvider(this).get(PokerTableViewModel.class);
+        viewModel.errors.observe(this, error -> {
+            Toast.makeText(this, error.getMessage(), Toast.LENGTH_SHORT).show();
+        });
+        viewModel.pokerTables.observe(this, dataset -> {
+            recyclerView.setAdapter(new PokerTableAdapter(dataset));
         });
     }
 }
