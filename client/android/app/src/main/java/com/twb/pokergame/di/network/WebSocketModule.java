@@ -1,7 +1,7 @@
-package com.twb.pokergame.di.application.network;
+package com.twb.pokergame.di.network;
 
+import com.twb.pokergame.di.network.qualifiers.Unauthenticated;
 import com.twb.pokergame.data.websocket.WebSocketClient;
-import com.twb.pokergame.di.application.network.qualifiers.Unauthenticated;
 
 import javax.inject.Singleton;
 

@@ -1,4 +1,4 @@
-package com.twb.pokergame.di.application.network;
+package com.twb.pokergame.di.network;
 
 import com.twb.pokergame.data.repository.PokerTableRepository;
 import com.twb.pokergame.data.retrofit.api.PokerTableApi;

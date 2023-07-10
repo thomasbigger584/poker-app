@@ -1,4 +1,4 @@
-package com.twb.pokergame.di.application.network.qualifiers;
+package com.twb.pokergame.di.network.qualifiers;
 
 import javax.inject.Qualifier;
 
