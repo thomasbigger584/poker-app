@@ -1,6 +1,9 @@
 package com.twb.pokergame.web.websocket;
 
 import com.twb.pokergame.web.websocket.dto.PokerAppWebSocketMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -11,29 +14,30 @@ import java.util.Map;
 
 @Controller
 public class PokerAppWebSocketController {
+    private static final Logger logger = LoggerFactory.getLogger(PokerAppWebSocketController.class);
 
     /*
-     * Generic message sent to the subscriber
+     * Generic message sent to the subscriber.
+     * Using dot "." in the topic path because rabbitmq doesn't support forward-slash "/" as a separator
      */
-    @MessageMapping("/ws.sendMessage") // send message endpoint
-    @SendTo("/topic/poker-app-events") // clients subscription endpoint
-    public PokerAppWebSocketMessage sendMessage(@Payload PokerAppWebSocketMessage message) {
-        System.out.println("WebSocketChatController.sendMessage");
-        System.out.println("message = " + message);
+    @MessageMapping("/ws.sendMessage/{pokerTableId}") // send message endpoint
+    @SendTo("/topic/poker-app-events.{pokerTableId}") // clients subscription endpoint
+    public PokerAppWebSocketMessage sendMessage(@DestinationVariable String pokerTableId,
+                                                @Payload PokerAppWebSocketMessage message) {
+        logger.info("WEBSOCKET (sendMessage) - response to table {} with {}", pokerTableId, message);
         return message;
     }
-
 
     /*
      * Specific handlers for message sent to the subscriber
      */
 
-    @MessageMapping("/ws.newUser")
-    @SendTo("/topic/poker-app-events") // clients subscription endpoint
-    public PokerAppWebSocketMessage newUser(@Payload PokerAppWebSocketMessage message,
+    @MessageMapping("/ws.newPlayer/{pokerTableId}")
+    @SendTo("/topic/poker-app-events.{pokerTableId}") // clients subscription endpoint
+    public PokerAppWebSocketMessage newUser(@DestinationVariable String pokerTableId,
+                                            @Payload PokerAppWebSocketMessage message,
                                             SimpMessageHeaderAccessor headerAccessor) {
-        System.out.println("WebSocketChatController.newUser");
-        System.out.println("message = " + message);
+        logger.info("WEBSOCKET (newUser) - response to table {} with {}", pokerTableId, message);
 
         Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
         sessionAttributes.put("username", message.getSender());

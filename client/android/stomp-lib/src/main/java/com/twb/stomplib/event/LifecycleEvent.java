@@ -9,7 +9,7 @@ public class LifecycleEvent {
     private Exception exception;
     //Nullable
     private String message;
-    private Map<String, String> handshakeResponseHeaders = new TreeMap<>();
+    private Map<String, String> responseHeaders = new TreeMap<>();
 
     public LifecycleEvent(EventType type) {
         this.type = type;
@@ -37,12 +37,12 @@ public class LifecycleEvent {
         return this.message;
     }
 
-    public Map<String, String> getHandshakeResponseHeaders() {
-        return this.handshakeResponseHeaders;
+    public Map<String, String> getResponseHeaders() {
+        return this.responseHeaders;
     }
 
-    public void setHandshakeResponseHeaders(Map<String, String> handshakeResponseHeaders) {
-        this.handshakeResponseHeaders = handshakeResponseHeaders;
+    public void setResponseHeaders(Map<String, String> responseHeaders) {
+        this.responseHeaders = responseHeaders;
     }
 
     public enum EventType {
@@ -55,7 +55,7 @@ public class LifecycleEvent {
                 "type=" + type +
                 ", exception=" + exception +
                 ", message='" + message + '\'' +
-                ", handshakeResponseHeaders=" + handshakeResponseHeaders +
+                ", responseHeaders=" + responseHeaders +
                 '}';
     }
 }

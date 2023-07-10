@@ -54,7 +54,7 @@ public class OkHttpConnectionProvider extends AbstractConnectionProvider {
                     @Override
                     public void onOpen(WebSocket webSocket, Response response) {
                         LifecycleEvent openEvent = new LifecycleEvent(LifecycleEvent.EventType.OPENED);
-                        openEvent.setHandshakeResponseHeaders(headersAsMap(response));
+                        openEvent.setResponseHeaders(headersAsMap(response));
 
                         emitLifecycleEvent(openEvent);
                     }

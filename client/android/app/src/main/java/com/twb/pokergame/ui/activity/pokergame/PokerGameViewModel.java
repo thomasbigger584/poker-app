@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.twb.pokergame.data.model.PokerTable;
 import com.twb.pokergame.data.websocket.message.PokerAppWebSocketMessage;
 import com.twb.pokergame.data.websocket.WebSocketClient;
 import com.twb.pokergame.data.websocket.listener.WebSocketLifecycleListener;
@@ -21,7 +22,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel;
 @HiltViewModel
 public class PokerGameViewModel extends ViewModel implements WebSocketLifecycleListener {
     private static final String TAG = PokerGameViewModel.class.getSimpleName();
-    private static final String WEBSOCKET_TOPIC = "/topic/poker-app-events";
+    private static final String WEBSOCKET_TOPIC = "/topic/poker-app-events.%s";
     private static final String WEBSOCKET_ENDPOINT = "/poker-app-ws/websocket";
     public final MutableLiveData<Throwable> errors = new MutableLiveData<>();
     public final LiveData<PokerAppWebSocketMessage> messages = new MutableLiveData<>();
@@ -43,9 +44,9 @@ public class PokerGameViewModel extends ViewModel implements WebSocketLifecycleL
         }
     }
 
-    public void subscribe() {
+    public void subscribe(PokerTable pokerTable) {
         TopicSubscriptionParams params = new TopicSubscriptionParams();
-        params.setTopic(WEBSOCKET_TOPIC);
+        params.setTopic(String.format(WEBSOCKET_TOPIC, pokerTable.getId()));
         params.setListener(this);
         client.subscribe(params);
     }

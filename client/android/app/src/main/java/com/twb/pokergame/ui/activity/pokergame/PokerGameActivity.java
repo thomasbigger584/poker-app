@@ -29,11 +29,8 @@ public class PokerGameActivity extends AppCompatActivity {
         viewModel = new ViewModelProvider(this).get(PokerGameViewModel.class);
         viewModel.errors.observe(this, this::onError);
         viewModel.messages.observe(this, this::onMessage);
-    }
-
-    public void connect(View view) {
         viewModel.connect();
-        viewModel.subscribe();
+        viewModel.subscribe(pokerTable);
     }
 
     private void onMessage(PokerAppWebSocketMessage message) {
@@ -42,10 +39,6 @@ public class PokerGameActivity extends AppCompatActivity {
 
     private void onError(Throwable throwable) {
         Toast.makeText(this, throwable.getMessage(), Toast.LENGTH_SHORT).show();
-    }
-
-    public void disconnect(View view) {
-        viewModel.disconnect();
     }
 
     @Override
