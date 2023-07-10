@@ -18,18 +18,18 @@ import okio.ByteString;
 
 public class OkHttpConnectionProvider extends AbstractConnectionProvider {
     private final String TAG = OkHttpConnectionProvider.class.getSimpleName();
-    private final String uri;
+    private final String url;
     private final Map<String, String> headers;
     private final OkHttpClient okHttpClient;
     private WebSocket websocket;
 
-    public OkHttpConnectionProvider(String uri, OkHttpClient okHttpClient) {
-        this(uri, null, okHttpClient);
+    public OkHttpConnectionProvider(String url, OkHttpClient okHttpClient) {
+        this(url, null, okHttpClient);
     }
 
-    public OkHttpConnectionProvider(String uri, Map<String, String> headers, OkHttpClient okHttpClient) {
+    public OkHttpConnectionProvider(String url, Map<String, String> headers, OkHttpClient okHttpClient) {
         super();
-        this.uri = uri;
+        this.url = url;
         this.headers = headers != null ? headers : new HashMap<>();
         this.okHttpClient = okHttpClient;
     }
@@ -44,7 +44,7 @@ public class OkHttpConnectionProvider extends AbstractConnectionProvider {
     @Override
     void createWebSocketConnection() {
         Request.Builder requestBuilder = new Request.Builder()
-                .url(uri);
+                .url(url);
 
         addConnectionHeadersToBuilder(requestBuilder);
 

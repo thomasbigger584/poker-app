@@ -61,7 +61,7 @@ services:
       - keycloak
       - postgres
     ports:
-      - 8081:8081 # Exposing only for websocket testing
+      - 8081:8081 # Exposing only for android connection, for now until we have keycloak/local dns set up
     networks:
       - backend
   nginx:

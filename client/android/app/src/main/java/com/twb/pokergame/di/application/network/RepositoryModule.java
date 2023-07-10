@@ -15,7 +15,7 @@ import dagger.hilt.components.SingletonComponent;
 // @InstallIn(SingletonComponent::class) this will make
 // this class to inject dependencies across the entire application.
 
-@Module(includes = {RetrofitApiModule.class})
+@Module(includes = {ApiModule.class})
 @InstallIn(SingletonComponent.class)
 public class RepositoryModule {
 

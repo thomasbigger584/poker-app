@@ -13,7 +13,7 @@ import retrofit2.Retrofit;
 
 @Module(includes = {NetworkModule.class})
 @InstallIn(SingletonComponent.class)
-public class RetrofitApiModule {
+public class ApiModule {
 
     @Provides
     @Singleton

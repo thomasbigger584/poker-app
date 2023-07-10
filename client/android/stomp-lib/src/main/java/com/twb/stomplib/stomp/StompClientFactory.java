@@ -9,10 +9,10 @@ import okhttp3.OkHttpClient;
 
 public class StompClientFactory {
 
-    public static StompClient createClient(String uri) {
+    public static StompClient createClient(String url) {
         OkHttpClient httpClient = buildHttpClient();
 
-        ConnectionProvider provider = new OkHttpConnectionProvider(uri, httpClient);
+        ConnectionProvider provider = new OkHttpConnectionProvider(url, httpClient);
         return new StompClient(provider);
     }
 

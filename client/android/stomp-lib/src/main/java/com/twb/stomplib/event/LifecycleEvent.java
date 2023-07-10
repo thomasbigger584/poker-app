@@ -48,4 +48,14 @@ public class LifecycleEvent {
     public enum EventType {
         OPENED, CLOSED, ERROR
     }
+
+    @Override
+    public String toString() {
+        return "LifecycleEvent{" +
+                "type=" + type +
+                ", exception=" + exception +
+                ", message='" + message + '\'' +
+                ", handshakeResponseHeaders=" + handshakeResponseHeaders +
+                '}';
+    }
 }
