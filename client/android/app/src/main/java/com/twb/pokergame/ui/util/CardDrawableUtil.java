@@ -14,7 +14,7 @@ public class CardDrawableUtil {
     @DrawableRes
     //required to dynamically get card from drawables
     @SuppressLint("DiscouragedApi")
-    public static int getDrawableResFromCard(Context context, Card card) {
+    public static int getDrawable(Context context, Card card) {
         String cardDrawRes = card.getDrawable();
         Resources resources = context.getResources();
         return resources.getIdentifier(cardDrawRes, DEF_TYPE, context.getPackageName());

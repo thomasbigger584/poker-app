@@ -1,4 +1,4 @@
-package com.twb.pokergame.ui.pokertable;
+package com.twb.pokergame.ui.activity.pokertable;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.twb.pokergame.R;
 import com.twb.pokergame.data.model.PokerTable;
-import com.twb.pokergame.ui.pokergame.PokerGameActivity;
+import com.twb.pokergame.ui.activity.pokergame.PokerGameActivity;
 
 import dagger.hilt.android.AndroidEntryPoint;
 

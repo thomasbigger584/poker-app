@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/community_border"
+    android:orientation="horizontal"
+    android:padding="4dp">
+
+    <com.twb.pokergame.ui.layout.CardLayout
+        android:id="@+id/community1CardLayout"
+        android:layout_width="70dp"
+        android:layout_height="100dp"
+        android:visibility="invisible">
+
+    </com.twb.pokergame.ui.layout.CardLayout>
+
+    <com.twb.pokergame.ui.layout.CardLayout
+        android:id="@+id/community2CardLayout"
+        android:layout_width="70dp"
+        android:layout_height="100dp"
+        android:layout_marginLeft="8dp"
+        android:visibility="invisible">
+
+    </com.twb.pokergame.ui.layout.CardLayout>
+
+    <com.twb.pokergame.ui.layout.CardLayout
+        android:id="@+id/community3CardLayout"
+        android:layout_width="70dp"
+        android:layout_height="100dp"
+        android:layout_marginLeft="8dp"
+        android:visibility="invisible">
+
+    </com.twb.pokergame.ui.layout.CardLayout>
+
+    <com.twb.pokergame.ui.layout.CardLayout
+        android:id="@+id/community4CardLayout"
+        android:layout_width="70dp"
+        android:layout_height="100dp"
+        android:layout_marginLeft="8dp"
+        android:visibility="invisible">
+
+    </com.twb.pokergame.ui.layout.CardLayout>
+
+    <com.twb.pokergame.ui.layout.CardLayout
+        android:id="@+id/community5CardLayout"
+        android:layout_width="70dp"
+        android:layout_height="100dp"
+        android:layout_marginLeft="8dp"
+        android:visibility="invisible">
+
+    </com.twb.pokergame.ui.layout.CardLayout>
+
+</LinearLayout>

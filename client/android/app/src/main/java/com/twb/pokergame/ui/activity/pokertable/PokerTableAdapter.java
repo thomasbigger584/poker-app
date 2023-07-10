@@ -1,4 +1,4 @@
-package com.twb.pokergame.ui.pokertable;
+package com.twb.pokergame.ui.activity.pokertable;
 
 import android.view.LayoutInflater;
 import android.view.View;

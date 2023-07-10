@@ -48,7 +48,7 @@ public class CardPairLayout extends FrameLayout {
     }
 
     public void updateCardImageView(Card card) {
-        int cardDrawResId = CardDrawableUtil.getDrawableResFromCard(getContext(), card);
+        int cardDrawResId = CardDrawableUtil.getDrawable(getContext(), card);
 
         if (cardImageViews[0].getVisibility() != INVISIBLE && cardImageViews[1].getVisibility() != INVISIBLE) {
             reset();

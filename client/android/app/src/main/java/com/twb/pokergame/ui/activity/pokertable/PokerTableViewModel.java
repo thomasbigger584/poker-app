@@ -1,4 +1,4 @@
-package com.twb.pokergame.ui.pokertable;
+package com.twb.pokergame.ui.activity.pokertable;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModel;

@@ -1,5 +1,6 @@
 package com.twb.pokergame.data.repository;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
@@ -18,7 +19,6 @@ public class PokerTableRepository extends BaseRepository {
     private final PokerTableApi api;
     private final MutableLiveData<List<PokerTable>> getPokerTablesLiveData = new MutableLiveData<>();
 
-
     public PokerTableRepository(PokerTableApi api) {
         this.api = api;
     }
@@ -27,12 +27,12 @@ public class PokerTableRepository extends BaseRepository {
         Map<String, Integer> queryParams = new HashMap<>();
         api.getPokerTables(queryParams).enqueue(new Callback<>() {
             @Override
-            public void onResponse(Call<List<PokerTable>> call, Response<List<PokerTable>> response) {
+            public void onResponse(@NonNull Call<List<PokerTable>> call, @NonNull Response<List<PokerTable>> response) {
                 getPokerTablesLiveData.setValue(response.body());
             }
 
             @Override
-            public void onFailure(Call<List<PokerTable>> call, Throwable throwable) {
+            public void onFailure(@NonNull Call<List<PokerTable>> call, @NonNull Throwable throwable) {
                 errorLiveData.setValue(throwable);
             }
         });
