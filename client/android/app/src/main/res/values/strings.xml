@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">pokergame</string>
     <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_crypto">CryptoActivity</string>
 
     <string name="send_mode_1">Send WebSocket</string>
     <string name="send_mode_2">Send REST</string>

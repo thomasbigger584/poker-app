@@ -1,4 +1,4 @@
-package com.twb.pokergame.activity;
+package com.twb.pokergame.ui.main;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -34,9 +34,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Button connectButton = (Button) findViewById(R.id.connectButton);
+        Button connectButton = findViewById(R.id.connectButton);
 
-        idNumberPicker = (NumberPicker) findViewById(R.id.idNumberPicker);
+        idNumberPicker = findViewById(R.id.idNumberPicker);
         idNumberPicker.setMinValue(0);
         idNumberPicker.setMaxValue(10000);
 
@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
             setConnectButtonText(connectButton, newVal);
         });
 
-        mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        mRecyclerView = findViewById(R.id.recycler_view);
         mAdapter = new SimpleAdapter(dataset);
         mAdapter.setHasStableIds(true);
 
