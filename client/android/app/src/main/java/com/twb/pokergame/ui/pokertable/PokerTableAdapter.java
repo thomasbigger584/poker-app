@@ -15,16 +15,30 @@ import java.util.List;
 
 public class PokerTableAdapter extends RecyclerView.Adapter<PokerTableAdapter.ViewHolder> {
     private final List<PokerTable> dataset;
+    private final PokerTableClickListener clickListener;
 
-    public PokerTableAdapter(List<PokerTable> dataset) {
+    public PokerTableAdapter(List<PokerTable> dataset, PokerTableClickListener clickListener) {
         this.dataset = dataset;
+        this.clickListener = clickListener;
     }
 
     @NonNull
     @Override
     public PokerTableAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return new PokerTableAdapter.ViewHolder(LayoutInflater.from(parent.getContext())
+        PokerTableAdapter.ViewHolder viewHolder = new PokerTableAdapter.ViewHolder(LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.poker_table_item_layout, parent, false));
+
+        viewHolder.itemView.setOnClickListener(view -> {
+
+            int position = viewHolder.getAdapterPosition();
+            if (position != RecyclerView.NO_POSITION) {
+
+                PokerTable pokerTable = dataset.get(position);
+                clickListener.onPokerTableClicked(pokerTable);
+            }
+        });
+
+        return viewHolder;
     }
 
     @Override
@@ -40,6 +54,10 @@ public class PokerTableAdapter extends RecyclerView.Adapter<PokerTableAdapter.Vi
     @Override
     public long getItemId(int position) {
         return dataset.get(position).hashCode();
+    }
+
+    public interface PokerTableClickListener {
+        void onPokerTableClicked(PokerTable pokerTable);
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

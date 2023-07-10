@@ -28,4 +28,13 @@ public class PokerAppWebSocketMessage {
     public void setSender(String sender) {
         this.sender = sender;
     }
+
+    @Override
+    public String toString() {
+        return "PokerAppWebSocketMessage{" +
+                "type='" + type + '\'' +
+                ", content='" + content + '\'' +
+                ", sender='" + sender + '\'' +
+                '}';
+    }
 }

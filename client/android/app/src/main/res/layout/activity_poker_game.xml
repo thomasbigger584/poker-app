@@ -18,7 +18,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:onClick="connectStomp"
+            android:onClick="connect"
             android:text="@string/connect_stomp" />
 
         <Button
@@ -26,7 +26,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:onClick="disconnectStomp"
+            android:onClick="disconnect"
             android:text="@string/disconnect_stomp" />
 
     </LinearLayout>

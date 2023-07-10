@@ -24,16 +24,15 @@ public class PokerGameViewModel extends ViewModel implements WebSocketLifecycleL
     private static final String WEBSOCKET_TOPIC = "/topic/poker-app-events";
     private static final String WEBSOCKET_ENDPOINT = "/poker-app-ws/websocket";
     public final MutableLiveData<Throwable> errors = new MutableLiveData<>();
-    public final LiveData<PokerAppWebSocketMessage> messageLiveData = new MutableLiveData<>();
+    public final LiveData<PokerAppWebSocketMessage> messages = new MutableLiveData<>();
     private final WebSocketClient client;
 
     @Inject
     public PokerGameViewModel(WebSocketClient client) {
         this.client = client;
-        connect();
     }
 
-    private void connect() {
+    public void connect() {
         WebSocketConnectionParams params = new WebSocketConnectionParams();
         params.setEndpoint(WEBSOCKET_ENDPOINT);
         params.setToken(null);
