@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="4dp">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="100dp"
+            android:layout_height="80dp"
+            android:layout_marginBottom="-10dp"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/leftCardImageView"
+                android:layout_width="40dp"
+                android:layout_height="wrap_content"
+                android:contentDescription="Left Card"
+                android:visibility="invisible" />
+
+            <ImageView
+                android:id="@+id/rightCardImageView"
+                android:layout_width="40dp"
+                android:layout_height="wrap_content"
+                android:contentDescription="Right Card"
+                android:visibility="invisible" />
+        </LinearLayout>
+
+        <include
+            android:id="@+id/dealerChipLayout"
+            layout="@layout/dealer_chip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_gravity="right|bottom" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/displayNameTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:gravity="center"
+        android:text="--"
+        android:textColor="@android:color/white"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/fundsTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:gravity="center"
+        android:text="--"
+        android:textColor="@android:color/white"
+        android:textStyle="bold" />
+
+</LinearLayout>

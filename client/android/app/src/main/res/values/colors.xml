@@ -7,4 +7,34 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <color name="colorPrimaryTranslucent">#991BAAE4</color>
+    <color name="colorPrimaryLight">#FF4EBFEF</color>
+    <color name="colorPrimary">#FF1BAAE4</color>
+    <color name="colorPrimaryDark">#FF047EAC</color>
+    <color name="colorAccent">#FF1A2866</color>
+
+    <color name="colorWhite">#FFFFFF</color>
+
+    <color name="colorBackgroundGrey">#EFEFEF</color>
+    <color name="lightGrey">#809197A3</color>
+    <color name="blackOverlay">#66000000</color>
+    <color name="colorOverlay">#66000000</color>
+    <color name="colorTimeGrey">#FF9197A3</color>
+    <color name="colorControlsBackground">#73000000</color>
+    <color name="colorSubtitleGrey">#FF7F8592</color>
+    <color name="colorShowTakenPhotos">#80000000</color>
+    <color name="colorTakePhotoBorder">#99000000</color>
+    <color name="colorNavigationTitle">#FF343434</color>
+    <color name="colorContent">#FF444444</color>
+
+
+    <color name="purple">#8128FB</color>
+    <color name="darkRed">#D0021B</color>
+    <color name="blue">#488AFF</color>
+    <color name="green">#32db64</color>
+    <color name="orange">#f0ad4e</color>
+    <color name="red">#f53d3d</color>
+
+    <color name="pokerGreen">#308014</color>
 </resources>

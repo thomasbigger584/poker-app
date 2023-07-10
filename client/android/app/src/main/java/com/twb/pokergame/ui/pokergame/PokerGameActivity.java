@@ -9,7 +9,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.twb.pokergame.R;
 import com.twb.pokergame.data.model.PokerTable;
-import com.twb.pokergame.data.model.pokergame.PokerAppWebSocketMessage;
+import com.twb.pokergame.data.websocket.message.PokerAppWebSocketMessage;
 
 import dagger.hilt.android.AndroidEntryPoint;
 

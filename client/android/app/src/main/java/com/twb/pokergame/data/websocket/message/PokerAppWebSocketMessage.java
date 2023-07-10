@@ -1,4 +1,4 @@
-package com.twb.pokergame.data.model.pokergame;
+package com.twb.pokergame.data.websocket.message;
 
 public class PokerAppWebSocketMessage {
     private String type;
