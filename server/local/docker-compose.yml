@@ -13,7 +13,7 @@ services:
     networks:
       - backend
   api:
-    build: server/local/api/.
+    build: api
     container_name: api
     restart: always
     environment:
