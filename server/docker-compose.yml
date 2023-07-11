@@ -3,11 +3,12 @@ services:
   postgres:
     image: postgres:13.1-alpine
     container_name: postgres
-    restart: always
     environment:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=db
+    ports:
+      - 5432:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -15,9 +16,10 @@ services:
   api:
     build: api
     container_name: api
-    restart: always
     environment:
       SPRING_PROFILES_ACTIVE: local
+    ports:
+      - 8081:8081
     depends_on:
       - postgres
     networks:
