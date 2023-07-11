@@ -1,6 +1,7 @@
 package com.twb.pokergame.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.twb.pokergame.configuration.ProfileConfiguration;
 import com.twb.pokergame.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.events.Event;
@@ -8,12 +9,14 @@ import org.keycloak.events.admin.AdminEvent;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
+@Profile(ProfileConfiguration.DIGITALOCEAN_PROFILE)
 public class UserRabbitMqConsumer {
     private final ObjectMapper objectMapper;
     private final UserService userService;

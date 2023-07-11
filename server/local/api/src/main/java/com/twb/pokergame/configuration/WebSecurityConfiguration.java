@@ -16,8 +16,6 @@ import static com.twb.pokergame.configuration.Constants.USER;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class WebSecurityConfiguration {
-
-
     private final JwtAuthConverter jwtAuthConverter;
 
     @Bean

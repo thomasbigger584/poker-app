@@ -1,3 +1,5 @@
+#NOTE: remember when adding api, to add SPRING_PROFILES_ACTIVE: digitalocean
+
 version: '3.1'
 services:
   postgres:
