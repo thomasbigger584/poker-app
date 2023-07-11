@@ -101,6 +101,7 @@ public class AuthStateManager {
     }
 
     public AuthState updateAfterAuthorization(AuthorizationResponse response, AuthorizationException ex) {
+        Log.i(TAG, "updateAfterAuthorization: ");
         AuthState current = getCurrent();
         current.update(response, ex);
         return replace(current);

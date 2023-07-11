@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.twb.pokergame.R;
 import com.twb.pokergame.ui.activity.login.auth.AuthHelper;
+import com.twb.pokergame.ui.activity.login.auth.DoAuthCallback;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -36,15 +37,26 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void doAuth() {
-        auth.doAuthorization(intent -> startActivityForResult(intent, RC_AUTH));
+        Log.i(TAG, "doAuth: ");
+        auth.doAuthorization(new DoAuthCallback() {
+            @Override
+            public void start(Intent intent) {
+                Log.i(TAG, "start: ");
+                startActivityForResult(intent, RC_AUTH);
+            }
+        });
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        Log.i(TAG, "onActivityResult: " + requestCode + " resultCode: " + data + " extras: " + data.getExtras().toString());
 
         if (requestCode == RC_AUTH) {
+            Log.i(TAG, "onActivityResult: is RC_AUTH");
+
             auth.handlePostAuthFlow(data);
+
             if (auth.isAuthorised()) {
                 Toast.makeText(this, auth.getValidAccessToken(), Toast.LENGTH_SHORT).show();
             }

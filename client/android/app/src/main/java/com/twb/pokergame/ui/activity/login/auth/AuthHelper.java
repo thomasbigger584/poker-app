@@ -24,6 +24,8 @@ import net.openid.appauth.browser.AnyBrowserMatcher;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class AuthHelper {
@@ -109,7 +111,9 @@ public class AuthHelper {
     }
 
     private void exchangeAuthorizationCode(AuthorizationResponse response) {
-        performTokenRequest(response.createTokenExchangeRequest(), this::handleTokenResponse);
+        Log.i(TAG, "exchangeAuthorizationCode: " + response);
+        TokenRequest tokenExchangeRequest = response.createTokenExchangeRequest();
+        performTokenRequest(tokenExchangeRequest, this::handleTokenResponse);
     }
 
     private void performTokenRequest(TokenRequest request, AuthorizationService.TokenResponseCallback callback) {
@@ -160,13 +164,20 @@ public class AuthHelper {
     }
 
     public void handlePostAuthFlow(Intent data) {
+        Log.i(TAG, "handlePostAuthFlow: " + data);
+
         AuthorizationResponse response = AuthorizationResponse.fromIntent(data);
         AuthorizationException exception = AuthorizationException.fromIntent(data);
+
+        Log.i(TAG, "handlePostAuthFlow: response: " + response);
+        Log.i(TAG, "handlePostAuthFlow: exception: " + exception);
+
         if (response != null || exception != null) {
             authStateManager.updateAfterAuthorization(response, exception);
         }
 
         if (response != null && response.authorizationCode != null) {
+            Log.i(TAG, "handlePostAuthFlow: authorization code exchange is required");
             // authorization code exchange is required
             authStateManager.updateAfterAuthorization(response, exception);
             exchangeAuthorizationCode(response);

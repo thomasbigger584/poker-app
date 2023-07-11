@@ -9,6 +9,7 @@ WORK IN PROGRESS
 Add the following entries into your `/etc/hosts` file:
 
 ```text
+127.0.0.1 	pokerapp.local
 127.0.0.1 	keycloak.pokerapp.local
 127.0.0.1 	api.pokerapp.local
 ```
@@ -23,6 +24,7 @@ Navigate to the following exposed services in your browser
 
 | Service  | DNS Name                |
 |----------|-------------------------|
+| Landing  | pokerapp.local          |
 | Keycloak | keycloak.pokerapp.local |
 | API      | api.pokerapp.local      |
 
