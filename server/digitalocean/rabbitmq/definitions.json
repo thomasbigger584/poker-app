@@ -60,7 +60,7 @@
       "vhost": "/",
       "destination": "app.keycloak.user.create",
       "destination_type": "queue",
-      "routing_key": "KK.EVENT.ADMIN.8abbdabe-7af5-4190-bcbe-3163236e121b.SUCCESS.USER.CREATE",
+      "routing_key": "KK.EVENT.ADMIN.poker-app-realm.SUCCESS.USER.CREATE",
       "arguments": {}
     },
     {
@@ -68,7 +68,7 @@
       "vhost": "/",
       "destination": "app.keycloak.user.register",
       "destination_type": "queue",
-      "routing_key": "KK.EVENT.CLIENT.8abbdabe-7af5-4190-bcbe-3163236e121b.SUCCESS.poker-game-android-client.REGISTER",
+      "routing_key": "KK.EVENT.CLIENT.poker-app-realm.SUCCESS.poker-game-android-client.REGISTER",
       "arguments": {}
     }
   ]

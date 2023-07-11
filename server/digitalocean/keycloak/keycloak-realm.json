@@ -1,6 +1,8 @@
 {
-  "id": "8abbdabe-7af5-4190-bcbe-3163236e121b",
-  "realm": "poker-game-realm",
+  "id": "poker-app-realm",
+  "realm": "poker-app",
+  "displayName": "",
+  "displayNameHtml": "",
   "notBefore": 0,
   "defaultSignatureAlgorithm": "RS256",
   "revokeRefreshToken": false,
@@ -63,7 +65,7 @@
           }
         },
         "clientRole": false,
-        "containerId": "8abbdabe-7af5-4190-bcbe-3163236e121b",
+        "containerId": "poker-app-realm",
         "attributes": {}
       },
       {
@@ -72,7 +74,7 @@
         "description": "${role_offline-access}",
         "composite": false,
         "clientRole": false,
-        "containerId": "8abbdabe-7af5-4190-bcbe-3163236e121b",
+        "containerId": "poker-app-realm",
         "attributes": {}
       },
       {
@@ -88,7 +90,7 @@
           }
         },
         "clientRole": false,
-        "containerId": "8abbdabe-7af5-4190-bcbe-3163236e121b",
+        "containerId": "poker-app-realm",
         "attributes": {}
       },
       {
@@ -104,7 +106,7 @@
           }
         },
         "clientRole": false,
-        "containerId": "8abbdabe-7af5-4190-bcbe-3163236e121b",
+        "containerId": "poker-app-realm",
         "attributes": {}
       },
       {
@@ -113,7 +115,7 @@
         "description": "${role_uma_authorization}",
         "composite": false,
         "clientRole": false,
-        "containerId": "8abbdabe-7af5-4190-bcbe-3163236e121b",
+        "containerId": "poker-app-realm",
         "attributes": {}
       }
     ],
@@ -489,7 +491,7 @@
     "description": "${role_default-roles}",
     "composite": true,
     "clientRole": false,
-    "containerId": "8abbdabe-7af5-4190-bcbe-3163236e121b"
+    "containerId": "poker-app-realm"
   },
   "defaultGroups": [
     "/user"
@@ -505,9 +507,9 @@
   "otpPolicyPeriod": 30,
   "otpPolicyCodeReusable": false,
   "otpSupportedApplications": [
+    "totpAppFreeOTPName",
     "totpAppGoogleName",
-    "totpAppMicrosoftAuthenticatorName",
-    "totpAppFreeOTPName"
+    "totpAppMicrosoftAuthenticatorName"
   ],
   "webAuthnPolicyRpEntityName": "keycloak",
   "webAuthnPolicySignatureAlgorithms": [
@@ -558,13 +560,13 @@
       "clientId": "account",
       "name": "${client_account}",
       "rootUrl": "${authBaseUrl}",
-      "baseUrl": "/realms/poker-game-realm/account/",
+      "baseUrl": "/realms/poker-app/account/",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "/realms/poker-game-realm/account/*"
+        "/realms/poker-app/account/*"
       ],
       "webOrigins": [],
       "notBefore": 0,
@@ -737,9 +739,9 @@
       "clientId": "poker-game-android-client",
       "name": "Poker Game Android Client",
       "description": "Poker Game Android Client",
-      "rootUrl": "http://192.168.0.118:8081",
-      "adminUrl": "http://192.168.0.118:8081",
-      "baseUrl": "http://192.168.0.118:8081/index.html",
+      "rootUrl": "http://twbdev.site",
+      "adminUrl": "http://twbdev.site",
+      "baseUrl": "http://twbdev.site",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
@@ -761,7 +763,7 @@
       "protocol": "openid-connect",
       "attributes": {
         "oidc.ciba.grant.enabled": "false",
-        "client.secret.creation.time": "1689068950",
+        "client.secret.creation.time": "1689091774",
         "backchannel.logout.session.required": "true",
         "login_theme": "keycloak",
         "post.logout.redirect.uris": "+",
@@ -799,10 +801,10 @@
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "http://api.pokerapp.local/*"
+        "http://api.twbdev.site/*"
       ],
       "webOrigins": [
-        "http://api.pokerapp.local"
+        "http://api.twbdev.site"
       ],
       "notBefore": 0,
       "bearerOnly": false,
@@ -885,13 +887,13 @@
       "clientId": "security-admin-console",
       "name": "${client_security-admin-console}",
       "rootUrl": "${authAdminUrl}",
-      "baseUrl": "/admin/poker-game-realm/console/",
+      "baseUrl": "/admin/poker-app/console/",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "/admin/poker-game-realm/console/*"
+        "/admin/poker-app/console/*"
       ],
       "webOrigins": [
         "+"
@@ -1598,6 +1600,18 @@
   "components": {
     "org.keycloak.services.clientregistration.policy.ClientRegistrationPolicy": [
       {
+        "id": "a3862dc4-80f0-4953-869c-5ac45e103c04",
+        "name": "Max Clients Limit",
+        "providerId": "max-clients",
+        "subType": "anonymous",
+        "subComponents": {},
+        "config": {
+          "max-clients": [
+            "200"
+          ]
+        }
+      },
+      {
         "id": "d12547d5-8dbd-4584-b50b-ab6a40121665",
         "name": "Allowed Protocol Mapper Types",
         "providerId": "allowed-protocol-mappers",
@@ -1605,14 +1619,45 @@
         "subComponents": {},
         "config": {
           "allowed-protocol-mapper-types": [
+            "oidc-address-mapper",
             "oidc-usermodel-property-mapper",
+            "oidc-sha256-pairwise-sub-mapper",
+            "saml-role-list-mapper",
             "oidc-full-name-mapper",
-            "saml-user-attribute-mapper",
+            "oidc-usermodel-attribute-mapper",
+            "saml-user-property-mapper",
+            "saml-user-attribute-mapper"
+          ]
+        }
+      },
+      {
+        "id": "e61ec13c-7d9d-4fe7-9066-6f44b35c2086",
+        "name": "Allowed Protocol Mapper Types",
+        "providerId": "allowed-protocol-mappers",
+        "subType": "authenticated",
+        "subComponents": {},
+        "config": {
+          "allowed-protocol-mapper-types": [
+            "oidc-usermodel-property-mapper",
+            "saml-role-list-mapper",
+            "oidc-address-mapper",
             "oidc-sha256-pairwise-sub-mapper",
             "oidc-usermodel-attribute-mapper",
             "saml-user-property-mapper",
-            "saml-role-list-mapper",
-            "oidc-address-mapper"
+            "oidc-full-name-mapper",
+            "saml-user-attribute-mapper"
+          ]
+        }
+      },
+      {
+        "id": "c93408c1-ebb4-4746-9820-d71982aa8a83",
+        "name": "Allowed Client Scopes",
+        "providerId": "allowed-client-templates",
+        "subType": "anonymous",
+        "subComponents": {},
+        "config": {
+          "allow-default-scopes": [
+            "true"
           ]
         }
       },
@@ -1630,6 +1675,14 @@
             "true"
           ]
         }
+      },
+      {
+        "id": "a0f1163c-56ec-4eaf-b87c-978254b1ded6",
+        "name": "Full Scope Disabled",
+        "providerId": "scope",
+        "subType": "anonymous",
+        "subComponents": {},
+        "config": {}
       },
       {
         "id": "6f892eef-c0bc-4b24-8d3a-9b9292daa9e4",
@@ -1650,65 +1703,6 @@
         "subType": "anonymous",
         "subComponents": {},
         "config": {}
-      },
-      {
-        "id": "a3862dc4-80f0-4953-869c-5ac45e103c04",
-        "name": "Max Clients Limit",
-        "providerId": "max-clients",
-        "subType": "anonymous",
-        "subComponents": {},
-        "config": {
-          "max-clients": [
-            "200"
-          ]
-        }
-      },
-      {
-        "id": "e61ec13c-7d9d-4fe7-9066-6f44b35c2086",
-        "name": "Allowed Protocol Mapper Types",
-        "providerId": "allowed-protocol-mappers",
-        "subType": "authenticated",
-        "subComponents": {},
-        "config": {
-          "allowed-protocol-mapper-types": [
-            "oidc-sha256-pairwise-sub-mapper",
-            "saml-user-property-mapper",
-            "oidc-usermodel-attribute-mapper",
-            "saml-role-list-mapper",
-            "oidc-usermodel-property-mapper",
-            "saml-user-attribute-mapper",
-            "oidc-address-mapper",
-            "oidc-full-name-mapper"
-          ]
-        }
-      },
-      {
-        "id": "c93408c1-ebb4-4746-9820-d71982aa8a83",
-        "name": "Allowed Client Scopes",
-        "providerId": "allowed-client-templates",
-        "subType": "anonymous",
-        "subComponents": {},
-        "config": {
-          "allow-default-scopes": [
-            "true"
-          ]
-        }
-      },
-      {
-        "id": "a0f1163c-56ec-4eaf-b87c-978254b1ded6",
-        "name": "Full Scope Disabled",
-        "providerId": "scope",
-        "subType": "anonymous",
-        "subComponents": {},
-        "config": {}
-      }
-    ],
-    "org.keycloak.userprofile.UserProfileProvider": [
-      {
-        "id": "b12b3241-4965-42e3-b246-9c88de9730fd",
-        "providerId": "declarative-user-profile",
-        "subComponents": {},
-        "config": {}
       }
     ],
     "org.keycloak.keys.KeyProvider": [
@@ -1723,20 +1717,6 @@
           ],
           "algorithm": [
             "HS256"
-          ]
-        }
-      },
-      {
-        "id": "664ae66c-d939-4fe6-b45a-2fad7caddf7f",
-        "name": "rsa-enc-generated",
-        "providerId": "rsa-enc-generated",
-        "subComponents": {},
-        "config": {
-          "priority": [
-            "100"
-          ],
-          "algorithm": [
-            "RSA-OAEP"
           ]
         }
       },
@@ -1759,6 +1739,20 @@
         "config": {
           "priority": [
             "100"
+          ]
+        }
+      },
+      {
+        "id": "664ae66c-d939-4fe6-b45a-2fad7caddf7f",
+        "name": "rsa-enc-generated",
+        "providerId": "rsa-enc-generated",
+        "subComponents": {},
+        "config": {
+          "priority": [
+            "100"
+          ],
+          "algorithm": [
+            "RSA-OAEP"
           ]
         }
       }
@@ -2465,6 +2459,8 @@
     "oauth2DeviceCodeLifespan": "600",
     "parRequestUriLifespan": "60",
     "clientSessionMaxLifespan": "0",
+    "frontendUrl": "",
+    "acr.loa.map": "{}",
     "adminEventsExpiration": ""
   },
   "keycloakVersion": "21.1.2",

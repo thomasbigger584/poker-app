@@ -5,8 +5,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://keycloak.twbdev.site/realms/poker-game-realm
-          jwk-set-uri: http://keycloak.twbdev.site/realms/poker-game-realm/protocol/openid-connect/certs
+          issuer-uri: http://keycloak.twbdev.site/realms/poker-app
+          jwk-set-uri: http://keycloak.twbdev.site/realms/poker-app/protocol/openid-connect/certs
   rabbitmq:
     host: rabbitmq
     port: 5672

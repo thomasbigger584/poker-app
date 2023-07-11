@@ -2,6 +2,6 @@
   "client_id": "poker-game-android-client",
   "redirect_uri": "com.twb.pokergame:/oauth2redirect",
   "authorization_scope": "openid email profile",
-  "discovery_uri": "http://192.168.0.118:8080/realms/poker-game-realm/.well-known/openid-configuration",
+  "discovery_uri": "http://keycloak.twbdev.site/realms/poker-app/.well-known/openid-configuration",
   "https_required": false
 }
