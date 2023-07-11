@@ -1,5 +1,5 @@
 {
-  "id": "poker-app-realm",
+  "id": "8abbdabe-7af5-4190-bcbe-3163236e121b",
   "realm": "poker-app",
   "displayName": "",
   "displayNameHtml": "",
@@ -65,7 +65,7 @@
           }
         },
         "clientRole": false,
-        "containerId": "poker-app-realm",
+        "containerId": "8abbdabe-7af5-4190-bcbe-3163236e121b",
         "attributes": {}
       },
       {
@@ -74,7 +74,7 @@
         "description": "${role_offline-access}",
         "composite": false,
         "clientRole": false,
-        "containerId": "poker-app-realm",
+        "containerId": "8abbdabe-7af5-4190-bcbe-3163236e121b",
         "attributes": {}
       },
       {
@@ -90,7 +90,7 @@
           }
         },
         "clientRole": false,
-        "containerId": "poker-app-realm",
+        "containerId": "8abbdabe-7af5-4190-bcbe-3163236e121b",
         "attributes": {}
       },
       {
@@ -106,7 +106,7 @@
           }
         },
         "clientRole": false,
-        "containerId": "poker-app-realm",
+        "containerId": "8abbdabe-7af5-4190-bcbe-3163236e121b",
         "attributes": {}
       },
       {
@@ -115,7 +115,7 @@
         "description": "${role_uma_authorization}",
         "composite": false,
         "clientRole": false,
-        "containerId": "poker-app-realm",
+        "containerId": "8abbdabe-7af5-4190-bcbe-3163236e121b",
         "attributes": {}
       }
     ],
@@ -491,7 +491,7 @@
     "description": "${role_default-roles}",
     "composite": true,
     "clientRole": false,
-    "containerId": "poker-app-realm"
+    "containerId": "8abbdabe-7af5-4190-bcbe-3163236e121b"
   },
   "defaultGroups": [
     "/user"
@@ -507,9 +507,9 @@
   "otpPolicyPeriod": 30,
   "otpPolicyCodeReusable": false,
   "otpSupportedApplications": [
+    "totpAppMicrosoftAuthenticatorName",
     "totpAppFreeOTPName",
-    "totpAppGoogleName",
-    "totpAppMicrosoftAuthenticatorName"
+    "totpAppGoogleName"
   ],
   "webAuthnPolicyRpEntityName": "keycloak",
   "webAuthnPolicySignatureAlgorithms": [
@@ -746,7 +746,6 @@
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
-      "secret": "**********",
       "redirectUris": [
         "com.twb.pokergame:/oauth2redirect"
       ],
@@ -758,7 +757,7 @@
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": true,
       "serviceAccountsEnabled": false,
-      "publicClient": false,
+      "publicClient": true,
       "frontchannelLogout": true,
       "protocol": "openid-connect",
       "attributes": {
@@ -1592,7 +1591,8 @@
         "clientId": "78v1hbncup2vuc",
         "disableUserInfo": "false",
         "syncMode": "IMPORT",
-        "clientSecret": "**********"
+        "clientSecret": "**********",
+        "guiOrder": "1"
       }
     }
   ],
