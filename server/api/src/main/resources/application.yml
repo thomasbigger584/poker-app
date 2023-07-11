@@ -28,7 +28,7 @@ spring:
 jwt:
   auth:
     converter:
-      resource-id: poker-game-keycloak-client
+      resource-id: poker-game-api-client
       principal-attribute: preferred_username
 server:
   port:

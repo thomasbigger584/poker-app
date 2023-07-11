@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools" package="com.twb.pokergame">
 
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -17,22 +17,27 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="34">
         <activity
-            android:name=".ui.activity.pokertable.PokerTableActivity"
+            android:name=".ui.activity.login.LoginActivity"
             android:exported="true"
-            android:label="@string/title_activity_poker_table">
+            android:label="@string/title_activity_poker_tables"
+            android:windowSoftInputMode="stateHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.VIEW" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ui.activity.pokertable.PokerTableActivity"
+            android:exported="false"
+            android:label="@string/title_activity_poker_tables" />
         <activity
             android:name=".ui.activity.pokergame.PokerGameActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="false"
             android:label="@string/title_activity_poker_game"
             android:screenOrientation="landscape"
-            android:theme="@style/FullscreenTheme"
-            />
+            android:theme="@style/FullscreenTheme" />
     </application>
 
 </manifest>

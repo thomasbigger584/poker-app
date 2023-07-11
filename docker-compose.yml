@@ -44,6 +44,8 @@ services:
     depends_on:
       - rabbitmq
       - postgres
+    ports:
+      - 8080:8080 # Exposing only for android connection, for now until we have keycloak/local dns set up
     command:
       - start-dev
       - --import-realm

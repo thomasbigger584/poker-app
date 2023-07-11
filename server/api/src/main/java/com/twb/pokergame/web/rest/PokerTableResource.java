@@ -1,6 +1,6 @@
 package com.twb.pokergame.web.rest;
 
-import com.twb.pokergame.dto.PokerTableDTO;
+import com.twb.pokergame.dto.pokertable.PokerTableDTO;
 import com.twb.pokergame.service.PokerTableService;
 import com.twb.pokergame.web.rest.util.PaginationService;
 import lombok.RequiredArgsConstructor;

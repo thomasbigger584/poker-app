@@ -1,11 +1,13 @@
 package com.twb.pokergame.mapper;
 
+import com.twb.pokergame.configuration.Constants;
 import com.twb.pokergame.domain.User;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,6 +24,9 @@ public interface UserMapper {
 
     @Named("mapGroups")
     default List<String> mapGroups(List<String> groups) {
+        if (groups == null || groups.isEmpty()) {
+            return Collections.singletonList(Constants.USER);
+        }
         return groups.stream()
                 .map(group -> group.replace("/", ""))
                 .toList();

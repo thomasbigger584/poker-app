@@ -1,8 +1,11 @@
 <resources>
     <string name="app_name">pokergame</string>
-    <string name="title_activity_main">MainActivity</string>
-    <string name="title_activity_poker_table">Poker Table Activity</string>
+    <string name="title_activity_login">Login Activity</string>
+    <string name="title_activity_poker_tables">Poker Tables Activity</string>
     <string name="title_activity_poker_game">Poker Game Activity</string>
+
+    <string name="keycloak_testing">Keycloak testing</string>
+    <string name="login">Login</string>
 
     <string name="send_mode_1">Send WebSocket</string>
     <string name="send_mode_2">Send REST</string>

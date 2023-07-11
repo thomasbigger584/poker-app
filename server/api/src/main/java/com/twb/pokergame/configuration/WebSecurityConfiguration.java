@@ -9,12 +9,14 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
+import static com.twb.pokergame.configuration.Constants.ADMIN;
+import static com.twb.pokergame.configuration.Constants.USER;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class WebSecurityConfiguration {
-    private static final String ADMIN = "admin";
-    private static final String USER = "user";
+
 
     private final JwtAuthConverter jwtAuthConverter;
 

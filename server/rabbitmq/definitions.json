@@ -37,6 +37,13 @@
       "durable": true,
       "auto_delete": false,
       "arguments": {}
+    },
+    {
+      "name": "app.keycloak.user.register",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
     }
   ],
   "bindings": [
@@ -54,6 +61,14 @@
       "destination": "app.keycloak.user.create",
       "destination_type": "queue",
       "routing_key": "KK.EVENT.ADMIN.8abbdabe-7af5-4190-bcbe-3163236e121b.SUCCESS.USER.CREATE",
+      "arguments": {}
+    },
+    {
+      "source": "amq.topic",
+      "vhost": "/",
+      "destination": "app.keycloak.user.register",
+      "destination_type": "queue",
+      "routing_key": "KK.EVENT.CLIENT.8abbdabe-7af5-4190-bcbe-3163236e121b.SUCCESS.poker-game-android-client.REGISTER",
       "arguments": {}
     }
   ]

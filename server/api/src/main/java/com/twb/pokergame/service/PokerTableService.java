@@ -2,7 +2,7 @@ package com.twb.pokergame.service;
 
 import com.twb.pokergame.domain.PokerTable;
 import com.twb.pokergame.domain.enumeration.GameType;
-import com.twb.pokergame.dto.PokerTableDTO;
+import com.twb.pokergame.dto.pokertable.PokerTableDTO;
 import com.twb.pokergame.mapper.PokerTableMapper;
 import com.twb.pokergame.repository.PokerTableRepository;
 import jakarta.annotation.PostConstruct;

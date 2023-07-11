@@ -82,7 +82,7 @@
         "composite": true,
         "composites": {
           "client": {
-            "poker-game-keycloak-client": [
+            "poker-game-api-client": [
               "admin"
             ]
           }
@@ -98,7 +98,7 @@
         "composite": true,
         "composites": {
           "client": {
-            "poker-game-keycloak-client": [
+            "poker-game-api-client": [
               "user"
             ]
           }
@@ -118,7 +118,7 @@
       }
     ],
     "client": {
-      "poker-game-keycloak-client": [
+      "poker-game-api-client": [
         {
           "id": "480d7f5f-20a4-492d-96c0-4eb8626ffd68",
           "name": "user",
@@ -229,11 +229,11 @@
                 "view-realm",
                 "impersonation",
                 "view-authorization",
+                "view-clients",
                 "view-identity-providers",
                 "view-users",
-                "view-clients",
-                "view-events",
                 "manage-events",
+                "view-events",
                 "manage-clients",
                 "create-client",
                 "manage-users",
@@ -451,7 +451,8 @@
           "containerId": "5480b535-0749-4747-bcb5-0098303e2134",
           "attributes": {}
         }
-      ]
+      ],
+      "poker-game-android-client": []
     }
   },
   "groups": [
@@ -464,7 +465,7 @@
         "app_admin"
       ],
       "clientRoles": {
-        "poker-game-keycloak-client": [
+        "poker-game-api-client": [
           "admin"
         ]
       },
@@ -490,6 +491,9 @@
     "clientRole": false,
     "containerId": "8abbdabe-7af5-4190-bcbe-3163236e121b"
   },
+  "defaultGroups": [
+    "/user"
+  ],
   "requiredCredentials": [
     "password"
   ],
@@ -729,10 +733,64 @@
       ]
     },
     {
+      "id": "82baf4c5-f317-4f7f-9485-4ef6259d5ebe",
+      "clientId": "poker-game-android-client",
+      "name": "Poker Game Android Client",
+      "description": "Poker Game Android Client",
+      "rootUrl": "http://192.168.0.118:8081",
+      "adminUrl": "http://192.168.0.118:8081",
+      "baseUrl": "http://192.168.0.118:8081/index.html",
+      "surrogateAuthRequired": false,
+      "enabled": true,
+      "alwaysDisplayInConsole": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "**********",
+      "redirectUris": [
+        "com.twb.pokergame:/oauth2redirect"
+      ],
+      "webOrigins": [],
+      "notBefore": 0,
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "publicClient": false,
+      "frontchannelLogout": true,
+      "protocol": "openid-connect",
+      "attributes": {
+        "oidc.ciba.grant.enabled": "false",
+        "client.secret.creation.time": "1689068950",
+        "backchannel.logout.session.required": "true",
+        "login_theme": "keycloak",
+        "post.logout.redirect.uris": "+",
+        "display.on.consent.screen": "false",
+        "oauth2.device.authorization.grant.enabled": "false",
+        "backchannel.logout.revoke.offline.tokens": "false"
+      },
+      "authenticationFlowBindingOverrides": {},
+      "fullScopeAllowed": true,
+      "nodeReRegistrationTimeout": -1,
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "roles",
+        "profile",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt"
+      ]
+    },
+    {
       "id": "16cb4489-46ff-47ee-9e6d-767295ac6aa4",
-      "clientId": "poker-game-keycloak-client",
-      "name": "Poker Game Keycloak Client",
-      "description": "Poker Game Keycloak Client",
+      "clientId": "poker-game-api-client",
+      "name": "Poker Game Api Client",
+      "description": "Poker Game Api Client",
       "rootUrl": "",
       "adminUrl": "",
       "baseUrl": "",
@@ -761,8 +819,8 @@
         "backchannel.logout.session.required": "true",
         "login_theme": "keycloak",
         "post.logout.redirect.uris": "+",
-        "oauth2.device.authorization.grant.enabled": "false",
         "display.on.consent.screen": "false",
+        "oauth2.device.authorization.grant.enabled": "false",
         "backchannel.logout.revoke.offline.tokens": "false"
       },
       "authenticationFlowBindingOverrides": {},
@@ -1528,8 +1586,8 @@
       "firstBrokerLoginFlowAlias": "first broker login",
       "config": {
         "hideOnLoginPage": "false",
-        "clientId": "78v1hbncup2vuc",
         "acceptsPromptNoneForwardFromClient": "false",
+        "clientId": "78v1hbncup2vuc",
         "disableUserInfo": "false",
         "syncMode": "IMPORT",
         "clientSecret": "**********"
@@ -1547,13 +1605,13 @@
         "subComponents": {},
         "config": {
           "allowed-protocol-mapper-types": [
-            "oidc-sha256-pairwise-sub-mapper",
+            "oidc-usermodel-property-mapper",
+            "oidc-full-name-mapper",
             "saml-user-attribute-mapper",
+            "oidc-sha256-pairwise-sub-mapper",
+            "oidc-usermodel-attribute-mapper",
             "saml-user-property-mapper",
             "saml-role-list-mapper",
-            "oidc-full-name-mapper",
-            "oidc-usermodel-property-mapper",
-            "oidc-usermodel-attribute-mapper",
             "oidc-address-mapper"
           ]
         }
@@ -1613,14 +1671,14 @@
         "subComponents": {},
         "config": {
           "allowed-protocol-mapper-types": [
+            "oidc-sha256-pairwise-sub-mapper",
+            "saml-user-property-mapper",
             "oidc-usermodel-attribute-mapper",
             "saml-role-list-mapper",
-            "oidc-full-name-mapper",
-            "saml-user-property-mapper",
             "oidc-usermodel-property-mapper",
             "saml-user-attribute-mapper",
-            "oidc-sha256-pairwise-sub-mapper",
-            "oidc-address-mapper"
+            "oidc-address-mapper",
+            "oidc-full-name-mapper"
           ]
         }
       },
