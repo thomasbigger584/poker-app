@@ -30,7 +30,7 @@ services:
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_HOSTNAME: twbdev.site
+      KC_HOSTNAME: keycloak.twbdev.site
       KC_HOSTNAME_STRICT: false
       KC_HOSTNAME_STRICT_HTTPS: false
       KC_HTTP_ENABLED: true
@@ -48,8 +48,6 @@ services:
     depends_on:
       - rabbitmq
       - postgres
-    ports:
-      - 8080:8080 # Exposing only for android connection, for now until we have keycloak/local dns set up
     command:
       - start-dev
       - --import-realm
