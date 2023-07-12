@@ -28,11 +28,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ui.activity.login.TokenActivity"
-            android:theme="@style/AppTheme"
-            android:windowSoftInputMode="stateHidden" />
-        <activity
-            android:name=".ui.activity.pokertable.PokerTableActivity"
+            android:name=".ui.activity.pokertable.PokerTableActivityBase"
             android:exported="false"
             android:label="@string/title_activity_poker_tables" />
         <activity

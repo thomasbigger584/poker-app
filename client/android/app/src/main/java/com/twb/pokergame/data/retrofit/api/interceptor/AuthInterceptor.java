@@ -25,9 +25,7 @@ public class AuthInterceptor implements Interceptor {
     public Response intercept(Chain chain) throws IOException {
         Request.Builder builder = chain.request().newBuilder();
 
-        Log.i(TAG, "intercept: authStateManager: " + authStateManager.toString());
-
-        String token = authStateManager.getCurrent().getIdToken();
+        String token = authStateManager.getCurrent().getAccessToken();
         Log.i(TAG, "intercept: token: " + token);
         builder.addHeader(AUTHORIZATION_HEADER, BEARER_PREFIX + token);
         return chain.proceed(builder.build());

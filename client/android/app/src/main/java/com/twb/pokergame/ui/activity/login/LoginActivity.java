@@ -33,7 +33,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.twb.pokergame.R;
 import com.twb.pokergame.data.auth.AuthConfiguration;
 import com.twb.pokergame.data.auth.AuthStateManager;
-import com.twb.pokergame.ui.activity.pokertable.PokerTableActivity;
+import com.twb.pokergame.ui.activity.pokertable.PokerTableActivityBase;
 
 import net.openid.appauth.AppAuthConfiguration;
 import net.openid.appauth.AuthState;
@@ -72,7 +72,7 @@ public final class LoginActivity extends AppCompatActivity {
     private AuthorizationService authService;
     private ExecutorService executor;
 
-    private static final Class<? extends AppCompatActivity> AUTH_COMPLETED_ACTIVITY = PokerTableActivity.class;
+    private static final Class<? extends AppCompatActivity> AUTH_COMPLETED_ACTIVITY = PokerTableActivityBase.class;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

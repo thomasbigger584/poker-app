@@ -56,10 +56,10 @@ public class PokerTableAdapter extends RecyclerView.Adapter<PokerTableAdapter.Vi
         return dataset.get(position).hashCode();
     }
 
-    public void addAll(List<PokerTable> list) {
-        int sizePrevious = dataset.size();
+    public void setData(List<PokerTable> list) {
+        dataset.clear();
         dataset.addAll(list);
-        notifyItemRangeInserted(sizePrevious, dataset.size() - 1);
+        notifyDataSetChanged();
     }
 
     public interface PokerTableClickListener {

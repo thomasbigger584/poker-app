@@ -15,13 +15,15 @@ import dagger.hilt.android.lifecycle.HiltViewModel;
 @HiltViewModel
 public class PokerTableViewModel extends ViewModel {
     public final LiveData<Throwable> errors;
-    public final LiveData<List<PokerTable>> pokerTables;
     private final PokerTableRepository repository;
 
     @Inject
     public PokerTableViewModel(PokerTableRepository repository) {
         this.repository = repository;
         this.errors = repository.getErrors();
-        this.pokerTables = repository.getPokerTables();
+    }
+
+    public LiveData<List<PokerTable>> getPokerTables() {
+        return repository.getPokerTables();
     }
 }
