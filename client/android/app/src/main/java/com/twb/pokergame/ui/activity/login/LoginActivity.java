@@ -16,21 +16,14 @@ package com.twb.pokergame.ui.activity.login;
 
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.text.Editable;
-import android.text.TextUtils;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.TextView;
 
 import androidx.annotation.AnyThread;
 import androidx.annotation.MainThread;
-import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.browser.customtabs.CustomTabsIntent;
@@ -56,28 +49,12 @@ import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.inject.Inject;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
-/**
- * Demonstrates the usage of the AppAuth to authorize a user with an OAuth2 / OpenID Connect
- * provider. Based on the configuration provided in `res/raw/auth_config.json`, the code
- * contained here will:
- * <p>
- * - Retrieve an OpenID Connect discovery document for the provider, or use a local static
- * configuration.
- * - Utilize dynamic client registration, if no static client id is specified.
- * - Initiate the authorization request using the built-in heuristics or a user-selected browser.
- * <p>
- * _NOTE_: From a clean checkout of this project, the authorization service is not configured.
- * Edit `res/raw/auth_config.json` to provide the required configuration properties. See the
- * README.md in the app/ directory for configuration instructions, and the adjacent IDP-specific
- * instructions.
- */
 @AndroidEntryPoint
 public final class LoginActivity extends AppCompatActivity {
     private static final String TAG = LoginActivity.class.getSimpleName();
@@ -108,13 +85,6 @@ public final class LoginActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_login);
 
-        findViewById(R.id.retry).setOnClickListener((View view) ->
-                executor.submit(this::initializeAppAuth));
-        findViewById(R.id.start_auth).setOnClickListener((View view) -> startAuth());
-
-        ((EditText) findViewById(R.id.login_hint_value)).addTextChangedListener(
-                new LoginHintChangeHandler());
-
         if (!authConfiguration.isValid()) {
             displayError(authConfiguration.getConfigurationError(), false);
             return;
@@ -126,13 +96,19 @@ public final class LoginActivity extends AppCompatActivity {
             authStateManager.replace(new AuthState());
             authConfiguration.acceptConfiguration();
         }
-
         if (getIntent().getBooleanExtra(EXTRA_FAILED, false)) {
-            displayAuthCancelled();
+            displaySnackbarMessage("Authorization Canceled");
         }
-
-        displayLoading("Initializing");
         executor.submit(this::initializeAppAuth);
+    }
+
+    public void onLoginClick(View view) {
+        executor.submit(this::doAuth);
+    }
+
+    public void onWebsiteClick(View view) {
+        CustomTabsIntent intent = new CustomTabsIntent.Builder().build();
+        intent.launchUrl(this, Uri.parse("http://twbdev.site"));
     }
 
     @Override
@@ -145,8 +121,8 @@ public final class LoginActivity extends AppCompatActivity {
 
     @Override
     protected void onStop() {
-        executor.shutdownNow();
         super.onStop();
+        executor.shutdownNow();
     }
 
     @Override
@@ -160,19 +136,10 @@ public final class LoginActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        displayAuthOptions();
         if (resultCode == RESULT_CANCELED) {
-            displayAuthCancelled();
+            Snackbar.make(findViewById(R.id.parent),
+                    "Authorization canceled", Snackbar.LENGTH_SHORT).show();
         }
-    }
-
-    @MainThread
-    void startAuth() {
-        displayLoading("Making authorization request");
-
-        // WrongThread inference is incorrect for lambdas
-        // noinspection WrongThread
-        executor.submit(this::doAuth);
     }
 
     /**
@@ -193,7 +160,7 @@ public final class LoginActivity extends AppCompatActivity {
 
         // WrongThread inference is incorrect for lambdas
         // noinspection WrongThread
-        runOnUiThread(() -> displayLoading("Retrieving discovery document"));
+        runOnUiThread(() -> displaySnackbarMessage("Retrieving discovery document"));
         Log.i(TAG, "Retrieving OpenID discovery doc");
         AuthorizationServiceConfiguration.fetchFromUrl(
                 authConfiguration.getDiscoveryUri(),
@@ -221,7 +188,6 @@ public final class LoginActivity extends AppCompatActivity {
     private void initializeClient() {
 
         if (authConfiguration.getClientId() != null) {
-            Log.i(TAG, "Using static client ID: " + authConfiguration.getClientId());
             clientId.set(authConfiguration.getClientId());
             runOnUiThread(this::initializeAuthRequest);
             return;
@@ -231,16 +197,10 @@ public final class LoginActivity extends AppCompatActivity {
                 authStateManager.getCurrent().getLastRegistrationResponse();
 
         if (lastResponse != null) {
-            Log.i(TAG, "Using dynamic client ID: " + lastResponse.clientId);
             clientId.set(lastResponse.clientId);
             runOnUiThread(this::initializeAuthRequest);
             return;
         }
-
-        // WrongThread inference is incorrect for lambdas
-        // noinspection WrongThread
-        runOnUiThread(() -> displayLoading("Dynamically registering client"));
-        Log.i(TAG, "Dynamically registering client");
 
         RegistrationRequest registrationRequest = new RegistrationRequest.Builder(
                 authStateManager.getCurrent().getAuthorizationServiceConfiguration(),
@@ -248,9 +208,7 @@ public final class LoginActivity extends AppCompatActivity {
                 .setTokenEndpointAuthenticationMethod(ClientSecretBasic.NAME)
                 .build();
 
-        authService.performRegistrationRequest(
-                registrationRequest,
-                this::handleRegistrationResponse);
+        authService.performRegistrationRequest(registrationRequest, this::handleRegistrationResponse);
     }
 
     @MainThread
@@ -316,69 +274,26 @@ public final class LoginActivity extends AppCompatActivity {
     }
 
     @MainThread
-    private void displayLoading(String loadingMessage) {
-        findViewById(R.id.loading_container).setVisibility(View.VISIBLE);
-        findViewById(R.id.auth_container).setVisibility(View.GONE);
-        findViewById(R.id.error_container).setVisibility(View.GONE);
-
-        ((TextView) findViewById(R.id.loading_description)).setText(loadingMessage);
+    private void displaySnackbarMessage(String message) {
+        Snackbar.make(findViewById(R.id.parent), message, Snackbar.LENGTH_SHORT).show();
     }
 
     @MainThread
-    private void displayError(String error, boolean recoverable) {
-        findViewById(R.id.error_container).setVisibility(View.VISIBLE);
-        findViewById(R.id.loading_container).setVisibility(View.GONE);
-        findViewById(R.id.auth_container).setVisibility(View.GONE);
-
-        ((TextView) findViewById(R.id.error_description)).setText(error);
-        findViewById(R.id.retry).setVisibility(recoverable ? View.VISIBLE : View.GONE);
+    private void displayError(String message, boolean recoverable) {
+        Snackbar.make(findViewById(R.id.parent), message, Snackbar.LENGTH_SHORT).show();
     }
 
     // WrongThread inference is incorrect in this case
     @SuppressWarnings("WrongThread")
     @AnyThread
-    private void displayErrorLater(final String error, final boolean recoverable) {
-        runOnUiThread(() -> displayError(error, recoverable));
+    private void displayErrorLater(final String message, final boolean recoverable) {
+        runOnUiThread(() -> displayError(message, recoverable));
     }
 
     @MainThread
     private void initializeAuthRequest() {
-        createAuthRequest(getLoginHint());
+        createAuthRequest();
         warmUpBrowser();
-        displayAuthOptions();
-    }
-
-    @MainThread
-    private void displayAuthOptions() {
-        findViewById(R.id.auth_container).setVisibility(View.VISIBLE);
-        findViewById(R.id.loading_container).setVisibility(View.GONE);
-        findViewById(R.id.error_container).setVisibility(View.GONE);
-
-        AuthState state = authStateManager.getCurrent();
-        AuthorizationServiceConfiguration config = state.getAuthorizationServiceConfiguration();
-
-        String authEndpointStr;
-        if (config.discoveryDoc != null) {
-            authEndpointStr = "Discovered auth endpoint: \n";
-        } else {
-            authEndpointStr = "Static auth endpoint: \n";
-        }
-        authEndpointStr += config.authorizationEndpoint;
-        ((TextView) findViewById(R.id.auth_endpoint)).setText(authEndpointStr);
-
-        String clientIdStr;
-        if (state.getLastRegistrationResponse() != null) {
-            clientIdStr = "Dynamic client ID: \n";
-        } else {
-            clientIdStr = "Static client ID: \n";
-        }
-        clientIdStr += clientId;
-        ((TextView) findViewById(R.id.client_id)).setText(clientIdStr);
-    }
-
-    private void displayAuthCancelled() {
-        Snackbar.make(findViewById(R.id.coordinatorLayout),
-                "Authorization canceled", Snackbar.LENGTH_SHORT).show();
     }
 
     private void warmUpBrowser() {
@@ -393,74 +308,12 @@ public final class LoginActivity extends AppCompatActivity {
         });
     }
 
-    private void createAuthRequest(@Nullable String loginHint) {
-        Log.i(TAG, "Creating auth request for login hint: " + loginHint);
-        AuthorizationRequest.Builder authRequestBuilder = new AuthorizationRequest.Builder(
+    private void createAuthRequest() {
+        authRequest.set(new AuthorizationRequest.Builder(
                 authStateManager.getCurrent().getAuthorizationServiceConfiguration(),
                 clientId.get(),
                 ResponseTypeValues.CODE,
                 authConfiguration.getRedirectUri())
-                .setScope(authConfiguration.getScope());
-
-        if (!TextUtils.isEmpty(loginHint)) {
-            authRequestBuilder.setLoginHint(loginHint);
-        }
-
-        authRequest.set(authRequestBuilder.build());
-    }
-
-    private String getLoginHint() {
-        return ((EditText) findViewById(R.id.login_hint_value))
-                .getText().toString().trim();
-    }
-
-    /**
-     * Responds to changes in the login hint. After a "debounce" delay, warms up the browser
-     * for a request with the new login hint; this avoids constantly re-initializing the
-     * browser while the user is typing.
-     */
-    private final class LoginHintChangeHandler implements TextWatcher {
-        private static final int DEBOUNCE_DELAY_MS = 500;
-
-        private final Handler handler;
-        private RecreateAuthRequestTask task;
-
-        LoginHintChangeHandler() {
-            handler = new Handler(Looper.getMainLooper());
-            task = new RecreateAuthRequestTask();
-        }
-
-        @Override
-        public void beforeTextChanged(CharSequence cs, int start, int count, int after) {
-        }
-
-        @Override
-        public void onTextChanged(CharSequence cs, int start, int before, int count) {
-            task.cancel();
-            task = new RecreateAuthRequestTask();
-            handler.postDelayed(task, DEBOUNCE_DELAY_MS);
-        }
-
-        @Override
-        public void afterTextChanged(Editable ed) {
-        }
-    }
-
-    private final class RecreateAuthRequestTask implements Runnable {
-        private final AtomicBoolean canceled = new AtomicBoolean();
-
-        @Override
-        public void run() {
-            if (canceled.get()) {
-                return;
-            }
-
-            createAuthRequest(getLoginHint());
-            warmUpBrowser();
-        }
-
-        public void cancel() {
-            canceled.set(true);
-        }
+                .setScope(authConfiguration.getScope()).build());
     }
 }

@@ -5,7 +5,7 @@
     <string name="title_activity_poker_game">Poker Game Activity</string>
 
     <string name="keycloak_testing">Keycloak testing</string>
-    <string name="login">Login</string>
+    <string name="login_register">Login / Register</string>
 
     <string name="send_mode_1">Send WebSocket</string>
     <string name="send_mode_2">Send REST</string>

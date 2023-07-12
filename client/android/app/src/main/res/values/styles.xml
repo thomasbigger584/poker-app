@@ -15,4 +15,119 @@
         <item name="android:windowContentOverlay">@null</item>
     </style>
 
+    <!--
+   ************************************************
+   *   TextInputLayout
+   ************************************************
+   -->
+    <style name="AppTheme.App.TextInputLayout" parent="@android:style/TextAppearance">
+        <item name="android:textColor">@color/colorSubtitleGrey</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="TextAppearance.App.TextInputLayout.White" parent="AppTheme.App.TextInputLayout">
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">10sp</item>
+    </style>
+
+    <style name="TextAppearance.App.TextInputLayout.Primary" parent="AppTheme.App.TextInputLayout">
+        <item name="android:textColor">@color/colorPrimary</item>
+        <item name="android:textSize">10sp</item>
+    </style>
+
+    <!--
+    ************************************************
+    *   Buttons
+    ************************************************
+    -->
+    <style name="AppButton">
+        <!--        <item name="android:fontFamily">@font/roboto</item>-->
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">57.65dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:foreground">?attr/selectableItemBackground</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
+    <style name="PrimaryButton" parent="AppButton">
+        <item name="android:background">@drawable/primary_button_selector</item>
+    </style>
+
+    <style name="PrimaryOutlineButton" parent="AppButton">
+        <item name="android:background">@drawable/outline_primary_selector</item>
+        <item name="android:textColor">@drawable/outline_primary_text_color_selector</item>
+    </style>
+
+    <style name="PrimaryLightButton" parent="AppButton">
+        <item name="android:background">@drawable/light_primary_selector</item>
+    </style>
+
+    <style name="PrimaryLightOutlineButton" parent="AppButton">
+        <item name="android:background">@drawable/light_outline_primary_selector</item>
+    </style>
+
+    <!--
+    ************************************************
+    *   EditTexts
+    ************************************************
+    -->
+
+    <style name="AppLoginEditText">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:imeOptions">actionUnspecified</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textColorHint">@android:color/white</item>
+        <item name="android:textCursorDrawable">@null</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+
+    <style name="AppPrimaryEditText" parent="AppLoginEditText">
+        <item name="android:textColor">@color/colorPrimary</item>
+        <item name="android:textColorHint">@color/colorPrimary</item>
+    </style>
+    <!--
+     ************************************************
+     *   TextViews
+     ************************************************
+     -->
+    <style name="AppTextView">
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textColor">@android:color/white</item>
+        <!--        <item name="android:fontFamily">@font/roboto</item>-->
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="LinkTextView" parent="AppTextView">
+        <item name="android:alpha">0.75</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="ToolbarTitleTextView" parent="AppTextView">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <!--        <item name="android:fontFamily">@font/roboto_medium</item>-->
+        <item name="android:gravity">start|center_vertical</item>
+        <item name="android:textSize">18sp</item>
+    </style>
+
+    <!--
+     ************************************************
+     *   Toolbar
+     ************************************************
+     -->
+    <style name="AppToolbar">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">?attr/colorPrimary</item>
+        <item name="android:minHeight">?attr/actionBarSize</item>
+    </style>
+
+    <style name="DotsDarkTheme" parent="@android:style/Widget.DeviceDefault.ActionButton.Overflow">
+        <item name="android:tint">@android:color/white</item>
+    </style>
+
 </resources>
