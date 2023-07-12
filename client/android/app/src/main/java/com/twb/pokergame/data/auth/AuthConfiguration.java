@@ -46,8 +46,8 @@ import okio.Okio;
  * configuration. When a configuration change is detected, the app state is reset.
  */
 public final class AuthConfiguration {
-    private static final String PREFS_NAME = "config";
-    private static final String KEY_LAST_HASH = "lastHash";
+    private static final String PREFS_NAME = "com.twb.pokergame.auth.config";
+    private static final String KEY_LAST_HASH = "com.twb.pokergame.auth.config.lastHash";
     private final Context context;
     private final SharedPreferences prefs;
     private final Resources resources;

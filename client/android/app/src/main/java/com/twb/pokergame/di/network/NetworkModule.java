@@ -8,9 +8,9 @@ import androidx.annotation.NonNull;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializer;
+import com.twb.pokergame.data.retrofit.api.interceptor.AuthInterceptor;
 import com.twb.pokergame.di.network.qualifiers.Authenticated;
 import com.twb.pokergame.di.network.qualifiers.Unauthenticated;
-import com.twb.pokergame.data.retrofit.api.interceptor.AuthInterceptor;
 
 import java.io.File;
 import java.util.Date;

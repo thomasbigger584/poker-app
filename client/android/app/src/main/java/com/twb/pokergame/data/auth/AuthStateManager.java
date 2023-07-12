@@ -34,16 +34,15 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * An example persistence mechanism for an {@link AuthState} instance.
+ * An persistence mechanism for an {@link AuthState} instance.
  * This stores the instance in a shared preferences file, and provides thread-safe access and
  * mutation.
  */
 public class AuthStateManager {
+    private static final String TAG = AuthStateManager.class.getSimpleName();
 
-    private static final String TAG = "AuthStateManager";
-
-    private static final String STORE_NAME = "com.twb.pokergame.data.auth.AuthState.store";
-    private static final String KEY_STATE = "com.twb.pokergame.data.auth.AuthState.key";
+    private static final String STORE_NAME = "com.twb.pokergame.auth.AuthState.store";
+    private static final String KEY_STATE = "com.twb.pokergame.auth.AuthState.keyState";
 
     private final SharedPreferences prefs;
     private final ReentrantLock prefsLock;

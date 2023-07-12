@@ -7,9 +7,9 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.twb.pokergame.data.model.PokerTable;
-import com.twb.pokergame.data.websocket.message.PokerAppWebSocketMessage;
 import com.twb.pokergame.data.websocket.WebSocketClient;
 import com.twb.pokergame.data.websocket.listener.WebSocketLifecycleListener;
+import com.twb.pokergame.data.websocket.message.PokerAppWebSocketMessage;
 import com.twb.pokergame.data.websocket.params.TopicSubscriptionParams;
 import com.twb.pokergame.data.websocket.params.WebSocketConnectionParams;
 import com.twb.stomplib.event.LifecycleEvent;
