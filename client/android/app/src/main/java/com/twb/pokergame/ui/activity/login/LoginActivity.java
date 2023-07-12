@@ -122,8 +122,8 @@ public final class LoginActivity extends AppCompatActivity {
 
     @Override
     protected void onStop() {
-        super.onStop();
         executor.shutdownNow();
+        super.onStop();
     }
 
     @Override

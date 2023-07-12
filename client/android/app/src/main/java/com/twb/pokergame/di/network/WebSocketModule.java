@@ -1,5 +1,7 @@
 package com.twb.pokergame.di.network;
 
+import static com.twb.pokergame.BuildConfig.API_BASE_URL;
+
 import com.twb.pokergame.data.websocket.WebSocketClient;
 
 import javax.inject.Singleton;
@@ -12,11 +14,10 @@ import dagger.hilt.components.SingletonComponent;
 @Module(includes = {NetworkModule.class})
 @InstallIn(SingletonComponent.class)
 public class WebSocketModule {
-    private static final String BASE_URL = "192.168.1.70:8081";
 
     @Provides
     @Singleton
     public WebSocketClient webSocketClient() {
-        return new WebSocketClient(BASE_URL);
+        return new WebSocketClient(API_BASE_URL);
     }
 }
