@@ -71,6 +71,8 @@ public final class LoginActivity extends AppCompatActivity {
     private AuthorizationService authService;
     private ExecutorService executor;
 
+    private static final Class<? extends AppCompatActivity> AUTH_COMPLETED_ACTIVITY = TokenActivity.class;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,7 +81,7 @@ public final class LoginActivity extends AppCompatActivity {
         if (authStateManager.getCurrent().isAuthorized()
                 && !authConfiguration.hasConfigurationChanged()) {
             Log.i(TAG, "User is already authenticated, proceeding to token activity");
-            startActivity(new Intent(this, PokerTableActivity.class));
+            startActivity(new Intent(this, AUTH_COMPLETED_ACTIVITY));
             finish();
             return;
         }
@@ -235,7 +237,7 @@ public final class LoginActivity extends AppCompatActivity {
             Log.w(TAG, "Interrupted while waiting for auth intent");
         }
 
-        final Intent completionIntent = new Intent(this, PokerTableActivity.class);
+        final Intent completionIntent = new Intent(this, AUTH_COMPLETED_ACTIVITY);
         final Intent cancelIntent = new Intent(this, LoginActivity.class);
         cancelIntent.putExtra(EXTRA_FAILED, true);
         cancelIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
