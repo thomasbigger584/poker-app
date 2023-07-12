@@ -47,7 +47,13 @@ public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationTo
 
     @SuppressWarnings("unchecked")
     private List<SimpleGrantedAuthority> extractResourceRoles(Jwt jwt) {
+        if (!jwt.hasClaim(RESOURCE_ACCESS)) {
+            return Collections.emptyList();
+        }
         Map<String, Object> resourceAccess = jwt.getClaim(RESOURCE_ACCESS);
+        if (resourceAccess == null) {
+            return Collections.emptyList();
+        }
         if (!resourceAccess.containsKey(properties.getResourceId())) {
             return Collections.emptyList();
         }

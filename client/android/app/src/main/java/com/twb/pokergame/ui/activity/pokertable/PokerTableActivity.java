@@ -23,7 +23,7 @@ import javax.inject.Inject;
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
-public class PokerTableActivityBase extends BaseAuthActivity implements PokerTableAdapter.PokerTableClickListener {
+public class PokerTableActivity extends BaseAuthActivity implements PokerTableAdapter.PokerTableClickListener {
     @Inject
     AuthStateManager authStateManager;
     private PokerTableViewModel viewModel;

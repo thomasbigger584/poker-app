@@ -28,7 +28,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ui.activity.pokertable.PokerTableActivityBase"
+            android:name=".ui.activity.pokertable.PokerTableActivity"
             android:exported="false"
             android:label="@string/title_activity_poker_tables" />
         <activity
