@@ -51,4 +51,20 @@ public class PokerTableActivity extends AppCompatActivity implements PokerTableA
         intent.putExtras(pokerTable.toBundle());
         startActivity(intent);
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.poker_table_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.action_logout) {
+            endSession();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 }
