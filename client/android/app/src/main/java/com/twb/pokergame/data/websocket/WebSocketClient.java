@@ -3,10 +3,10 @@ package com.twb.pokergame.data.websocket;
 import android.annotation.SuppressLint;
 import android.util.Log;
 
+import com.twb.pokergame.data.auth.AuthStateManager;
 import com.twb.pokergame.data.websocket.listener.RequestListener;
 import com.twb.pokergame.data.websocket.listener.WebSocketLifecycleListener;
 import com.twb.pokergame.data.websocket.params.TopicSubscriptionParams;
-import com.twb.pokergame.data.websocket.params.WebSocketConnectionParams;
 import com.twb.stomplib.stomp.StompClient;
 import com.twb.stomplib.stomp.StompClientFactory;
 
@@ -27,25 +27,26 @@ import io.reactivex.schedulers.Schedulers;
 public class WebSocketClient {
     private static final String TAG = WebSocketClient.class.getSimpleName();
     private final String baseUrl;
+    private final AuthStateManager authStateManager;
     private StompClient stompClient;
 
-    public WebSocketClient(String baseUrl) {
+    public WebSocketClient(String baseUrl,
+                           AuthStateManager authStateManager) {
         this.baseUrl = baseUrl;
+        this.authStateManager = authStateManager;
     }
 
-    public void connect(WebSocketConnectionParams params) {
+    public void connect(String endpoint) {
         if (checkStompClient()) {
             disconnect();
         }
-        String connectionUrl = getConnectionUrl(params);
-        this.stompClient = StompClientFactory.createClient(connectionUrl);
+        String url = getConnectionUrl(endpoint);
+        String accessToken = authStateManager.getCurrent().getAccessToken();
+        this.stompClient = StompClientFactory.createClient(url, accessToken);
     }
 
-    public String getConnectionUrl(WebSocketConnectionParams params) {
-        if (params.getToken() == null) {
-            return String.format("ws://%s%s", baseUrl, params.getEndpoint());
-        }
-        return String.format("ws://%s%s?access_token=%s", baseUrl, params.getEndpoint(), params.getToken());
+    public String getConnectionUrl(String endpoint) {
+        return String.format("ws://%s%s", baseUrl, endpoint);
     }
 
     public void subscribe(TopicSubscriptionParams params) {

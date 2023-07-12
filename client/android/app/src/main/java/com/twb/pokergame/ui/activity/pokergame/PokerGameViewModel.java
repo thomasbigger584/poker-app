@@ -11,7 +11,6 @@ import com.twb.pokergame.data.websocket.WebSocketClient;
 import com.twb.pokergame.data.websocket.listener.WebSocketLifecycleListener;
 import com.twb.pokergame.data.websocket.message.PokerAppWebSocketMessage;
 import com.twb.pokergame.data.websocket.params.TopicSubscriptionParams;
-import com.twb.pokergame.data.websocket.params.WebSocketConnectionParams;
 import com.twb.stomplib.event.LifecycleEvent;
 import com.twb.stomplib.stomp.StompMessage;
 
@@ -34,11 +33,8 @@ public class PokerGameViewModel extends ViewModel implements WebSocketLifecycleL
     }
 
     public void connect() {
-        WebSocketConnectionParams params = new WebSocketConnectionParams();
-        params.setEndpoint(WEBSOCKET_ENDPOINT);
-        params.setToken(null);
         try {
-            client.connect(params);
+            client.connect(WEBSOCKET_ENDPOINT);
         } catch (Exception e) {
             errors.postValue(e);
         }

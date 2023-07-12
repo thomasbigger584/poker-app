@@ -60,9 +60,9 @@ public class PokerTableActivity extends BaseAuthActivity implements PokerTableAd
     }
 
     @Override
-    protected void onNotAuthorized(String message, @Nullable Throwable t) {
-        if (t != null) {
-            Toast.makeText(this, message + " " + t.getMessage(), Toast.LENGTH_SHORT).show();
+    protected void onNotAuthorized(String message, @Nullable Throwable throwable) {
+        if (throwable != null) {
+            Toast.makeText(this, message + " " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
         }
