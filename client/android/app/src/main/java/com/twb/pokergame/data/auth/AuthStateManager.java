@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package com.twb.pokergame.ui.activity.login;
+package com.twb.pokergame.data.auth;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -30,7 +30,6 @@ import net.openid.appauth.TokenResponse;
 
 import org.json.JSONException;
 
-import java.lang.ref.WeakReference;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -41,47 +40,33 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class AuthStateManager {
 
-    private static final AtomicReference<WeakReference<AuthStateManager>> INSTANCE_REF =
-            new AtomicReference<>(new WeakReference<>(null));
-
     private static final String TAG = "AuthStateManager";
 
-    private static final String STORE_NAME = "AuthState";
-    private static final String KEY_STATE = "state";
+    private static final String STORE_NAME = "com.twb.pokergame.data.auth.AuthState.store";
+    private static final String KEY_STATE = "com.twb.pokergame.data.auth.AuthState.key";
 
-    private final SharedPreferences mPrefs;
-    private final ReentrantLock mPrefsLock;
-    private final AtomicReference<AuthState> mCurrentAuthState;
+    private final SharedPreferences prefs;
+    private final ReentrantLock prefsLock;
+    private final AtomicReference<AuthState> currentAuthState;
 
-    private AuthStateManager(Context context) {
-        mPrefs = context.getSharedPreferences(STORE_NAME, Context.MODE_PRIVATE);
-        mPrefsLock = new ReentrantLock();
-        mCurrentAuthState = new AtomicReference<>();
+    public AuthStateManager(Context context) {
+        prefs = context.getSharedPreferences(STORE_NAME, Context.MODE_PRIVATE);
+        prefsLock = new ReentrantLock();
+        currentAuthState = new AtomicReference<>();
     }
 
-    @AnyThread
-    public static AuthStateManager getInstance(@NonNull Context context) {
-        AuthStateManager manager = INSTANCE_REF.get().get();
-        if (manager == null) {
-            manager = new AuthStateManager(context.getApplicationContext());
-            INSTANCE_REF.set(new WeakReference<>(manager));
-        }
-
-        return manager;
-    }
-
-    @AnyThread
     @NonNull
+    @AnyThread
     public AuthState getCurrent() {
-        if (mCurrentAuthState.get() != null) {
-            return mCurrentAuthState.get();
+        if (currentAuthState.get() != null) {
+            return currentAuthState.get();
         }
 
         AuthState state = readState();
-        if (mCurrentAuthState.compareAndSet(null, state)) {
+        if (currentAuthState.compareAndSet(null, state)) {
             return state;
         } else {
-            return mCurrentAuthState.get();
+            return currentAuthState.get();
         }
     }
 
@@ -89,7 +74,7 @@ public class AuthStateManager {
     @NonNull
     public AuthState replace(@NonNull AuthState state) {
         writeState(state);
-        mCurrentAuthState.set(state);
+        currentAuthState.set(state);
         return state;
     }
 
@@ -130,9 +115,9 @@ public class AuthStateManager {
     @AnyThread
     @NonNull
     private AuthState readState() {
-        mPrefsLock.lock();
+        prefsLock.lock();
         try {
-            String currentState = mPrefs.getString(KEY_STATE, null);
+            String currentState = prefs.getString(KEY_STATE, null);
             if (currentState == null) {
                 return new AuthState();
             }
@@ -144,15 +129,15 @@ public class AuthStateManager {
                 return new AuthState();
             }
         } finally {
-            mPrefsLock.unlock();
+            prefsLock.unlock();
         }
     }
 
     @AnyThread
     private void writeState(@Nullable AuthState state) {
-        mPrefsLock.lock();
+        prefsLock.lock();
         try {
-            SharedPreferences.Editor editor = mPrefs.edit();
+            SharedPreferences.Editor editor = prefs.edit();
             if (state == null) {
                 editor.remove(KEY_STATE);
             } else {
@@ -163,7 +148,7 @@ public class AuthStateManager {
                 throw new IllegalStateException("Failed to write state to shared prefs");
             }
         } finally {
-            mPrefsLock.unlock();
+            prefsLock.unlock();
         }
     }
 }

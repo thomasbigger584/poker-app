@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package com.twb.pokergame.ui.activity.login;
+package com.twb.pokergame.data.auth;
 
 import android.content.Context;
 import android.content.Intent;
@@ -33,8 +33,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.lang.ref.WeakReference;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 import okio.Buffer;
@@ -47,55 +45,39 @@ import okio.Okio;
  * changes are detected by comparing the hash of the last known configuration to the read
  * configuration. When a configuration change is detected, the app state is reset.
  */
-public final class Configuration {
-
-    private static final String TAG = "Configuration";
-
+public final class AuthConfiguration {
     private static final String PREFS_NAME = "config";
     private static final String KEY_LAST_HASH = "lastHash";
+    private final Context context;
+    private final SharedPreferences prefs;
+    private final Resources resources;
 
-    private static WeakReference<Configuration> sInstance = new WeakReference<>(null);
+    private JSONObject configJson;
+    private String configHash;
+    private String configError;
 
-    private final Context mContext;
-    private final SharedPreferences mPrefs;
-    private final Resources mResources;
+    private String clientId;
+    private String scope;
+    private Uri redirectUri;
+    private Uri endSessionRedirectUri;
+    private Uri discoveryUri;
+    private Uri authEndpointUri;
+    private Uri tokenEndpointUri;
+    private Uri endSessionEndpoint;
+    private Uri registrationEndpointUri;
+    private Uri userInfoEndpointUri;
+    private boolean httpsRequired;
 
-    private JSONObject mConfigJson;
-    private String mConfigHash;
-    private String mConfigError;
-
-    private String mClientId;
-    private String mScope;
-    private Uri mRedirectUri;
-    private Uri mEndSessionRedirectUri;
-    private Uri mDiscoveryUri;
-    private Uri mAuthEndpointUri;
-    private Uri mTokenEndpointUri;
-    private Uri mEndSessionEndpoint;
-    private Uri mRegistrationEndpointUri;
-    private Uri mUserInfoEndpointUri;
-    private boolean mHttpsRequired;
-
-    public Configuration(Context context) {
-        mContext = context;
-        mPrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        mResources = context.getResources();
+    public AuthConfiguration(Context context) {
+        this.context = context;
+        this.prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        this.resources = context.getResources();
 
         try {
             readConfiguration();
         } catch (InvalidConfigurationException ex) {
-            mConfigError = ex.getMessage();
+            configError = ex.getMessage();
         }
-    }
-
-    public static Configuration getInstance(Context context) {
-        Configuration config = sInstance.get();
-        if (config == null) {
-            config = new Configuration(context);
-            sInstance = new WeakReference<Configuration>(config);
-        }
-
-        return config;
     }
 
     /**
@@ -103,14 +85,14 @@ public final class Configuration {
      */
     public boolean hasConfigurationChanged() {
         String lastHash = getLastKnownConfigHash();
-        return !mConfigHash.equals(lastHash);
+        return !configHash.equals(lastHash);
     }
 
     /**
      * Indicates whether the current configuration is valid.
      */
     public boolean isValid() {
-        return mConfigError == null;
+        return configError == null;
     }
 
     /**
@@ -118,7 +100,7 @@ public final class Configuration {
      */
     @Nullable
     public String getConfigurationError() {
-        return mConfigError;
+        return configError;
     }
 
     /**
@@ -126,61 +108,61 @@ public final class Configuration {
      * configuration.
      */
     public void acceptConfiguration() {
-        mPrefs.edit().putString(KEY_LAST_HASH, mConfigHash).apply();
+        prefs.edit().putString(KEY_LAST_HASH, configHash).apply();
     }
 
     @Nullable
     public String getClientId() {
-        return mClientId;
+        return clientId;
     }
 
     @NonNull
     public String getScope() {
-        return mScope;
+        return scope;
     }
 
     @NonNull
     public Uri getRedirectUri() {
-        return mRedirectUri;
+        return redirectUri;
     }
 
     @Nullable
     public Uri getDiscoveryUri() {
-        return mDiscoveryUri;
+        return discoveryUri;
     }
 
     @Nullable
     public Uri getEndSessionRedirectUri() {
-        return mEndSessionRedirectUri;
+        return endSessionRedirectUri;
     }
 
     @Nullable
     public Uri getAuthEndpointUri() {
-        return mAuthEndpointUri;
+        return authEndpointUri;
     }
 
     @Nullable
     public Uri getTokenEndpointUri() {
-        return mTokenEndpointUri;
+        return tokenEndpointUri;
     }
 
     @Nullable
     public Uri getEndSessionEndpoint() {
-        return mEndSessionEndpoint;
+        return endSessionEndpoint;
     }
 
     @Nullable
     public Uri getRegistrationEndpointUri() {
-        return mRegistrationEndpointUri;
+        return registrationEndpointUri;
     }
 
     @Nullable
     public Uri getUserInfoEndpointUri() {
-        return mUserInfoEndpointUri;
+        return userInfoEndpointUri;
     }
 
     public boolean isHttpsRequired() {
-        return mHttpsRequired;
+        return httpsRequired;
     }
 
     public ConnectionBuilder getConnectionBuilder() {
@@ -191,16 +173,16 @@ public final class Configuration {
     }
 
     private String getLastKnownConfigHash() {
-        return mPrefs.getString(KEY_LAST_HASH, null);
+        return prefs.getString(KEY_LAST_HASH, null);
     }
 
     private void readConfiguration() throws InvalidConfigurationException {
         BufferedSource configSource =
-                Okio.buffer(Okio.source(mResources.openRawResource(R.raw.auth_config)));
+                Okio.buffer(Okio.source(resources.openRawResource(R.raw.auth_config)));
         Buffer configData = new Buffer();
         try {
             configSource.readAll(configData);
-            mConfigJson = new JSONObject(configData.readString(StandardCharsets.UTF_8));
+            configJson = new JSONObject(configData.readString(StandardCharsets.UTF_8));
         } catch (IOException ex) {
             throw new InvalidConfigurationException(
                     "Failed to read configuration: " + ex.getMessage());
@@ -209,11 +191,11 @@ public final class Configuration {
                     "Unable to parse configuration: " + ex.getMessage());
         }
 
-        mConfigHash = configData.sha256().base64();
-        mClientId = getConfigString("client_id");
-        mScope = getRequiredConfigString("authorization_scope");
-        mRedirectUri = getRequiredConfigUri("redirect_uri");
-        mEndSessionRedirectUri = getRequiredConfigUri("end_session_redirect_uri");
+        configHash = configData.sha256().base64();
+        clientId = getConfigString("client_id");
+        scope = getRequiredConfigString("authorization_scope");
+        redirectUri = getRequiredConfigUri("redirect_uri");
+        endSessionRedirectUri = getRequiredConfigUri("end_session_redirect_uri");
 
         if (!isRedirectUriRegistered()) {
             throw new InvalidConfigurationException(
@@ -224,28 +206,24 @@ public final class Configuration {
         }
 
         if (getConfigString("discovery_uri") == null) {
-            mAuthEndpointUri = getRequiredConfigWebUri("authorization_endpoint_uri");
+            authEndpointUri = getRequiredConfigWebUri("authorization_endpoint_uri");
 
-            mTokenEndpointUri = getRequiredConfigWebUri("token_endpoint_uri");
-            mUserInfoEndpointUri = getRequiredConfigWebUri("user_info_endpoint_uri");
-            mEndSessionEndpoint = getRequiredConfigUri("end_session_endpoint");
+            tokenEndpointUri = getRequiredConfigWebUri("token_endpoint_uri");
+            userInfoEndpointUri = getRequiredConfigWebUri("user_info_endpoint_uri");
+            endSessionEndpoint = getRequiredConfigUri("end_session_endpoint");
 
-            if (mClientId == null) {
-                mRegistrationEndpointUri = getRequiredConfigWebUri("registration_endpoint_uri");
+            if (clientId == null) {
+                registrationEndpointUri = getRequiredConfigWebUri("registration_endpoint_uri");
             }
         } else {
-            mDiscoveryUri = getRequiredConfigWebUri("discovery_uri");
+            discoveryUri = getRequiredConfigWebUri("discovery_uri");
         }
-
-        mHttpsRequired = mConfigJson.optBoolean("https_required", true);
+        httpsRequired = configJson.optBoolean("https_required", true);
     }
 
     @Nullable
     String getConfigString(String propName) {
-        String value = mConfigJson.optString(propName);
-        if (value == null) {
-            return null;
-        }
+        String value = configJson.optString(propName);
 
         value = value.trim();
         if (TextUtils.isEmpty(value)) {
@@ -314,12 +292,12 @@ public final class Configuration {
         // ensure that the redirect URI declared in the configuration is handled by some activity
         // in the app, by querying the package manager speculatively
         Intent redirectIntent = new Intent();
-        redirectIntent.setPackage(mContext.getPackageName());
+        redirectIntent.setPackage(context.getPackageName());
         redirectIntent.setAction(Intent.ACTION_VIEW);
         redirectIntent.addCategory(Intent.CATEGORY_BROWSABLE);
-        redirectIntent.setData(mRedirectUri);
+        redirectIntent.setData(redirectUri);
 
-        return !mContext.getPackageManager().queryIntentActivities(redirectIntent, 0).isEmpty();
+        return !context.getPackageManager().queryIntentActivities(redirectIntent, 0).isEmpty();
     }
 
     public static final class InvalidConfigurationException extends Exception {

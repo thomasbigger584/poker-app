@@ -25,12 +25,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.twb.pokergame.R;
+import com.twb.pokergame.data.auth.AuthConfiguration;
+import com.twb.pokergame.data.auth.AuthStateManager;
 
 import net.openid.appauth.AppAuthConfiguration;
 import net.openid.appauth.AuthState;
@@ -50,12 +53,14 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
 import okio.Okio;
 
 
@@ -66,50 +71,42 @@ import okio.Okio;
  * additional post-authorization operations if available, such as fetching user info and refreshing
  * access tokens.
  */
+@AndroidEntryPoint
 public class TokenActivity extends AppCompatActivity {
-    private static final String TAG = "TokenActivity";
-
+    private static final String TAG = TokenActivity.class.getSimpleName();
     private static final String KEY_USER_INFO = "userInfo";
-
     private static final int END_SESSION_REQUEST_CODE = 911;
-    private final AtomicReference<JSONObject> mUserInfoJson = new AtomicReference<>();
-    private AuthorizationService mAuthService;
-    private AuthStateManager mStateManager;
-    private ExecutorService mExecutor;
-    private Configuration mConfiguration;
+
+    private final AtomicReference<JSONObject> userInfoJson = new AtomicReference<>();
+    @Inject
+    public AuthStateManager authStateManager;
+    @Inject
+    public AuthConfiguration authConfiguration;
+    private AuthorizationService authService;
+    private ExecutorService executor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        executor = Executors.newSingleThreadExecutor();
 
-        mStateManager = AuthStateManager.getInstance(this);
-        mExecutor = Executors.newSingleThreadExecutor();
-        mConfiguration = Configuration.getInstance(this);
-
-        Configuration config = Configuration.getInstance(this);
-        if (config.hasConfigurationChanged()) {
-            Toast.makeText(
-                            this,
-                            "Configuration change detected",
-                            Toast.LENGTH_SHORT)
-                    .show();
+        if (authConfiguration.hasConfigurationChanged()) {
+            Toast.makeText(this, "Configuration change detected", Toast.LENGTH_SHORT).show();
             signOut();
             return;
         }
 
-        mAuthService = new AuthorizationService(
-                this,
-                new AppAuthConfiguration.Builder()
-                        .setConnectionBuilder(config.getConnectionBuilder())
-                        .setSkipIssuerHttpsCheck(true) // todo: come from json file
-                        .build());
+        authService = new AuthorizationService(this, new AppAuthConfiguration.Builder()
+                .setConnectionBuilder(authConfiguration.getConnectionBuilder())
+                .setSkipIssuerHttpsCheck(!authConfiguration.isHttpsRequired())
+                .build());
 
         setContentView(R.layout.activity_token);
         displayLoading("Restoring state...");
 
         if (savedInstanceState != null) {
             try {
-                mUserInfoJson.set(new JSONObject(savedInstanceState.getString(KEY_USER_INFO)));
+                userInfoJson.set(new JSONObject(savedInstanceState.getString(KEY_USER_INFO)));
             } catch (JSONException ex) {
                 Log.e(TAG, "Failed to parse saved user info JSON, discarding", ex);
             }
@@ -120,11 +117,11 @@ public class TokenActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-        if (mExecutor.isShutdown()) {
-            mExecutor = Executors.newSingleThreadExecutor();
+        if (executor.isShutdown()) {
+            executor = Executors.newSingleThreadExecutor();
         }
 
-        if (mStateManager.getCurrent().isAuthorized()) {
+        if (authStateManager.getCurrent().isAuthorized()) {
             displayAuthorized();
             return;
         }
@@ -135,12 +132,12 @@ public class TokenActivity extends AppCompatActivity {
         AuthorizationException ex = AuthorizationException.fromIntent(getIntent());
 
         if (response != null || ex != null) {
-            mStateManager.updateAfterAuthorization(response, ex);
+            authStateManager.updateAfterAuthorization(response, ex);
         }
 
         if (response != null && response.authorizationCode != null) {
             // authorization code exchange is required
-            mStateManager.updateAfterAuthorization(response, ex);
+            authStateManager.updateAfterAuthorization(response, ex);
             exchangeAuthorizationCode(response);
         } else if (ex != null) {
             displayNotAuthorized("Authorization flow failed: " + ex.getMessage());
@@ -150,21 +147,21 @@ public class TokenActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle state) {
+    protected void onSaveInstanceState(@NonNull Bundle state) {
         super.onSaveInstanceState(state);
         // user info is retained to survive activity restarts, such as when rotating the
         // device or switching apps. This isn't essential, but it helps provide a less
         // jarring UX when these events occur - data does not just disappear from the view.
-        if (mUserInfoJson.get() != null) {
-            state.putString(KEY_USER_INFO, mUserInfoJson.toString());
+        if (userInfoJson.get() != null) {
+            state.putString(KEY_USER_INFO, userInfoJson.toString());
         }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mAuthService.dispose();
-        mExecutor.shutdownNow();
+        authService.dispose();
+        executor.shutdownNow();
     }
 
     @MainThread
@@ -193,7 +190,7 @@ public class TokenActivity extends AppCompatActivity {
         findViewById(R.id.not_authorized).setVisibility(View.GONE);
         findViewById(R.id.loading_container).setVisibility(View.GONE);
 
-        AuthState state = mStateManager.getCurrent();
+        AuthState state = authStateManager.getCurrent();
 
         TextView refreshTokenInfoView = findViewById(R.id.refresh_token_info);
         refreshTokenInfoView.setText((state.getRefreshToken() == null)
@@ -232,7 +229,7 @@ public class TokenActivity extends AppCompatActivity {
         AuthorizationServiceDiscovery discoveryDoc =
                 state.getAuthorizationServiceConfiguration().discoveryDoc;
         if ((discoveryDoc == null || discoveryDoc.getUserinfoEndpoint() == null)
-                && mConfiguration.getUserInfoEndpointUri() == null) {
+                && authConfiguration.getUserInfoEndpointUri() == null) {
             viewProfileButton.setVisibility(View.GONE);
         } else {
             viewProfileButton.setVisibility(View.VISIBLE);
@@ -242,7 +239,7 @@ public class TokenActivity extends AppCompatActivity {
         findViewById(R.id.sign_out).setOnClickListener((View view) -> endSession());
 
         View userInfoCard = findViewById(R.id.userinfo_card);
-        JSONObject userInfo = mUserInfoJson.get();
+        JSONObject userInfo = userInfoJson.get();
         if (userInfo == null) {
             userInfoCard.setVisibility(View.INVISIBLE);
         } else {
@@ -261,7 +258,7 @@ public class TokenActivity extends AppCompatActivity {
 //                            .into((ImageView) findViewById(R.id.userinfo_profile));
                 }
 
-                ((TextView) findViewById(R.id.userinfo_json)).setText(mUserInfoJson.toString());
+                ((TextView) findViewById(R.id.userinfo_json)).setText(userInfoJson.toString());
                 userInfoCard.setVisibility(View.VISIBLE);
             } catch (JSONException ex) {
                 Log.e(TAG, "Failed to read userinfo JSON", ex);
@@ -273,7 +270,7 @@ public class TokenActivity extends AppCompatActivity {
     private void refreshAccessToken() {
         displayLoading("Refreshing access token");
         performTokenRequest(
-                mStateManager.getCurrent().createTokenRefreshRequest(),
+                authStateManager.getCurrent().createTokenRefreshRequest(),
                 this::handleAccessTokenResponse);
     }
 
@@ -291,7 +288,7 @@ public class TokenActivity extends AppCompatActivity {
             AuthorizationService.TokenResponseCallback callback) {
         ClientAuthentication clientAuthentication;
         try {
-            clientAuthentication = mStateManager.getCurrent().getClientAuthentication();
+            clientAuthentication = authStateManager.getCurrent().getClientAuthentication();
         } catch (ClientAuthentication.UnsupportedAuthenticationMethod ex) {
             Log.d(TAG, "Token request cannot be made, client authentication for the token "
                     + "endpoint could not be constructed (%s)", ex);
@@ -299,27 +296,22 @@ public class TokenActivity extends AppCompatActivity {
             return;
         }
 
-        mAuthService.performTokenRequest(
+        authService.performTokenRequest(
                 request,
                 clientAuthentication,
                 callback);
     }
 
     @WorkerThread
-    private void handleAccessTokenResponse(
-            @Nullable TokenResponse tokenResponse,
-            @Nullable AuthorizationException authException) {
-        mStateManager.updateAfterTokenResponse(tokenResponse, authException);
+    private void handleAccessTokenResponse(@Nullable TokenResponse tokenResponse, @Nullable AuthorizationException authException) {
+        authStateManager.updateAfterTokenResponse(tokenResponse, authException);
         runOnUiThread(this::displayAuthorized);
     }
 
     @WorkerThread
-    private void handleCodeExchangeResponse(
-            @Nullable TokenResponse tokenResponse,
-            @Nullable AuthorizationException authException) {
-
-        mStateManager.updateAfterTokenResponse(tokenResponse, authException);
-        if (!mStateManager.getCurrent().isAuthorized()) {
+    private void handleCodeExchangeResponse(@Nullable TokenResponse tokenResponse, @Nullable AuthorizationException authException) {
+        authStateManager.updateAfterTokenResponse(tokenResponse, authException);
+        if (!authStateManager.getCurrent().isAuthorized()) {
             final String message = "Authorization Code exchange failed"
                     + ((authException != null) ? authException.error : "");
 
@@ -339,37 +331,35 @@ public class TokenActivity extends AppCompatActivity {
     @MainThread
     private void fetchUserInfo() {
         displayLoading("Fetching user info");
-        mStateManager.getCurrent().performActionWithFreshTokens(mAuthService, this::fetchUserInfo);
+        authStateManager.getCurrent().performActionWithFreshTokens(authService, this::fetchUserInfo);
     }
 
     @MainThread
     private void fetchUserInfo(String accessToken, String idToken, AuthorizationException ex) {
         if (ex != null) {
             Log.e(TAG, "Token refresh failed when fetching user info");
-            mUserInfoJson.set(null);
+            userInfoJson.set(null);
             runOnUiThread(this::displayAuthorized);
             return;
         }
 
-        AuthorizationServiceDiscovery discovery =
-                mStateManager.getCurrent()
-                        .getAuthorizationServiceConfiguration()
-                        .discoveryDoc;
+        AuthorizationServiceDiscovery discovery = authStateManager
+                .getCurrent().getAuthorizationServiceConfiguration().discoveryDoc;
 
         Uri userInfoEndpoint =
-                mConfiguration.getUserInfoEndpointUri() != null
-                        ? Uri.parse(mConfiguration.getUserInfoEndpointUri().toString())
+                authConfiguration.getUserInfoEndpointUri() != null
+                        ? Uri.parse(authConfiguration.getUserInfoEndpointUri().toString())
                         : Uri.parse(discovery.getUserinfoEndpoint().toString());
 
-        mExecutor.submit(() -> {
+        executor.submit(() -> {
             try {
-                HttpURLConnection conn = mConfiguration.getConnectionBuilder().openConnection(
+                HttpURLConnection conn = authConfiguration.getConnectionBuilder().openConnection(
                         userInfoEndpoint);
                 conn.setRequestProperty("Authorization", "Bearer " + accessToken);
                 conn.setInstanceFollowRedirects(false);
                 String response = Okio.buffer(Okio.source(conn.getInputStream()))
                         .readString(StandardCharsets.UTF_8);
-                mUserInfoJson.set(new JSONObject(response));
+                userInfoJson.set(new JSONObject(response));
             } catch (IOException ioEx) {
                 Log.e(TAG, "Network error when querying userinfo endpoint", ioEx);
                 showSnackbar("Fetching user info failed");
@@ -394,7 +384,7 @@ public class TokenActivity extends AppCompatActivity {
     }
 
     private void displayEndSessionCancelled() {
-        Snackbar.make(findViewById(R.id.coordinator),
+        Snackbar.make(findViewById(R.id.coordinatorLayout),
                         "Sign out canceled",
                         Snackbar.LENGTH_SHORT)
                 .show();
@@ -402,7 +392,7 @@ public class TokenActivity extends AppCompatActivity {
 
     @MainThread
     private void showSnackbar(String message) {
-        Snackbar.make(findViewById(R.id.coordinator),
+        Snackbar.make(findViewById(R.id.coordinatorLayout),
                         message,
                         Snackbar.LENGTH_SHORT)
                 .show();
@@ -410,14 +400,14 @@ public class TokenActivity extends AppCompatActivity {
 
     @MainThread
     private void endSession() {
-        AuthState currentState = mStateManager.getCurrent();
+        AuthState currentState = authStateManager.getCurrent();
         AuthorizationServiceConfiguration config =
                 currentState.getAuthorizationServiceConfiguration();
         if (config.endSessionEndpoint != null) {
-            Intent endSessionIntent = mAuthService.getEndSessionRequestIntent(
+            Intent endSessionIntent = authService.getEndSessionRequestIntent(
                     new EndSessionRequest.Builder(config)
                             .setIdTokenHint(currentState.getIdToken())
-                            .setPostLogoutRedirectUri(mConfiguration.getEndSessionRedirectUri())
+                            .setPostLogoutRedirectUri(authConfiguration.getEndSessionRedirectUri())
                             .build());
             startActivityForResult(endSessionIntent, END_SESSION_REQUEST_CODE);
         } else {
@@ -429,13 +419,12 @@ public class TokenActivity extends AppCompatActivity {
     private void signOut() {
         // discard the authorization and token state, but retain the configuration and
         // dynamic client registration (if applicable), to save from retrieving them again.
-        AuthState currentState = mStateManager.getCurrent();
-        AuthState clearedState =
-                new AuthState(currentState.getAuthorizationServiceConfiguration());
+        AuthState currentState = authStateManager.getCurrent();
+        AuthState clearedState = new AuthState(currentState.getAuthorizationServiceConfiguration());
         if (currentState.getLastRegistrationResponse() != null) {
             clearedState.update(currentState.getLastRegistrationResponse());
         }
-        mStateManager.replace(clearedState);
+        authStateManager.replace(clearedState);
 
         Intent mainIntent = new Intent(this, LoginActivity.class);
         mainIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);

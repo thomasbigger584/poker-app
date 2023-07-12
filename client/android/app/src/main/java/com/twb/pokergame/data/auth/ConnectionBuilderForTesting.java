@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package com.twb.pokergame.ui.activity.login;
+package com.twb.pokergame.data.auth;
 
 import android.annotation.SuppressLint;
 import android.net.Uri;

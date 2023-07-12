@@ -17,56 +17,20 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
         tools:targetApi="34">
-
-
-        <!-- Main activity -->
         <activity
             android:name=".ui.activity.login.LoginActivity"
+            android:exported="true"
             android:theme="@style/AppTheme"
-            android:windowSoftInputMode="stateHidden"
-            android:exported="true">
+            android:windowSoftInputMode="stateHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".ui.activity.login.TokenActivity"
             android:theme="@style/AppTheme"
-            android:windowSoftInputMode="stateHidden" >
-        </activity>
-
-        <!--
-        This activity declaration is merged with the version from the library manifest.
-        It demonstrates how an https redirect can be captured, in addition to or instead of
-        a custom scheme.
-
-        Generally, this should be done in conjunction with an app link declaration for Android M
-        and above, for additional security and an improved user experience. See:
-
-        https://developer.android.com/training/app-links/index.html
-
-        The declaration from the library can be completely replaced by adding
-
-        tools:node="replace"
-
-        To the list of attributes on the activity element.
-        -->
-<!--        todo consider removing this-->
-        <activity
-            android:name="net.openid.appauth.RedirectUriReceiverActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:scheme="https"
-                    android:host="appauth.demo-app.io"
-                    android:path="/oauth2redirect"/>
-            </intent-filter>
-        </activity>
-
+            android:windowSoftInputMode="stateHidden" />
         <activity
             android:name=".ui.activity.pokertable.PokerTableActivity"
             android:exported="false"
@@ -79,5 +43,4 @@
             android:screenOrientation="landscape"
             android:theme="@style/FullscreenTheme" />
     </application>
-
 </manifest>
