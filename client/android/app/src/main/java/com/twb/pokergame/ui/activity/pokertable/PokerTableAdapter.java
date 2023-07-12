@@ -11,14 +11,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.twb.pokergame.R;
 import com.twb.pokergame.data.model.PokerTable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class PokerTableAdapter extends RecyclerView.Adapter<PokerTableAdapter.ViewHolder> {
-    private final List<PokerTable> dataset;
     private final PokerTableClickListener clickListener;
+    private final List<PokerTable> dataset = new ArrayList<>();
 
-    public PokerTableAdapter(List<PokerTable> dataset, PokerTableClickListener clickListener) {
-        this.dataset = dataset;
+    public PokerTableAdapter(PokerTableClickListener clickListener) {
         this.clickListener = clickListener;
     }
 
@@ -54,6 +54,12 @@ public class PokerTableAdapter extends RecyclerView.Adapter<PokerTableAdapter.Vi
     @Override
     public long getItemId(int position) {
         return dataset.get(position).hashCode();
+    }
+
+    public void addAll(List<PokerTable> list) {
+        int sizePrevious = dataset.size();
+        dataset.addAll(list);
+        notifyItemRangeInserted(sizePrevious, dataset.size() - 1);
     }
 
     public interface PokerTableClickListener {

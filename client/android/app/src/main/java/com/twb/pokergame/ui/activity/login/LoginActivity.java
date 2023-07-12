@@ -21,6 +21,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.AnyThread;
 import androidx.annotation.MainThread;
@@ -71,16 +72,21 @@ public final class LoginActivity extends AppCompatActivity {
     private AuthorizationService authService;
     private ExecutorService executor;
 
-    private static final Class<? extends AppCompatActivity> AUTH_COMPLETED_ACTIVITY = TokenActivity.class;
+    private static final Class<? extends AppCompatActivity> AUTH_COMPLETED_ACTIVITY = PokerTableActivity.class;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         executor = Executors.newSingleThreadExecutor();
 
+        Log.i(TAG, "intercept: authStateManager: " + authStateManager.toString());
+
         if (authStateManager.getCurrent().isAuthorized()
                 && !authConfiguration.hasConfigurationChanged()) {
-            Log.i(TAG, "User is already authenticated, proceeding to token activity");
+
+            Toast.makeText(this, "User Already Authenticated", Toast.LENGTH_SHORT).show();
+
+            Log.i(TAG, "User is already authenticated, proceeding to next activity");
             startActivity(new Intent(this, AUTH_COMPLETED_ACTIVITY));
             finish();
             return;

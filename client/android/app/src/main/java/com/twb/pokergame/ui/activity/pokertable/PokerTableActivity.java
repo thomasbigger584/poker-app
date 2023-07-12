@@ -29,13 +29,20 @@ public class PokerTableActivity extends AppCompatActivity implements PokerTableA
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
+        PokerTableAdapter adapter = new PokerTableAdapter(this);
+        recyclerView.setAdapter(adapter);
+
         viewModel = new ViewModelProvider(this).get(PokerTableViewModel.class);
         viewModel.errors.observe(this, error -> {
             Toast.makeText(this, error.getMessage(), Toast.LENGTH_SHORT).show();
         });
-        viewModel.pokerTables.observe(this, dataset -> {
-            recyclerView.setAdapter(new PokerTableAdapter(dataset, PokerTableActivity.this));
-        });
+        viewModel.pokerTables.observe(this, adapter::addAll);
+
+
+        
+
+
+
     }
 
     @Override

@@ -202,6 +202,8 @@ public class TokenActivity extends AppCompatActivity {
                 ? R.string.no_id_token_returned
                 : R.string.id_token_returned);
 
+        Toast.makeText(this, state.getIdToken(), Toast.LENGTH_SHORT).show();
+
         TextView accessTokenInfoView = (TextView) findViewById(R.id.access_token_info);
         if (state.getAccessToken() == null) {
             accessTokenInfoView.setText(R.string.no_access_token_returned);

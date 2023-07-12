@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializer;
+import com.twb.pokergame.data.auth.AuthStateManager;
 import com.twb.pokergame.data.retrofit.api.interceptor.AuthInterceptor;
 import com.twb.pokergame.di.network.qualifiers.Authenticated;
 import com.twb.pokergame.di.network.qualifiers.Unauthenticated;
@@ -31,7 +32,7 @@ import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-@Module
+@Module(includes = AuthModule.class)
 @InstallIn(SingletonComponent.class)
 public class NetworkModule {
     private static final String OKHTTP_CACHE_FILE = "okhttp_cache";
@@ -108,8 +109,8 @@ public class NetworkModule {
 
     @Provides
     @Singleton
-    public AuthInterceptor authInterceptor() {
-        return new AuthInterceptor();
+    public AuthInterceptor authInterceptor(AuthStateManager authStateManager) {
+        return new AuthInterceptor(authStateManager);
     }
 
     @Provides

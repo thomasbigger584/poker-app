@@ -24,7 +24,7 @@ public class WebSecurityConfiguration {
         http.authorizeHttpRequests()
                 .requestMatchers("/public", "/public/**").permitAll()
                 .requestMatchers("/poker-app-ws", "/poker-app-ws/**").permitAll()
-                .requestMatchers("/poker-table", "/poker-table/**").permitAll()
+//                .requestMatchers("/poker-table", "/poker-table/**").permitAll()
                 .requestMatchers("/admin/**", "/admin/**").hasRole(ADMIN)
                 .anyRequest().hasAnyRole(ADMIN, USER);
         http.oauth2ResourceServer()
