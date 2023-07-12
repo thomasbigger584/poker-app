@@ -12,7 +12,7 @@ import dagger.hilt.components.SingletonComponent;
 @Module(includes = {NetworkModule.class})
 @InstallIn(SingletonComponent.class)
 public class WebSocketModule {
-    private static final String BASE_URL = "192.168.0.118:8081";
+    private static final String BASE_URL = "192.168.1.70:8081";
 
     @Provides
     @Singleton

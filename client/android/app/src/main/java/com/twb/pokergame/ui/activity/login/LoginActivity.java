@@ -32,6 +32,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.twb.pokergame.R;
 import com.twb.pokergame.data.auth.AuthConfiguration;
 import com.twb.pokergame.data.auth.AuthStateManager;
+import com.twb.pokergame.ui.activity.pokertable.PokerTableActivity;
 
 import net.openid.appauth.AppAuthConfiguration;
 import net.openid.appauth.AuthState;
@@ -78,7 +79,7 @@ public final class LoginActivity extends AppCompatActivity {
         if (authStateManager.getCurrent().isAuthorized()
                 && !authConfiguration.hasConfigurationChanged()) {
             Log.i(TAG, "User is already authenticated, proceeding to token activity");
-            startActivity(new Intent(this, TokenActivity.class));
+            startActivity(new Intent(this, PokerTableActivity.class));
             finish();
             return;
         }
@@ -234,7 +235,7 @@ public final class LoginActivity extends AppCompatActivity {
             Log.w(TAG, "Interrupted while waiting for auth intent");
         }
 
-        final Intent completionIntent = new Intent(this, TokenActivity.class);
+        final Intent completionIntent = new Intent(this, PokerTableActivity.class);
         final Intent cancelIntent = new Intent(this, LoginActivity.class);
         cancelIntent.putExtra(EXTRA_FAILED, true);
         cancelIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);

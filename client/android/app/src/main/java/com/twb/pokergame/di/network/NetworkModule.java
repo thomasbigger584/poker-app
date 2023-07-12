@@ -32,7 +32,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 @Module
 @InstallIn(SingletonComponent.class)
 public class NetworkModule {
-    private static final String BASE_URL = "http://192.168.0.118:8081";
+    private static final String BASE_URL = "http://192.168.1.70:8081";
 
     private static final String OKHTTP_CACHE_FILE = "okhttp_cache";
     private static final int MAX_CACHE_SIZE = 10 * 1000 * 1000; //10MB Cache
