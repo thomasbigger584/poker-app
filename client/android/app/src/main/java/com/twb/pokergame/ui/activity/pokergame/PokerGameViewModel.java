@@ -77,13 +77,12 @@ public class PokerGameViewModel extends ViewModel {
 
         compositeDisposable.add(dispLifecycle);
 
-        // Receive greetings
-//        Disposable dispTopic = stompClient.topic(String.format(WEBSOCKET_TOPIC, pokerTableId))
         Disposable dispTopic = stompClient.topic("/topic/loops")
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(topicMessage -> {
                     String payloadJson = topicMessage.getPayload();
+                    Log.i(TAG, "connect: message recieved: " + payloadJson);
                     onMessage(mGson.fromJson(payloadJson, WebSocketMessage.class));
                 }, this::onSubscribeError);
 

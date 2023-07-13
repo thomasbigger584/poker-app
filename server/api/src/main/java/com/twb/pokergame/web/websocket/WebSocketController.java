@@ -1,32 +1,62 @@
 package com.twb.pokergame.web.websocket;
 
-import com.twb.pokergame.web.websocket.dto.PokerAppWebSocketMessage;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.twb.pokergame.web.websocket.dto.WebSocketMessage;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
-
-import java.util.Map;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
+@RequestMapping("/")
+@RequiredArgsConstructor
 public class WebSocketController {
     private static final Logger logger = LoggerFactory.getLogger(WebSocketController.class);
 
-//    /*
-//     * Generic message sent to the subscriber.
-//     * Using dot "." in the topic path because rabbitmq doesn't support forward-slash "/" as a separator
-//     */
-//    @MessageMapping("/ws.sendMessage/{pokerTableId}") // send message endpoint
-//    @SendTo("/topic/poker-app-events.{pokerTableId}") // clients subscription endpoint
-//    public PokerAppWebSocketMessage sendMessage(@DestinationVariable String pokerTableId,
-//                                                @Payload PokerAppWebSocketMessage message) {
-//        logger.info("WEBSOCKET (sendMessage) - response to table {} with {}", pokerTableId, message);
-//        return message;
-//    }
+    private final SimpMessagingTemplate template;
+    private final ObjectMapper objectMapper;
+
+    /*
+     * Generic message sent to the subscriber.
+     * Using dot "." in the topic path because rabbitmq doesn't support forward-slash "/" as a separator
+     */
+    @MessageMapping("/ws.sendMessage") // send message endpoint
+    @SendTo("/topic/loops") // clients subscription endpoint
+    public WebSocketMessage sendMessage(@Payload WebSocketMessage message) {
+        logger.info("WEBSOCKET (sendMessage) with {}", message);
+        return message;
+    }
+
+    public void sendMessage() throws Exception {
+        logger.info("sendMessage - start");
+
+        WebSocketMessage message = new WebSocketMessage();
+        message.setType("send-message-type");
+        message.setSender("send-message-sender");
+        message.setContent("send-message-content");
+
+        template.convertAndSend("/topic/loops", objectMapper.writeValueAsString(message));
+
+        logger.info("sendMessage - message sent");
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
 //
 //    /*
 //     * Specific handlers for message sent to the subscriber

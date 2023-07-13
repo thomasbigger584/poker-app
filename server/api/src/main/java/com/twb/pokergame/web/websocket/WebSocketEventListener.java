@@ -1,6 +1,6 @@
 package com.twb.pokergame.web.websocket;
 
-import com.twb.pokergame.web.websocket.dto.PokerAppWebSocketMessage;
+import com.twb.pokergame.web.websocket.dto.WebSocketMessage;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +42,7 @@ public class WebSocketEventListener {
         if (sessionAttributes.containsKey("username")) {
             String username = (String) sessionAttributes.get("username");
 
-            PokerAppWebSocketMessage chatMessage = new PokerAppWebSocketMessage();
+            WebSocketMessage chatMessage = new WebSocketMessage();
             chatMessage.setType("Leave");
             chatMessage.setSender(username);
 

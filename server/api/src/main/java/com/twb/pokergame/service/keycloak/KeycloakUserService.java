@@ -34,7 +34,7 @@ public class KeycloakUserService {
     private UserMapper userMapper;
 
     /*
-     * Synchronizing users in keycloak with the api database on application startup
+     * Synchronizing users api database with those stored in keycloak on application startup
      */
     @PostConstruct
     public void init() {
