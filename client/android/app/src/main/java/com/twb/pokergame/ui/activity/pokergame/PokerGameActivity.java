@@ -8,7 +8,8 @@ import androidx.annotation.Nullable;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.twb.pokergame.R;
-import com.twb.pokergame.data.message.WebSocketMessage;
+import com.twb.pokergame.data.message.GenericTestMessageDTO;
+import com.twb.pokergame.data.message.ServerMessage;
 import com.twb.pokergame.data.model.PokerTable;
 import com.twb.pokergame.ui.activity.login.BaseAuthActivity;
 import com.twb.stomplib.dto.LifecycleEvent;
@@ -52,12 +53,11 @@ public class PokerGameActivity extends BaseAuthActivity implements PokerGameView
     @Override
     public void onOpened(LifecycleEvent event) {
         Log.i(TAG, "onOpened: " + event);
-        WebSocketMessage message = new WebSocketMessage();
-        message.setSender("sender - 1");
-        message.setContent("content - 1");
-        message.setType("PLAYER_CONNECT");
 
-        viewModel.send(message, new PokerGameViewModel.SendListener() {
+        GenericTestMessageDTO message = new GenericTestMessageDTO();
+        message.setMessage("sent from client");
+
+        viewModel.send(pokerTable.getId(), message, new PokerGameViewModel.SendListener() {
             @Override
             public void onSuccess() {
                 Toast.makeText(PokerGameActivity.this, "Successful Send", Toast.LENGTH_LONG).show();
@@ -86,7 +86,7 @@ public class PokerGameActivity extends BaseAuthActivity implements PokerGameView
     }
 
     @Override
-    public void onMessage(WebSocketMessage message) {
+    public void onMessage(GenericTestMessageDTO message) {
         Log.i(TAG, "onMessage: " + message.toString());
     }
 

@@ -1,15 +1,15 @@
 package com.twb.pokergame.web.websocket;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.twb.pokergame.service.game.PokerGameThreadHandler;
-import com.twb.pokergame.web.websocket.message.dto.WebSocketMessageDTO;
+import com.twb.pokergame.web.websocket.message.client.GenericTestMessageDTO;
+import com.twb.pokergame.web.websocket.message.server.ServerMessage;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 @Controller
@@ -19,27 +19,16 @@ public class WebSocketController {
 
     private final PokerGameThreadHandler handler;
 
-    @MessageMapping("/ws.sendMessage") // clients send message to here from outside
-    @SendTo("/topic/loops") // clients subscription endpoint
-    public WebSocketMessageDTO sendMessage(@Payload WebSocketMessageDTO message) {
+    @MessageMapping("/pokerTable/{pokerTableId}/sendMessage") // client hits this endpoint with message
+    @SendTo("/topic/loops.{pokerTableId}") // subscribe and send messages to topic
+    public GenericTestMessageDTO sendMessage(@DestinationVariable("pokerTableId") String pokerTableId,
+                                     @Payload GenericTestMessageDTO message) {
         logger.info("WEBSOCKET (sendMessage) with {}", message);
 
-        handler.onPlayerConnected(null, "username");
+//        handler.onPlayerConnected(pokerTableId, "username");
 
         return message;
     }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 //

@@ -1,7 +1,5 @@
 package com.twb.pokergame.web.websocket;
 
-import com.twb.pokergame.web.websocket.message.dto.MessageType;
-import com.twb.pokergame.web.websocket.message.dto.WebSocketMessageDTO;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

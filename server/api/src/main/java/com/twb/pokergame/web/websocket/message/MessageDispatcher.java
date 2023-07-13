@@ -2,7 +2,7 @@ package com.twb.pokergame.web.websocket.message;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.twb.pokergame.web.websocket.message.dto.WebSocketMessageDTO;
+import com.twb.pokergame.web.websocket.message.server.ServerMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
@@ -10,15 +10,15 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class MessageDispatcher {
-    private static final String TOPIC = "/topic/loops";
+    private static final String TOPIC = "/topic/loops.%s";
 
     private final SimpMessagingTemplate template;
     private final ObjectMapper objectMapper;
 
-    public void send(String pokerTableId, WebSocketMessageDTO message) {
+    public void send(String pokerTableId, ServerMessage message) {
         try {
-            //todo: test not using objectmapper
-            template.convertAndSend(TOPIC, objectMapper.writeValueAsString(message));
+            String destination = String.format(TOPIC, pokerTableId);
+            template.convertAndSend(destination, objectMapper.writeValueAsString(message));
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

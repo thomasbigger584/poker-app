@@ -8,7 +8,8 @@ import androidx.lifecycle.ViewModel;
 import com.google.gson.Gson;
 import com.twb.pokergame.BuildConfig;
 import com.twb.pokergame.data.auth.AuthStateManager;
-import com.twb.pokergame.data.message.WebSocketMessage;
+import com.twb.pokergame.data.message.GenericTestMessageDTO;
+import com.twb.pokergame.data.message.ServerMessage;
 import com.twb.stomplib.dto.LifecycleEvent;
 import com.twb.stomplib.dto.StompHeader;
 import com.twb.stomplib.stomp.Stomp;
@@ -78,13 +79,13 @@ public class PokerGameViewModel extends ViewModel {
 
         compositeDisposable.add(dispLifecycle);
 
-        Disposable dispTopic = stompClient.topic("/topic/loops")
+        Disposable dispTopic = stompClient.topic("/topic/loops." + pokerTableId)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(topicMessage -> {
                     String payloadJson = topicMessage.getPayload();
                     Log.i(TAG, "connect: message received: " + payloadJson);
-                    listener.onMessage(gson.fromJson(payloadJson, WebSocketMessage.class));
+                    listener.onMessage(gson.fromJson(payloadJson, GenericTestMessageDTO.class));
                 }, throwable -> {
                     Log.e(TAG, "connect: subscription error", throwable);
                     listener.onSubscribeError(throwable);
@@ -95,9 +96,10 @@ public class PokerGameViewModel extends ViewModel {
         stompClient.connect(headers);
     }
 
-    public void send(WebSocketMessage message, SendListener listener) {
+    public void send(String pokerTableId, GenericTestMessageDTO message, SendListener listener) {
         String jsonMessage = gson.toJson(message);
-        compositeDisposable.add(stompClient.send("/app/ws.sendMessage", jsonMessage)
+        String destination = String.format("/app/pokerTable/%s/sendMessage", pokerTableId);
+        compositeDisposable.add(stompClient.send(destination, jsonMessage)
                 .compose(applySchedulers())
                 .subscribe(listener::onSuccess, listener::onFailure));
     }
@@ -141,7 +143,7 @@ public class PokerGameViewModel extends ViewModel {
 
         void onFailedServerHeartbeat(LifecycleEvent event);
 
-        void onMessage(WebSocketMessage message);
+        void onMessage(GenericTestMessageDTO message);
 
         void onSubscribeError(Throwable throwable);
     }

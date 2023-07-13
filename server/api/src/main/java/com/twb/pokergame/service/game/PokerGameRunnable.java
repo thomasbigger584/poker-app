@@ -3,8 +3,9 @@ package com.twb.pokergame.service.game;
 import com.twb.pokergame.domain.PokerTable;
 import com.twb.pokergame.repository.PokerTableRepository;
 import com.twb.pokergame.web.websocket.message.MessageDispatcher;
-import com.twb.pokergame.web.websocket.message.dto.MessageType;
-import com.twb.pokergame.web.websocket.message.dto.WebSocketMessageDTO;
+import com.twb.pokergame.web.websocket.message.server.ServerMessageFactory;
+import com.twb.pokergame.web.websocket.message.server.ServerMessageType;
+import com.twb.pokergame.web.websocket.message.server.ServerMessage;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,7 @@ public class PokerGameRunnable implements Runnable {
     private final String pokerTableId;
 
     @Autowired
-    private PokerTableRepository pokerTableRepository;
+    private ServerMessageFactory messageFactory;
 
     @Autowired
     private MessageDispatcher dispatcher;
@@ -32,23 +33,24 @@ public class PokerGameRunnable implements Runnable {
     public void run() {
         logger.info("Starting Game Runnable: {} ", pokerTableId);
 
-        for (int index = 0; index < 30; index++) {
+        for (int index = 0; index < 3000; index++) {
             System.out.println("index = " + index);
             try {
                 Thread.sleep(3000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-
-            List<PokerTable> allPokerTables = pokerTableRepository.findAll();
-            System.out.println(index + " - allPokerTables.size() = " + allPokerTables.size());
-
-            dispatcher.send(pokerTableId, WebSocketMessageDTO.builder()
-                    .type(MessageType.PLAYER_CONNECT).content("poker tables: " + allPokerTables.size())
-                    .sender(String.valueOf(index)).build());
         }
 
 
         logger.info("Finishing Game Runnable: {} ", pokerTableId);
+    }
+
+    public void onPlayerConnected(String username) {
+        logger.info("Game Runnable: Player Connected" + username);
+    }
+
+    public void onPlayerDisconnected(String username) {
+        logger.info("Game Runnable: Player Disconnected" + username);
     }
 }
