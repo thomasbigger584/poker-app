@@ -3,6 +3,6 @@ package com.twb.pokergame.web.websocket.message.client;
 import lombok.Data;
 
 @Data
-public class GenericTestMessageDTO {
+public class CreateChatMessageDTO {
     private String message;
 }

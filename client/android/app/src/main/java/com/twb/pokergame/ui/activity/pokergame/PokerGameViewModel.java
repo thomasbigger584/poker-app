@@ -8,8 +8,8 @@ import androidx.lifecycle.ViewModel;
 import com.google.gson.Gson;
 import com.twb.pokergame.BuildConfig;
 import com.twb.pokergame.data.auth.AuthStateManager;
-import com.twb.pokergame.data.message.GenericTestMessageDTO;
-import com.twb.pokergame.data.message.ServerMessage;
+import com.twb.pokergame.data.message.client.CreateChatMessageDTO;
+import com.twb.pokergame.data.message.server.ServerMessage;
 import com.twb.stomplib.dto.LifecycleEvent;
 import com.twb.stomplib.dto.StompHeader;
 import com.twb.stomplib.stomp.Stomp;
@@ -85,7 +85,7 @@ public class PokerGameViewModel extends ViewModel {
                 .subscribe(topicMessage -> {
                     String payloadJson = topicMessage.getPayload();
                     Log.i(TAG, "connect: message received: " + payloadJson);
-                    listener.onMessage(gson.fromJson(payloadJson, GenericTestMessageDTO.class));
+                    listener.onMessage(gson.fromJson(payloadJson, ServerMessage.class));
                 }, throwable -> {
                     Log.e(TAG, "connect: subscription error", throwable);
                     listener.onSubscribeError(throwable);
@@ -96,9 +96,9 @@ public class PokerGameViewModel extends ViewModel {
         stompClient.connect(headers);
     }
 
-    public void send(String pokerTableId, GenericTestMessageDTO message, SendListener listener) {
+    public void sendChatMessage(String pokerTableId, CreateChatMessageDTO message, SendListener listener) {
         String jsonMessage = gson.toJson(message);
-        String destination = String.format("/app/pokerTable/%s/sendMessage", pokerTableId);
+        String destination = String.format("/app/pokerTable/%s/sendChatMessage", pokerTableId);
         compositeDisposable.add(stompClient.send(destination, jsonMessage)
                 .compose(applySchedulers())
                 .subscribe(listener::onSuccess, listener::onFailure));
@@ -143,7 +143,7 @@ public class PokerGameViewModel extends ViewModel {
 
         void onFailedServerHeartbeat(LifecycleEvent event);
 
-        void onMessage(GenericTestMessageDTO message);
+        void onMessage(ServerMessage message);
 
         void onSubscribeError(Throwable throwable);
     }

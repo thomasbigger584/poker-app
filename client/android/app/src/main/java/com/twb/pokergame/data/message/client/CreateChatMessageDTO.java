@@ -1,6 +1,6 @@
-package com.twb.pokergame.data.message;
+package com.twb.pokergame.data.message.client;
 
-public class GenericTestMessageDTO {
+public class CreateChatMessageDTO {
     private String message;
 
     public String getMessage() {

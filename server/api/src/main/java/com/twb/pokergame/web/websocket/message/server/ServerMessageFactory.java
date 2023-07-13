@@ -1,5 +1,6 @@
 package com.twb.pokergame.web.websocket.message.server;
 
+import com.twb.pokergame.web.websocket.message.server.body.ChatMessageDTO;
 import com.twb.pokergame.web.websocket.message.server.body.PlayerConnectedDTO;
 import com.twb.pokergame.web.websocket.message.server.body.PlayerDisconnectedDTO;
 import org.springframework.stereotype.Component;
@@ -23,6 +24,18 @@ public class ServerMessageFactory {
 
         return ServerMessage.builder()
                 .type(ServerMessageType.PLAYER_DISCONNECTED)
+                .body(dto).build();
+    }
+
+    public ServerMessage chatMessage(String username, String message) {
+        ChatMessageDTO dto = ChatMessageDTO.builder()
+                .username(username)
+                .message(message)
+                .date(System.currentTimeMillis())
+                .build();
+
+        return ServerMessage.builder()
+                .type(ServerMessageType.CHAT)
                 .body(dto).build();
     }
 }
