@@ -1,6 +1,11 @@
 package com.twb.pokergame.configuration.jwt;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.twb.pokergame.domain.User;
+import com.twb.pokergame.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -11,22 +16,22 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationToken> {
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthConverter.class);
     private static final String RESOURCE_ACCESS = "resource_access";
     private static final String ROLES = "roles";
     private static final String AUTHORITY_PREFIX = "ROLE_";
 
     private final JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter;
     private final JwtAuthConverterProperties properties;
+    private final UserRepository userRepository;
+    private final ObjectMapper objectMapper;
 
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
@@ -35,8 +40,7 @@ public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationTo
                 extractResourceRoles(jwt).stream()).collect(Collectors.toList());
 
         JwtAuthenticationToken authToken = new JwtAuthenticationToken(jwt, authorities, getPrincipalClaimName(jwt));
-//        authToken.setDetails(); // todo: can we set more user details here?
-        authToken.setAuthenticated(true);
+        setUserDetails(authToken);
         return authToken;
     }
 
@@ -71,5 +75,17 @@ public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationTo
         return resourceRoles.stream()
                 .map(role -> new SimpleGrantedAuthority(AUTHORITY_PREFIX + role))
                 .collect(Collectors.toList());
+    }
+
+    private void setUserDetails(JwtAuthenticationToken authToken) {
+        try {
+            Optional<User> userOpt = userRepository.findByUsername(authToken.getName());
+            if (userOpt.isPresent()) {
+                authToken.setDetails(objectMapper.writeValueAsString(userOpt.get()));
+                authToken.setAuthenticated(true);
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to retrieve user to populate the authentication token details");
+        }
     }
 }
