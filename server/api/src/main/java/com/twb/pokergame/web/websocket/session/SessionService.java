@@ -1,4 +1,4 @@
-package com.twb.pokergame.web.websocket;
+package com.twb.pokergame.web.websocket.session;
 
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;

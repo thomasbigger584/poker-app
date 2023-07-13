@@ -5,7 +5,6 @@ import lombok.Data;
 
 @Data
 @Builder
-public class ChatMessageDTO {
-    private String username;
+public class LogMessageDTO {
     private String message;
 }

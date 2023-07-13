@@ -38,11 +38,15 @@ public class KeycloakUserService {
      */
     @PostConstruct
     public void init() {
+        logger.info("Synchronizing Keycloak users...");
         List<UserRepresentation> userMembers = userGroupResource.members();
         List<User> databaseUsersFetched = new ArrayList<>(userRepository.findAll());
 
+        int updatedUsers = 0;
+        int createdUsers = 0;
+
         for (UserRepresentation representation : userMembers) {
-            logger.info("Keycloak Users: " + ReflectionToStringBuilder.toString(representation, ToStringStyle.JSON_STYLE));
+            logger.info(ReflectionToStringBuilder.toString(representation, ToStringStyle.JSON_STYLE));
 
             UUID id = UUID.fromString(representation.getId());
             Optional<User> userOpt = userRepository.findById(id);
@@ -50,11 +54,15 @@ public class KeycloakUserService {
                 User user = userOpt.get();
                 logger.info("User {} already exists in database - todo: consider updating user here", user.getId());
                 databaseUsersFetched.remove(user);
+                updatedUsers++;
             } else {
                 User user = userMapper.representationToModel(representation);
                 userRepository.save(user);
+                createdUsers++;
             }
         }
         userRepository.deleteAll(databaseUsersFetched);
+        logger.info("Keycloak user sync completed. " +
+                "Updated: {}, Created: {}, Deleted: {}", updatedUsers, createdUsers, databaseUsersFetched.size());
     }
 }

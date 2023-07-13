@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 @RequiredArgsConstructor
 public class MessageDispatcher {
@@ -16,7 +18,7 @@ public class MessageDispatcher {
     private final SimpMessagingTemplate template;
     private final ObjectMapper objectMapper;
 
-    public void send(String pokerTableId, ServerMessage message) {
+    public void send(UUID pokerTableId, ServerMessage message) {
         try {
             String destination = String.format(TOPIC, pokerTableId);
             template.convertAndSend(destination, objectMapper.writeValueAsString(message));

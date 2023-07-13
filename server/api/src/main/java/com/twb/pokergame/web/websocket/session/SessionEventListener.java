@@ -1,6 +1,6 @@
-package com.twb.pokergame.web.websocket;
+package com.twb.pokergame.web.websocket.session;
 
-import com.twb.pokergame.service.game.PokerGameThreadHandler;
+import com.twb.pokergame.service.game.PokerGameService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,10 +16,10 @@ import java.util.Optional;
 // Generic websocket connect/disconnect. This gets called when the session is created
 @Component
 @RequiredArgsConstructor
-public class WebSocketEventListener {
-    private static final Logger logger = LoggerFactory.getLogger(WebSocketEventListener.class);
+public class SessionEventListener {
+    private static final Logger logger = LoggerFactory.getLogger(SessionEventListener.class);
     private final SessionService sessionService;
-    private final PokerGameThreadHandler threadHandler;
+    private final PokerGameService gameService;
 
     @EventListener
     public void handleWebSocketConnectListener(SessionConnectedEvent event) {
@@ -40,6 +40,6 @@ public class WebSocketEventListener {
             logger.warn("Session disconnect cannot disconnect player as no poker table id found on session");
             return;
         }
-        threadHandler.onPlayerDisconnected(pokerTableIdOpt.get(), principal.getName());
+        gameService.onPlayerDisconnected(pokerTableIdOpt.get(), principal.getName());
     }
 }
