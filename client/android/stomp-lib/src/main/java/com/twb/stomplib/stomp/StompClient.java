@@ -4,7 +4,12 @@ import android.annotation.SuppressLint;
 import android.util.Log;
 
 import com.twb.stomplib.connection.ConnectionProvider;
-import com.twb.stomplib.event.LifecycleEvent;
+import com.twb.stomplib.dto.LifecycleEvent;
+import com.twb.stomplib.dto.StompCommand;
+import com.twb.stomplib.dto.StompHeader;
+import com.twb.stomplib.dto.StompMessage;
+import com.twb.stomplib.pathmatcher.PathMatcher;
+import com.twb.stomplib.pathmatcher.SimplePathMatcher;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,6 +21,8 @@ import io.reactivex.BackpressureStrategy;
 import io.reactivex.Completable;
 import io.reactivex.CompletableSource;
 import io.reactivex.Flowable;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.annotations.Nullable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.BehaviorSubject;
 import io.reactivex.subjects.PublishSubject;
@@ -23,44 +30,34 @@ import io.reactivex.subjects.PublishSubject;
 @SuppressLint("CheckResult")
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class StompClient {
-    public static final String SUPPORTED_VERSIONS = "1.1,1.0";
-    public static final String DEFAULT_ACK = "auto";
+
     private static final String TAG = StompClient.class.getSimpleName();
+
+    public static final String SUPPORTED_VERSIONS = "1.1,1.2";
+    public static final String DEFAULT_ACK = "auto";
+
     private final ConnectionProvider connectionProvider;
-    private final BehaviorSubject<Boolean> connectionStream;
-    private final PublishSubject<StompMessage> messageStream;
-    private final ConcurrentHashMap<String, Flowable<StompMessage>> streamMap;
     private ConcurrentHashMap<String, String> topics;
-    private boolean connected;
-    private boolean connecting;
     private boolean legacyWhitespace;
-    private Parser parser;
+
+    private PublishSubject<StompMessage> messageStream;
+    private BehaviorSubject<Boolean> connectionStream;
+    private ConcurrentHashMap<String, Flowable<StompMessage>> streamMap;
+    private PathMatcher pathMatcher;
     private Disposable lifecycleDisposable;
     private Disposable messagesDisposable;
+    private PublishSubject<LifecycleEvent> lifecyclePublishSubject;
     private List<StompHeader> headers;
-    private int heartbeat;
+    private HeartBeatTask heartBeatTask;
 
     public StompClient(ConnectionProvider connectionProvider) {
         this.connectionProvider = connectionProvider;
-        this.messageStream = PublishSubject.create();
-        this.streamMap = new ConcurrentHashMap<>();
-        this.connectionStream = BehaviorSubject.createDefault(false);
-        this.parser = Parser.NONE;
-    }
-
-    /**
-     * Set the wildcard parser for Topic subscription.
-     * <p>
-     * Right now, the only options are NONE and RABBITMQ.
-     * <p>
-     * When set to RABBITMQ, topic subscription allows for RMQ-style wildcards.
-     * <p>
-     * See more info <a href="https://www.rabbitmq.com/tutorials/tutorial-five-java.html">here</a>.
-     *
-     * @param parser Set to NONE by default
-     */
-    public void setParser(Parser parser) {
-        this.parser = parser;
+        streamMap = new ConcurrentHashMap<>();
+        lifecyclePublishSubject = PublishSubject.create();
+        pathMatcher = new SimplePathMatcher();
+        heartBeatTask = new HeartBeatTask(this::sendHeartBeat, () -> {
+            lifecyclePublishSubject.onNext(new LifecycleEvent(LifecycleEvent.Type.FAILED_SERVER_HEARTBEAT));
+        });
     }
 
     /**
@@ -70,9 +67,21 @@ public class StompClient {
      *
      * @param ms heartbeat time in milliseconds
      */
-    public void setHeartbeat(int ms) {
-        heartbeat = ms;
-        connectionProvider.setHeartbeat(ms).subscribe();
+    public StompClient withServerHeartbeat(int ms) {
+        heartBeatTask.setServerHeartbeat(ms);
+        return this;
+    }
+
+    /**
+     * Sets the heartbeat interval that client propose to send.
+     * <p>
+     * Not very useful yet, because we don't have any heartbeat logic on our side.
+     *
+     * @param ms heartbeat time in milliseconds
+     */
+    public StompClient withClientHeartbeat(int ms) {
+        heartBeatTask.setClientHeartbeat(ms);
+        return this;
     }
 
     /**
@@ -85,56 +94,72 @@ public class StompClient {
     /**
      * Connect to websocket. If already connected, this will silently fail.
      *
-     * @param headers HTTP headers to send in the INITIAL REQUEST, i.e. during the protocol upgrade
+     * @param _headers HTTP headers to send in the INITIAL REQUEST, i.e. during the protocol upgrade
      */
-    public void connect(List<StompHeader> headers) {
-        if (connected) {
+    public void connect(@Nullable List<StompHeader> _headers) {
+
+        Log.d(TAG, "Connect");
+
+        this.headers = _headers;
+
+        if (isConnected()) {
+            Log.d(TAG, "Already connected, ignore");
             return;
         }
-
-        this.headers = headers;
         lifecycleDisposable = connectionProvider.lifecycle()
                 .subscribe(lifecycleEvent -> {
                     switch (lifecycleEvent.getType()) {
                         case OPENED:
-                            List<StompHeader> stompHeaders = new ArrayList<>();
-                            stompHeaders.add(new StompHeader(StompHeader.VERSION, SUPPORTED_VERSIONS));
-                            stompHeaders.add(new StompHeader(StompHeader.HEART_BEAT, "0," + heartbeat));
-                            if (this.headers != null) {
-                                stompHeaders.addAll(this.headers);
-                            }
+                            List<StompHeader> headers = new ArrayList<>();
+                            headers.add(new StompHeader(StompHeader.VERSION, SUPPORTED_VERSIONS));
+                            headers.add(new StompHeader(StompHeader.HEART_BEAT,
+                                    heartBeatTask.getClientHeartbeat() + "," + heartBeatTask.getServerHeartbeat()));
 
-                            StompMessage stompMessage = new StompMessage(StompCommand.CONNECT, stompHeaders, null);
-                            String messageStr = stompMessage.compile(legacyWhitespace);
-                            connectionProvider.send(messageStr).subscribe();
+                            if (_headers != null) headers.addAll(_headers);
+
+                            connectionProvider.send(new StompMessage(StompCommand.CONNECT, headers, null).compile(legacyWhitespace))
+                                    .subscribe(() -> {
+                                        Log.d(TAG, "Publish open");
+                                        lifecyclePublishSubject.onNext(lifecycleEvent);
+                                    });
                             break;
+
                         case CLOSED:
-                            setConnected(false);
-                            connecting = false;
+                            Log.d(TAG, "Socket closed");
+                            disconnect();
                             break;
+
                         case ERROR:
-                            setConnected(false);
-                            connecting = false;
+                            Log.d(TAG, "Socket closed with error");
+                            lifecyclePublishSubject.onNext(lifecycleEvent);
                             break;
                     }
                 });
 
-        connecting = true;
         messagesDisposable = connectionProvider.messages()
                 .map(StompMessage::from)
-                .doOnNext(this::callSubscribers)
-                .filter(message -> message.getCommand().equals(StompCommand.CONNECTED))
+                .filter(heartBeatTask::consumeHeartBeat)
+                .doOnNext(getMessageStream()::onNext)
+                .filter(msg -> msg.getStompCommand().equals(StompCommand.CONNECTED))
                 .subscribe(stompMessage -> {
-                    setConnected(true);
-                    connecting = false;
+                    getConnectionStream().onNext(true);
+                }, onError -> {
+                    Log.e(TAG, "Error parsing message", onError);
                 });
     }
 
-    /**
-     * Disconnect from server, and then reconnect with the last-used headers
-     */
-    public void reconnect() {
-        disconnectCompletable().subscribe(() -> connect(headers), exception -> Log.e(TAG, "Disconnect error", exception));
+    synchronized private BehaviorSubject<Boolean> getConnectionStream() {
+        if (connectionStream == null || connectionStream.hasComplete()) {
+            connectionStream = BehaviorSubject.createDefault(false);
+        }
+        return connectionStream;
+    }
+
+    synchronized private PublishSubject<StompMessage> getMessageStream() {
+        if (messageStream == null || messageStream.hasComplete()) {
+            messageStream = PublishSubject.create();
+        }
+        return messageStream;
     }
 
     public Completable send(String destination) {
@@ -142,59 +167,148 @@ public class StompClient {
     }
 
     public Completable send(String destination, String data) {
-        List<StompHeader> headers = Collections.singletonList(new StompHeader(StompHeader.DESTINATION, destination));
-        StompMessage message = new StompMessage(StompCommand.SEND, headers, data);
-        return send(message);
+        return send(new StompMessage(
+                StompCommand.SEND,
+                Collections.singletonList(new StompHeader(StompHeader.DESTINATION, destination)),
+                data));
     }
 
-    public Completable send(StompMessage stompMessage) {
-        String messageStr = stompMessage.compile(legacyWhitespace);
-        Completable completable = connectionProvider.send(messageStr);
-        CompletableSource connectionComplete = connectionStream
+    public Completable send(@NonNull StompMessage stompMessage) {
+        Completable completable = connectionProvider.send(stompMessage.compile(legacyWhitespace));
+        CompletableSource connectionComplete = getConnectionStream()
                 .filter(isConnected -> isConnected)
-                .firstOrError().ignoreElement();
-        return completable.startWith(connectionComplete);
+                .firstElement().ignoreElement();
+        return completable
+                .startWith(connectionComplete);
     }
 
-    private void callSubscribers(StompMessage stompMessage) {
-        messageStream.onNext(stompMessage);
+    @SuppressLint("CheckResult")
+    private void sendHeartBeat(@NonNull String pingMessage) {
+        Completable completable = connectionProvider.send(pingMessage);
+        CompletableSource connectionComplete = getConnectionStream()
+                .filter(isConnected -> isConnected)
+                .firstElement().ignoreElement();
+        completable.startWith(connectionComplete)
+                .onErrorComplete()
+                .subscribe();
     }
 
     public Flowable<LifecycleEvent> lifecycle() {
-        return connectionProvider.lifecycle().toFlowable(BackpressureStrategy.BUFFER);
+        return lifecyclePublishSubject.toFlowable(BackpressureStrategy.BUFFER);
     }
 
+    /**
+     * Disconnect from server, and then reconnect with the last-used headers
+     */
+    @SuppressLint("CheckResult")
+    public void reconnect() {
+        disconnectCompletable()
+                .subscribe(() -> connect(headers),
+                        e -> Log.e(TAG, "Disconnect error", e));
+    }
 
+    @SuppressLint("CheckResult")
     public void disconnect() {
         disconnectCompletable().subscribe(() -> {
-        }, exception -> Log.e(TAG, "Disconnect error", exception));
+        }, e -> Log.e(TAG, "Disconnect error", e));
     }
 
     public Completable disconnectCompletable() {
+
+        heartBeatTask.shutdown();
+
         if (lifecycleDisposable != null) {
             lifecycleDisposable.dispose();
         }
         if (messagesDisposable != null) {
             messagesDisposable.dispose();
         }
+
         return connectionProvider.disconnect()
-                .doOnComplete(() -> setConnected(false));
+                .doFinally(() -> {
+                    Log.d(TAG, "Stomp disconnected");
+                    getConnectionStream().onComplete();
+                    getMessageStream().onComplete();
+                    lifecyclePublishSubject.onNext(new LifecycleEvent(LifecycleEvent.Type.CLOSED));
+                });
     }
 
     public Flowable<StompMessage> topic(String destinationPath) {
         return topic(destinationPath, null);
     }
 
-    public Flowable<StompMessage> topic(String destPath, List<StompHeader> headerList) {
-        if (!streamMap.containsKey(destPath)) {
-            streamMap.put(destPath, messageStream
-                    .filter(msg -> matches(destPath, msg))
-                    .toFlowable(BackpressureStrategy.BUFFER)
-                    .doOnSubscribe(disposable -> subscribePath(destPath, headerList).subscribe())
-                    .doFinally(() -> unsubscribePath(destPath).subscribe())
-                    .share());
-        }
+    public Flowable<StompMessage> topic(@NonNull String destPath, List<StompHeader> headerList) {
+        if (destPath == null)
+            return Flowable.error(new IllegalArgumentException("Topic path cannot be null"));
+        else if (!streamMap.containsKey(destPath))
+            streamMap.put(destPath,
+                    Completable.defer(() -> subscribePath(destPath, headerList)).andThen(
+                            getMessageStream()
+                                    .filter(msg -> pathMatcher.matches(destPath, msg))
+                                    .toFlowable(BackpressureStrategy.BUFFER)
+                                    .doFinally(() -> unsubscribePath(destPath).subscribe())
+                                    .share())
+            );
         return streamMap.get(destPath);
+    }
+
+    private Completable subscribePath(String destinationPath, @Nullable List<StompHeader> headerList) {
+        String topicId = UUID.randomUUID().toString();
+
+        if (topics == null) topics = new ConcurrentHashMap<>();
+
+        // Only continue if we don't already have a subscription to the topic
+        if (topics.containsKey(destinationPath)) {
+            Log.d(TAG, "Attempted to subscribe to already-subscribed path!");
+            return Completable.complete();
+        }
+
+        topics.put(destinationPath, topicId);
+        List<StompHeader> headers = new ArrayList<>();
+        headers.add(new StompHeader(StompHeader.ID, topicId));
+        headers.add(new StompHeader(StompHeader.DESTINATION, destinationPath));
+        headers.add(new StompHeader(StompHeader.ACK, DEFAULT_ACK));
+        if (headerList != null) headers.addAll(headerList);
+        return send(new StompMessage(StompCommand.SUBSCRIBE,
+                headers, null))
+                .doOnError(throwable -> unsubscribePath(destinationPath).subscribe());
+    }
+
+
+    private Completable unsubscribePath(String dest) {
+        streamMap.remove(dest);
+
+        String topicId = topics.get(dest);
+
+        if (topicId == null) {
+            return Completable.complete();
+        }
+
+        topics.remove(dest);
+
+        Log.d(TAG, "Unsubscribe path: " + dest + " id: " + topicId);
+
+        return send(new StompMessage(StompCommand.UNSUBSCRIBE,
+                Collections.singletonList(new StompHeader(StompHeader.ID, topicId)), null)).onErrorComplete();
+    }
+
+    /**
+     * Set the wildcard or other matcher for Topic subscription.
+     * <p>
+     * Right now, the only options are simple, rmq supported.
+     * But you can write you own matcher by implementing {@link PathMatcher}
+     * <p>
+     * When set to {@link ua.naiksoftware.stomp.pathmatcher.RabbitPathMatcher}, topic subscription allows for RMQ-style wildcards.
+     * <p>
+     *
+     * @param pathMatcher Set to {@link SimplePathMatcher} by default
+     */
+    public void setPathMatcher(PathMatcher pathMatcher) {
+        this.pathMatcher = pathMatcher;
+    }
+
+    public boolean isConnected() {
+        return getConnectionStream().getValue();
     }
 
     /**
@@ -212,115 +326,10 @@ public class StompClient {
         this.legacyWhitespace = legacyWhitespace;
     }
 
-
-    //todo: this may be greatly simplified as we only use NONE
-    private boolean matches(String path, StompMessage msg) {
-        String dest = msg.findHeader(StompHeader.DESTINATION);
-        if (dest == null) {
-            return false;
-        }
-
-        boolean ret;
-
-        switch (parser) {
-            case NONE:
-                ret = path.equals(dest);
-                break;
-
-            case RABBITMQ:
-                // for example string "lorem.ipsum.*.sit":
-
-                // split it up into ["lorem", "ipsum", "*", "sit"]
-                String[] split = path.split("\\.");
-                ArrayList<String> transformed = new ArrayList<>();
-                // check for wildcards and replace with corresponding regex
-                for (String s : split) {
-                    switch (s) {
-                        case "*":
-                            transformed.add("[^.]+");
-                            break;
-                        case "#":
-                            // TODO: make this work with zero-word
-                            // e.g. "lorem.#.dolor" should ideally match "lorem.dolor"
-                            transformed.add(".*");
-                            break;
-                        default:
-                            transformed.add(s);
-                            break;
-                    }
-                }
-                // at this point, 'transformed' looks like ["lorem", "ipsum", "[^.]+", "sit"]
-                StringBuilder sb = new StringBuilder();
-                for (String s : transformed) {
-                    if (sb.length() > 0) sb.append("\\.");
-                    sb.append(s);
-                }
-                String join = sb.toString();
-                // join = "lorem\.ipsum\.[^.]+\.sit"
-
-                ret = dest.matches(join);
-                break;
-
-            default:
-                ret = false;
-                break;
-        }
-
-        return ret;
-    }
-
-    private Completable subscribePath(String destinationPath, List<StompHeader> headerList) {
-        String topicId = UUID.randomUUID().toString();
-
-        if (topics == null) {
-            topics = new ConcurrentHashMap<>();
-        }
-
-        // Only continue if we don't already have a subscription to the topic
-        if (topics.containsKey(destinationPath)) {
-            Log.d(TAG, "Attempted to subscribe to already-subscribed path!");
-            return Completable.complete();
-        }
-
-        topics.put(destinationPath, topicId);
-        List<StompHeader> headers = new ArrayList<>();
-        headers.add(new StompHeader(StompHeader.ID, topicId));
-        headers.add(new StompHeader(StompHeader.DESTINATION, destinationPath));
-        headers.add(new StompHeader(StompHeader.ACK, DEFAULT_ACK));
-        if (headerList != null) {
-            headers.addAll(headerList);
-        }
-
-        return send(new StompMessage(StompCommand.SUBSCRIBE, headers));
-    }
-
-    private Completable unsubscribePath(String dest) {
-        streamMap.remove(dest);
-
-        String topicId = topics.get(dest);
-        topics.remove(dest);
-
-        Log.d(TAG, "Unsubscribe path: " + dest + " id: " + topicId);
-
-        List<StompHeader> headers = Collections.singletonList(new StompHeader(StompHeader.ID, topicId));
-        return send(new StompMessage(StompCommand.UNSUBSCRIBE, headers));
-    }
-
-    public boolean isConnected() {
-        return connected;
-    }
-
-    private void setConnected(boolean connected) {
-        this.connected = connected;
-        connectionStream.onNext(this.connected);
-    }
-
-    public boolean isConnecting() {
-        return connecting;
-    }
-
-    public enum Parser {
-        NONE,
-        RABBITMQ
+    /** returns the to topic (subscription id) corresponding to a given destination
+     * @param dest the destination
+     * @return the topic (subscription id) or null if no topic corresponds to the destination */
+    public String getTopicId(String dest) {
+        return topics.get(dest);
     }
 }

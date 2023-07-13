@@ -15,19 +15,29 @@ import static com.twb.pokergame.configuration.Constants.USER;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-public class WebSecurityConfiguration {
+public class SecurityConfiguration {
     private final JwtAuthConverter jwtAuthConverter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         //todo: fix this
         http.authorizeHttpRequests()
+
+                // public endpoint
                 .requestMatchers("/public", "/public/**").permitAll()
-//                .requestMatchers("/poker-app-ws", "/poker-app-ws/**").permitAll()
+
+                // websocket endpoints
+                .requestMatchers("/looping").hasAuthority(USER)
+                .requestMatchers("/looping/**").permitAll()
+
+                //everything else
                 .requestMatchers("/poker-table/send-message").permitAll()
-//                .requestMatchers("/poker-table", "/poker-table/**").permitAll()
+
+                //admin endpoints
                 .requestMatchers("/admin", "/admin/**").hasRole(ADMIN)
-                .anyRequest().hasAnyRole(ADMIN, USER);
+
+                //catch-all
+                .anyRequest().hasAnyRole(ADMIN, USER).and();
         http.oauth2ResourceServer()
                 .jwt()
                 .jwtAuthenticationConverter(jwtAuthConverter);

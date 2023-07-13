@@ -1,6 +1,6 @@
-package com.twb.pokergame.data.websocket.message;
+package com.twb.pokergame.data.message;
 
-public class PokerAppWebSocketMessage {
+public class WebSocketMessage {
     private String type;
     private String content;
     private String sender;

@@ -15,8 +15,8 @@ import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
-public class PokerAppWebSocketEventListener {
-    private static final Logger logger = LoggerFactory.getLogger(PokerAppWebSocketEventListener.class);
+public class WebSocketEventListener {
+    private static final Logger logger = LoggerFactory.getLogger(WebSocketEventListener.class);
 
     private final SimpMessageSendingOperations messagingTemplate;
 

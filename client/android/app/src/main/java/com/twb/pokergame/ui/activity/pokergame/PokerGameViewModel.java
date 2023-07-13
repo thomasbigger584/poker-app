@@ -6,73 +6,111 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.twb.pokergame.data.model.PokerTable;
-import com.twb.pokergame.data.websocket.WebSocketClient;
-import com.twb.pokergame.data.websocket.listener.WebSocketLifecycleListener;
-import com.twb.pokergame.data.websocket.message.PokerAppWebSocketMessage;
-import com.twb.pokergame.data.websocket.params.TopicSubscriptionParams;
-import com.twb.stomplib.event.LifecycleEvent;
-import com.twb.stomplib.stomp.StompMessage;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.twb.pokergame.BuildConfig;
+import com.twb.pokergame.data.auth.AuthStateManager;
+import com.twb.pokergame.data.message.WebSocketMessage;
+import com.twb.stomplib.dto.StompHeader;
+import com.twb.stomplib.stomp.Stomp;
+import com.twb.stomplib.stomp.StompClient;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 @HiltViewModel
-public class PokerGameViewModel extends ViewModel implements WebSocketLifecycleListener {
+public class PokerGameViewModel extends ViewModel {
     private static final String TAG = PokerGameViewModel.class.getSimpleName();
-    private static final String WEBSOCKET_TOPIC = "/topic/poker-app-events.%s";
-    private static final String WEBSOCKET_ENDPOINT = "/poker-app-ws/websocket";
+
     public final MutableLiveData<Throwable> errors = new MutableLiveData<>();
-    public final LiveData<PokerAppWebSocketMessage> messages = new MutableLiveData<>();
-    private final WebSocketClient client;
+    public final LiveData<WebSocketMessage> messages = new MutableLiveData<>();
+    private final AuthStateManager authStateManager;
+    private StompClient stompClient;
+    private Gson mGson = new GsonBuilder().create();
+    private Disposable mRestPingDisposable;
+    private CompositeDisposable compositeDisposable;
 
     @Inject
-    public PokerGameViewModel(WebSocketClient client) {
-        this.client = client;
+    public PokerGameViewModel(AuthStateManager authStateManager) {
+        this.authStateManager = authStateManager;
     }
 
-    public void connect() {
-        try {
-            client.connect(WEBSOCKET_ENDPOINT);
-        } catch (Exception e) {
-            errors.postValue(e);
-            throw new RuntimeException("Failed to connec to websocket endpoint: " + WEBSOCKET_ENDPOINT, e);
+    public void connect(String pokerTableId) {
+        String accessToken = authStateManager.getCurrent().getAccessToken();
+        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, "ws://" + BuildConfig.API_BASE_URL + "/looping/websocket");
+
+        List<StompHeader> headers = new ArrayList<>();
+        headers.add(new StompHeader("X-Authorization", "Bearer " + accessToken));
+
+        stompClient.withClientHeartbeat(1000).withServerHeartbeat(1000);
+
+        resetSubscriptions();
+
+        Disposable dispLifecycle = stompClient.lifecycle()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(lifecycleEvent -> {
+                    switch (lifecycleEvent.getType()) {
+                        case OPENED:
+                            Log.i(TAG, "connect: Stomp Connection Opened");
+                            break;
+                        case ERROR:
+                            Log.e(TAG, "connect: Stomp connection error", lifecycleEvent.getException());
+                            break;
+                        case CLOSED:
+                            Log.i(TAG, "connect: Stomp Connection Closed");
+                            resetSubscriptions();
+                            break;
+                        case FAILED_SERVER_HEARTBEAT:
+                            Log.e(TAG, "connect: Stomp Failed server heartbeat");
+                            break;
+                    }
+                });
+
+        compositeDisposable.add(dispLifecycle);
+
+        // Receive greetings
+//        Disposable dispTopic = stompClient.topic(String.format(WEBSOCKET_TOPIC, pokerTableId))
+        Disposable dispTopic = stompClient.topic("/topic/loops")
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(topicMessage -> {
+                    String payloadJson = topicMessage.getPayload();
+                    onMessage(mGson.fromJson(payloadJson, WebSocketMessage.class));
+                }, this::onSubscribeError);
+
+        compositeDisposable.add(dispTopic);
+
+        stompClient.connect(headers);
+    }
+
+    private void resetSubscriptions() {
+        if (compositeDisposable != null) {
+            compositeDisposable.dispose();
         }
+        compositeDisposable = new CompositeDisposable();
     }
 
-    public void subscribe(PokerTable pokerTable) {
-        TopicSubscriptionParams params = new TopicSubscriptionParams();
-        params.setTopic(String.format(WEBSOCKET_TOPIC, pokerTable.getId()));
-        params.setListener(this);
-        client.subscribe(params);
+    private void onMessage(WebSocketMessage message) {
+        Log.i(TAG, "Received: " + message);
     }
 
-    @Override
-    public void onOpened(LifecycleEvent event) {
-        Log.i(TAG, "onOpened: " + event);
-    }
-
-    @Override
-    public void onError(LifecycleEvent event) {
-        if (event.getException() != null) {
-            Log.e(TAG, "onError: " + event, event.getException());
-        } else {
-            Log.e(TAG, "onError: " + event);
-        }
-    }
-
-    @Override
-    public void onClosed(LifecycleEvent event) {
-        Log.i(TAG, "onClosed: " + event);
-    }
-
-    @Override
-    public void onMessage(StompMessage message) {
-        Log.i(TAG, "onMessage: " + message);
+    private void onSubscribeError(Throwable throwable) {
+        Log.e(TAG, "Error on subscribe topic", throwable);
     }
 
     public void disconnect() {
-        client.disconnect();
+        stompClient.disconnect();
+
+        if (mRestPingDisposable != null) mRestPingDisposable.dispose();
+        if (compositeDisposable != null) compositeDisposable.dispose();
     }
 }

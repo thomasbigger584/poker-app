@@ -1,17 +1,17 @@
 package com.twb.pokergame.ui.activity.pokergame;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.twb.pokergame.BuildConfig;
 import com.twb.pokergame.R;
 import com.twb.pokergame.data.model.PokerTable;
-import com.twb.pokergame.data.websocket.message.PokerAppWebSocketMessage;
+import com.twb.pokergame.data.message.WebSocketMessage;
 import com.twb.pokergame.ui.activity.login.BaseAuthActivity;
+import com.twb.stomplib.stomp.Stomp;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -42,12 +42,7 @@ public class PokerGameActivity extends BaseAuthActivity {
 
     @Override
     protected void onAuthorized() {
-        try {
-            viewModel.connect();
-            viewModel.subscribe(pokerTable);
-        } catch (Exception e) {
-            Log.e(TAG, "onAuthorized: Failed to connect to websocket", e);
-        }
+        viewModel.connect(pokerTable.getId());
     }
 
     @Override
@@ -59,7 +54,7 @@ public class PokerGameActivity extends BaseAuthActivity {
         }
     }
 
-    private void onMessage(PokerAppWebSocketMessage message) {
+    private void onMessage(WebSocketMessage message) {
         Toast.makeText(this, message.toString(), Toast.LENGTH_SHORT).show();
     }
 

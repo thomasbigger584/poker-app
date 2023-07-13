@@ -3,10 +3,12 @@ package com.twb.stomplib.connection.impl;
 import android.util.Log;
 
 import com.twb.stomplib.connection.ConnectionProvider;
-import com.twb.stomplib.event.LifecycleEvent;
+import com.twb.stomplib.dto.LifecycleEvent;
 
 import io.reactivex.Completable;
 import io.reactivex.Observable;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.annotations.Nullable;
 import io.reactivex.subjects.PublishSubject;
 
 /**
@@ -14,16 +16,20 @@ import io.reactivex.subjects.PublishSubject;
  * Created because there was a lot of shared code between JWS and OkHttp connection providers.
  */
 public abstract class AbstractConnectionProvider implements ConnectionProvider {
+
     private static final String TAG = AbstractConnectionProvider.class.getSimpleName();
 
+    @NonNull
     private final PublishSubject<LifecycleEvent> lifecycleStream;
+    @NonNull
     private final PublishSubject<String> messagesStream;
 
-    AbstractConnectionProvider() {
-        this.lifecycleStream = PublishSubject.create();
-        this.messagesStream = PublishSubject.create();
+    public AbstractConnectionProvider() {
+        lifecycleStream = PublishSubject.create();
+        messagesStream = PublishSubject.create();
     }
 
+    @NonNull
     @Override
     public Observable<String> messages() {
         return messagesStream.startWith(initSocket().toObservable());
@@ -37,20 +43,17 @@ public abstract class AbstractConnectionProvider implements ConnectionProvider {
      * webSocket.close();
      * </pre>
      */
-    abstract void rawDisconnect();
+    protected abstract void rawDisconnect();
 
     @Override
     public Completable disconnect() {
-        return Completable.fromAction(this::rawDisconnect);
+        return Completable
+                .fromAction(this::rawDisconnect);
     }
 
     private Completable initSocket() {
-        return Completable.fromAction(this::createWebSocketConnection);
-    }
-
-    // Doesn't do anything at all, only here as a stub
-    public Completable setHeartbeat(int ms) {
-        return Completable.complete();
+        return Completable
+                .fromAction(this::createWebSocketConnection);
     }
 
     /**
@@ -58,13 +61,14 @@ public abstract class AbstractConnectionProvider implements ConnectionProvider {
      * <p>
      * See implementations in OkHttpConnectionProvider and WebSocketsConnectionProvider.
      */
-    abstract void createWebSocketConnection();
+    protected abstract void createWebSocketConnection();
 
+    @NonNull
     @Override
     public Completable send(String stompMessage) {
         return Completable.fromCallable(() -> {
             if (getSocket() == null) {
-                throw new IllegalStateException("Not connected yet");
+                throw new IllegalStateException("Not connected");
             } else {
                 Log.d(TAG, "Send STOMP message: " + stompMessage);
                 rawSend(stompMessage);
@@ -83,7 +87,7 @@ public abstract class AbstractConnectionProvider implements ConnectionProvider {
      *
      * @param stompMessage message to send
      */
-    abstract void rawSend(String stompMessage);
+    protected abstract void rawSend(String stompMessage);
 
     /**
      * Get socket object.
@@ -94,18 +98,20 @@ public abstract class AbstractConnectionProvider implements ConnectionProvider {
      * return webSocket;
      * </pre>
      */
-    abstract Object getSocket();
+    @Nullable
+    protected abstract Object getSocket();
 
-    void emitLifecycleEvent(LifecycleEvent lifecycleEvent) {
+    protected void emitLifecycleEvent(@NonNull LifecycleEvent lifecycleEvent) {
         Log.d(TAG, "Emit lifecycle event: " + lifecycleEvent.getType().name());
         lifecycleStream.onNext(lifecycleEvent);
     }
 
-    void emitMessage(String stompMessage) {
-        Log.d(TAG, "Emit STOMP message: " + stompMessage);
+    protected void emitMessage(String stompMessage) {
+        Log.d(TAG, "Receive STOMP message: " + stompMessage);
         messagesStream.onNext(stompMessage);
     }
 
+    @NonNull
     @Override
     public Observable<LifecycleEvent> lifecycle() {
         return lifecycleStream;

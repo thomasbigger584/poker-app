@@ -1,12 +1,11 @@
 package com.twb.stomplib.connection;
 
-import com.twb.stomplib.event.LifecycleEvent;
+import com.twb.stomplib.dto.LifecycleEvent;
 
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 
 public interface ConnectionProvider {
-
     /**
      * Subscribe this for receive stomp messages
      */
@@ -29,6 +28,4 @@ public interface ConnectionProvider {
      * Automatically emits Lifecycle.CLOSE
      */
     Completable disconnect();
-
-    Completable setHeartbeat(int ms);
 }
