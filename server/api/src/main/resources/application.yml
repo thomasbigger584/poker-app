@@ -4,6 +4,8 @@ keycloak:
   client-id: poker-game-api-client
   username: admin
   password: admin
+  admin-group-id: 900d795d-15e2-407a-8952-d16ca8aa2c6b
+  user-group-id: 1ecf1db5-4a66-48ec-8064-47e59dd0a4f1
 
 spring:
   profiles:

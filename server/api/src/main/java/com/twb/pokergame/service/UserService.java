@@ -3,7 +3,6 @@ package com.twb.pokergame.service;
 import com.twb.pokergame.domain.User;
 import com.twb.pokergame.mapper.UserMapper;
 import com.twb.pokergame.repository.UserRepository;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.stereotype.Component;
