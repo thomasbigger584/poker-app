@@ -1,11 +1,11 @@
 package com.twb.pokergame.web.websocket;
 
-import com.twb.pokergame.web.websocket.dto.WebSocketMessage;
+import com.twb.pokergame.web.websocket.message.dto.MessageType;
+import com.twb.pokergame.web.websocket.message.dto.WebSocketMessageDTO;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
@@ -18,7 +18,6 @@ import java.util.Map;
 public class WebSocketEventListener {
     private static final Logger logger = LoggerFactory.getLogger(WebSocketEventListener.class);
 
-    private final SimpMessageSendingOperations messagingTemplate;
 
     @EventListener
     public void handleWebSocketConnectListener(SessionConnectedEvent event) {
@@ -42,12 +41,12 @@ public class WebSocketEventListener {
         if (sessionAttributes.containsKey("username")) {
             String username = (String) sessionAttributes.get("username");
 
-            WebSocketMessage chatMessage = new WebSocketMessage();
-            chatMessage.setType("Leave");
-            chatMessage.setSender(username);
+//            WebSocketMessageDTO chatMessage = new WebSocketMessageDTO();
+//            chatMessage.setType(MessageType.PLAYER_DISCONNECT);
+//            chatMessage.setSender(username);
 
             //todo: what is this being sent to ? revise
-            messagingTemplate.convertAndSend("/topic/public", chatMessage);
+//            messagingTemplate.convertAndSend("/topic/public", chatMessage);
         }
     }
 }

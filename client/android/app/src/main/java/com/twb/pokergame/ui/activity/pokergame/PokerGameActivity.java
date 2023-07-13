@@ -1,22 +1,22 @@
 package com.twb.pokergame.ui.activity.pokergame;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.twb.pokergame.BuildConfig;
 import com.twb.pokergame.R;
-import com.twb.pokergame.data.model.PokerTable;
 import com.twb.pokergame.data.message.WebSocketMessage;
+import com.twb.pokergame.data.model.PokerTable;
 import com.twb.pokergame.ui.activity.login.BaseAuthActivity;
-import com.twb.stomplib.stomp.Stomp;
+import com.twb.stomplib.dto.LifecycleEvent;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
-public class PokerGameActivity extends BaseAuthActivity {
+public class PokerGameActivity extends BaseAuthActivity implements PokerGameViewModel.WebSocketListener {
     private static final String TAG = PokerGameActivity.class.getSimpleName();
     private PokerGameViewModel viewModel;
     private PokerTable pokerTable;
@@ -30,19 +30,14 @@ public class PokerGameActivity extends BaseAuthActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_poker_game);
-
         pokerTable = PokerTable.fromBundle(getIntent().getExtras());
-        Toast.makeText(this, pokerTable.toString(), Toast.LENGTH_SHORT).show();
-
+        ;
         viewModel = new ViewModelProvider(this).get(PokerGameViewModel.class);
-        viewModel.errors.observe(this, this::onError);
-        viewModel.messages.observe(this, this::onMessage);
-
     }
 
     @Override
     protected void onAuthorized() {
-        viewModel.connect(pokerTable.getId());
+        viewModel.connect(pokerTable.getId(), this);
     }
 
     @Override
@@ -54,12 +49,54 @@ public class PokerGameActivity extends BaseAuthActivity {
         }
     }
 
-    private void onMessage(WebSocketMessage message) {
-        Toast.makeText(this, message.toString(), Toast.LENGTH_SHORT).show();
+    @Override
+    public void onOpened(LifecycleEvent event) {
+        Log.i(TAG, "onOpened: " + event);
+        WebSocketMessage message = new WebSocketMessage();
+        message.setSender("sender - 1");
+        message.setContent("content - 1");
+        message.setType("PLAYER_CONNECT");
+
+        viewModel.send(message, new PokerGameViewModel.SendListener() {
+            @Override
+            public void onSuccess() {
+                Toast.makeText(PokerGameActivity.this, "Successful Send", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onFailure(Throwable throwable) {
+                Toast.makeText(PokerGameActivity.this, "Failed Send: " + throwable.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    @Override
+    public void onConnectError(LifecycleEvent event) {
+        Toast.makeText(this, "Subscribe Error: " + event.getException().getMessage(), Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void onClosed(LifecycleEvent event) {
+        Log.i(TAG, "onClosed: Connection Closed: " + event.getMessage());
+    }
+
+    @Override
+    public void onFailedServerHeartbeat(LifecycleEvent event) {
+        Toast.makeText(this, "Failed Heartbeat: " + event.getException().getMessage(), Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void onMessage(WebSocketMessage message) {
+        Log.i(TAG, "onMessage: " + message.toString());
+    }
+
+    @Override
+    public void onSubscribeError(Throwable throwable) {
+        Toast.makeText(this, "Subscribe Error: " + throwable.getMessage(), Toast.LENGTH_LONG).show();
     }
 
     private void onError(Throwable throwable) {
-        Toast.makeText(this, throwable.getMessage(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, throwable.getMessage(), Toast.LENGTH_LONG).show();
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.twb.pokergame.service.game;
 
+import com.twb.pokergame.web.websocket.message.MessageDispatcher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.task.AsyncTaskExecutor;
@@ -11,16 +12,25 @@ import java.util.Map;
 @Component
 @RequiredArgsConstructor
 public class PokerGameThreadHandler {
+    private static final Map<String, PokerGameRunnable> POKER_GAME_RUNNABLE_MAP = new HashMap<>();
     private final ApplicationContext context;
     private final AsyncTaskExecutor taskExecutor;
-
-    private static final Map<String, PokerGameRunnable> POKER_GAME_RUNNABLE_MAP = new HashMap<>();
+    private final MessageDispatcher dispatcher;
 
     public void onPlayerConnected(String pokerTableId, String username) {
+        PokerGameRunnable gameRunnable;
 
-        PokerGameRunnable gameRunnable = context.getBean(PokerGameRunnable.class, pokerTableId);
+        if (POKER_GAME_RUNNABLE_MAP.containsKey(pokerTableId)) {
+            gameRunnable = POKER_GAME_RUNNABLE_MAP.get(pokerTableId);
+        } else {
+            gameRunnable = context.getBean(PokerGameRunnable.class, pokerTableId);
+            taskExecutor.execute(gameRunnable);
+            POKER_GAME_RUNNABLE_MAP.put(pokerTableId, gameRunnable);
+        }
 
-        taskExecutor.execute(gameRunnable);
+
+
+
     }
 
 }
