@@ -1,3 +1,10 @@
+keycloak:
+  server-url: http://keycloak.twbdev.site
+  realm: poker-app
+  client-id: poker-game-api-client
+  username: admin
+  password: admin
+
 spring:
   profiles:
     active: local
@@ -7,8 +14,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://keycloak.twbdev.site/realms/poker-app
-          jwk-set-uri: http://keycloak.twbdev.site/realms/poker-app/protocol/openid-connect/certs
+          issuer-uri: ${keycloak.server-url}/realms/${keycloak.realm}
+          jwk-set-uri: ${keycloak.server-url}/realms/${keycloak.realm}/protocol/openid-connect/certs
   rabbitmq:
     host: rabbitmq
     port: 5672
@@ -31,7 +38,7 @@ spring:
 jwt:
   auth:
     converter:
-      resource-id: poker-game-api-client
+      resource-id: ${keycloak.client-id}
       principal-attribute: preferred_username
 server:
   port:
