@@ -1,4 +1,4 @@
-package com.twb.pokergame.configuration.websocket;
+package com.twb.pokergame.configuration.websocket.security;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.messaging.MessageSecurityMetadataSourceRegistry;
