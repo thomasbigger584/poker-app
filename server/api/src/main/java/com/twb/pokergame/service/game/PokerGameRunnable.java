@@ -1,19 +1,14 @@
 package com.twb.pokergame.service.game;
 
-import com.twb.pokergame.domain.PokerTable;
-import com.twb.pokergame.repository.PokerTableRepository;
 import com.twb.pokergame.web.websocket.message.MessageDispatcher;
-import com.twb.pokergame.web.websocket.message.server.ServerMessageFactory;
-import com.twb.pokergame.web.websocket.message.server.ServerMessageType;
 import com.twb.pokergame.web.websocket.message.server.ServerMessage;
+import com.twb.pokergame.web.websocket.message.server.ServerMessageFactory;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 @Component
 @Scope("prototype")
@@ -47,10 +42,16 @@ public class PokerGameRunnable implements Runnable {
     }
 
     public void onPlayerConnected(String username) {
-        logger.info("Game Runnable: Player Connected" + username);
+        logger.info("Game Runnable: Player Connected " + username);
+
+        ServerMessage serverMessage = messageFactory.playerConnected(username);
+        dispatcher.send(pokerTableId, serverMessage);
     }
 
     public void onPlayerDisconnected(String username) {
-        logger.info("Game Runnable: Player Disconnected" + username);
+        logger.info("Game Runnable: Player Disconnected " + username);
+
+        ServerMessage serverMessage = messageFactory.playerDisconnected(username);
+        dispatcher.send(pokerTableId, serverMessage);
     }
 }

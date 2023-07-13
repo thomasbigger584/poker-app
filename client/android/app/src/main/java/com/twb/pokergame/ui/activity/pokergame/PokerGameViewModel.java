@@ -9,6 +9,7 @@ import com.google.gson.Gson;
 import com.twb.pokergame.BuildConfig;
 import com.twb.pokergame.data.auth.AuthStateManager;
 import com.twb.pokergame.data.message.client.CreateChatMessageDTO;
+import com.twb.pokergame.data.message.client.PlayerConnectDTO;
 import com.twb.pokergame.data.message.server.ServerMessage;
 import com.twb.stomplib.dto.LifecycleEvent;
 import com.twb.stomplib.dto.StompHeader;
@@ -96,9 +97,17 @@ public class PokerGameViewModel extends ViewModel {
         stompClient.connect(headers);
     }
 
-    public void sendChatMessage(String pokerTableId, CreateChatMessageDTO message, SendListener listener) {
+    public void send(String pokerTableId, CreateChatMessageDTO message, SendListener listener) {
         String jsonMessage = gson.toJson(message);
         String destination = String.format("/app/pokerTable/%s/sendChatMessage", pokerTableId);
+        compositeDisposable.add(stompClient.send(destination, jsonMessage)
+                .compose(applySchedulers())
+                .subscribe(listener::onSuccess, listener::onFailure));
+    }
+
+    public void send(String pokerTableId, PlayerConnectDTO message, SendListener listener) {
+        String jsonMessage = gson.toJson(message);
+        String destination = String.format("/app/pokerTable/%s/sendConnectPlayer", pokerTableId);
         compositeDisposable.add(stompClient.send(destination, jsonMessage)
                 .compose(applySchedulers())
                 .subscribe(listener::onSuccess, listener::onFailure));

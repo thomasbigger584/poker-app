@@ -10,6 +10,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Component;
 
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,20 +26,15 @@ public class PokerGameThreadHandler {
     private final MessageDispatcher dispatcher;
 
     public void onPlayerConnected(String pokerTableId, String username) {
-        PokerGameRunnable gameRunnable;
-
+        PokerGameRunnable runnable;
         if (POKER_GAME_RUNNABLE_MAP.containsKey(pokerTableId)) {
-            gameRunnable = POKER_GAME_RUNNABLE_MAP.get(pokerTableId);
+            runnable = POKER_GAME_RUNNABLE_MAP.get(pokerTableId);
         } else {
-            gameRunnable = context.getBean(PokerGameRunnable.class, pokerTableId);
-            taskExecutor.execute(gameRunnable);
-            POKER_GAME_RUNNABLE_MAP.put(pokerTableId, gameRunnable);
+            runnable = context.getBean(PokerGameRunnable.class, pokerTableId);
+            taskExecutor.execute(runnable);
+            POKER_GAME_RUNNABLE_MAP.put(pokerTableId, runnable);
         }
-
-        gameRunnable.onPlayerConnected(username);
-
-        ServerMessage serverMessage = messageFactory.playerConnected(username);
-        dispatcher.send(pokerTableId, serverMessage);
+        runnable.onPlayerConnected(username);
     }
 
     public void onPlayerDisconnected(String pokerTableId, String username) {
@@ -46,10 +42,8 @@ public class PokerGameThreadHandler {
             logger.warn("Poker Table {} doesn't have a game thread running.", pokerTableId);
             return;
         }
-
-        PokerGameRunnable gameRunnable = POKER_GAME_RUNNABLE_MAP.get(pokerTableId);
-        gameRunnable.onPlayerDisconnected(username);
-
+        PokerGameRunnable runnable = POKER_GAME_RUNNABLE_MAP.get(pokerTableId);
+        runnable.onPlayerDisconnected(username);
     }
 
 }

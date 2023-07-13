@@ -1,7 +1,6 @@
 package com.twb.pokergame.web.websocket;
 
 import com.twb.pokergame.service.game.PokerGameThreadHandler;
-import com.twb.pokergame.web.websocket.message.MessageDispatcher;
 import com.twb.pokergame.web.websocket.message.client.CreateChatMessageDTO;
 import com.twb.pokergame.web.websocket.message.server.ServerMessage;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageFactory;
@@ -12,23 +11,42 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
+
+import java.security.Principal;
 
 @Controller
 @RequiredArgsConstructor
 public class WebSocketController {
     private static final Logger logger = LoggerFactory.getLogger(WebSocketController.class);
-    private final ServerMessageFactory messageFactory;
-    private final MessageDispatcher messageDispatcher;
+    public static final String POKER_GAME_EVENTS_TOPIC = "/topic/loops.{pokerTableId}";
 
+    private final SessionService sessionService;
+    private final ServerMessageFactory messageFactory;
     private final PokerGameThreadHandler handler;
 
+    @MessageMapping("/pokerTable/{pokerTableId}/sendConnectPlayer")
+    public void sendConnectPlayer(Principal principal,
+                                  StompHeaderAccessor headerAccessor,
+                                  @DestinationVariable("pokerTableId") String pokerTableId) {
+        sessionService.putSessionData(headerAccessor, pokerTableId);
+        handler.onPlayerConnected(pokerTableId, principal.getName());
+    }
+
     @MessageMapping("/pokerTable/{pokerTableId}/sendChatMessage")
-    @SendTo("/topic/loops.{pokerTableId}")
-    public ServerMessage sendChatMessage(@DestinationVariable("pokerTableId") String pokerTableId,
+    @SendTo(POKER_GAME_EVENTS_TOPIC)
+    public ServerMessage sendChatMessage(Principal principal,
+                                         @DestinationVariable("pokerTableId") String pokerTableId,
                                          @Payload CreateChatMessageDTO message) {
-        logger.info("sendChatMessage - PokerTable: {}, User: {}, Message: {}" , pokerTableId, "placeholder", message.getMessage());
-        return messageFactory.chatMessage("placeholder", message.getMessage());
+        return messageFactory.chatMessage(principal.getName(), message.getMessage());
+    }
+
+
+    @MessageMapping("/pokerTable/{pokerTableId}/sendDisconnectPlayer")
+    public void sendDisconnectPlayer(Principal principal,
+                                     @DestinationVariable("pokerTableId") String pokerTableId) {
+        handler.onPlayerDisconnected(pokerTableId, principal.getName());
     }
 
 

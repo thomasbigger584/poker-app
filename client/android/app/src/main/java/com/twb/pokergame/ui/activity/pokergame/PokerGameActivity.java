@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.twb.pokergame.R;
 import com.twb.pokergame.data.message.client.CreateChatMessageDTO;
+import com.twb.pokergame.data.message.client.PlayerConnectDTO;
 import com.twb.pokergame.data.message.server.ServerMessage;
 import com.twb.pokergame.data.model.PokerTable;
 import com.twb.pokergame.ui.activity.login.BaseAuthActivity;
@@ -54,10 +55,9 @@ public class PokerGameActivity extends BaseAuthActivity implements PokerGameView
     public void onOpened(LifecycleEvent event) {
         Log.i(TAG, "onOpened: " + event);
 
-        CreateChatMessageDTO message = new CreateChatMessageDTO();
-        message.setMessage("message sent from client");
+        PlayerConnectDTO message = new PlayerConnectDTO();
 
-        viewModel.sendChatMessage(pokerTable.getId(), message, new PokerGameViewModel.SendListener() {
+        viewModel.send(pokerTable.getId(), message, new PokerGameViewModel.SendListener() {
             @Override
             public void onSuccess() {
                 Toast.makeText(PokerGameActivity.this, "Successful Send", Toast.LENGTH_LONG).show();

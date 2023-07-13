@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class MessageDispatcher {
+    //todo: change this topic to a more meaningful name
     private static final String TOPIC = "/topic/loops.%s";
 
     private final SimpMessagingTemplate template;
