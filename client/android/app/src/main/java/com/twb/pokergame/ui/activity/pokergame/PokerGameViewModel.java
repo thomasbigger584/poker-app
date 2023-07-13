@@ -37,6 +37,7 @@ public class PokerGameViewModel extends ViewModel implements WebSocketLifecycleL
             client.connect(WEBSOCKET_ENDPOINT);
         } catch (Exception e) {
             errors.postValue(e);
+            throw new RuntimeException("Failed to connec to websocket endpoint: " + WEBSOCKET_ENDPOINT, e);
         }
     }
 

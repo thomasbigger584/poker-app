@@ -41,5 +41,5 @@ logging:
     org.springframework.security: DEBUG
 app:
   cors:
-    allow-origins: http://localhost:63342
+    allow-origins: http://localhost:63343
     allow-credentials: true

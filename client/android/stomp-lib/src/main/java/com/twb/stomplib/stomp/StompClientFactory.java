@@ -6,6 +6,8 @@ import com.twb.stomplib.connection.ConnectionProvider;
 import com.twb.stomplib.connection.impl.OkHttpConnectionProvider;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -13,11 +15,17 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class StompClientFactory {
+    private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String BEARER_PREFIX = "Bearer ";
+
 
     public static StompClient createClient(String url, String accessToken) {
         OkHttpClient httpClient = buildHttpClient(accessToken);
 
-        ConnectionProvider provider = new OkHttpConnectionProvider(url, httpClient);
+        Map<String, String> headers = new HashMap<>();
+        headers.put(AUTHORIZATION_HEADER, BEARER_PREFIX + accessToken);
+
+        ConnectionProvider provider = new OkHttpConnectionProvider(url, headers, httpClient);
         return new StompClient(provider);
     }
 
@@ -30,8 +38,6 @@ public class StompClientFactory {
 
     private static class AuthInterceptor implements Interceptor {
         private static final String TAG = AuthInterceptor.class.getSimpleName();
-        private static final String AUTHORIZATION_HEADER = "Authorization";
-        private static final String BEARER_PREFIX = "Bearer ";
         private final String accessToken;
 
         private AuthInterceptor(String accessToken) {
@@ -44,6 +50,7 @@ public class StompClientFactory {
 
             Log.i(TAG, "websocket intercept: token: " + accessToken);
             builder.addHeader(AUTHORIZATION_HEADER, BEARER_PREFIX + accessToken);
+
             return chain.proceed(builder.build());
         }
     }

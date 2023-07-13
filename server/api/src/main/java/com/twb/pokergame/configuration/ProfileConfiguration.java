@@ -2,7 +2,6 @@ package com.twb.pokergame.configuration;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.SpringApplication;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 

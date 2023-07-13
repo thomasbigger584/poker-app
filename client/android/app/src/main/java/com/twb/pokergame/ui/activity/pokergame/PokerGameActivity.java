@@ -1,6 +1,7 @@
 package com.twb.pokergame.ui.activity.pokergame;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -41,8 +42,12 @@ public class PokerGameActivity extends BaseAuthActivity {
 
     @Override
     protected void onAuthorized() {
-        viewModel.connect();
-        viewModel.subscribe(pokerTable);
+        try {
+            viewModel.connect();
+            viewModel.subscribe(pokerTable);
+        } catch (Exception e) {
+            Log.e(TAG, "onAuthorized: Failed to connect to websocket", e);
+        }
     }
 
     @Override

@@ -307,6 +307,9 @@ public final class LoginActivity extends AppCompatActivity {
 
     private void warmUpBrowser() {
         authIntentLatch = new CountDownLatch(1);
+        if (executor.isShutdown()) {
+            executor = Executors.newSingleThreadExecutor();
+        }
         executor.execute(() -> {
             Log.i(TAG, "Warming up browser instance for auth request");
             CustomTabsIntent.Builder intentBuilder =
