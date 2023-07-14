@@ -1,5 +1,6 @@
 package com.twb.pokergame.service.game;
 
+import com.antkorwin.xsync.XSync;
 import com.twb.pokergame.domain.PokerTable;
 import com.twb.pokergame.domain.PokerTableUser;
 import com.twb.pokergame.domain.User;
@@ -29,60 +30,59 @@ public class PokerGameService {
     private final PokerTableRepository pokerTableRepository;
     private final PokerTableUserRepository pokerTableUserRepository;
     private final PokerTableUserService pokerTableUserService;
+
     private final GameRunnableFactory runnableFactory;
-
-
     private final ServerMessageFactory messageFactory;
     private final MessageDispatcher dispatcher;
-
-    //todo: may need to synchronize these methods with pokerTableId `value`
-    // to get around multi threading of different games
+    private final XSync<UUID> mutex;
 
     public void onPlayerConnected(UUID pokerTableId, String username) {
+        mutex.execute(pokerTableId, () -> {
+            Optional<PokerTable> pokerTableOpt = pokerTableRepository.findById(pokerTableId);
+            if (pokerTableOpt.isEmpty()) {
+                logger.warn("Failed to connect user {} to poker table {} as poker table not found", username, pokerTableId);
+                return;
+            }
 
+            Optional<User> userOpt = userRepository.findByUsername(username);
+            if (userOpt.isEmpty()) {
+                logger.warn("Failed to connect user {} to poker table {} as user not found", username, pokerTableId);
+                return;
+            }
 
-        Optional<PokerTable> pokerTableOpt = pokerTableRepository.findById(pokerTableId);
-        if (pokerTableOpt.isEmpty()) {
-            logger.warn("Failed to connect user {} to poker table {} as poker table not found", username, pokerTableId);
-            return;
-        }
+            PokerTable pokerTable = pokerTableOpt.get();
+            User user = userOpt.get();
 
-        Optional<User> userOpt = userRepository.findByUsername(username);
-        if (userOpt.isEmpty()) {
-            logger.warn("Failed to connect user {} to poker table {} as user not found", username, pokerTableId);
-            return;
-        }
+            runnableFactory.createIfNotExist(pokerTableOpt.get());
+            pokerTableUserService.create(pokerTable, user);
 
-        PokerTable pokerTable = pokerTableOpt.get();
-        User user = userOpt.get();
-
-        runnableFactory.createIfNotExist(pokerTableOpt.get());
-        pokerTableUserService.create(pokerTable, user);
-
-        ServerMessageDTO message = messageFactory.playerConnected(user.getUsername());
-        dispatcher.send(pokerTableId, message);
+            ServerMessageDTO message = messageFactory.playerConnected(user.getUsername());
+            dispatcher.send(pokerTableId, message);
+        });
     }
 
     public void onPlayerDisconnected(UUID pokerTableId, String username) {
-        List<PokerTableUser> pokerTableUsers = pokerTableUserRepository.findByPokerTableId(pokerTableId);
-        if (pokerTableUsers.isEmpty()) {
-            logger.info("No PokerTableUsers so deleting runnable");
-            runnableFactory.delete(pokerTableId);
-        } else {
-            for (PokerTableUser pokerTableUser : pokerTableUsers) {
-                User user = pokerTableUser.getUser();
-                if (user.getUsername().equals(username)) {
-                    pokerTableUserRepository.delete(pokerTableUser);
-                    break;
-                }
-            }
-            pokerTableUsers = pokerTableUserRepository.findByPokerTableId(pokerTableId);
+        mutex.execute(pokerTableId, () -> {
+            List<PokerTableUser> pokerTableUsers = pokerTableUserRepository.findByPokerTableId(pokerTableId);
             if (pokerTableUsers.isEmpty()) {
                 logger.info("No PokerTableUsers so deleting runnable");
                 runnableFactory.delete(pokerTableId);
+            } else {
+                for (PokerTableUser pokerTableUser : pokerTableUsers) {
+                    User user = pokerTableUser.getUser();
+                    if (user.getUsername().equals(username)) {
+                        pokerTableUserRepository.delete(pokerTableUser);
+                        break;
+                    }
+                }
+                pokerTableUsers = pokerTableUserRepository.findByPokerTableId(pokerTableId);
+                if (pokerTableUsers.isEmpty()) {
+                    logger.info("No PokerTableUsers so deleting runnable");
+                    runnableFactory.delete(pokerTableId);
+                }
             }
-        }
-        ServerMessageDTO message = messageFactory.playerDisconnected(username);
-        dispatcher.send(pokerTableId, message);
+            ServerMessageDTO message = messageFactory.playerDisconnected(username);
+            dispatcher.send(pokerTableId, message);
+        });
     }
 }

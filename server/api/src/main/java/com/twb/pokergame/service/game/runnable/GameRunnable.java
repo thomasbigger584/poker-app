@@ -20,7 +20,7 @@ public abstract class GameRunnable implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(GameRunnable.class);
 
     protected final UUID pokerTableId;
-    private final int maxNumberOfPlayers;
+    protected final int maxNumberOfPlayers;
 
     protected GameState gameState = GameState.GAME_INIT;
 
@@ -55,7 +55,7 @@ public abstract class GameRunnable implements Runnable {
         onRun();
 
         this.gameState = GameState.GAME_ENDED;
-        sendLogMessage("Game Starting...");
+        sendLogMessage("Game Ended.");
     }
 
     abstract protected void onRun();
