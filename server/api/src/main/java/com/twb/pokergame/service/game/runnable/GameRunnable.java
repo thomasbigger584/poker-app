@@ -20,6 +20,7 @@ public abstract class GameRunnable implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(GameRunnable.class);
 
     protected final UUID pokerTableId;
+    private final int maxNumberOfPlayers;
 
     protected GameState gameState = GameState.GAME_INIT;
 
@@ -36,15 +37,17 @@ public abstract class GameRunnable implements Runnable {
     public void run() {
         this.gameState = GameState.WAITING_FOR_PLAYERS;
         sendLogMessage("Waiting for players to join...");
-        List<PokerTableUser> userSessions;
+        List<PokerTableUser> pokerTableUsers;
         do {
-            userSessions = pokerTableUserRepository.findByPokerTableId(pokerTableId);
-            if (userSessions.isEmpty()) {
+            pokerTableUsers = pokerTableUserRepository.findByPokerTableId(pokerTableId);
+            if (pokerTableUsers.isEmpty()) {
                 sendLogMessage("No more players so stopping");
                 return;
             }
-            sleep(300);
-        } while (userSessions.size() < getMinNumberOfPlayers());
+            if (pokerTableUsers.size() < maxNumberOfPlayers) {
+                sleep(300);
+            }
+        } while (pokerTableUsers.size() < maxNumberOfPlayers);
 
         sendLogMessage("Game Starting...");
         this.gameState = GameState.GAME_STARTING;
@@ -54,8 +57,6 @@ public abstract class GameRunnable implements Runnable {
         this.gameState = GameState.GAME_ENDED;
         sendLogMessage("Game Starting...");
     }
-
-    abstract protected int getMinNumberOfPlayers();
 
     abstract protected void onRun();
 

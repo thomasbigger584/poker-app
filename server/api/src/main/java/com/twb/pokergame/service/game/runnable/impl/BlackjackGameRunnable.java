@@ -12,20 +12,13 @@ import java.util.UUID;
 @Scope("prototype")
 public class BlackjackGameRunnable extends GameRunnable {
     private static final Logger logger = LoggerFactory.getLogger(BlackjackGameRunnable.class);
-    private static final int MIN_NUMBER_OF_PLAYERS = 1;
-
     public BlackjackGameRunnable(UUID pokerTableId) {
-        super(pokerTableId);
+        super(pokerTableId, 1);
     }
 
     @Override
     protected void onRun() {
         System.out.println("BlackjackGameRunnable.onRun");
         sleep(1000);
-    }
-
-    @Override
-    protected int getMinNumberOfPlayers() {
-        return MIN_NUMBER_OF_PLAYERS;
     }
 }

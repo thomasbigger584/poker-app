@@ -12,20 +12,14 @@ import java.util.UUID;
 @Scope("prototype")
 public class TexasHoldemGameRunnable extends GameRunnable {
     private static final Logger logger = LoggerFactory.getLogger(TexasHoldemGameRunnable.class);
-    private static final int MIN_NUMBER_OF_PLAYERS = 2;
 
     public TexasHoldemGameRunnable(UUID pokerTableId) {
-        super(pokerTableId);
+        super(pokerTableId, 2);
     }
 
     @Override
     protected void onRun() {
         System.out.println("TexasHoldemGameRunnable.onRun");
         sleep(1000);
-    }
-
-    @Override
-    protected int getMinNumberOfPlayers() {
-        return MIN_NUMBER_OF_PLAYERS;
     }
 }
