@@ -1,15 +1,18 @@
 package com.twb.pokergame.ui.activity.pokergame;
 
 import android.os.Bundle;
-import android.util.Log;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.twb.pokergame.R;
 import com.twb.pokergame.data.model.PokerTable;
 import com.twb.pokergame.ui.activity.login.BaseAuthActivity;
+import com.twb.pokergame.ui.activity.pokergame.chatbox.ChatBoxRecyclerAdapter;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -19,6 +22,9 @@ public class PokerGameActivity extends BaseAuthActivity {
     private PokerGameViewModel viewModel;
     private PokerTable pokerTable;
 
+    private RecyclerView chatBoxRecyclerView;
+    private ChatBoxRecyclerAdapter chatBoxAdapter;
+
     @Override
     protected int getContentView() {
         return R.layout.activity_poker_game;
@@ -27,28 +33,28 @@ public class PokerGameActivity extends BaseAuthActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         pokerTable = PokerTable.fromBundle(getIntent().getExtras());
+
+        chatBoxRecyclerView = findViewById(R.id.chatBoxRecyclerView);
+        setupChatBoxRecyclerView();
+
         viewModel = new ViewModelProvider(this).get(PokerGameViewModel.class);
         viewModel.errors.observe(this, throwable -> {
-            // todo: add throwable to chatbox
-            Toast.makeText(PokerGameActivity.this, throwable.getMessage(), Toast.LENGTH_SHORT).show();
+            chatBoxAdapter.add(throwable.getMessage());
         });
         viewModel.playerConnected.observe(this, playerConnected -> {
-            Log.i(TAG, "Event: " + playerConnected);
-            //todo: add player connected to chatbox
+            chatBoxAdapter.add("Connected: " + playerConnected.getUsername());
             //todo: add player to view
         });
         viewModel.chatMessage.observe(this, chatMessage -> {
-            Log.i(TAG, "Event: " + chatMessage);
-            //todo: add chat message to chat box
+            chatBoxAdapter.add(chatMessage.getUsername() + ": " + chatMessage.getMessage());
         });
         viewModel.logMessage.observe(this, logMessage -> {
-            Log.i(TAG, "Event: " + logMessage);
-            //todo: add log message to chat box
+            chatBoxAdapter.add(logMessage.getMessage());
         });
-        viewModel.playerConnected.observe(this, playerDisconnected -> {
-            Log.i(TAG, "Event: " + playerDisconnected);
-            //todo: add player disconnected to chatbox
+        viewModel.playerDisconnected.observe(this, playerDisconnected -> {
+            chatBoxAdapter.add("Disconnected: " + playerDisconnected.getUsername());
             //todo: remove player to from view, if player is current player then finish activity
         });
     }
@@ -65,6 +71,15 @@ public class PokerGameActivity extends BaseAuthActivity {
         } else {
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void setupChatBoxRecyclerView() {
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        layoutManager.setStackFromEnd(true);
+        chatBoxRecyclerView.setLayoutManager(layoutManager);
+
+        chatBoxAdapter = new ChatBoxRecyclerAdapter(layoutManager);
+        chatBoxRecyclerView.setAdapter(chatBoxAdapter);
     }
 
     @Override

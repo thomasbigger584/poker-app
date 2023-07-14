@@ -19,12 +19,10 @@ public class TexasHoldemGameRunnable extends GameRunnable {
 
     @Override
     public void run() {
-        System.out.println("pokerTableId = " + pokerTableId);
+        sendLogMessage("Starting Game: " + pokerTableId);
 
         for (int index = 0; index < 3000; index++) {
-
-            System.out.println("index = " + index);
-            sendLogMessage(String.format("Texas Holdem Game Runnable %s with index %d", pokerTableId.toString(), index));
+            sendLogMessage("Index: " + index);
 
             try {
                 Thread.sleep(3000);
