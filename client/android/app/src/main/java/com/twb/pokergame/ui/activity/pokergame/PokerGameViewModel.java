@@ -4,10 +4,15 @@ import android.util.Log;
 
 import androidx.lifecycle.ViewModel;
 
+import com.google.gson.Gson;
 import com.twb.pokergame.data.websocket.WebSocketClient;
-import com.twb.pokergame.data.websocket.message.client.CreateChatMessageDTO;
-import com.twb.pokergame.data.websocket.message.client.PlayerConnectDTO;
+import com.twb.pokergame.data.websocket.message.client.SendChatMessageDTO;
+import com.twb.pokergame.data.websocket.message.client.SendPlayerConnectDTO;
 import com.twb.pokergame.data.websocket.message.server.ServerMessageDTO;
+import com.twb.pokergame.data.websocket.message.server.payload.ChatMessageDTO;
+import com.twb.pokergame.data.websocket.message.server.payload.LogMessageDTO;
+import com.twb.pokergame.data.websocket.message.server.payload.PlayerConnectedDTO;
+import com.twb.pokergame.data.websocket.message.server.payload.PlayerDisconnectedDTO;
 import com.twb.stomplib.dto.LifecycleEvent;
 
 import javax.inject.Inject;
@@ -15,15 +20,19 @@ import javax.inject.Inject;
 import dagger.hilt.android.lifecycle.HiltViewModel;
 
 @HiltViewModel
-public class PokerGameViewModel extends ViewModel implements WebSocketClient.WebSocketListener, WebSocketClient.SendListener {
+public class PokerGameViewModel extends ViewModel
+        implements WebSocketClient.WebSocketListener, WebSocketClient.SendListener {
+
     private static final String TAG = PokerGameViewModel.class.getSimpleName();
     private final WebSocketClient webSocketClient;
+    private final Gson gson;
 
     private String pokerTableId;
 
     @Inject
-    public PokerGameViewModel(WebSocketClient webSocketClient) {
+    public PokerGameViewModel(WebSocketClient webSocketClient, Gson gson) {
         this.webSocketClient = webSocketClient;
+        this.gson = gson;
     }
 
 
@@ -38,10 +47,8 @@ public class PokerGameViewModel extends ViewModel implements WebSocketClient.Web
 
     @Override
     public void onOpened(LifecycleEvent event) {
-        Log.i(TAG, "onOpened: " + event.getMessage());
-
         // Send Player Connect Message
-        PlayerConnectDTO dto = new PlayerConnectDTO();
+        SendPlayerConnectDTO dto = new SendPlayerConnectDTO();
         webSocketClient.send(pokerTableId, dto, this);
     }
 
@@ -51,12 +58,35 @@ public class PokerGameViewModel extends ViewModel implements WebSocketClient.Web
     }
 
     @Override
-    public void onMessage(ServerMessageDTO message) {
-        Log.i(TAG, "onMessage: " + message);
+    public void onMessage(ServerMessageDTO<?> message) {
+        switch (message.getType()) {
+            case PLAYER_CONNECTED: {
+                PlayerConnectedDTO dto = (PlayerConnectedDTO) message.getPayload();
+                Log.i(TAG, "onMessage: " + dto);
+                break;
+            }
+            case CHAT: {
+                ChatMessageDTO dto = (ChatMessageDTO) message.getPayload();
+                Log.i(TAG, "onMessage: " + dto);
+                break;
+            }
+            case LOG: {
+                LogMessageDTO dto = (LogMessageDTO) message.getPayload();
+                Log.i(TAG, "onMessage: " + dto);
+                break;
+            }
+            case PLAYER_DISCONNECTED: {
+                PlayerDisconnectedDTO dto = (PlayerDisconnectedDTO) message.getPayload();
+                Log.i(TAG, "onMessage: " + dto);
+                break;
+            }
+            default:
+                throw new IllegalStateException("Unexpected Game Event Value: " + message.getType());
+        }
     }
 
     public void sendChatMessage(String pokerTableId, String message) {
-        CreateChatMessageDTO dto = new CreateChatMessageDTO();
+        SendChatMessageDTO dto = new SendChatMessageDTO();
         dto.setMessage(message);
         webSocketClient.send(pokerTableId, dto, this);
     }
@@ -89,4 +119,6 @@ public class PokerGameViewModel extends ViewModel implements WebSocketClient.Web
     public void disconnect() {
         webSocketClient.disconnect();
     }
+
+
 }

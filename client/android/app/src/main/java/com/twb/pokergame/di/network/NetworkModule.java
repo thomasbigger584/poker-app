@@ -12,6 +12,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializer;
 import com.twb.pokergame.data.auth.AuthStateManager;
 import com.twb.pokergame.data.retrofit.api.interceptor.AuthInterceptor;
+import com.twb.pokergame.data.retrofit.gson.ServerMessageDeserializer;
+import com.twb.pokergame.data.websocket.message.server.ServerMessageDTO;
 import com.twb.pokergame.di.network.qualifiers.Authenticated;
 import com.twb.pokergame.di.network.qualifiers.Unauthenticated;
 
@@ -94,6 +96,7 @@ public class NetworkModule {
             //todo: verify this works with dates which get returned
             return new Date((long) (json.getAsJsonPrimitive().getAsDouble() * 1000));
         });
+        gsonBuilder.registerTypeAdapter(ServerMessageDTO.class, new ServerMessageDeserializer());
         gsonBuilder.setPrettyPrinting();
         return gsonBuilder.create();
     }

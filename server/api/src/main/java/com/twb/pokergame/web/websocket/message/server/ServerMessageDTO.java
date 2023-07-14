@@ -5,13 +5,13 @@ import lombok.Data;
 
 @Data
 @Builder
-public class ServerMessage {
+public class ServerMessageDTO {
     private ServerMessageType type;
     private long timestamp;
     private Object payload;
 
-    public static ServerMessage create(ServerMessageType type, Object payload) {
-        return ServerMessage.builder()
+    public static ServerMessageDTO create(ServerMessageType type, Object payload) {
+        return ServerMessageDTO.builder()
                 .type(type)
                 .timestamp(System.currentTimeMillis())
                 .payload(payload)

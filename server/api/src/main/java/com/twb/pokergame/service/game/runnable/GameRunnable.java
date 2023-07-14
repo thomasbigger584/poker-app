@@ -1,7 +1,7 @@
 package com.twb.pokergame.service.game.runnable;
 
 import com.twb.pokergame.web.websocket.message.MessageDispatcher;
-import com.twb.pokergame.web.websocket.message.server.ServerMessage;
+import com.twb.pokergame.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageFactory;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -24,21 +24,21 @@ public abstract class GameRunnable implements Runnable {
     protected MessageDispatcher dispatcher;
 
     protected void sendLogMessage(String log) {
-        ServerMessage message = messageFactory.logMessage(log);
+        ServerMessageDTO message = messageFactory.logMessage(log);
         dispatcher.send(pokerTableId, message);
     }
 
     public void onPlayerConnected(String username) {
         logger.info("Player Connected " + username);
 
-        ServerMessage serverMessage = messageFactory.playerConnected(username);
-        dispatcher.send(pokerTableId, serverMessage);
+        ServerMessageDTO message = messageFactory.playerConnected(username);
+        dispatcher.send(pokerTableId, message);
     }
 
     public void onPlayerDisconnected(String username) {
         logger.info("Player Disconnected " + username);
 
-        ServerMessage serverMessage = messageFactory.playerDisconnected(username);
-        dispatcher.send(pokerTableId, serverMessage);
+        ServerMessageDTO message = messageFactory.playerDisconnected(username);
+        dispatcher.send(pokerTableId, message);
     }
 }

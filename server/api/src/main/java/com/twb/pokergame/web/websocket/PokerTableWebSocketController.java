@@ -2,7 +2,7 @@ package com.twb.pokergame.web.websocket;
 
 import com.twb.pokergame.service.game.PokerGameService;
 import com.twb.pokergame.web.websocket.message.client.CreateChatMessageDTO;
-import com.twb.pokergame.web.websocket.message.server.ServerMessage;
+import com.twb.pokergame.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageFactory;
 import com.twb.pokergame.web.websocket.session.SessionService;
 import lombok.RequiredArgsConstructor;
@@ -49,9 +49,9 @@ public class PokerTableWebSocketController {
 
     @MessageMapping(POKER_TABLE_MESSAGE_PREFIX + SEND_CHAT_MESSAGE)
     @SendTo(POKER_TABLE_EVENTS_TOPIC)
-    public ServerMessage sendChatMessage(Principal principal,
-                                         @DestinationVariable(POKER_TABLE_ID) String pokerTableId,
-                                         @Payload CreateChatMessageDTO message) {
+    public ServerMessageDTO sendChatMessage(Principal principal,
+                                            @DestinationVariable(POKER_TABLE_ID) String pokerTableId,
+                                            @Payload CreateChatMessageDTO message) {
         return messageFactory.chatMessage(principal.getName(), message.getMessage());
     }
 

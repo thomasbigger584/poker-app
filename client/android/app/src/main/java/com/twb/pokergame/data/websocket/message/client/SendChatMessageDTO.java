@@ -1,6 +1,6 @@
 package com.twb.pokergame.data.websocket.message.client;
 
-public class CreateChatMessageDTO {
+public class SendChatMessageDTO {
     private String message;
 
     public String getMessage() {
@@ -9,5 +9,12 @@ public class CreateChatMessageDTO {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    @Override
+    public String toString() {
+        return "SendChatMessageDTO{" +
+                "message='" + message + '\'' +
+                '}';
     }
 }

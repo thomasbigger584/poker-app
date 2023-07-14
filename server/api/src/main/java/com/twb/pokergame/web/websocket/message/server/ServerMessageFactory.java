@@ -9,32 +9,32 @@ import org.springframework.stereotype.Component;
 @Component
 public class ServerMessageFactory {
 
-    public ServerMessage playerConnected(String username) {
+    public ServerMessageDTO playerConnected(String username) {
         PlayerConnectedDTO payload = PlayerConnectedDTO.builder()
                 .username(username)
                 .build();
-        return ServerMessage.create(ServerMessageType.PLAYER_CONNECTED, payload);
+        return ServerMessageDTO.create(ServerMessageType.PLAYER_CONNECTED, payload);
     }
 
-    public ServerMessage logMessage(String message) {
+    public ServerMessageDTO logMessage(String message) {
         LogMessageDTO payload = LogMessageDTO.builder()
                 .message(message)
                 .build();
-        return ServerMessage.create(ServerMessageType.LOG, payload);
+        return ServerMessageDTO.create(ServerMessageType.LOG, payload);
     }
 
-    public ServerMessage playerDisconnected(String username) {
+    public ServerMessageDTO playerDisconnected(String username) {
         PlayerDisconnectedDTO payload = PlayerDisconnectedDTO.builder()
                 .username(username)
                 .build();
-        return ServerMessage.create(ServerMessageType.PLAYER_DISCONNECTED, payload);
+        return ServerMessageDTO.create(ServerMessageType.PLAYER_DISCONNECTED, payload);
     }
 
-    public ServerMessage chatMessage(String username, String message) {
+    public ServerMessageDTO chatMessage(String username, String message) {
         ChatMessageDTO payload = ChatMessageDTO.builder()
                 .username(username)
                 .message(message)
                 .build();
-        return ServerMessage.create(ServerMessageType.CHAT, payload);
+        return ServerMessageDTO.create(ServerMessageType.CHAT, payload);
     }
 }

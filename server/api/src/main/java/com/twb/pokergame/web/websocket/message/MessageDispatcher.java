@@ -2,7 +2,7 @@ package com.twb.pokergame.web.websocket.message;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.twb.pokergame.web.websocket.message.server.ServerMessage;
+import com.twb.pokergame.web.websocket.message.server.ServerMessageDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
@@ -18,7 +18,7 @@ public class MessageDispatcher {
     private final SimpMessagingTemplate template;
     private final ObjectMapper objectMapper;
 
-    public void send(UUID pokerTableId, ServerMessage message) {
+    public void send(UUID pokerTableId, ServerMessageDTO message) {
         try {
             String destination = String.format(TOPIC, pokerTableId);
             template.convertAndSend(destination, objectMapper.writeValueAsString(message));

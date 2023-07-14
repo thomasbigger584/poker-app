@@ -7,9 +7,9 @@ import androidx.annotation.MainThread;
 import com.google.gson.Gson;
 import com.twb.pokergame.BuildConfig;
 import com.twb.pokergame.data.auth.AuthStateManager;
-import com.twb.pokergame.data.websocket.message.client.CreateChatMessageDTO;
-import com.twb.pokergame.data.websocket.message.client.PlayerConnectDTO;
-import com.twb.pokergame.data.websocket.message.client.PlayerDisconnectDTO;
+import com.twb.pokergame.data.websocket.message.client.SendChatMessageDTO;
+import com.twb.pokergame.data.websocket.message.client.SendPlayerConnectDTO;
+import com.twb.pokergame.data.websocket.message.client.SendPlayerDisconnectDTO;
 import com.twb.pokergame.data.websocket.message.server.ServerMessageDTO;
 import com.twb.pokergame.ui.activity.pokergame.PokerGameViewModel;
 import com.twb.stomplib.dto.LifecycleEvent;
@@ -41,8 +41,10 @@ public class WebSocketClient {
     private static final String SEND_DISCONNECT_PLAYER = "/sendDisconnectPlayer";
     private static final String AUTHORIZATION_HEADER = "X-Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
+
     private final AuthStateManager authStateManager;
     private final Gson gson;
+
     private StompClient stompClient;
     private CompositeDisposable compositeDisposable;
 
@@ -128,24 +130,23 @@ public class WebSocketClient {
         }
     }
 
-
     // ***************************************************************
     // WebSocket Send Methods
     // ***************************************************************
 
-    public void send(String pokerTableId, CreateChatMessageDTO dto, SendListener listener) {
+    public void send(String pokerTableId, SendChatMessageDTO dto, SendListener listener) {
         String destination = String.format(SEND_ENDPOINT_PREFIX + SEND_CHAT_MESSAGE, pokerTableId);
         String message = gson.toJson(dto);
         send(destination, message, listener);
     }
 
-    public void send(String pokerTableId, PlayerConnectDTO dto, SendListener listener) {
+    public void send(String pokerTableId, SendPlayerConnectDTO dto, SendListener listener) {
         String destination = String.format(SEND_ENDPOINT_PREFIX + SEND_CONNECT_PLAYER, pokerTableId);
         String message = gson.toJson(dto);
         send(destination, message, listener);
     }
 
-    public void send(String pokerTableId, PlayerDisconnectDTO dto, SendListener listener) {
+    public void send(String pokerTableId, SendPlayerDisconnectDTO dto, SendListener listener) {
         String destination = String.format(SEND_ENDPOINT_PREFIX + SEND_DISCONNECT_PLAYER, pokerTableId);
         String message = gson.toJson(dto);
         send(destination, message, listener);
@@ -166,7 +167,6 @@ public class WebSocketClient {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
     }
-
 
     // ***************************************************************
     // Listeners
@@ -189,7 +189,7 @@ public class WebSocketClient {
 
         void onFailedServerHeartbeat(LifecycleEvent event);
 
-        void onMessage(ServerMessageDTO message);
+        void onMessage(ServerMessageDTO<?> message);
 
         void onSubscribeError(Throwable throwable);
     }
