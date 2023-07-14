@@ -31,6 +31,7 @@ public class PokerGameViewModel extends ViewModel
     public MutableLiveData<ChatMessageDTO> chatMessage = new MutableLiveData<>();
     public MutableLiveData<LogMessageDTO> logMessage = new MutableLiveData<>();
     public MutableLiveData<PlayerDisconnectedDTO> playerDisconnected = new MutableLiveData<>();
+    public MutableLiveData<Void> closedConnection = new MutableLiveData<>();
 
     private String pokerTableId;
 
@@ -92,7 +93,7 @@ public class PokerGameViewModel extends ViewModel
 
     @Override
     public void onClosed(LifecycleEvent event) {
-        Log.i(TAG, "onClosed: ");
+        closedConnection.setValue(null);
     }
 
     public void disconnect() {

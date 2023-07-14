@@ -43,6 +43,9 @@ public class PokerGameActivity extends BaseAuthActivity {
         viewModel.errors.observe(this, throwable -> {
             chatBoxAdapter.add(throwable.getMessage());
         });
+        viewModel.closedConnection.observe(this, aVoid -> {
+            chatBoxAdapter.add("Lost connection with server");
+        });
         viewModel.playerConnected.observe(this, playerConnected -> {
             chatBoxAdapter.add("Connected: " + playerConnected.getUsername());
             //todo: add player to view
