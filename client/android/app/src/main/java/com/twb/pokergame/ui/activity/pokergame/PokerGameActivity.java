@@ -1,6 +1,7 @@
 package com.twb.pokergame.ui.activity.pokergame;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -28,6 +29,28 @@ public class PokerGameActivity extends BaseAuthActivity {
         super.onCreate(savedInstanceState);
         pokerTable = PokerTable.fromBundle(getIntent().getExtras());
         viewModel = new ViewModelProvider(this).get(PokerGameViewModel.class);
+        viewModel.errors.observe(this, throwable -> {
+            // todo: add throwable to chatbox
+            Toast.makeText(PokerGameActivity.this, throwable.getMessage(), Toast.LENGTH_SHORT).show();
+        });
+        viewModel.playerConnected.observe(this, playerConnected -> {
+            Log.i(TAG, "Event: " + playerConnected);
+            //todo: add player connected to chatbox
+            //todo: add player to view
+        });
+        viewModel.chatMessage.observe(this, chatMessage -> {
+            Log.i(TAG, "Event: " + chatMessage);
+            //todo: add chat message to chat box
+        });
+        viewModel.logMessage.observe(this, logMessage -> {
+            Log.i(TAG, "Event: " + logMessage);
+            //todo: add log message to chat box
+        });
+        viewModel.playerConnected.observe(this, playerDisconnected -> {
+            Log.i(TAG, "Event: " + playerDisconnected);
+            //todo: add player disconnected to chatbox
+            //todo: remove player to from view, if player is current player then finish activity
+        });
     }
 
     @Override

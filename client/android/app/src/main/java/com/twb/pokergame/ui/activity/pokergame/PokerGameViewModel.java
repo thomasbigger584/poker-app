@@ -2,9 +2,9 @@ package com.twb.pokergame.ui.activity.pokergame;
 
 import android.util.Log;
 
+import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.google.gson.Gson;
 import com.twb.pokergame.data.websocket.WebSocketClient;
 import com.twb.pokergame.data.websocket.message.client.SendChatMessageDTO;
 import com.twb.pokergame.data.websocket.message.client.SendPlayerConnectDTO;
@@ -25,16 +25,19 @@ public class PokerGameViewModel extends ViewModel
 
     private static final String TAG = PokerGameViewModel.class.getSimpleName();
     private final WebSocketClient webSocketClient;
-    private final Gson gson;
+
+    public MutableLiveData<Throwable> errors = new MutableLiveData<>();
+    public MutableLiveData<PlayerConnectedDTO> playerConnected = new MutableLiveData<>();
+    public MutableLiveData<ChatMessageDTO> chatMessage = new MutableLiveData<>();
+    public MutableLiveData<LogMessageDTO> logMessage = new MutableLiveData<>();
+    public MutableLiveData<PlayerDisconnectedDTO> playerDisconnected = new MutableLiveData<>();
 
     private String pokerTableId;
 
     @Inject
-    public PokerGameViewModel(WebSocketClient webSocketClient, Gson gson) {
+    public PokerGameViewModel(WebSocketClient webSocketClient) {
         this.webSocketClient = webSocketClient;
-        this.gson = gson;
     }
-
 
     // ***************************************************************
     // WebSocket Lifecycle
@@ -53,31 +56,22 @@ public class PokerGameViewModel extends ViewModel
     }
 
     @Override
-    public void onConnectError(LifecycleEvent event) {
-        Log.e(TAG, "onConnectError: ", event.getException());
-    }
-
-    @Override
     public void onMessage(ServerMessageDTO<?> message) {
         switch (message.getType()) {
             case PLAYER_CONNECTED: {
-                PlayerConnectedDTO dto = (PlayerConnectedDTO) message.getPayload();
-                Log.i(TAG, "onMessage: " + dto);
+                playerConnected.setValue((PlayerConnectedDTO) message.getPayload());
                 break;
             }
             case CHAT: {
-                ChatMessageDTO dto = (ChatMessageDTO) message.getPayload();
-                Log.i(TAG, "onMessage: " + dto);
+                chatMessage.setValue((ChatMessageDTO) message.getPayload());
                 break;
             }
             case LOG: {
-                LogMessageDTO dto = (LogMessageDTO) message.getPayload();
-                Log.i(TAG, "onMessage: " + dto);
+                logMessage.setValue((LogMessageDTO) message.getPayload());
                 break;
             }
             case PLAYER_DISCONNECTED: {
-                PlayerDisconnectedDTO dto = (PlayerDisconnectedDTO) message.getPayload();
-                Log.i(TAG, "onMessage: " + dto);
+                playerDisconnected.setValue((PlayerDisconnectedDTO) message.getPayload());
                 break;
             }
             default:
@@ -85,7 +79,7 @@ public class PokerGameViewModel extends ViewModel
         }
     }
 
-    public void sendChatMessage(String pokerTableId, String message) {
+    public void sendChatMessage(String message) {
         SendChatMessageDTO dto = new SendChatMessageDTO();
         dto.setMessage(message);
         webSocketClient.send(pokerTableId, dto, this);
@@ -97,28 +91,46 @@ public class PokerGameViewModel extends ViewModel
     }
 
     @Override
-    public void onSendFailure(Throwable throwable) {
-        Log.e(TAG, "onSendFailure: ", throwable);
-    }
-
-    @Override
     public void onClosed(LifecycleEvent event) {
         Log.i(TAG, "onClosed: ");
-    }
-
-    @Override
-    public void onFailedServerHeartbeat(LifecycleEvent event) {
-        Log.e(TAG, "onFailedServerHeartbeat: " + event.getException());
-    }
-
-    @Override
-    public void onSubscribeError(Throwable throwable) {
-        Log.e(TAG, "onSubscribeError: ", throwable);
     }
 
     public void disconnect() {
         webSocketClient.disconnect();
     }
 
+    // ***************************************************************
+    // Error Lifecycle
+    // ***************************************************************
 
+    @Override
+    public void onConnectError(LifecycleEvent event) {
+        publishLifecycleEventError(event);
+    }
+
+    @Override
+    public void onFailedServerHeartbeat(LifecycleEvent event) {
+        publishLifecycleEventError(event);
+    }
+
+    @Override
+    public void onSubscribeError(Throwable throwable) {
+        errors.setValue(throwable);
+    }
+
+    @Override
+    public void onSendFailure(Throwable throwable) {
+        errors.setValue(throwable);
+    }
+
+    // Helper Methods
+    // ----------------------------------------------------------------
+
+    private void publishLifecycleEventError(LifecycleEvent event) {
+        if (event.getException() == null) {
+            errors.setValue(new RuntimeException(event.getMessage()));
+        } else {
+            errors.setValue(event.getException());
+        }
+    }
 }

@@ -25,7 +25,9 @@ public class ServerMessageDeserializer implements JsonDeserializer<ServerMessage
     private static final String PAYLOAD_KEY = "payload";
 
     @Override
-    public ServerMessageDTO<?> deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+    public ServerMessageDTO<?> deserialize(JsonElement json, Type typeOfT,
+                                           JsonDeserializationContext context) throws JsonParseException {
+
         JsonObject jsonObject = json.getAsJsonObject();
 
         ServerMessageType messageType = getServerMessageType(jsonObject);
