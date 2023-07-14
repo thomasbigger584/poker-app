@@ -12,12 +12,13 @@ import java.util.Optional;
 public class SessionService {
     private static final String SESSION_POKER_TABLE_ID = "SESSION_POKER_TABLE_ID";
 
-    public void putSessionData(StompHeaderAccessor headerAccessor, String pokerTableId) {
+    public void putPokerTableId(StompHeaderAccessor headerAccessor, String pokerTableId) {
         Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
         if (sessionAttributes == null) {
             sessionAttributes = new HashMap<>();
         }
         sessionAttributes.put(SESSION_POKER_TABLE_ID, pokerTableId);
+        headerAccessor.setSessionAttributes(sessionAttributes);
     }
 
     public Optional<String> getPokerTableId(StompHeaderAccessor headerAccessor) {

@@ -1,4 +1,4 @@
-package com.twb.pokergame.data.message.client;
+package com.twb.pokergame.data.websocket.message.client;
 
 public class CreateChatMessageDTO {
     private String message;

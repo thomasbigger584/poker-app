@@ -8,13 +8,13 @@ import lombok.Data;
 public class ServerMessage {
     private ServerMessageType type;
     private long timestamp;
-    private Object body;
+    private Object payload;
 
-    public static ServerMessage create(ServerMessageType type, Object body) {
+    public static ServerMessage create(ServerMessageType type, Object payload) {
         return ServerMessage.builder()
                 .type(type)
                 .timestamp(System.currentTimeMillis())
-                .body(body)
+                .payload(payload)
                 .build();
     }
 }

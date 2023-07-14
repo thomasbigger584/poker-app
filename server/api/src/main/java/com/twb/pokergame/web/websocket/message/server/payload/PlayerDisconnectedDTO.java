@@ -1,4 +1,4 @@
-package com.twb.pokergame.web.websocket.message.server.body;
+package com.twb.pokergame.web.websocket.message.server.payload;
 
 import lombok.Builder;
 import lombok.Data;

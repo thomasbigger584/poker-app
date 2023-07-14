@@ -2,158 +2,91 @@ package com.twb.pokergame.ui.activity.pokergame;
 
 import android.util.Log;
 
-import androidx.annotation.MainThread;
 import androidx.lifecycle.ViewModel;
 
-import com.google.gson.Gson;
-import com.twb.pokergame.BuildConfig;
-import com.twb.pokergame.data.auth.AuthStateManager;
-import com.twb.pokergame.data.message.client.CreateChatMessageDTO;
-import com.twb.pokergame.data.message.client.PlayerConnectDTO;
-import com.twb.pokergame.data.message.server.ServerMessage;
+import com.twb.pokergame.data.websocket.WebSocketClient;
+import com.twb.pokergame.data.websocket.message.client.CreateChatMessageDTO;
+import com.twb.pokergame.data.websocket.message.client.PlayerConnectDTO;
+import com.twb.pokergame.data.websocket.message.server.ServerMessageDTO;
 import com.twb.stomplib.dto.LifecycleEvent;
-import com.twb.stomplib.dto.StompHeader;
-import com.twb.stomplib.stomp.Stomp;
-import com.twb.stomplib.stomp.StompClient;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
-import io.reactivex.CompletableTransformer;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
 
 @HiltViewModel
-public class PokerGameViewModel extends ViewModel {
+public class PokerGameViewModel extends ViewModel implements WebSocketClient.WebSocketListener, WebSocketClient.SendListener {
     private static final String TAG = PokerGameViewModel.class.getSimpleName();
-    private final AuthStateManager authStateManager;
-    private final Gson gson;
-    private StompClient stompClient;
-    private CompositeDisposable compositeDisposable;
+    private final WebSocketClient webSocketClient;
+
+    private String pokerTableId;
 
     @Inject
-    public PokerGameViewModel(AuthStateManager authStateManager, Gson gson) {
-        this.authStateManager = authStateManager;
-        this.gson = gson;
+    public PokerGameViewModel(WebSocketClient webSocketClient) {
+        this.webSocketClient = webSocketClient;
     }
 
-    public void connect(String pokerTableId, WebSocketListener listener) {
-        String accessToken = authStateManager.getCurrent().getAccessToken();
-        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, "ws://" + BuildConfig.API_BASE_URL + "/looping/websocket");
 
-        List<StompHeader> headers = new ArrayList<>();
-        headers.add(new StompHeader("X-Authorization", "Bearer " + accessToken));
+    // ***************************************************************
+    // WebSocket Lifecycle
+    // ***************************************************************
 
-        stompClient.withClientHeartbeat(1000).withServerHeartbeat(1000);
-
-        resetSubscriptions();
-
-        Disposable dispLifecycle = stompClient.lifecycle()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(lifecycleEvent -> {
-                    switch (lifecycleEvent.getType()) {
-                        case OPENED:
-                            Log.i(TAG, "connect: Stomp Connection Opened");
-                            listener.onOpened(lifecycleEvent);
-                            break;
-                        case ERROR:
-                            Log.e(TAG, "connect: Stomp connection error", lifecycleEvent.getException());
-                            listener.onConnectError(lifecycleEvent);
-                            break;
-                        case CLOSED:
-                            Log.i(TAG, "connect: Stomp Connection Closed");
-                            listener.onClosed(lifecycleEvent);
-                            resetSubscriptions();
-                            break;
-                        case FAILED_SERVER_HEARTBEAT:
-                            Log.e(TAG, "connect: Stomp Failed server heartbeat");
-                            listener.onFailedServerHeartbeat(lifecycleEvent);
-                            break;
-                    }
-                });
-
-        compositeDisposable.add(dispLifecycle);
-
-        Disposable dispTopic = stompClient.topic("/topic/loops." + pokerTableId)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(topicMessage -> {
-                    String payloadJson = topicMessage.getPayload();
-                    Log.i(TAG, "connect: message received: " + payloadJson);
-                    listener.onMessage(gson.fromJson(payloadJson, ServerMessage.class));
-                }, throwable -> {
-                    Log.e(TAG, "connect: subscription error", throwable);
-                    listener.onSubscribeError(throwable);
-                });
-
-        compositeDisposable.add(dispTopic);
-
-        stompClient.connect(headers);
+    public void connect(String pokerTableId) {
+        this.pokerTableId = pokerTableId;
+        webSocketClient.connect(pokerTableId, this);
     }
 
-    public void send(String pokerTableId, CreateChatMessageDTO message, SendListener listener) {
-        String jsonMessage = gson.toJson(message);
-        String destination = String.format("/app/pokerTable/%s/sendChatMessage", pokerTableId);
-        compositeDisposable.add(stompClient.send(destination, jsonMessage)
-                .compose(applySchedulers())
-                .subscribe(listener::onSuccess, listener::onFailure));
+    @Override
+    public void onOpened(LifecycleEvent event) {
+        Log.i(TAG, "onOpened: " + event.getMessage());
+
+        // Send Player Connect Message
+        PlayerConnectDTO dto = new PlayerConnectDTO();
+        webSocketClient.send(pokerTableId, dto, this);
     }
 
-    public void send(String pokerTableId, PlayerConnectDTO message, SendListener listener) {
-        String jsonMessage = gson.toJson(message);
-        String destination = String.format("/app/pokerTable/%s/sendConnectPlayer", pokerTableId);
-        compositeDisposable.add(stompClient.send(destination, jsonMessage)
-                .compose(applySchedulers())
-                .subscribe(listener::onSuccess, listener::onFailure));
+    @Override
+    public void onConnectError(LifecycleEvent event) {
+        Log.e(TAG, "onConnectError: ", event.getException());
     }
 
-    private CompletableTransformer applySchedulers() {
-        return upstream -> upstream
-                .unsubscribeOn(Schedulers.newThread())
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+    @Override
+    public void onMessage(ServerMessageDTO message) {
+        Log.i(TAG, "onMessage: " + message);
     }
 
-    private void resetSubscriptions() {
-        if (compositeDisposable != null) {
-            compositeDisposable.dispose();
-        }
-        compositeDisposable = new CompositeDisposable();
+    public void sendChatMessage(String pokerTableId, String message) {
+        CreateChatMessageDTO dto = new CreateChatMessageDTO();
+        dto.setMessage(message);
+        webSocketClient.send(pokerTableId, dto, this);
+    }
+
+    @Override
+    public void onSendSuccess() {
+        Log.i(TAG, "onSendSuccess: ");
+    }
+
+    @Override
+    public void onSendFailure(Throwable throwable) {
+        Log.e(TAG, "onSendFailure: ", throwable);
+    }
+
+    @Override
+    public void onClosed(LifecycleEvent event) {
+        Log.i(TAG, "onClosed: ");
+    }
+
+    @Override
+    public void onFailedServerHeartbeat(LifecycleEvent event) {
+        Log.e(TAG, "onFailedServerHeartbeat: " + event.getException());
+    }
+
+    @Override
+    public void onSubscribeError(Throwable throwable) {
+        Log.e(TAG, "onSubscribeError: ", throwable);
     }
 
     public void disconnect() {
-        stompClient.disconnect();
-
-        if (compositeDisposable != null) {
-            compositeDisposable.dispose();
-        }
-    }
-
-    @MainThread
-    public interface SendListener {
-        void onSuccess();
-
-        void onFailure(Throwable throwable);
-    }
-
-    @MainThread
-    public interface WebSocketListener {
-        void onOpened(LifecycleEvent event);
-
-        void onConnectError(LifecycleEvent event);
-
-        void onClosed(LifecycleEvent event);
-
-        void onFailedServerHeartbeat(LifecycleEvent event);
-
-        void onMessage(ServerMessage message);
-
-        void onSubscribeError(Throwable throwable);
+        webSocketClient.disconnect();
     }
 }

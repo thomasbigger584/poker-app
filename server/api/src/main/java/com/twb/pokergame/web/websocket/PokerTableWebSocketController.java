@@ -19,13 +19,15 @@ import java.security.Principal;
 
 @Controller
 @RequiredArgsConstructor
-public class PokerGameWebSocketController {
-    private static final Logger logger = LoggerFactory.getLogger(PokerGameWebSocketController.class);
+public class PokerTableWebSocketController {
+    private static final Logger logger = LoggerFactory.getLogger(PokerTableWebSocketController.class);
+    private static final String POKER_TABLE_EVENTS_TOPIC = "/topic/loops.{pokerTableId}";
+    private static final String POKER_TABLE_MESSAGE_PREFIX = "/pokerTable/{pokerTableId}";
+
     private static final String SEND_CONNECT_PLAYER = "/sendConnectPlayer";
     private static final String SEND_CHAT_MESSAGE = "/sendChatMessage";
     private static final String SEND_DISCONNECT_PLAYER = "/sendDisconnectPlayer";
-    private static final String POKER_GAME_EVENTS_TOPIC = "/topic/loops.{pokerTableId}";
-    private static final String POKER_TABLE_MESSAGE_PREFIX = "/pokerTable/{pokerTableId}";
+
     private static final String POKER_TABLE_ID = "pokerTableId";
 
     private final SessionService sessionService;
@@ -41,12 +43,12 @@ public class PokerGameWebSocketController {
     @MessageMapping(POKER_TABLE_MESSAGE_PREFIX + SEND_CONNECT_PLAYER)
     public void sendConnectPlayer(Principal principal, StompHeaderAccessor headerAccessor,
                                   @DestinationVariable(POKER_TABLE_ID) String pokerTableId) {
-        sessionService.putSessionData(headerAccessor, pokerTableId);
+        sessionService.putPokerTableId(headerAccessor, pokerTableId);
         gameService.onPlayerConnected(pokerTableId, principal.getName());
     }
 
     @MessageMapping(POKER_TABLE_MESSAGE_PREFIX + SEND_CHAT_MESSAGE)
-    @SendTo(POKER_GAME_EVENTS_TOPIC)
+    @SendTo(POKER_TABLE_EVENTS_TOPIC)
     public ServerMessage sendChatMessage(Principal principal,
                                          @DestinationVariable(POKER_TABLE_ID) String pokerTableId,
                                          @Payload CreateChatMessageDTO message) {

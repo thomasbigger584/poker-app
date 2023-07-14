@@ -1,40 +1,40 @@
 package com.twb.pokergame.web.websocket.message.server;
 
-import com.twb.pokergame.web.websocket.message.server.body.ChatMessageDTO;
-import com.twb.pokergame.web.websocket.message.server.body.LogMessageDTO;
-import com.twb.pokergame.web.websocket.message.server.body.PlayerConnectedDTO;
-import com.twb.pokergame.web.websocket.message.server.body.PlayerDisconnectedDTO;
+import com.twb.pokergame.web.websocket.message.server.payload.ChatMessageDTO;
+import com.twb.pokergame.web.websocket.message.server.payload.LogMessageDTO;
+import com.twb.pokergame.web.websocket.message.server.payload.PlayerConnectedDTO;
+import com.twb.pokergame.web.websocket.message.server.payload.PlayerDisconnectedDTO;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ServerMessageFactory {
 
     public ServerMessage playerConnected(String username) {
-        PlayerConnectedDTO dto = PlayerConnectedDTO.builder()
+        PlayerConnectedDTO payload = PlayerConnectedDTO.builder()
                 .username(username)
                 .build();
-        return ServerMessage.create(ServerMessageType.PLAYER_CONNECTED, dto);
+        return ServerMessage.create(ServerMessageType.PLAYER_CONNECTED, payload);
     }
 
     public ServerMessage logMessage(String message) {
-        LogMessageDTO dto = LogMessageDTO.builder()
+        LogMessageDTO payload = LogMessageDTO.builder()
                 .message(message)
                 .build();
-        return ServerMessage.create(ServerMessageType.LOG, dto);
+        return ServerMessage.create(ServerMessageType.LOG, payload);
     }
 
     public ServerMessage playerDisconnected(String username) {
-        PlayerDisconnectedDTO dto = PlayerDisconnectedDTO.builder()
+        PlayerDisconnectedDTO payload = PlayerDisconnectedDTO.builder()
                 .username(username)
                 .build();
-        return ServerMessage.create(ServerMessageType.PLAYER_DISCONNECTED, dto);
+        return ServerMessage.create(ServerMessageType.PLAYER_DISCONNECTED, payload);
     }
 
     public ServerMessage chatMessage(String username, String message) {
-        ChatMessageDTO dto = ChatMessageDTO.builder()
+        ChatMessageDTO payload = ChatMessageDTO.builder()
                 .username(username)
                 .message(message)
                 .build();
-        return ServerMessage.create(ServerMessageType.CHAT, dto);
+        return ServerMessage.create(ServerMessageType.CHAT, payload);
     }
 }

@@ -13,7 +13,7 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import java.security.Principal;
 import java.util.Optional;
 
-// Generic websocket connect/disconnect. This gets called when the session is created
+// Generic websocket connect/disconnect. This gets called when the session is created/destroyed
 @Component
 @RequiredArgsConstructor
 public class SessionEventListener {
