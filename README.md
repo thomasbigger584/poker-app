@@ -64,7 +64,3 @@ docker-compose up --build
 #### PostgresQL (PSQL)
 
 - The database of choice for storing both the keycloak persistence data and backend app persistence data.
-
-![PokerApp-ERD.png](drawio%2FPokerApp-ERD.png)
-
-Subject to change (just initial thoughts)

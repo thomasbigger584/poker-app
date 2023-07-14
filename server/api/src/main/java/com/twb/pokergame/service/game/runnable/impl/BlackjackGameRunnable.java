@@ -10,17 +10,17 @@ import java.util.UUID;
 
 @Component
 @Scope("prototype")
-public class TexasHoldemGameRunnable extends GameRunnable {
-    private static final Logger logger = LoggerFactory.getLogger(TexasHoldemGameRunnable.class);
-    private static final int MIN_NUMBER_OF_PLAYERS = 2;
+public class BlackjackGameRunnable extends GameRunnable {
+    private static final Logger logger = LoggerFactory.getLogger(BlackjackGameRunnable.class);
+    private static final int MIN_NUMBER_OF_PLAYERS = 1;
 
-    public TexasHoldemGameRunnable(UUID pokerTableId) {
+    public BlackjackGameRunnable(UUID pokerTableId) {
         super(pokerTableId);
     }
 
     @Override
     protected void onRun() {
-        System.out.println("TexasHoldemGameRunnable.onRun");
+        System.out.println("BlackjackGameRunnable.onRun");
         sleep(1000);
     }
 

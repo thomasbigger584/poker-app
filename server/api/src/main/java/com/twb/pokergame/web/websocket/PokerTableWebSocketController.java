@@ -16,6 +16,7 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
+import java.util.UUID;
 
 @Controller
 @RequiredArgsConstructor
@@ -42,7 +43,8 @@ public class PokerTableWebSocketController {
 
     @MessageMapping(POKER_TABLE_MESSAGE_PREFIX + SEND_CONNECT_PLAYER)
     public void sendConnectPlayer(Principal principal, StompHeaderAccessor headerAccessor,
-                                  @DestinationVariable(POKER_TABLE_ID) String pokerTableId) {
+                                  @DestinationVariable(POKER_TABLE_ID) UUID pokerTableId) {
+        logger.info(">>>> sendConnectPlayer - Poker Table: {} - User: {}", pokerTableId, principal.getName());
         sessionService.putPokerTableId(headerAccessor, pokerTableId);
         gameService.onPlayerConnected(pokerTableId, principal.getName());
     }
@@ -50,14 +52,15 @@ public class PokerTableWebSocketController {
     @MessageMapping(POKER_TABLE_MESSAGE_PREFIX + SEND_CHAT_MESSAGE)
     @SendTo(POKER_TABLE_EVENTS_TOPIC)
     public ServerMessageDTO sendChatMessage(Principal principal,
-                                            @DestinationVariable(POKER_TABLE_ID) String pokerTableId,
+                                            @DestinationVariable(POKER_TABLE_ID) UUID pokerTableId,
                                             @Payload CreateChatMessageDTO message) {
         return messageFactory.chatMessage(principal.getName(), message.getMessage());
     }
 
     @MessageMapping(POKER_TABLE_MESSAGE_PREFIX + SEND_DISCONNECT_PLAYER)
     public void sendDisconnectPlayer(Principal principal,
-                                     @DestinationVariable(POKER_TABLE_ID) String pokerTableId) {
+                                     @DestinationVariable(POKER_TABLE_ID) UUID pokerTableId) {
+        logger.info(">>>> sendDisconnectPlayer - Poker Table: {} - User: {}", pokerTableId, principal.getName());
         gameService.onPlayerDisconnected(pokerTableId, principal.getName());
     }
 }

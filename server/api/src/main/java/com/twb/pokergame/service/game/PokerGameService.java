@@ -1,16 +1,22 @@
 package com.twb.pokergame.service.game;
 
 import com.twb.pokergame.domain.PokerTable;
+import com.twb.pokergame.domain.PokerTableUser;
+import com.twb.pokergame.domain.User;
 import com.twb.pokergame.repository.PokerTableRepository;
-import com.twb.pokergame.service.game.runnable.GameRunnable;
+import com.twb.pokergame.repository.PokerTableUserRepository;
+import com.twb.pokergame.repository.UserRepository;
+import com.twb.pokergame.service.PokerTableUserService;
 import com.twb.pokergame.service.game.runnable.GameRunnableFactory;
 import com.twb.pokergame.web.websocket.message.MessageDispatcher;
+import com.twb.pokergame.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageFactory;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,7 +25,10 @@ import java.util.UUID;
 public class PokerGameService {
     private static final Logger logger = LoggerFactory.getLogger(PokerGameService.class);
 
+    private final UserRepository userRepository;
     private final PokerTableRepository pokerTableRepository;
+    private final PokerTableUserRepository pokerTableUserRepository;
+    private final PokerTableUserService pokerTableUserService;
     private final GameRunnableFactory runnableFactory;
 
 
@@ -29,25 +38,51 @@ public class PokerGameService {
     //todo: may need to synchronize these methods with pokerTableId `value`
     // to get around multi threading of different games
 
-    public void onPlayerConnected(String pokerTableId, String username) {
-        UUID uuid = UUID.fromString(pokerTableId);
+    public void onPlayerConnected(UUID pokerTableId, String username) {
 
-        Optional<PokerTable> pokerTableOpt = pokerTableRepository.findById(uuid);
+
+        Optional<PokerTable> pokerTableOpt = pokerTableRepository.findById(pokerTableId);
         if (pokerTableOpt.isEmpty()) {
-            logger.warn("Failed to connect user {} to poker table {} as not found", username, uuid);
+            logger.warn("Failed to connect user {} to poker table {} as poker table not found", username, pokerTableId);
             return;
         }
 
-        GameRunnable runnable = runnableFactory.get(pokerTableOpt.get());
-        runnable.onPlayerConnected(username);
-    }
-
-    public void onPlayerDisconnected(String pokerTableId, String username) {
-        Optional<GameRunnable> runnableOpt = runnableFactory.getIfExists(pokerTableId);
-        if (runnableOpt.isPresent()) {
-            GameRunnable runnable = runnableOpt.get();
-            runnable.onPlayerDisconnected(username);
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            logger.warn("Failed to connect user {} to poker table {} as user not found", username, pokerTableId);
+            return;
         }
+
+        PokerTable pokerTable = pokerTableOpt.get();
+        User user = userOpt.get();
+
+        runnableFactory.createIfNotExist(pokerTableOpt.get());
+        pokerTableUserService.create(pokerTable, user);
+
+        ServerMessageDTO message = messageFactory.playerConnected(user.getUsername());
+        dispatcher.send(pokerTableId, message);
     }
 
+    public void onPlayerDisconnected(UUID pokerTableId, String username) {
+        List<PokerTableUser> pokerTableUsers = pokerTableUserRepository.findByPokerTableId(pokerTableId);
+        if (pokerTableUsers.isEmpty()) {
+            logger.info("No PokerTableUsers so deleting runnable");
+            runnableFactory.delete(pokerTableId);
+        } else {
+            for (PokerTableUser pokerTableUser : pokerTableUsers) {
+                User user = pokerTableUser.getUser();
+                if (user.getUsername().equals(username)) {
+                    pokerTableUserRepository.delete(pokerTableUser);
+                    break;
+                }
+            }
+            pokerTableUsers = pokerTableUserRepository.findByPokerTableId(pokerTableId);
+            if (pokerTableUsers.isEmpty()) {
+                logger.info("No PokerTableUsers so deleting runnable");
+                runnableFactory.delete(pokerTableId);
+            }
+        }
+        ServerMessageDTO message = messageFactory.playerDisconnected(username);
+        dispatcher.send(pokerTableId, message);
+    }
 }

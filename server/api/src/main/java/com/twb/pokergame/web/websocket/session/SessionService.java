@@ -6,13 +6,14 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 
 @Component
 public class SessionService {
     private static final String SESSION_POKER_TABLE_ID = "SESSION_POKER_TABLE_ID";
 
-    public void putPokerTableId(StompHeaderAccessor headerAccessor, String pokerTableId) {
+    public void putPokerTableId(StompHeaderAccessor headerAccessor, UUID pokerTableId) {
         Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
         if (sessionAttributes == null) {
             sessionAttributes = new HashMap<>();
@@ -21,11 +22,11 @@ public class SessionService {
         headerAccessor.setSessionAttributes(sessionAttributes);
     }
 
-    public Optional<String> getPokerTableId(StompHeaderAccessor headerAccessor) {
+    public Optional<UUID> getPokerTableId(StompHeaderAccessor headerAccessor) {
         Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
         if (sessionAttributes == null || !sessionAttributes.containsKey(SESSION_POKER_TABLE_ID)) {
             return Optional.empty();
         }
-        return Optional.of((String) sessionAttributes.get(SESSION_POKER_TABLE_ID));
+        return Optional.of((UUID) sessionAttributes.get(SESSION_POKER_TABLE_ID));
     }
 }

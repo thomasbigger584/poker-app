@@ -1,6 +1,7 @@
 package com.twb.pokergame.service.game.runnable;
 
 import com.twb.pokergame.domain.PokerTable;
+import com.twb.pokergame.service.game.runnable.impl.BlackjackGameRunnable;
 import com.twb.pokergame.service.game.runnable.impl.TexasHoldemGameRunnable;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -23,7 +24,7 @@ public class GameRunnableFactory {
     private final ApplicationContext context;
     private final AsyncTaskExecutor taskExecutor;
 
-    public GameRunnable get(PokerTable pokerTable) {
+    public GameRunnable createIfNotExist(PokerTable pokerTable) {
         Optional<GameRunnable> runnableOpt = getIfExists(pokerTable);
         if (runnableOpt.isPresent()) {
             return runnableOpt.get();
@@ -38,6 +39,7 @@ public class GameRunnableFactory {
         UUID pokerTableId = pokerTable.getId();
         return switch (pokerTable.getGameType()) {
             case TEXAS_HOLDEM -> context.getBean(TexasHoldemGameRunnable.class, pokerTableId);
+            case BLACKJACK -> context.getBean(BlackjackGameRunnable.class, pokerTableId);
         };
     }
 
@@ -55,5 +57,12 @@ public class GameRunnableFactory {
             return Optional.empty();
         }
         return Optional.of(POKER_GAME_RUNNABLE_MAP.get(uuid));
+    }
+
+    public void delete(UUID uuid) {
+        Optional<GameRunnable> runnableOpt = getIfExists(uuid);
+        if (runnableOpt.isPresent()) {
+            POKER_GAME_RUNNABLE_MAP.remove(uuid);
+        }
     }
 }

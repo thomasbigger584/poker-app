@@ -25,11 +25,17 @@ public class PokerTableService {
     public void init() {
         List<PokerTable> allTables = repository.findAll();
         if (allTables.isEmpty()) {
-            PokerTable pokerTable = new PokerTable();
-            pokerTable.setName("Poker Table");
-            pokerTable.setGameType(GameType.TEXAS_HOLDEM);
+            PokerTable pokerTable1 = new PokerTable();
+            pokerTable1.setName("Poker Table 1");
+            pokerTable1.setGameType(GameType.TEXAS_HOLDEM);
 
-            repository.save(pokerTable);
+            repository.save(pokerTable1);
+
+            PokerTable pokerTable2 = new PokerTable();
+            pokerTable2.setName("Poker Table 1");
+            pokerTable2.setGameType(GameType.BLACKJACK);
+
+            repository.save(pokerTable2);
         }
     }
 

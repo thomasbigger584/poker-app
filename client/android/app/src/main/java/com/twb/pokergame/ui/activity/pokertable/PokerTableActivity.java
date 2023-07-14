@@ -68,7 +68,6 @@ public class PokerTableActivity extends BaseAuthActivity implements PokerTableAd
         }
     }
 
-
     @Override
     public void onPokerTableClicked(PokerTable pokerTable) {
         Intent intent = new Intent(this, PokerGameActivity.class);

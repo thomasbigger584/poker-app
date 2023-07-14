@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog logicalFilePath="db.changelog-1.0.xml" xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet author="tbigg" id="3">
+        <addColumn tableName="app_user">
+            <column name="total_funds" type="double" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="tbigg" id="4">
+        <createTable tableName="poker_table_app_user">
+            <column name="id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="funds" type="double" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="position" type="tinyint"/>
+            <column name="poker_table_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="pk_poker_table_app_user" tableName="poker_table_app_user"/>
+        <addForeignKeyConstraint constraintName="fk_app_user_poker_table_poker_table_id" onDelete="CASCADE"
+                                 baseTableName="poker_table_app_user" baseColumnNames="poker_table_id"
+                                 referencedTableName="poker_table" referencedColumnNames="id"/>
+        <addForeignKeyConstraint constraintName="fk_app_user_poker_table_user_id" onDelete="CASCADE"
+                                 baseTableName="poker_table_app_user" baseColumnNames="user_id"
+                                 referencedTableName="app_user" referencedColumnNames="id"/>
+    </changeSet>
+</databaseChangeLog>

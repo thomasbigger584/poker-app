@@ -1,6 +1,7 @@
 package com.twb.pokergame.web.websocket.session;
 
 import com.twb.pokergame.service.game.PokerGameService;
+import com.twb.pokergame.web.websocket.PokerTableWebSocketController;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,7 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import java.security.Principal;
 import java.util.Optional;
+import java.util.UUID;
 
 // Generic websocket connect/disconnect. This gets called when the session is created/destroyed
 @Component
@@ -19,7 +21,7 @@ import java.util.Optional;
 public class SessionEventListener {
     private static final Logger logger = LoggerFactory.getLogger(SessionEventListener.class);
     private final SessionService sessionService;
-    private final PokerGameService gameService;
+    private final PokerTableWebSocketController webSocketController;
 
     @EventListener
     public void handleWebSocketConnectListener(SessionConnectedEvent event) {
@@ -35,11 +37,12 @@ public class SessionEventListener {
             return;
         }
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-        Optional<String> pokerTableIdOpt = sessionService.getPokerTableId(headerAccessor);
+        Optional<UUID> pokerTableIdOpt = sessionService.getPokerTableId(headerAccessor);
         if (pokerTableIdOpt.isEmpty()) {
             logger.warn("Session disconnect cannot disconnect player as no poker table id found on session");
             return;
         }
-        gameService.onPlayerDisconnected(pokerTableIdOpt.get(), principal.getName());
+
+        webSocketController.sendDisconnectPlayer(principal, pokerTableIdOpt.get());
     }
 }

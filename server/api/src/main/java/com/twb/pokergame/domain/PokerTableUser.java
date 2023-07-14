@@ -1,6 +1,5 @@
 package com.twb.pokergame.domain;
 
-import com.twb.pokergame.domain.enumeration.GameType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -8,15 +7,13 @@ import lombok.Setter;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Entity
 @Getter
 @Setter
-@Table(name = "poker_table")
-public class PokerTable {
+@Table(name = "poker_table_app_user")
+public class PokerTableUser {
 
     @Id
     @NotNull
@@ -24,23 +21,22 @@ public class PokerTable {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @NotNull
-    @Column(name = "name")
-    private String name;
+    @Column(name = "funds")
+    private double funds = 0d;
 
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    @Column(name = "game_type")
-    private GameType gameType;
+    @OneToOne(optional = false)
+    @JoinColumn(name = "user_id")
+    private User user;
 
-    @OneToMany(mappedBy = "pokerTable", cascade = CascadeType.ALL)
-    private List<PokerTableUser> pokerTableUsers = new ArrayList<>();
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "poker_table_id")
+    private PokerTable pokerTable;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        PokerTable that = (PokerTable) o;
+        PokerTableUser that = (PokerTableUser) o;
         return new EqualsBuilder().append(id, that.id).isEquals();
     }
 
