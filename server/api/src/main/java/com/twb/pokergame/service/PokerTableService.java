@@ -32,7 +32,7 @@ public class PokerTableService {
             repository.save(pokerTable1);
 
             PokerTable pokerTable2 = new PokerTable();
-            pokerTable2.setName("Poker Table 1");
+            pokerTable2.setName("Poker Table 2");
             pokerTable2.setGameType(GameType.BLACKJACK);
 
             repository.save(pokerTable2);

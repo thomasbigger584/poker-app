@@ -38,5 +38,10 @@
             android:label="@string/title_activity_poker_game"
             android:screenOrientation="landscape"
             android:theme="@style/FullscreenTheme" />
+
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            tools:node="remove" />
     </application>
 </manifest>

@@ -40,10 +40,6 @@ public abstract class GameRunnable implements Runnable {
         List<PokerTableUser> pokerTableUsers;
         do {
             pokerTableUsers = pokerTableUserRepository.findByPokerTableId(pokerTableId);
-            if (pokerTableUsers.isEmpty()) {
-                sendLogMessage("No more players so stopping");
-                return;
-            }
             if (pokerTableUsers.size() < maxNumberOfPlayers) {
                 sleep(300);
             }

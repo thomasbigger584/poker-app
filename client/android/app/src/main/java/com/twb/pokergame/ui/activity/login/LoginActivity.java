@@ -27,7 +27,9 @@ import androidx.annotation.AnyThread;
 import androidx.annotation.MainThread;
 import androidx.annotation.WorkerThread;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.browser.customtabs.CustomTabColorSchemeParams;
 import androidx.browser.customtabs.CustomTabsIntent;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.twb.pokergame.R;
@@ -314,7 +316,9 @@ public final class LoginActivity extends AppCompatActivity {
             Log.i(TAG, "Warming up browser instance for auth request");
             CustomTabsIntent.Builder intentBuilder =
                     authService.createCustomTabsIntentBuilder(authRequest.get().toUri());
-            intentBuilder.setToolbarColor(getColor(R.color.colorPrimary));
+            intentBuilder.setDefaultColorSchemeParams(new CustomTabColorSchemeParams.Builder()
+                    .setToolbarColor(ContextCompat.getColor(this, R.color.colorPrimary))
+                    .build());
             authIntent.set(intentBuilder.build());
             authIntentLatch.countDown();
         });
