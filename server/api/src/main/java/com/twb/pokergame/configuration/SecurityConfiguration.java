@@ -30,8 +30,9 @@ public class SecurityConfiguration {
                 .requestMatchers("/looping").hasAuthority(USER)
                 .requestMatchers("/looping/**").permitAll()
 
-                //everything else
+                //todo: remove these, only added for ease of testing
                 .requestMatchers("/poker-table/send-message").permitAll()
+                .requestMatchers("/player-session", "/player-session/**").permitAll()
                 .requestMatchers("/round", "/round/**").permitAll()
 
                 //admin endpoints

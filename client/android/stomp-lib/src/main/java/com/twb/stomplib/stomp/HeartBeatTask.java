@@ -38,20 +38,20 @@ public class HeartBeatTask {
         this.sendCallback = sendCallback;
     }
 
-    public void setServerHeartbeat(int serverHeartbeat) {
-        this.serverHeartbeatNew = serverHeartbeat;
-    }
-
-    public void setClientHeartbeat(int clientHeartbeat) {
-        this.clientHeartbeatNew = clientHeartbeat;
-    }
-
     public int getServerHeartbeat() {
         return serverHeartbeatNew;
     }
 
+    public void setServerHeartbeat(int serverHeartbeat) {
+        this.serverHeartbeatNew = serverHeartbeat;
+    }
+
     public int getClientHeartbeat() {
         return clientHeartbeatNew;
+    }
+
+    public void setClientHeartbeat(int clientHeartbeat) {
+        this.clientHeartbeatNew = clientHeartbeat;
     }
 
     public boolean consumeHeartBeat(StompMessage message) {

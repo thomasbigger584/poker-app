@@ -31,11 +31,9 @@ import io.reactivex.subjects.PublishSubject;
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class StompClient {
 
-    private static final String TAG = StompClient.class.getSimpleName();
-
     public static final String SUPPORTED_VERSIONS = "1.1,1.2";
     public static final String DEFAULT_ACK = "auto";
-
+    private static final String TAG = StompClient.class.getSimpleName();
     private final ConnectionProvider connectionProvider;
     private ConcurrentHashMap<String, String> topics;
     private boolean legacyWhitespace;
@@ -326,9 +324,12 @@ public class StompClient {
         this.legacyWhitespace = legacyWhitespace;
     }
 
-    /** returns the to topic (subscription id) corresponding to a given destination
+    /**
+     * returns the to topic (subscription id) corresponding to a given destination
+     *
      * @param dest the destination
-     * @return the topic (subscription id) or null if no topic corresponds to the destination */
+     * @return the topic (subscription id) or null if no topic corresponds to the destination
+     */
     public String getTopicId(String dest) {
         return topics.get(dest);
     }

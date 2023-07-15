@@ -6,7 +6,7 @@ import com.twb.stomplib.stomp.StompClient;
 
 public class SubscriptionPathMatcher implements PathMatcher {
 
-    private final  StompClient stompClient;
+    private final StompClient stompClient;
 
     public SubscriptionPathMatcher(StompClient stompClient) {
         this.stompClient = stompClient;

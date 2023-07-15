@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<databaseChangeLog logicalFilePath="db.changelog-1.0.xml" xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" logicalFilePath="db.changelog-1.0.xml"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
-
     <changeSet author="tbigg" id="3">
         <addColumn tableName="app_user">
             <column name="total_funds" type="double" defaultValueNumeric="0">
@@ -27,5 +26,36 @@
         <addForeignKeyConstraint constraintName="fk_round_poker_table_id" onDelete="CASCADE"
                                  baseTableName="round" baseColumnNames="poker_table_id"
                                  referencedTableName="poker_table" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet author="tbigg" id="5">
+        <createTable tableName="player_session">
+            <column name="id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="poker_table_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="round_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="position" type="tinyint"/>
+            <column name="connection_state" type="text" defaultValue="CONNECTED">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="pk_player_session" tableName="player_session"/>
+        <addForeignKeyConstraint constraintName="fk_player_session_user_id" onDelete="CASCADE"
+                                 baseTableName="player_session" baseColumnNames="user_id"
+                                 referencedTableName="app_user" referencedColumnNames="id"/>
+        <addForeignKeyConstraint constraintName="fk_player_session_poker_table_id" onDelete="CASCADE"
+                                 baseTableName="player_session" baseColumnNames="poker_table_id"
+                                 referencedTableName="poker_table" referencedColumnNames="id"/>
+        <addForeignKeyConstraint constraintName="fk_player_session_round_id" onDelete="CASCADE"
+                                 baseTableName="player_session" baseColumnNames="round_id"
+                                 referencedTableName="round" referencedColumnNames="id"/>
     </changeSet>
 </databaseChangeLog>

@@ -1,20 +1,22 @@
 package com.twb.pokergame.data.websocket.message.server.payload;
 
-public class PlayerConnectedDTO {
-    private String username;
+import com.twb.pokergame.data.model.dto.playersession.PlayerSessionDTO;
 
-    public String getUsername() {
-        return username;
+public class PlayerConnectedDTO {
+    private PlayerSessionDTO session;
+
+    public PlayerSessionDTO getSession() {
+        return session;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setSession(PlayerSessionDTO session) {
+        this.session = session;
     }
 
     @Override
     public String toString() {
         return "PlayerConnectedDTO{" +
-                "username='" + username + '\'' +
+                "session=" + session +
                 '}';
     }
 }

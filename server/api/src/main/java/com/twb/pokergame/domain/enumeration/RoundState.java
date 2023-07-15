@@ -7,6 +7,5 @@ public enum RoundState {
     //todo: more round types
 
 
-
     COMPLETED;
 }

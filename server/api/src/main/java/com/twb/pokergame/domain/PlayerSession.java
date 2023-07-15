@@ -1,6 +1,7 @@
 package com.twb.pokergame.domain;
 
-import com.twb.pokergame.domain.enumeration.RoundState;
+
+import com.twb.pokergame.domain.enumeration.ConnectionState;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -8,15 +9,13 @@ import lombok.Setter;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Entity
 @Getter
 @Setter
-@Table(name = "round")
-public class Round {
+@Table(name = "player_session")
+public class PlayerSession {
 
     @Id
     @NotNull
@@ -24,30 +23,41 @@ public class Round {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    @Column(name = "round_state")
-    private RoundState roundState = RoundState.INIT;
+    @OneToOne(optional = false)
+    @JoinColumn(name = "user_id")
+    private AppUser user;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "poker_table_id")
     private PokerTable pokerTable;
 
-    @OneToMany(mappedBy = "round", cascade = CascadeType.ALL)
-    private List<PlayerSession> playerSessions = new ArrayList<>();
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "round_id")
+    private Round round;
+
+    @Column(name = "position")
+    private Integer position;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "connection_state")
+    private ConnectionState connectionState;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
+
         if (o == null || getClass() != o.getClass()) return false;
-        Round round = (Round) o;
-        return new EqualsBuilder().append(id, round.id)
-                .append(roundState, round.roundState).isEquals();
+
+        PlayerSession that = (PlayerSession) o;
+
+        return new EqualsBuilder().append(id, that.id)
+                .append(connectionState, that.connectionState).isEquals();
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
-                .append(id).append(roundState).toHashCode();
+                .append(id).append(connectionState).toHashCode();
     }
 }

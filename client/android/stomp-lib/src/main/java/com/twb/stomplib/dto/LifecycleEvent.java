@@ -5,18 +5,11 @@ import java.util.TreeMap;
 
 public class LifecycleEvent {
 
-    public enum Type {
-        OPENED, CLOSED, ERROR, FAILED_SERVER_HEARTBEAT
-    }
-
     private final Type mType;
-
     //Nullable
     private Exception mException;
-
     //Nullable
     private String mMessage;
-
     private TreeMap<String, String> handshakeResponseHeaders = new TreeMap<>();
 
     public LifecycleEvent(Type type) {
@@ -45,11 +38,15 @@ public class LifecycleEvent {
         return mMessage;
     }
 
+    public TreeMap<String, String> getHandshakeResponseHeaders() {
+        return handshakeResponseHeaders;
+    }
+
     public void setHandshakeResponseHeaders(TreeMap<String, String> handshakeResponseHeaders) {
         this.handshakeResponseHeaders = handshakeResponseHeaders;
     }
 
-    public TreeMap<String, String> getHandshakeResponseHeaders() {
-        return handshakeResponseHeaders;
+    public enum Type {
+        OPENED, CLOSED, ERROR, FAILED_SERVER_HEARTBEAT
     }
 }

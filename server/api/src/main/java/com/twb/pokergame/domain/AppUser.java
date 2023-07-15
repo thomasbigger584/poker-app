@@ -53,6 +53,8 @@ public class AppUser {
     @Column(name = "total_funds")
     private double totalFunds = 0d;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private PlayerSession playerSession;
 
     @Override
     public boolean equals(Object o) {

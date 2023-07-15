@@ -12,6 +12,7 @@ import java.util.UUID;
 @Scope("prototype")
 public class BlackjackGameRunnable extends GameRunnable {
     private static final Logger logger = LoggerFactory.getLogger(BlackjackGameRunnable.class);
+
     public BlackjackGameRunnable(UUID tableId) {
         super(tableId, 1);
     }

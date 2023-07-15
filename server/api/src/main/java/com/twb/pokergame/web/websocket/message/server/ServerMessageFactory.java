@@ -1,5 +1,6 @@
 package com.twb.pokergame.web.websocket.message.server;
 
+import com.twb.pokergame.dto.playersession.PlayerSessionDTO;
 import com.twb.pokergame.web.websocket.message.server.payload.ChatMessageDTO;
 import com.twb.pokergame.web.websocket.message.server.payload.LogMessageDTO;
 import com.twb.pokergame.web.websocket.message.server.payload.PlayerConnectedDTO;
@@ -9,9 +10,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class ServerMessageFactory {
 
-    public ServerMessageDTO playerConnected(String username) {
+    public ServerMessageDTO playerConnected(PlayerSessionDTO dto) {
         PlayerConnectedDTO payload = PlayerConnectedDTO.builder()
-                .username(username)
+                .session(dto)
                 .build();
         return ServerMessageDTO.create(ServerMessageType.PLAYER_CONNECTED, payload);
     }

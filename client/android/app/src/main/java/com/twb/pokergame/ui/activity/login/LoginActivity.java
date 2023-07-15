@@ -36,7 +36,6 @@ import com.twb.pokergame.R;
 import com.twb.pokergame.data.auth.AuthConfiguration;
 import com.twb.pokergame.data.auth.AuthStateManager;
 import com.twb.pokergame.ui.activity.pokertable.PokerTableActivity;
-import com.twb.pokergame.ui.dialog.AlertModalDialog;
 
 import net.openid.appauth.AppAuthConfiguration;
 import net.openid.appauth.AuthState;

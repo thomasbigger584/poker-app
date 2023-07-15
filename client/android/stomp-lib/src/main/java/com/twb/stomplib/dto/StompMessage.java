@@ -26,6 +26,29 @@ public class StompMessage {
         mPayload = payload;
     }
 
+    public static StompMessage from(@Nullable String data) {
+        if (data == null || data.trim().isEmpty()) {
+            return new StompMessage(StompCommand.UNKNOWN, null, data);
+        }
+        Scanner reader = new Scanner(new StringReader(data));
+        reader.useDelimiter("\\n");
+        String command = reader.next();
+        List<StompHeader> headers = new ArrayList<>();
+
+        while (reader.hasNext(PATTERN_HEADER)) {
+            Matcher matcher = PATTERN_HEADER.matcher(reader.next());
+            matcher.find();
+            headers.add(new StompHeader(matcher.group(1), matcher.group(2)));
+        }
+
+        reader.skip("\n\n");
+
+        reader.useDelimiter(TERMINATE_MESSAGE_SYMBOL);
+        String payload = reader.hasNext() ? reader.next() : null;
+
+        return new StompMessage(command, headers, payload);
+    }
+
     public List<StompHeader> getStompHeaders() {
         return mStompHeaders;
     }
@@ -66,29 +89,6 @@ public class StompMessage {
         }
         builder.append(TERMINATE_MESSAGE_SYMBOL);
         return builder.toString();
-    }
-
-    public static StompMessage from(@Nullable String data) {
-        if (data == null || data.trim().isEmpty()) {
-            return new StompMessage(StompCommand.UNKNOWN, null, data);
-        }
-        Scanner reader = new Scanner(new StringReader(data));
-        reader.useDelimiter("\\n");
-        String command = reader.next();
-        List<StompHeader> headers = new ArrayList<>();
-
-        while (reader.hasNext(PATTERN_HEADER)) {
-            Matcher matcher = PATTERN_HEADER.matcher(reader.next());
-            matcher.find();
-            headers.add(new StompHeader(matcher.group(1), matcher.group(2)));
-        }
-
-        reader.skip("\n\n");
-
-        reader.useDelimiter(TERMINATE_MESSAGE_SYMBOL);
-        String payload = reader.hasNext() ? reader.next() : null;
-
-        return new StompMessage(command, headers, payload);
     }
 
     @Override

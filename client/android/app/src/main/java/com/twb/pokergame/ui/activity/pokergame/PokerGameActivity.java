@@ -2,7 +2,6 @@ package com.twb.pokergame.ui.activity.pokergame;
 
 import android.os.Bundle;
 import android.view.WindowManager;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -12,6 +11,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.twb.pokergame.R;
 import com.twb.pokergame.data.model.PokerTable;
+import com.twb.pokergame.data.model.dto.appuser.AppUserDTO;
+import com.twb.pokergame.data.model.dto.playersession.PlayerSessionDTO;
 import com.twb.pokergame.ui.activity.login.BaseAuthActivity;
 import com.twb.pokergame.ui.activity.pokergame.chatbox.ChatBoxRecyclerAdapter;
 import com.twb.pokergame.ui.dialog.AlertModalDialog;
@@ -67,7 +68,9 @@ public class PokerGameActivity extends BaseAuthActivity {
             chatBoxAdapter.add(message);
         });
         viewModel.playerConnected.observe(this, playerConnected -> {
-            chatBoxAdapter.add("Connected: " + playerConnected.getUsername());
+            PlayerSessionDTO sessionDto = playerConnected.getSession();
+            AppUserDTO appUserDTO = sessionDto.getUser();
+            chatBoxAdapter.add("Connected: " + appUserDTO.getUsername());
             //todo: add player to view
             DialogHelper.dismiss(loadingSpinner);
         });
