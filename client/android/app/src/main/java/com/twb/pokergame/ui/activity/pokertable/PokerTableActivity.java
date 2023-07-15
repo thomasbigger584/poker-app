@@ -7,6 +7,7 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -17,6 +18,8 @@ import com.twb.pokergame.data.auth.AuthStateManager;
 import com.twb.pokergame.data.model.PokerTable;
 import com.twb.pokergame.ui.activity.login.BaseAuthActivity;
 import com.twb.pokergame.ui.activity.pokergame.PokerGameActivity;
+import com.twb.pokergame.ui.dialog.AlertModalDialog;
+import com.twb.pokergame.ui.dialog.DialogHelper;
 
 import javax.inject.Inject;
 
@@ -26,6 +29,7 @@ import dagger.hilt.android.AndroidEntryPoint;
 public class PokerTableActivity extends BaseAuthActivity implements PokerTableAdapter.PokerTableClickListener {
     @Inject
     AuthStateManager authStateManager;
+    private AlertDialog loadingSpinner;
     private PokerTableViewModel viewModel;
     private PokerTableAdapter adapter;
 
@@ -41,6 +45,9 @@ public class PokerTableActivity extends BaseAuthActivity implements PokerTableAd
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        loadingSpinner = DialogHelper.createLoadingSpinner(this);
+        DialogHelper.show(loadingSpinner);
+
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
@@ -49,14 +56,21 @@ public class PokerTableActivity extends BaseAuthActivity implements PokerTableAd
 
         viewModel = new ViewModelProvider(this).get(PokerTableViewModel.class);
         viewModel.errors.observe(this, error -> {
-            Toast.makeText(this, error.getMessage(), Toast.LENGTH_SHORT).show();
+            if (error != null) {
+                DialogHelper.dismiss(loadingSpinner);
+                AlertModalDialog alertModalDialog = AlertModalDialog
+                        .newInstance(AlertModalDialog.AlertModalType.ERROR, error.getMessage(), null);
+                alertModalDialog.show(getSupportFragmentManager(), "modal_alert");
+            }
         });
     }
 
     @Override
     protected void onAuthorized() {
-        viewModel.getPokerTables()
-                .observe(this, pokerTables -> adapter.setData(pokerTables));
+        viewModel.getPokerTables().observe(this, pokerTables -> {
+            adapter.setData(pokerTables);
+            DialogHelper.dismiss(loadingSpinner);
+        });
     }
 
     @Override

@@ -20,7 +20,6 @@ public class PokerTableUserService {
         PokerTableUser pokerTableUser = new PokerTableUser();
         pokerTableUser.setPokerTable(pokerTable);
         pokerTableUser.setUser(user);
-        pokerTableUser.setFunds(0d);
 
         return repository.saveAndFlush(pokerTableUser);
     }

@@ -21,9 +21,6 @@ public class PokerTableUser {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "funds")
-    private double funds = 0d;
-
     @OneToOne(optional = false)
     @JoinColumn(name = "user_id")
     private User user;

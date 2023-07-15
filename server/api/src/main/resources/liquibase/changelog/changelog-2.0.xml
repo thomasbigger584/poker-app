@@ -16,10 +16,6 @@
             <column name="id" type="uuid">
                 <constraints nullable="false"/>
             </column>
-            <column name="funds" type="double" defaultValueNumeric="0">
-                <constraints nullable="false"/>
-            </column>
-            <column name="position" type="tinyint"/>
             <column name="poker_table_id" type="uuid">
                 <constraints nullable="false"/>
             </column>

@@ -41,4 +41,16 @@
     <string name="auth_settings">Authorization settings in use:</string>
     <string name="use_pending_intents">Use PendingIntent\'s for completion</string>
     <string name="logout">Logout</string>
+
+
+    <string name="warning">Warning</string>
+    <string name="are_you_sure">Are you sure?</string>
+    <string name="info">Info</string>
+    <string name="success">Success</string>
+    <string name="error_occurred">An Error occurred</string>
+    <string name="confirm">Confirm</string>
+    <string name="ok_got_it">OK, Got it</string>
+    <string name="close">Close</string>
+    <string name="cancel">Cancel</string>
+
 </resources>

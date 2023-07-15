@@ -5,6 +5,7 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -13,6 +14,9 @@ import com.twb.pokergame.R;
 import com.twb.pokergame.data.model.PokerTable;
 import com.twb.pokergame.ui.activity.login.BaseAuthActivity;
 import com.twb.pokergame.ui.activity.pokergame.chatbox.ChatBoxRecyclerAdapter;
+import com.twb.pokergame.ui.dialog.AlertModalDialog;
+import com.twb.pokergame.ui.dialog.DialogHelper;
+import com.twb.pokergame.ui.dialog.FinishActivityOnClickListener;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -21,7 +25,7 @@ public class PokerGameActivity extends BaseAuthActivity {
     private static final String TAG = PokerGameActivity.class.getSimpleName();
     private PokerGameViewModel viewModel;
     private PokerTable pokerTable;
-
+    private AlertDialog loadingSpinner;
     private RecyclerView chatBoxRecyclerView;
     private ChatBoxRecyclerAdapter chatBoxAdapter;
 
@@ -36,19 +40,32 @@ public class PokerGameActivity extends BaseAuthActivity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         pokerTable = PokerTable.fromBundle(getIntent().getExtras());
 
+        loadingSpinner = DialogHelper.createLoadingSpinner(this);
+        DialogHelper.show(loadingSpinner);
+
         chatBoxRecyclerView = findViewById(R.id.chatBoxRecyclerView);
         setupChatBoxRecyclerView();
 
         viewModel = new ViewModelProvider(this).get(PokerGameViewModel.class);
         viewModel.errors.observe(this, throwable -> {
+            DialogHelper.dismiss(loadingSpinner);
+            AlertModalDialog alertModalDialog = AlertModalDialog
+                    .newInstance(AlertModalDialog.AlertModalType.ERROR, throwable.getMessage(), null);
+            alertModalDialog.show(getSupportFragmentManager(), "modal_alert");
             chatBoxAdapter.add(throwable.getMessage());
         });
         viewModel.closedConnection.observe(this, aVoid -> {
-            chatBoxAdapter.add("Lost connection with server");
+            DialogHelper.dismiss(loadingSpinner);
+            String message = "Lost connection with server";
+            AlertModalDialog alertModalDialog = AlertModalDialog
+                    .newInstance(AlertModalDialog.AlertModalType.ERROR, message, new FinishActivityOnClickListener(this));
+            alertModalDialog.show(getSupportFragmentManager(), "modal_alert");
+            chatBoxAdapter.add(message);
         });
         viewModel.playerConnected.observe(this, playerConnected -> {
             chatBoxAdapter.add("Connected: " + playerConnected.getUsername());
             //todo: add player to view
+            DialogHelper.dismiss(loadingSpinner);
         });
         viewModel.chatMessage.observe(this, chatMessage -> {
             chatBoxAdapter.add(chatMessage.getUsername() + ": " + chatMessage.getMessage());
@@ -68,12 +85,9 @@ public class PokerGameActivity extends BaseAuthActivity {
     }
 
     @Override
-    protected void onNotAuthorized(String message, @Nullable Throwable t) {
-        if (t != null) {
-            Toast.makeText(this, message + " " + t.getMessage(), Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
-        }
+    protected void onNotAuthorized(String message, @Nullable Throwable throwable) {
+        DialogHelper.dismiss(loadingSpinner);
+        chatBoxAdapter.add(message);
     }
 
     private void setupChatBoxRecyclerView() {

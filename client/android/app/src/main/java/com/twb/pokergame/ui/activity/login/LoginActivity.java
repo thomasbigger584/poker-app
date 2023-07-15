@@ -36,6 +36,7 @@ import com.twb.pokergame.R;
 import com.twb.pokergame.data.auth.AuthConfiguration;
 import com.twb.pokergame.data.auth.AuthStateManager;
 import com.twb.pokergame.ui.activity.pokertable.PokerTableActivity;
+import com.twb.pokergame.ui.dialog.AlertModalDialog;
 
 import net.openid.appauth.AppAuthConfiguration;
 import net.openid.appauth.AuthState;
@@ -63,6 +64,7 @@ import dagger.hilt.android.AndroidEntryPoint;
 public final class LoginActivity extends AppCompatActivity {
     private static final String TAG = LoginActivity.class.getSimpleName();
     private static final String EXTRA_FAILED = "com.twb.pokergame.auth.failed";
+    private static final Class<? extends AppCompatActivity> AUTH_COMPLETED_ACTIVITY = PokerTableActivity.class;
     private final AtomicReference<String> clientId = new AtomicReference<>();
     private final AtomicReference<AuthorizationRequest> authRequest = new AtomicReference<>();
     private final AtomicReference<CustomTabsIntent> authIntent = new AtomicReference<>();
@@ -73,8 +75,6 @@ public final class LoginActivity extends AppCompatActivity {
     private CountDownLatch authIntentLatch = new CountDownLatch(1);
     private AuthorizationService authService;
     private ExecutorService executor;
-
-    private static final Class<? extends AppCompatActivity> AUTH_COMPLETED_ACTIVITY = PokerTableActivity.class;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

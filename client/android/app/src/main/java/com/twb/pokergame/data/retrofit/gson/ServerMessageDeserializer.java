@@ -29,7 +29,6 @@ public class ServerMessageDeserializer implements JsonDeserializer<ServerMessage
                                            JsonDeserializationContext context) throws JsonParseException {
 
         JsonObject jsonObject = json.getAsJsonObject();
-
         ServerMessageType messageType = getServerMessageType(jsonObject);
         Class<?> payloadClass = getPayloadClass(messageType);
         long timestamp = getTimestamp(jsonObject);
@@ -44,7 +43,7 @@ public class ServerMessageDeserializer implements JsonDeserializer<ServerMessage
         return serverMessageDto;
     }
 
-    private static long getTimestamp(JsonObject jsonObject) {
+    private long getTimestamp(JsonObject jsonObject) {
         if (!jsonObject.has(TIMESTAMP_KEY)) {
             Log.w(TAG, "Expected Server Message to provide " + TIMESTAMP_KEY
                     + " but it is null. Returning from app instead");

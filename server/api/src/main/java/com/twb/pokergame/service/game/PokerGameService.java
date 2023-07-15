@@ -54,7 +54,8 @@ public class PokerGameService {
             User user = userOpt.get();
 
             runnableFactory.createIfNotExist(pokerTableOpt.get());
-            pokerTableUserService.create(pokerTable, user);
+
+//            pokerTableUserService.create(pokerTable, user);
 
             ServerMessageDTO message = messageFactory.playerConnected(user.getUsername());
             dispatcher.send(pokerTableId, message);
@@ -71,7 +72,7 @@ public class PokerGameService {
                 for (PokerTableUser pokerTableUser : pokerTableUsers) {
                     User user = pokerTableUser.getUser();
                     if (user.getUsername().equals(username)) {
-                        pokerTableUserRepository.delete(pokerTableUser);
+//                        pokerTableUserRepository.delete(pokerTableUser);
                         break;
                     }
                 }
