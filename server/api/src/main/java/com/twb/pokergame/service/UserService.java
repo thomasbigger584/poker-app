@@ -1,6 +1,6 @@
 package com.twb.pokergame.service;
 
-import com.twb.pokergame.domain.User;
+import com.twb.pokergame.domain.AppUser;
 import com.twb.pokergame.mapper.UserMapper;
 import com.twb.pokergame.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,8 +15,8 @@ public class UserService {
     private final UserRepository repository;
     private final UserMapper mapper;
 
-    public User create(UserRepresentation representation) {
-        User user = mapper.representationToModel(representation);
-        return repository.save(user);
+    public AppUser create(UserRepresentation representation) {
+        AppUser appUser = mapper.representationToModel(representation);
+        return repository.save(appUser);
     }
 }

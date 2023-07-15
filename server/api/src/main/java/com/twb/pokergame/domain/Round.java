@@ -1,5 +1,6 @@
 package com.twb.pokergame.domain;
 
+import com.twb.pokergame.domain.enumeration.RoundState;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -12,8 +13,8 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
-@Table(name = "poker_table_app_user")
-public class PokerTableUser {
+@Table(name = "round")
+public class Round {
 
     @Id
     @NotNull
@@ -21,9 +22,10 @@ public class PokerTableUser {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @OneToOne(optional = false)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "round_state")
+    private RoundState roundState = RoundState.INIT;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "poker_table_id")
@@ -33,13 +35,14 @@ public class PokerTableUser {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        PokerTableUser that = (PokerTableUser) o;
-        return new EqualsBuilder().append(id, that.id).isEquals();
+        Round round = (Round) o;
+        return new EqualsBuilder().append(id, round.id)
+                .append(roundState, round.roundState).isEquals();
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
-                .append(id).toHashCode();
+                .append(id).append(roundState).toHashCode();
     }
 }

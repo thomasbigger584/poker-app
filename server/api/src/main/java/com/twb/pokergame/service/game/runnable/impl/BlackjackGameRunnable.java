@@ -12,8 +12,8 @@ import java.util.UUID;
 @Scope("prototype")
 public class BlackjackGameRunnable extends GameRunnable {
     private static final Logger logger = LoggerFactory.getLogger(BlackjackGameRunnable.class);
-    public BlackjackGameRunnable(UUID pokerTableId) {
-        super(pokerTableId, 1);
+    public BlackjackGameRunnable(UUID tableId) {
+        super(tableId, 1);
     }
 
     @Override

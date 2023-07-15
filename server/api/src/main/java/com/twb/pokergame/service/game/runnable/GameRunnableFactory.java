@@ -14,12 +14,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @RequiredArgsConstructor
 public class GameRunnableFactory {
     private static final Logger logger = LoggerFactory.getLogger(GameRunnableFactory.class);
-    private static final Map<UUID, GameRunnable> POKER_GAME_RUNNABLE_MAP = new HashMap<>();
+    private static final Map<UUID, GameRunnable> POKER_GAME_RUNNABLE_MAP = new ConcurrentHashMap<>();
 
     private final ApplicationContext context;
     private final AsyncTaskExecutor taskExecutor;
@@ -36,10 +37,10 @@ public class GameRunnableFactory {
     }
 
     private GameRunnable create(PokerTable pokerTable) {
-        UUID pokerTableId = pokerTable.getId();
+        UUID tableId = pokerTable.getId();
         return switch (pokerTable.getGameType()) {
-            case TEXAS_HOLDEM -> context.getBean(TexasHoldemGameRunnable.class, pokerTableId);
-            case BLACKJACK -> context.getBean(BlackjackGameRunnable.class, pokerTableId);
+            case TEXAS_HOLDEM -> context.getBean(TexasHoldemGameRunnable.class, tableId);
+            case BLACKJACK -> context.getBean(BlackjackGameRunnable.class, tableId);
         };
     }
 

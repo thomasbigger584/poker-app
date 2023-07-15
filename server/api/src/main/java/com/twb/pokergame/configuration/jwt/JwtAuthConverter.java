@@ -1,7 +1,7 @@
 package com.twb.pokergame.configuration.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.twb.pokergame.domain.User;
+import com.twb.pokergame.domain.AppUser;
 import com.twb.pokergame.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -79,7 +79,7 @@ public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationTo
 
     private void setUserDetails(JwtAuthenticationToken authToken) {
         try {
-            Optional<User> userOpt = userRepository.findByUsername(authToken.getName());
+            Optional<AppUser> userOpt = userRepository.findByUsername(authToken.getName());
             if (userOpt.isPresent()) {
                 authToken.setDetails(objectMapper.writeValueAsString(userOpt.get()));
                 authToken.setAuthenticated(true);

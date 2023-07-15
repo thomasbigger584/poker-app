@@ -13,12 +13,12 @@ import java.util.UUID;
 public class SessionService {
     private static final String SESSION_POKER_TABLE_ID = "SESSION_POKER_TABLE_ID";
 
-    public void putPokerTableId(StompHeaderAccessor headerAccessor, UUID pokerTableId) {
+    public void putPokerTableId(StompHeaderAccessor headerAccessor, UUID tableId) {
         Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
         if (sessionAttributes == null) {
             sessionAttributes = new HashMap<>();
         }
-        sessionAttributes.put(SESSION_POKER_TABLE_ID, pokerTableId);
+        sessionAttributes.put(SESSION_POKER_TABLE_ID, tableId);
         headerAccessor.setSessionAttributes(sessionAttributes);
     }
 

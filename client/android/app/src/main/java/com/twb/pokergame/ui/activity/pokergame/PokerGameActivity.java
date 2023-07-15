@@ -26,7 +26,6 @@ public class PokerGameActivity extends BaseAuthActivity {
     private PokerGameViewModel viewModel;
     private PokerTable pokerTable;
     private AlertDialog loadingSpinner;
-    private RecyclerView chatBoxRecyclerView;
     private ChatBoxRecyclerAdapter chatBoxAdapter;
 
     @Override
@@ -43,8 +42,13 @@ public class PokerGameActivity extends BaseAuthActivity {
         loadingSpinner = DialogHelper.createLoadingSpinner(this);
         DialogHelper.show(loadingSpinner);
 
-        chatBoxRecyclerView = findViewById(R.id.chatBoxRecyclerView);
-        setupChatBoxRecyclerView();
+        RecyclerView chatBoxRecyclerView = findViewById(R.id.chatBoxRecyclerView);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        layoutManager.setStackFromEnd(true);
+        chatBoxRecyclerView.setLayoutManager(layoutManager);
+
+        chatBoxAdapter = new ChatBoxRecyclerAdapter(layoutManager);
+        chatBoxRecyclerView.setAdapter(chatBoxAdapter);
 
         viewModel = new ViewModelProvider(this).get(PokerGameViewModel.class);
         viewModel.errors.observe(this, throwable -> {
@@ -87,16 +91,10 @@ public class PokerGameActivity extends BaseAuthActivity {
     @Override
     protected void onNotAuthorized(String message, @Nullable Throwable throwable) {
         DialogHelper.dismiss(loadingSpinner);
+        AlertModalDialog alertModalDialog = AlertModalDialog
+                .newInstance(AlertModalDialog.AlertModalType.ERROR, message, new FinishActivityOnClickListener(this));
+        alertModalDialog.show(getSupportFragmentManager(), "modal_alert");
         chatBoxAdapter.add(message);
-    }
-
-    private void setupChatBoxRecyclerView() {
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        layoutManager.setStackFromEnd(true);
-        chatBoxRecyclerView.setLayoutManager(layoutManager);
-
-        chatBoxAdapter = new ChatBoxRecyclerAdapter(layoutManager);
-        chatBoxRecyclerView.setAdapter(chatBoxAdapter);
     }
 
     @Override

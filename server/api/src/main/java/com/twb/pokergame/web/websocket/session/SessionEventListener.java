@@ -1,6 +1,5 @@
 package com.twb.pokergame.web.websocket.session;
 
-import com.twb.pokergame.service.game.PokerGameService;
 import com.twb.pokergame.web.websocket.PokerTableWebSocketController;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -37,12 +36,12 @@ public class SessionEventListener {
             return;
         }
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-        Optional<UUID> pokerTableIdOpt = sessionService.getPokerTableId(headerAccessor);
-        if (pokerTableIdOpt.isEmpty()) {
+        Optional<UUID> tableIdOpt = sessionService.getPokerTableId(headerAccessor);
+        if (tableIdOpt.isEmpty()) {
             logger.warn("Session disconnect cannot disconnect player as no poker table id found on session");
             return;
         }
 
-        webSocketController.sendDisconnectPlayer(principal, pokerTableIdOpt.get());
+        webSocketController.sendDisconnectPlayer(principal, tableIdOpt.get());
     }
 }

@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 import java.util.UUID;
 
 @Repository
-public interface PokerTableRepository extends JpaRepository<PokerTable, UUID> {
+public interface TableRepository extends JpaRepository<PokerTable, UUID> {
 }

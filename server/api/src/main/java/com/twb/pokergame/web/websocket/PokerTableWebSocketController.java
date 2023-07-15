@@ -1,6 +1,6 @@
 package com.twb.pokergame.web.websocket;
 
-import com.twb.pokergame.service.game.PokerGameService;
+import com.twb.pokergame.service.game.GameService;
 import com.twb.pokergame.web.websocket.message.client.CreateChatMessageDTO;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageFactory;
@@ -22,18 +22,18 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PokerTableWebSocketController {
     private static final Logger logger = LoggerFactory.getLogger(PokerTableWebSocketController.class);
-    private static final String POKER_TABLE_EVENTS_TOPIC = "/topic/loops.{pokerTableId}";
-    private static final String POKER_TABLE_MESSAGE_PREFIX = "/pokerTable/{pokerTableId}";
+    private static final String POKER_TABLE_EVENTS_TOPIC = "/topic/loops.{tableId}";
+    private static final String POKER_TABLE_MESSAGE_PREFIX = "/pokerTable/{tableId}";
 
     private static final String SEND_CONNECT_PLAYER = "/sendConnectPlayer";
     private static final String SEND_CHAT_MESSAGE = "/sendChatMessage";
     private static final String SEND_DISCONNECT_PLAYER = "/sendDisconnectPlayer";
 
-    private static final String POKER_TABLE_ID = "pokerTableId";
+    private static final String POKER_TABLE_ID = "tableId";
 
     private final SessionService sessionService;
     private final ServerMessageFactory messageFactory;
-    private final PokerGameService gameService;
+    private final GameService gameService;
 
     /*
      * Note: Always send back to the client a ServerMessage with a specific ServerMessageType and payload.
@@ -43,24 +43,24 @@ public class PokerTableWebSocketController {
 
     @MessageMapping(POKER_TABLE_MESSAGE_PREFIX + SEND_CONNECT_PLAYER)
     public void sendConnectPlayer(Principal principal, StompHeaderAccessor headerAccessor,
-                                  @DestinationVariable(POKER_TABLE_ID) UUID pokerTableId) {
-        logger.info(">>>> sendConnectPlayer - Poker Table: {} - User: {}", pokerTableId, principal.getName());
-        sessionService.putPokerTableId(headerAccessor, pokerTableId);
-        gameService.onPlayerConnected(pokerTableId, principal.getName());
+                                  @DestinationVariable(POKER_TABLE_ID) UUID tableId) {
+        logger.info(">>>> sendConnectPlayer - Poker Table: {} - User: {}", tableId, principal.getName());
+        sessionService.putPokerTableId(headerAccessor, tableId);
+        gameService.onPlayerConnected(tableId, principal.getName());
     }
 
     @MessageMapping(POKER_TABLE_MESSAGE_PREFIX + SEND_CHAT_MESSAGE)
     @SendTo(POKER_TABLE_EVENTS_TOPIC)
     public ServerMessageDTO sendChatMessage(Principal principal,
-                                            @DestinationVariable(POKER_TABLE_ID) UUID pokerTableId,
+                                            @DestinationVariable(POKER_TABLE_ID) UUID tableId,
                                             @Payload CreateChatMessageDTO message) {
         return messageFactory.chatMessage(principal.getName(), message.getMessage());
     }
 
     @MessageMapping(POKER_TABLE_MESSAGE_PREFIX + SEND_DISCONNECT_PLAYER)
     public void sendDisconnectPlayer(Principal principal,
-                                     @DestinationVariable(POKER_TABLE_ID) UUID pokerTableId) {
-        logger.info(">>>> sendDisconnectPlayer - Poker Table: {} - User: {}", pokerTableId, principal.getName());
-        gameService.onPlayerDisconnected(pokerTableId, principal.getName());
+                                     @DestinationVariable(POKER_TABLE_ID) UUID tableId) {
+        logger.info(">>>> sendDisconnectPlayer - Poker Table: {} - User: {}", tableId, principal.getName());
+        gameService.onPlayerDisconnected(tableId, principal.getName());
     }
 }

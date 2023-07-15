@@ -1,6 +1,6 @@
 package com.twb.pokergame.service.keycloak;
 
-import com.twb.pokergame.domain.User;
+import com.twb.pokergame.domain.AppUser;
 import com.twb.pokergame.mapper.UserMapper;
 import com.twb.pokergame.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
@@ -40,7 +40,7 @@ public class KeycloakUserService {
     public void init() {
         logger.info("Synchronizing Keycloak users...");
         List<UserRepresentation> userMembers = userGroupResource.members();
-        List<User> databaseUsersFetched = new ArrayList<>(userRepository.findAll());
+        List<AppUser> databaseUsersFetched = new ArrayList<>(userRepository.findAll());
 
         int updatedUsers = 0;
         int createdUsers = 0;
@@ -49,15 +49,15 @@ public class KeycloakUserService {
             logger.info(ReflectionToStringBuilder.toString(representation, ToStringStyle.JSON_STYLE));
 
             UUID id = UUID.fromString(representation.getId());
-            Optional<User> userOpt = userRepository.findById(id);
+            Optional<AppUser> userOpt = userRepository.findById(id);
             if (userOpt.isPresent()) {
-                User user = userOpt.get();
-                logger.info("User {} already exists in database - todo: consider updating user here", user.getId());
-                databaseUsersFetched.remove(user);
+                AppUser appUser = userOpt.get();
+                logger.info("User {} already exists in database - todo: consider updating user here", appUser.getId());
+                databaseUsersFetched.remove(appUser);
                 updatedUsers++;
             } else {
-                User user = userMapper.representationToModel(representation);
-                userRepository.save(user);
+                AppUser appUser = userMapper.representationToModel(representation);
+                userRepository.save(appUser);
                 createdUsers++;
             }
         }

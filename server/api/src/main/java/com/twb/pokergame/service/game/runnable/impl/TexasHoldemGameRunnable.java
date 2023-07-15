@@ -13,8 +13,8 @@ import java.util.UUID;
 public class TexasHoldemGameRunnable extends GameRunnable {
     private static final Logger logger = LoggerFactory.getLogger(TexasHoldemGameRunnable.class);
 
-    public TexasHoldemGameRunnable(UUID pokerTableId) {
-        super(pokerTableId, 2);
+    public TexasHoldemGameRunnable(UUID tableId) {
+        super(tableId, 2);
     }
 
     @Override

@@ -34,7 +34,7 @@ public class PokerTable {
     private GameType gameType;
 
     @OneToMany(mappedBy = "pokerTable", cascade = CascadeType.ALL)
-    private List<PokerTableUser> pokerTableUsers = new ArrayList<>();
+    private List<Round> rounds = new ArrayList<>();
 
     @Override
     public boolean equals(Object o) {

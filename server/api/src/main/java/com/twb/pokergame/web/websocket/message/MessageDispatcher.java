@@ -21,9 +21,9 @@ public class MessageDispatcher {
     private final SimpMessagingTemplate template;
     private final ObjectMapper objectMapper;
 
-    public void send(UUID pokerTableId, ServerMessageDTO message) {
+    public void send(UUID tableId, ServerMessageDTO message) {
         try {
-            String destination = String.format(TOPIC, pokerTableId);
+            String destination = String.format(TOPIC, tableId);
             String payload = objectMapper.writeValueAsString(message);
             template.convertAndSend(destination, payload);
             logger.info("<<<< " + payload);

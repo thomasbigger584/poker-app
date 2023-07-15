@@ -32,12 +32,13 @@ public class SecurityConfiguration {
 
                 //everything else
                 .requestMatchers("/poker-table/send-message").permitAll()
+                .requestMatchers("/round", "/round/**").permitAll()
 
                 //admin endpoints
                 .requestMatchers("/admin", "/admin/**").hasRole(ADMIN)
 
                 //catch-all
-                .anyRequest().hasAnyRole(ADMIN, USER).and();
+                .anyRequest().hasAnyRole(ADMIN, USER);
         http.oauth2ResourceServer()
                 .jwt()
                 .jwtAuthenticationConverter(jwtAuthConverter);

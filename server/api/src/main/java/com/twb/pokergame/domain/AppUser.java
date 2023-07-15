@@ -17,7 +17,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Table(name = "app_user")
-public class User {
+public class AppUser {
 
     @Id
     @NotNull
@@ -53,16 +53,13 @@ public class User {
     @Column(name = "total_funds")
     private double totalFunds = 0d;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-    private PokerTableUser pokerTableUser;
-
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        User user = (User) o;
-        return new EqualsBuilder().append(id, user.id).append(username, user.username).isEquals();
+        AppUser appUser = (AppUser) o;
+        return new EqualsBuilder().append(id, appUser.id).append(username, appUser.username).isEquals();
     }
 
     @Override

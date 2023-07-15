@@ -1,10 +1,10 @@
 package com.twb.pokergame.web.rest;
 
 
+import com.twb.pokergame.eval.HandEvaluator;
 import com.twb.pokergame.old.Card;
 import com.twb.pokergame.old.DeckOfCardsFactory;
 import com.twb.pokergame.old.Hand;
-import com.twb.pokergame.eval.HandEvaluator;
 import com.twb.pokergame.web.rest.dto.CardRequest;
 import com.twb.pokergame.web.rest.dto.HandRankRequest;
 import com.twb.pokergame.web.rest.dto.HandRankResponse;
@@ -18,9 +18,10 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-public class PokerGameResource {
+public class GameResource {
     private final HandEvaluator evaluator;
 
+    // this is for testing and will change, used to test end to end of hand evaluation
     @PostMapping("/rank")
     public HandRankResponse getHandRank(@RequestBody HandRankRequest request) {
         List<Card> cards = new ArrayList<>();

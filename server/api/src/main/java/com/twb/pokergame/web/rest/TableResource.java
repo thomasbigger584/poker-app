@@ -1,7 +1,7 @@
 package com.twb.pokergame.web.rest;
 
-import com.twb.pokergame.dto.pokertable.PokerTableDTO;
-import com.twb.pokergame.service.PokerTableService;
+import com.twb.pokergame.dto.pokertable.TableDTO;
+import com.twb.pokergame.service.TableService;
 import com.twb.pokergame.web.rest.util.PaginationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,8 +18,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/poker-table")
 @RequiredArgsConstructor
-public class PokerTableUserResource {
-    private final PokerTableService service;
+public class TableResource {
+    private final TableService service;
     private final PaginationService paginationService;
 
+    @GetMapping
+    public ResponseEntity<List<TableDTO>> getAll(Pageable pageable) {
+        Page<TableDTO> page = service.getAll(pageable);
+        HttpHeaders headers = paginationService.createHeaders(page);
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+    }
 }
