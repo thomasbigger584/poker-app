@@ -10,9 +10,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class ServerMessageFactory {
 
-    public ServerMessageDTO playerConnected(PlayerSessionDTO dto) {
+    public ServerMessageDTO playerConnected(PlayerSessionDTO session) {
         PlayerConnectedDTO payload = PlayerConnectedDTO.builder()
-                .session(dto)
+                .session(session)
                 .build();
         return ServerMessageDTO.create(ServerMessageType.PLAYER_CONNECTED, payload);
     }
@@ -24,9 +24,9 @@ public class ServerMessageFactory {
         return ServerMessageDTO.create(ServerMessageType.LOG, payload);
     }
 
-    public ServerMessageDTO playerDisconnected(String username) {
+    public ServerMessageDTO playerDisconnected(PlayerSessionDTO session) {
         PlayerDisconnectedDTO payload = PlayerDisconnectedDTO.builder()
-                .username(username)
+                .session(session)
                 .build();
         return ServerMessageDTO.create(ServerMessageType.PLAYER_DISCONNECTED, payload);
     }

@@ -5,7 +5,6 @@ import com.twb.pokergame.domain.AppUser;
 import com.twb.pokergame.domain.PlayerSession;
 import com.twb.pokergame.domain.PokerTable;
 import com.twb.pokergame.domain.Round;
-import com.twb.pokergame.domain.enumeration.ConnectionState;
 import com.twb.pokergame.dto.playersession.PlayerSessionDTO;
 import com.twb.pokergame.repository.PlayerSessionRepository;
 import com.twb.pokergame.repository.RoundRepository;
@@ -21,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -74,28 +74,14 @@ public class GameService {
         });
     }
 
-
     public void onPlayerDisconnected(UUID tableId, String username) {
         mutex.execute(tableId, () -> {
-//            List<Round> pokerTableUsers = roundRepository.findByPokerTableId(tableId);
-//            if (pokerTableUsers.isEmpty()) {
-//                logger.info("No PokerTableUsers so deleting runnable");
-//                runnableFactory.delete(tableId);
-//            } else {
-//                for (Round pokerTableUser : pokerTableUsers) {
-//                    User user = pokerTableUser.getUser();
-//                    if (user.getUsername().equals(username)) {
-//                        pokerTableUserRepository.delete(pokerTableUser);
-//                        break;
-//                    }
-//                }
-//                pokerTableUsers = roundRepository.findByPokerTableId(tableId);
-//                if (pokerTableUsers.isEmpty()) {
-//                    logger.info("No PokerTableUsers so deleting runnable");
-//                    runnableFactory.delete(tableId);
-//                }
-//            }
-            ServerMessageDTO message = messageFactory.playerDisconnected(username);
+            PlayerSessionDTO sessionDto = playerSessionService.disconnectUser(tableId, username);
+            List<PlayerSession> tableConnections = playerSessionRepository.findConnectedByTableId(tableId);
+            if (tableConnections.isEmpty()) {
+                runnableFactory.delete(tableId);
+            }
+            ServerMessageDTO message = messageFactory.playerDisconnected(sessionDto);
             dispatcher.send(tableId, message);
         });
     }

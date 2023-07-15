@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Component
 @Transactional
@@ -25,7 +26,7 @@ public class PlayerSessionService {
         PokerTable pokerTable = round.getPokerTable();
 
         Optional<PlayerSession> sessionOpt = repository
-                .findByTableIdAndUsername(pokerTable.getId(), user.getUsername());
+                .findConnectedByTableIdAndUsername(pokerTable.getId(), user.getUsername());
 
         PlayerSession session;
         if (sessionOpt.isPresent()) {
@@ -37,9 +38,22 @@ public class PlayerSessionService {
         }
 
         session.setRound(round);
-//          playerSession.setPosition(); //: todo: calculate position
+//          playerSession.setPosition();  todo: calculate position
         session.setConnectionState(ConnectionState.CONNECTED);
         session = repository.saveAndFlush(session);
         return mapper.modelToDto(session);
+    }
+
+    public PlayerSessionDTO disconnectUser(UUID tableId, String username) {
+        Optional<PlayerSession> playerSessionOpt =
+                repository.findConnectedByTableIdAndUsername(tableId, username);
+        PlayerSession session = playerSessionOpt.orElseGet(PlayerSession::new);
+        session.setPokerTable(null);
+        session.setRound(null);
+        session.setPosition(null);
+        session.setConnectionState(ConnectionState.DISCONNECTED);
+        session = repository.saveAndFlush(session);
+        return mapper.modelToDto(session);
+
     }
 }

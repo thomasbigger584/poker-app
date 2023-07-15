@@ -48,22 +48,22 @@ public class GameRunnableFactory {
         return getIfExists(pokerTable.getId());
     }
 
-    public Optional<GameRunnable> getIfExists(String id) {
-        return getIfExists(UUID.fromString(id));
+    public Optional<GameRunnable> getIfExists(String tableId) {
+        return getIfExists(UUID.fromString(tableId));
     }
 
-    public Optional<GameRunnable> getIfExists(UUID uuid) {
-        if (!POKER_GAME_RUNNABLE_MAP.containsKey(uuid)) {
-            logger.warn("Poker Table {} doesn't have a game thread running.", uuid);
+    public Optional<GameRunnable> getIfExists(UUID tableId) {
+        if (!POKER_GAME_RUNNABLE_MAP.containsKey(tableId)) {
+            logger.warn("Poker Table {} doesn't have a game thread running.", tableId);
             return Optional.empty();
         }
-        return Optional.of(POKER_GAME_RUNNABLE_MAP.get(uuid));
+        return Optional.of(POKER_GAME_RUNNABLE_MAP.get(tableId));
     }
 
-    public void delete(UUID uuid) {
-        Optional<GameRunnable> runnableOpt = getIfExists(uuid);
+    public void delete(UUID tableId) {
+        Optional<GameRunnable> runnableOpt = getIfExists(tableId);
         if (runnableOpt.isPresent()) {
-            POKER_GAME_RUNNABLE_MAP.remove(uuid);
+            POKER_GAME_RUNNABLE_MAP.remove(tableId);
         }
     }
 }

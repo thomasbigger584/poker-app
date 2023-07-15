@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,5 +18,11 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             "WHERE s.pokerTable.id = :tableId " +
             "AND s.user.username = :username " +
             "AND s.connectionState = com.twb.pokergame.domain.enumeration.ConnectionState.CONNECTED")
-    Optional<PlayerSession> findByTableIdAndUsername(@Param("tableId") UUID tableId, @Param("username") String username);
+    Optional<PlayerSession> findConnectedByTableIdAndUsername(@Param("tableId") UUID tableId, @Param("username") String username);
+
+    @Query("SELECT s " +
+            "FROM PlayerSession s " +
+            "WHERE s.pokerTable.id = :tableId " +
+            "AND s.connectionState = com.twb.pokergame.domain.enumeration.ConnectionState.CONNECTED")
+    List<PlayerSession> findConnectedByTableId(@Param("tableId") UUID tableId);
 }
