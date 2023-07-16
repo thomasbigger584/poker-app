@@ -2,7 +2,6 @@ package com.twb.pokergame.service.game;
 
 import com.antkorwin.xsync.XSync;
 import com.twb.pokergame.domain.AppUser;
-import com.twb.pokergame.domain.PlayerSession;
 import com.twb.pokergame.domain.PokerTable;
 import com.twb.pokergame.domain.Round;
 import com.twb.pokergame.dto.playersession.PlayerSessionDTO;
@@ -11,7 +10,8 @@ import com.twb.pokergame.repository.RoundRepository;
 import com.twb.pokergame.repository.TableRepository;
 import com.twb.pokergame.repository.UserRepository;
 import com.twb.pokergame.service.PlayerSessionService;
-import com.twb.pokergame.service.game.runnable.GameRunnableFactory;
+import com.twb.pokergame.service.game.runnable.GameThread;
+import com.twb.pokergame.service.game.runnable.GameThreadFactory;
 import com.twb.pokergame.web.websocket.message.MessageDispatcher;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageFactory;
@@ -20,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -36,7 +35,7 @@ public class GameService {
     private final PlayerSessionService playerSessionService;
     private final PlayerSessionRepository playerSessionRepository;
 
-    private final GameRunnableFactory runnableFactory;
+    private final GameThreadFactory threadFactory;
     private final ServerMessageFactory messageFactory;
     private final MessageDispatcher dispatcher;
     private final XSync<UUID> mutex;
@@ -66,8 +65,9 @@ public class GameService {
             AppUser appUser = userOpt.get();
             Round currentRound = currentRoundOpt.get();
 
-            runnableFactory.createIfNotExist(pokerTable);
+            GameThread thread = threadFactory.createIfNotExist(pokerTable);
             PlayerSessionDTO sessionDto = playerSessionService.connectUserToRound(appUser, currentRound);
+            thread.playerConnected();
 
             ServerMessageDTO message = messageFactory.playerConnected(sessionDto);
             dispatcher.send(tableId, message);
@@ -77,11 +77,13 @@ public class GameService {
     public void onPlayerDisconnected(UUID tableId, String username) {
         mutex.execute(tableId, () -> {
             playerSessionService.disconnectUser(tableId, username);
-            List<PlayerSession> tableConnections =
-                    playerSessionRepository.findByTableId(tableId);
-            if (tableConnections.isEmpty()) {
-                runnableFactory.delete(tableId);
+            Optional<GameThread> threadOpt = threadFactory.getIfExists(tableId);
+            if (threadOpt.isPresent()) {
+
+                GameThread gameThread = threadOpt.get();
+                gameThread.playerDisconnected();
             }
+
             ServerMessageDTO message =
                     messageFactory.playerDisconnected(username);
             dispatcher.send(tableId, message);

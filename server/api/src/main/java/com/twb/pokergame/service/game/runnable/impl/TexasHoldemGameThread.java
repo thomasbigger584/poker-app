@@ -1,6 +1,6 @@
 package com.twb.pokergame.service.game.runnable.impl;
 
-import com.twb.pokergame.service.game.runnable.GameRunnable;
+import com.twb.pokergame.service.game.runnable.GameThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -10,16 +10,16 @@ import java.util.UUID;
 
 @Component
 @Scope("prototype")
-public class TexasHoldemGameRunnable extends GameRunnable {
-    private static final Logger logger = LoggerFactory.getLogger(TexasHoldemGameRunnable.class);
+public class TexasHoldemGameThread extends GameThread {
+    private static final Logger logger = LoggerFactory.getLogger(TexasHoldemGameThread.class);
 
-    public TexasHoldemGameRunnable(UUID tableId) {
+    public TexasHoldemGameThread(UUID tableId) {
         super(tableId);
     }
 
     @Override
     protected void onRun() {
         logger.info("TexasHoldemGameRunnable.onRun");
-        sleep(1000);
+        sleepInMs(10000);
     }
 }

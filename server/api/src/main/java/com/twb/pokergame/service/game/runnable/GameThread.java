@@ -17,19 +17,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 
 @RequiredArgsConstructor
-public abstract class GameRunnable implements Runnable {
-    private static final Logger logger = LoggerFactory.getLogger(GameRunnable.class);
+public abstract class GameThread extends Thread {
+    private static final Logger logger = LoggerFactory.getLogger(GameThread.class);
 
     protected final UUID tableId;
 
     protected PokerTable pokerTable;
     protected Round currentRound;
+
+
+    // user session
+    // --------------------------------------------
+    protected List<PlayerSession> sessionsInPlay;
+    protected int numPlayersConnected;
+    private final Object lock = new Object();
+
+    // --------------------------------------------
+
+    @Autowired
+    protected GameThreadFactory threadFactory;
 
     @Autowired
     protected ServerMessageFactory messageFactory;
@@ -54,18 +67,20 @@ public abstract class GameRunnable implements Runnable {
         // -----------------------------------------------------------------------
 
         sendLogMessage("Initializing the round...");
-        Optional<Round> roundOpt = roundRepository.findCurrentByTableId(tableId);
+        Optional<Round> roundOpt = roundRepository
+                .findCurrentByTableId(tableId);
         if (roundOpt.isPresent()) {
             currentRound = roundOpt.get();
             pokerTable = currentRound.getPokerTable();
             if (currentRound.getRoundState() != RoundState.INIT) {
-                logger.warn("Cannot start an existing new round not in the INIT state");
+                fail("Cannot start an existing new round not in the INIT state");
                 return;
             }
         } else {
-            Optional<PokerTable> tableOpt = tableRepository.findById(tableId);
+            Optional<PokerTable> tableOpt =
+                    tableRepository.findById(tableId);
             if (tableOpt.isEmpty()) {
-                logger.warn("Cannot start as table doesnt exist");
+                fail("Cannot start as table doesn't exist");
                 return;
             }
             pokerTable = tableOpt.get();
@@ -85,8 +100,13 @@ public abstract class GameRunnable implements Runnable {
         do {
             sessionsConnected = playerSessionRepository
                     .findByTableId(tableId);
-            sleep(300);
+            sleepInMs(400);
         } while (sessionsConnected.size() < minPlayerCount);
+
+        synchronized (lock) {
+            sessionsInPlay = new ArrayList<>(sessionsConnected);
+            numPlayersConnected = sessionsInPlay.size();
+        }
 
         // -----------------------------------------------------------------------
 
@@ -113,11 +133,32 @@ public abstract class GameRunnable implements Runnable {
         dispatcher.send(tableId, message);
     }
 
-    protected void sleep(long milliseconds) {
+    protected void sleepInMs(long ms) {
         try {
-            Thread.sleep(milliseconds);
+            Thread.sleep(ms);
         } catch (InterruptedException e) {
-            throw new RuntimeException("Failed to sleep for " + milliseconds, e);
+            throw new RuntimeException("Failed to sleep for " + ms, e);
+        }
+    }
+
+    protected void fail(String message) {
+        logger.error(message);
+        sendLogMessage(message);
+        threadFactory.delete(tableId);
+        interrupt();
+    }
+
+    public void playerConnected() {
+        synchronized (lock) {
+            numPlayersConnected++;
+            System.out.println("numPlayersConnected = " + numPlayersConnected);
+        }
+    }
+
+    public void playerDisconnected() {
+        synchronized (lock) {
+            numPlayersConnected--;
+            System.out.println("numPlayersConnected = " + numPlayersConnected);
         }
     }
 }
