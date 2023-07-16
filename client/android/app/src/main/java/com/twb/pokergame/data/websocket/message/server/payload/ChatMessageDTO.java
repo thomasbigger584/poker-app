@@ -1,5 +1,7 @@
 package com.twb.pokergame.data.websocket.message.server.payload;
 
+import androidx.annotation.NonNull;
+
 public class ChatMessageDTO {
     private String username;
     private String message;
@@ -20,6 +22,7 @@ public class ChatMessageDTO {
         this.message = message;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "ChatMessageDTO{" +

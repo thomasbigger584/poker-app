@@ -1,7 +1,6 @@
 package com.twb.pokergame.domain;
 
 
-import com.twb.pokergame.domain.enumeration.ConnectionState;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -38,26 +37,21 @@ public class PlayerSession {
     @Column(name = "position")
     private Integer position;
 
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    @Column(name = "connection_state")
-    private ConnectionState connectionState;
+    @Column(name = "funds")
+    private Double funds;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-
         if (o == null || getClass() != o.getClass()) return false;
-
         PlayerSession that = (PlayerSession) o;
-
-        return new EqualsBuilder().append(id, that.id)
-                .append(connectionState, that.connectionState).isEquals();
+        return new EqualsBuilder()
+                .append(id, that.id).isEquals();
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
-                .append(id).append(connectionState).toHashCode();
+                .append(id).toHashCode();
     }
 }

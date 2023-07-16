@@ -43,9 +43,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="position" type="tinyint"/>
-            <column name="connection_state" type="text" defaultValue="CONNECTED">
-                <constraints nullable="false"/>
-            </column>
+            <column name="funds" type="double"/>
         </createTable>
         <addPrimaryKey columnNames="id" constraintName="pk_player_session" tableName="player_session"/>
         <addForeignKeyConstraint constraintName="fk_player_session_user_id" onDelete="CASCADE"

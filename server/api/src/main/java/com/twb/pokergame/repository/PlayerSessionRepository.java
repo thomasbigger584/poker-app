@@ -16,13 +16,12 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
     @Query("SELECT s " +
             "FROM PlayerSession s " +
             "WHERE s.pokerTable.id = :tableId " +
-            "AND s.user.username = :username " +
-            "AND s.connectionState = com.twb.pokergame.domain.enumeration.ConnectionState.CONNECTED")
-    Optional<PlayerSession> findConnectedByTableIdAndUsername(@Param("tableId") UUID tableId, @Param("username") String username);
+            "AND s.user.username = :username ")
+    Optional<PlayerSession> findByTableIdAndUsername(@Param("tableId") UUID tableId,
+                                                     @Param("username") String username);
 
     @Query("SELECT s " +
             "FROM PlayerSession s " +
-            "WHERE s.pokerTable.id = :tableId " +
-            "AND s.connectionState = com.twb.pokergame.domain.enumeration.ConnectionState.CONNECTED")
-    List<PlayerSession> findConnectedByTableId(@Param("tableId") UUID tableId);
+            "WHERE s.pokerTable.id = :tableId ")
+    List<PlayerSession> findByTableId(@Param("tableId") UUID tableId);
 }

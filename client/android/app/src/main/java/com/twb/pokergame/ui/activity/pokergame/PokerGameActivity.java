@@ -18,6 +18,7 @@ import com.twb.pokergame.ui.activity.pokergame.chatbox.ChatBoxRecyclerAdapter;
 import com.twb.pokergame.ui.dialog.AlertModalDialog;
 import com.twb.pokergame.ui.dialog.DialogHelper;
 import com.twb.pokergame.ui.dialog.FinishActivityOnClickListener;
+import com.twb.pokergame.ui.layout.CardPairLayout;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -28,6 +29,7 @@ public class PokerGameActivity extends BaseAuthActivity {
     private PokerTable pokerTable;
     private AlertDialog loadingSpinner;
     private ChatBoxRecyclerAdapter chatBoxAdapter;
+    private CardPairLayout[] cardPairLayouts = new CardPairLayout[6];
 
     @Override
     protected int getContentView() {
@@ -43,6 +45,13 @@ public class PokerGameActivity extends BaseAuthActivity {
         loadingSpinner = DialogHelper.createLoadingSpinner(this);
         DialogHelper.show(loadingSpinner);
 
+        cardPairLayouts[0] = findViewById(R.id.playerCardPairLayout);
+        cardPairLayouts[1] = findViewById(R.id.tablePlayer1CardPairLayout);
+        cardPairLayouts[2] = findViewById(R.id.tablePlayer2CardPairLayout);
+        cardPairLayouts[3] = findViewById(R.id.tablePlayer3CardPairLayout);
+        cardPairLayouts[4] = findViewById(R.id.tablePlayer4CardPairLayout);
+        cardPairLayouts[5] = findViewById(R.id.tablePlayer5CardPairLayout);
+
         RecyclerView chatBoxRecyclerView = findViewById(R.id.chatBoxRecyclerView);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setStackFromEnd(true);
@@ -53,6 +62,7 @@ public class PokerGameActivity extends BaseAuthActivity {
 
         viewModel = new ViewModelProvider(this).get(PokerGameViewModel.class);
         viewModel.errors.observe(this, throwable -> {
+            if (throwable == null) return;
             DialogHelper.dismiss(loadingSpinner);
             AlertModalDialog alertModalDialog = AlertModalDialog
                     .newInstance(AlertModalDialog.AlertModalType.ERROR, throwable.getMessage(), null);
@@ -68,10 +78,10 @@ public class PokerGameActivity extends BaseAuthActivity {
             chatBoxAdapter.add(message);
         });
         viewModel.playerConnected.observe(this, playerConnected -> {
-            PlayerSessionDTO sessionDto = playerConnected.getSession();
-            AppUserDTO appUserDTO = sessionDto.getUser();
+            PlayerSessionDTO playerSession = playerConnected.getSession();
+            AppUserDTO appUserDTO = playerSession.getUser();
+            cardPairLayouts[0].updateDetails(playerSession);
             chatBoxAdapter.add("Connected: " + appUserDTO.getUsername());
-            //todo: add player to view
             DialogHelper.dismiss(loadingSpinner);
         });
         viewModel.chatMessage.observe(this, chatMessage -> {

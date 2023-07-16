@@ -12,7 +12,7 @@ public class PlayerSessionDTO {
     private TableDTO pokerTable;
     private RoundDTO round;
     private Integer position;
-    private String connectionState;
+    private Double funds;
 
     public UUID getId() {
         return id;
@@ -54,11 +54,11 @@ public class PlayerSessionDTO {
         this.position = position;
     }
 
-    public String getConnectionState() {
-        return connectionState;
+    public Double getFunds() {
+        return funds;
     }
 
-    public void setConnectionState(String connectionState) {
-        this.connectionState = connectionState;
+    public void setFunds(Double funds) {
+        this.funds = funds;
     }
 }

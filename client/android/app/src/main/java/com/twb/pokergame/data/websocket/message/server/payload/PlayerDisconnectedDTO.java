@@ -1,5 +1,7 @@
 package com.twb.pokergame.data.websocket.message.server.payload;
 
+import androidx.annotation.NonNull;
+
 public class PlayerDisconnectedDTO {
     private String username;
 
@@ -11,6 +13,7 @@ public class PlayerDisconnectedDTO {
         this.username = username;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "PlayerDisconnectedDTO{" +

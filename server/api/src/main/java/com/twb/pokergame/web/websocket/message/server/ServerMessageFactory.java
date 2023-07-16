@@ -24,9 +24,9 @@ public class ServerMessageFactory {
         return ServerMessageDTO.create(ServerMessageType.LOG, payload);
     }
 
-    public ServerMessageDTO playerDisconnected(PlayerSessionDTO session) {
+    public ServerMessageDTO playerDisconnected(String username) {
         PlayerDisconnectedDTO payload = PlayerDisconnectedDTO.builder()
-                .session(session)
+                .username(username)
                 .build();
         return ServerMessageDTO.create(ServerMessageType.PLAYER_DISCONNECTED, payload);
     }

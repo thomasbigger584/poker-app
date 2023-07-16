@@ -7,5 +7,5 @@ import lombok.Data;
 @Data
 @Builder
 public class PlayerDisconnectedDTO {
-    private PlayerSessionDTO session;
+    private String username;
 }

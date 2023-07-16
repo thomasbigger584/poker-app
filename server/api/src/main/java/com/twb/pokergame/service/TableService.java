@@ -25,7 +25,6 @@ public class TableService {
     private final TableRepository repository;
     private final TableMapper mapper;
 
-
     private final RoundRepository roundRepository;
     private final RoundService roundService;
 

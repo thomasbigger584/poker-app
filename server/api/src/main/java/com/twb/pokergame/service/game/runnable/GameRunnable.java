@@ -1,8 +1,11 @@
 package com.twb.pokergame.service.game.runnable;
 
+import com.twb.pokergame.domain.PlayerSession;
 import com.twb.pokergame.domain.PokerTable;
 import com.twb.pokergame.domain.Round;
+import com.twb.pokergame.domain.enumeration.GameType;
 import com.twb.pokergame.domain.enumeration.RoundState;
+import com.twb.pokergame.repository.PlayerSessionRepository;
 import com.twb.pokergame.repository.RoundRepository;
 import com.twb.pokergame.repository.TableRepository;
 import com.twb.pokergame.service.RoundService;
@@ -14,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,8 +27,8 @@ public abstract class GameRunnable implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(GameRunnable.class);
 
     protected final UUID tableId;
-    protected final int minNumberOfPlayers;
 
+    protected PokerTable pokerTable;
     protected Round currentRound;
 
     @Autowired
@@ -42,13 +46,18 @@ public abstract class GameRunnable implements Runnable {
     @Autowired
     protected RoundService roundService;
 
+    @Autowired
+    protected PlayerSessionRepository playerSessionRepository;
+
     @Override
     public void run() {
+        // -----------------------------------------------------------------------
 
         sendLogMessage("Initializing the round...");
         Optional<Round> roundOpt = roundRepository.findCurrentByTableId(tableId);
         if (roundOpt.isPresent()) {
             currentRound = roundOpt.get();
+            pokerTable = currentRound.getPokerTable();
             if (currentRound.getRoundState() != RoundState.INIT) {
                 logger.warn("Cannot start an existing new round not in the INIT state");
                 return;
@@ -59,38 +68,41 @@ public abstract class GameRunnable implements Runnable {
                 logger.warn("Cannot start as table doesnt exist");
                 return;
             }
-            PokerTable table = tableOpt.get();
-            currentRound = roundService.createSingle(table);
+            pokerTable = tableOpt.get();
+            currentRound = roundService.createSingle(pokerTable);
         }
         sendLogMessage("Round Initialized.");
 
+        // -----------------------------------------------------------------------
 
+        currentRound.setRoundState(RoundState.WAITING_FOR_PLAYERS);
+        roundRepository.saveAndFlush(currentRound);
         sendLogMessage("Waiting for players to join...");
 
+        GameType gameType = pokerTable.getGameType();
+        int minPlayerCount = gameType.getMinPlayerCount();
+        List<PlayerSession> sessionsConnected;
+        do {
+            sessionsConnected = playerSessionRepository
+                    .findByTableId(tableId);
+            sleep(300);
+        } while (sessionsConnected.size() < minPlayerCount);
 
-        //wait for players to join the round...
+        // -----------------------------------------------------------------------
 
-
-//        this.gameState = GameState.WAITING_FOR_PLAYERS;
-//        sendLogMessage("Waiting for players to join...");
-//        List<Round> pokerTableUsers;
-//        do {
-//            pokerTableUsers = roundRepository.findByPokerTableId(tableId);
-//            if (pokerTableUsers.size() < minNumberOfPlayers) {
-//                sleep(300);
-//            }
-//        } while (pokerTableUsers.size() < minNumberOfPlayers);
-//        sendLogMessage("Game Starting...");
-//        this.gameState = GameState.GAME_STARTING;
-
+        sendLogMessage("Game Starting...");
         onRun();
 
-//        this.gameState = GameState.GAME_ENDED;
-        sendLogMessage("Game Ended.");
+        // -----------------------------------------------------------------------
+
+        currentRound.setRoundState(RoundState.COMPLETED);
+        roundRepository.saveAndFlush(currentRound);
+        sendLogMessage("Game Completed");
+
+        // -----------------------------------------------------------------------
     }
 
     abstract protected void onRun();
-
 
     // ***************************************************************
     // Helper Methods

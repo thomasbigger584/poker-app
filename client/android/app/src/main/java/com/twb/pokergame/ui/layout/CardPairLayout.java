@@ -10,6 +10,8 @@ import android.widget.TextView;
 import com.twb.pokergame.R;
 import com.twb.pokergame.data.model.Card;
 import com.twb.pokergame.data.model.PokerPlayer;
+import com.twb.pokergame.data.model.dto.appuser.AppUserDTO;
+import com.twb.pokergame.data.model.dto.playersession.PlayerSessionDTO;
 import com.twb.pokergame.ui.util.CardDrawableUtil;
 
 import java.util.Locale;
@@ -49,8 +51,8 @@ public class CardPairLayout extends FrameLayout {
 
     public void updateCardImageView(Card card) {
         int cardDrawResId = CardDrawableUtil.getDrawable(getContext(), card);
-
-        if (cardImageViews[0].getVisibility() != INVISIBLE && cardImageViews[1].getVisibility() != INVISIBLE) {
+        if (cardImageViews[0].getVisibility() != INVISIBLE
+                && cardImageViews[1].getVisibility() != INVISIBLE) {
             reset();
         }
         if (cardImageViews[0].getVisibility() == INVISIBLE) {
@@ -62,9 +64,12 @@ public class CardPairLayout extends FrameLayout {
         }
     }
 
-    public void updateDetails(PokerPlayer pokerPlayer) {
-        displayNameTextView.setText(pokerPlayer.getUsername());
-        fundsTextView.setText(String.format(Locale.getDefault(), "%.2f", pokerPlayer.getFunds()));
+    public void updateDetails(PlayerSessionDTO playerSession) {
+        AppUserDTO user = playerSession.getUser();
+        displayNameTextView.setText(user.getUsername());
+        if (playerSession.getFunds() != null) {
+            fundsTextView.setText(String.format(Locale.getDefault(), "%.2f", playerSession.getFunds()));
+        }
     }
 
     public void updateDealerChip(boolean dealer) {

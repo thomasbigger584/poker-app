@@ -14,12 +14,12 @@ public class BlackjackGameRunnable extends GameRunnable {
     private static final Logger logger = LoggerFactory.getLogger(BlackjackGameRunnable.class);
 
     public BlackjackGameRunnable(UUID tableId) {
-        super(tableId, 1);
+        super(tableId);
     }
 
     @Override
     protected void onRun() {
-        System.out.println("BlackjackGameRunnable.onRun");
+        logger.info("BlackjackGameRunnable.onRun");
         sleep(1000);
     }
 }

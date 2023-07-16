@@ -14,12 +14,12 @@ public class TexasHoldemGameRunnable extends GameRunnable {
     private static final Logger logger = LoggerFactory.getLogger(TexasHoldemGameRunnable.class);
 
     public TexasHoldemGameRunnable(UUID tableId) {
-        super(tableId, 2);
+        super(tableId);
     }
 
     @Override
     protected void onRun() {
-        System.out.println("TexasHoldemGameRunnable.onRun");
+        logger.info("TexasHoldemGameRunnable.onRun");
         sleep(1000);
     }
 }

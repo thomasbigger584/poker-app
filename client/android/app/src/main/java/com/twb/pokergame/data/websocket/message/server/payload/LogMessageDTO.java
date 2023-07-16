@@ -1,5 +1,7 @@
 package com.twb.pokergame.data.websocket.message.server.payload;
 
+import androidx.annotation.NonNull;
+
 public class LogMessageDTO {
     private String message;
 
@@ -11,6 +13,7 @@ public class LogMessageDTO {
         this.message = message;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "LogMessageDTO{" +

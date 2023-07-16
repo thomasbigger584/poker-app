@@ -76,12 +76,14 @@ public class GameService {
 
     public void onPlayerDisconnected(UUID tableId, String username) {
         mutex.execute(tableId, () -> {
-            PlayerSessionDTO sessionDto = playerSessionService.disconnectUser(tableId, username);
-            List<PlayerSession> tableConnections = playerSessionRepository.findConnectedByTableId(tableId);
+            playerSessionService.disconnectUser(tableId, username);
+            List<PlayerSession> tableConnections =
+                    playerSessionRepository.findByTableId(tableId);
             if (tableConnections.isEmpty()) {
                 runnableFactory.delete(tableId);
             }
-            ServerMessageDTO message = messageFactory.playerDisconnected(sessionDto);
+            ServerMessageDTO message =
+                    messageFactory.playerDisconnected(username);
             dispatcher.send(tableId, message);
         });
     }
