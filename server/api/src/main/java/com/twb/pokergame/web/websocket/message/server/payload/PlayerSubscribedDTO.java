@@ -4,8 +4,10 @@ import com.twb.pokergame.dto.playersession.PlayerSessionDTO;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Builder
-public class PlayerConnectedDTO {
-    private PlayerSessionDTO session;
+public class PlayerSubscribedDTO {
+    private List<PlayerSessionDTO> playerSessions;
 }

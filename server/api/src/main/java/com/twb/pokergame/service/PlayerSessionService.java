@@ -84,4 +84,10 @@ public class PlayerSessionService {
         }
         return false;
     }
+
+    @Transactional(readOnly = true)
+    public List<PlayerSessionDTO> getPlayerSessionsByTableId(UUID tableId) {
+        return repository.findByTableId(tableId)
+                .stream().map(mapper::modelToDto).toList();
+    }
 }

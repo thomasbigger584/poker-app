@@ -9,12 +9,12 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 
 import java.security.Principal;
 import java.util.Optional;
 import java.util.UUID;
 
-// Generic websocket connect/disconnect. This gets called when the session is created/destroyed
 @Component
 @RequiredArgsConstructor
 public class SessionEventListener {
@@ -23,9 +23,13 @@ public class SessionEventListener {
     private final PokerTableWebSocketController webSocketController;
 
     @EventListener
+    public void handleWebSocketSubscribeListener(SessionSubscribeEvent event) {
+        logger.info("Received a new web socket subscription + " + new String(event.getMessage().getPayload()));
+    }
+
+    @EventListener
     public void handleWebSocketConnectListener(SessionConnectedEvent event) {
-        logger.info("WebSocketChatEventListener.handleWebSocketConnectListener");
-        logger.info("Received a new web socket connection");
+        logger.info("Received a new web socket connection + " + new String(event.getMessage().getPayload()));
     }
 
     @EventListener
@@ -41,7 +45,6 @@ public class SessionEventListener {
             logger.warn("Session disconnect cannot disconnect player as no poker table id found on session");
             return;
         }
-
         webSocketController.sendDisconnectPlayer(principal, tableIdOpt.get());
     }
 }

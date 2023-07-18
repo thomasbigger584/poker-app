@@ -12,6 +12,7 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
@@ -25,6 +26,7 @@ public class PokerTableWebSocketController {
     private static final String POKER_TABLE_EVENTS_TOPIC = "/topic/loops.{tableId}";
     private static final String POKER_TABLE_MESSAGE_PREFIX = "/pokerTable/{tableId}";
 
+    private static final String SEND_SUBSCRIPTION = "/sendSubscription";
     private static final String SEND_CONNECT_PLAYER = "/sendConnectPlayer";
     private static final String SEND_CHAT_MESSAGE = "/sendChatMessage";
     private static final String SEND_DISCONNECT_PLAYER = "/sendDisconnectPlayer";
@@ -41,12 +43,16 @@ public class PokerTableWebSocketController {
      * Doing both, in my mind, will make messaging to the client more confusing.
      */
 
-    @MessageMapping(POKER_TABLE_MESSAGE_PREFIX + SEND_CONNECT_PLAYER)
-    public void sendConnectPlayer(Principal principal, StompHeaderAccessor headerAccessor,
-                                  @DestinationVariable(POKER_TABLE_ID) UUID tableId) {
-        logger.info(">>>> sendConnectPlayer - Poker Table: {} - User: {}", tableId, principal.getName());
+
+    //connection initialization
+    @SubscribeMapping("/loops.{tableId}")
+    public ServerMessageDTO sendPlayerSubscribed(Principal principal, StompHeaderAccessor headerAccessor,
+                                                 @DestinationVariable(POKER_TABLE_ID) UUID tableId) {
+        logger.info(">>>> sendPlayerSubscribed - Poker Table: {} - User: {}", tableId, principal.getName());
         sessionService.putPokerTableId(headerAccessor, tableId);
-        gameService.onPlayerConnected(tableId, principal.getName());
+        ServerMessageDTO message = gameService.onPlayerSubscribed(tableId, principal.getName());
+        logger.info("<<<< sendPlayerSubscribed - " + message);
+        return message;
     }
 
     @MessageMapping(POKER_TABLE_MESSAGE_PREFIX + SEND_CHAT_MESSAGE)

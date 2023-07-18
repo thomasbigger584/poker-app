@@ -1,5 +1,7 @@
 package com.twb.pokergame.data.repository;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -18,6 +20,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class PokerTableRepository extends BaseRepository {
+    private static final String TAG = PokerTableRepository.class.getSimpleName();
     private final PokerTableApi api;
     private final MutableLiveData<List<PokerTable>> getPokerTablesLiveData = new MutableLiveData<>();
 
@@ -35,9 +38,13 @@ public class PokerTableRepository extends BaseRepository {
                 } else {
                     try (ResponseBody errorResponseBody = response.errorBody()) {
                         if (errorResponseBody != null) {
-                            errorLiveData.setValue(new Exception(errorResponseBody.string()));
+                            String errorMessage = errorResponseBody.string();
+                            Log.e(TAG, "onResponse: errorMessage: " + errorMessage);
+                            errorLiveData.setValue(new Exception());
                         }
                     } catch (IOException e) {
+                        String errorMessage = e.getMessage();
+                        Log.e(TAG, "onResponse: errorMessage: " + errorMessage);
                         errorLiveData.setValue(e);
                     }
                 }
@@ -45,6 +52,8 @@ public class PokerTableRepository extends BaseRepository {
 
             @Override
             public void onFailure(@NonNull Call<List<PokerTable>> call, @NonNull Throwable throwable) {
+                String errorMessage = throwable.getMessage();
+                Log.e(TAG, "onFailure: errorMessage: " + errorMessage);
                 errorLiveData.setValue(throwable);
             }
         });

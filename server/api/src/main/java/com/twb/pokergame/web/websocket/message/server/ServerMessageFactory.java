@@ -1,20 +1,19 @@
 package com.twb.pokergame.web.websocket.message.server;
 
 import com.twb.pokergame.dto.playersession.PlayerSessionDTO;
-import com.twb.pokergame.web.websocket.message.server.payload.ChatMessageDTO;
-import com.twb.pokergame.web.websocket.message.server.payload.LogMessageDTO;
-import com.twb.pokergame.web.websocket.message.server.payload.PlayerConnectedDTO;
-import com.twb.pokergame.web.websocket.message.server.payload.PlayerDisconnectedDTO;
+import com.twb.pokergame.web.websocket.message.server.payload.*;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 public class ServerMessageFactory {
 
-    public ServerMessageDTO playerConnected(PlayerSessionDTO session) {
-        PlayerConnectedDTO payload = PlayerConnectedDTO.builder()
-                .session(session)
+    public ServerMessageDTO playerSubscribed(List<PlayerSessionDTO> playerSessions) {
+        PlayerSubscribedDTO payload = PlayerSubscribedDTO.builder()
+                .playerSessions(playerSessions)
                 .build();
-        return ServerMessageDTO.create(ServerMessageType.PLAYER_CONNECTED, payload);
+        return ServerMessageDTO.create(ServerMessageType.PLAYER_SUBSCRIBED, payload);
     }
 
     public ServerMessageDTO logMessage(String message) {

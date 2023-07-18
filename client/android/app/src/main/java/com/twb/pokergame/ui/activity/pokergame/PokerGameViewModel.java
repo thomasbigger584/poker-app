@@ -7,11 +7,10 @@ import androidx.lifecycle.ViewModel;
 
 import com.twb.pokergame.data.websocket.WebSocketClient;
 import com.twb.pokergame.data.websocket.message.client.SendChatMessageDTO;
-import com.twb.pokergame.data.websocket.message.client.SendPlayerConnectDTO;
 import com.twb.pokergame.data.websocket.message.server.ServerMessageDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.ChatMessageDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.LogMessageDTO;
-import com.twb.pokergame.data.websocket.message.server.payload.PlayerConnectedDTO;
+import com.twb.pokergame.data.websocket.message.server.payload.PlayerSubscribedDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.PlayerDisconnectedDTO;
 import com.twb.stomplib.dto.LifecycleEvent;
 
@@ -27,7 +26,7 @@ public class PokerGameViewModel extends ViewModel
     private final WebSocketClient webSocketClient;
 
     public MutableLiveData<Throwable> errors = new MutableLiveData<>();
-    public MutableLiveData<PlayerConnectedDTO> playerConnected = new MutableLiveData<>();
+    public MutableLiveData<PlayerSubscribedDTO> playerSubscribed = new MutableLiveData<>();
     public MutableLiveData<ChatMessageDTO> chatMessage = new MutableLiveData<>();
     public MutableLiveData<LogMessageDTO> logMessage = new MutableLiveData<>();
     public MutableLiveData<PlayerDisconnectedDTO> playerDisconnected = new MutableLiveData<>();
@@ -51,16 +50,14 @@ public class PokerGameViewModel extends ViewModel
 
     @Override
     public void onOpened(LifecycleEvent event) {
-        // Send Player Connect Message
-        SendPlayerConnectDTO dto = new SendPlayerConnectDTO();
-        webSocketClient.send(pokerTableId, dto, this);
+        Log.i(TAG, "onOpened: Websocket Opened.");
     }
 
     @Override
     public void onMessage(ServerMessageDTO<?> message) {
         switch (message.getType()) {
-            case PLAYER_CONNECTED: {
-                playerConnected.setValue((PlayerConnectedDTO) message.getPayload());
+            case PLAYER_SUBSCRIBED: {
+                playerSubscribed.setValue((PlayerSubscribedDTO) message.getPayload());
                 break;
             }
             case CHAT: {

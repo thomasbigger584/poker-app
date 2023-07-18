@@ -5,7 +5,6 @@ import com.twb.pokergame.domain.AppUser;
 import com.twb.pokergame.domain.PokerTable;
 import com.twb.pokergame.domain.Round;
 import com.twb.pokergame.dto.playersession.PlayerSessionDTO;
-import com.twb.pokergame.repository.PlayerSessionRepository;
 import com.twb.pokergame.repository.RoundRepository;
 import com.twb.pokergame.repository.TableRepository;
 import com.twb.pokergame.repository.UserRepository;
@@ -20,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,32 +33,31 @@ public class GameService {
     private final RoundRepository roundRepository;
 
     private final PlayerSessionService playerSessionService;
-    private final PlayerSessionRepository playerSessionRepository;
 
     private final GameThreadFactory threadFactory;
     private final ServerMessageFactory messageFactory;
     private final MessageDispatcher dispatcher;
     private final XSync<UUID> mutex;
 
-    public void onPlayerConnected(UUID tableId, String username) {
-        mutex.execute(tableId, () -> {
+
+    public ServerMessageDTO onPlayerSubscribed(UUID tableId, String username) {
+        return mutex.evaluate(tableId, () -> {
             Optional<PokerTable> pokerTableOpt = tableRepository.findById(tableId);
             if (pokerTableOpt.isEmpty()) {
-                logger.warn("Failed to connect user {} to table {} as table not found", username, tableId);
-                return;
+                String message = String.format("Failed to connect user %s to table %s as table not found", username, tableId);
+                throw new RuntimeException(message);
             }
 
             Optional<AppUser> userOpt = userRepository.findByUsername(username);
             if (userOpt.isEmpty()) {
-                logger.warn("Failed to connect user {} to table {} as user not found", username, tableId);
-                return;
+                String message = String.format("Failed to connect user %s to table %s as user not found", username, tableId);
+                throw new RuntimeException(message);
             }
 
             Optional<Round> currentRoundOpt = roundRepository.findCurrentByTableId(tableId);
             if (currentRoundOpt.isEmpty()) {
-                logger.warn("Fail to connect user {} to table as there is no current" +
-                        " round created for table {}", username, tableId);
-                return;
+                String message = String.format("Fail to connect user %s to table as there is no current round created for table %s", username, tableId);
+                throw new RuntimeException(message);
             }
 
             PokerTable pokerTable = pokerTableOpt.get();
@@ -66,11 +65,11 @@ public class GameService {
             Round currentRound = currentRoundOpt.get();
 
             GameThread thread = threadFactory.createIfNotExist(pokerTable);
-            PlayerSessionDTO sessionDto = playerSessionService.connectUserToRound(appUser, currentRound);
+            playerSessionService.connectUserToRound(appUser, currentRound);
             thread.playerConnected();
 
-            ServerMessageDTO message = messageFactory.playerConnected(sessionDto);
-            dispatcher.send(tableId, message);
+            List<PlayerSessionDTO> playerSessionDtos = playerSessionService.getPlayerSessionsByTableId(tableId);
+            return messageFactory.playerSubscribed(playerSessionDtos);
         });
     }
 

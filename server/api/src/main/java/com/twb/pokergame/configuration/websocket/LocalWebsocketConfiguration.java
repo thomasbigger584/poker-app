@@ -15,7 +15,10 @@ public class LocalWebsocketConfiguration implements WebSocketMessageBrokerConfig
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.setApplicationDestinationPrefixes("/app");
+        // - /app used for MessageMapping
+        // - /topic used for SubscribeMapping (
+        //     client connects directly to topic so we wait to forward this into application)
+        registry.setApplicationDestinationPrefixes("/app", "/topic");
         registry.enableSimpleBroker("/topic")
                 .setTaskScheduler(heartBeatScheduler());
         registry.setPreservePublishOrder(true);

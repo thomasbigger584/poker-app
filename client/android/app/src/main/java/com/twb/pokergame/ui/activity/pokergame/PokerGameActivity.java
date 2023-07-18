@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.twb.pokergame.R;
 import com.twb.pokergame.data.auth.AuthService;
 import com.twb.pokergame.data.model.PokerTable;
-import com.twb.pokergame.data.model.dto.appuser.AppUserDTO;
 import com.twb.pokergame.data.model.dto.playersession.PlayerSessionDTO;
 import com.twb.pokergame.ui.activity.login.BaseAuthActivity;
 import com.twb.pokergame.ui.activity.pokergame.chatbox.ChatBoxRecyclerAdapter;
@@ -78,16 +77,19 @@ public class PokerGameActivity extends BaseAuthActivity {
             alertModalDialog.show(getSupportFragmentManager(), "modal_alert");
             chatBoxAdapter.add(message);
         });
-        viewModel.playerConnected.observe(this, playerConnected -> {
-            PlayerSessionDTO playerSession = playerConnected.getSession();
-            AppUserDTO appUserDTO = playerSession.getUser();
-            String current = authService.getCurrentUser();
-            if (appUserDTO.getUsername().equals(current)) {
-                tableController.connectCurrentPlayer(playerSession);
-            } else {
-                tableController.connectOtherPlayer(playerSession);
+        viewModel.playerSubscribed.observe(this, playerConnected -> {
+            String currentUsername = authService.getCurrentUser();
+
+            PlayerSessionDTO currentPlayerSession =
+                    playerConnected.getCurrentPlayerSession(currentUsername);
+            tableController.connectCurrentPlayer(currentPlayerSession);
+
+            for (PlayerSessionDTO playerSession : playerConnected.getPlayerSessions()) {
+                if (!playerSession.getUser().getUsername().equals(currentUsername)) {
+                    tableController.connectOtherPlayer(playerSession);
+                }
             }
-            chatBoxAdapter.add("Connected: " + appUserDTO.getUsername());
+            chatBoxAdapter.add("Connected: " + currentUsername);
             DialogHelper.dismiss(loadingSpinner);
         });
         viewModel.chatMessage.observe(this, chatMessage -> {
