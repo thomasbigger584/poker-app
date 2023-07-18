@@ -14,7 +14,7 @@
         android:layout_height="58dp"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="27dp"
-        android:src="@drawable/ic_success"
+        tools:srcCompat="@drawable/ic_success"
         tools:ignore="ContentDescription" />
 
     <TextView

@@ -3,6 +3,7 @@ package com.twb.pokergame.di.network;
 import android.content.Context;
 
 import com.twb.pokergame.data.auth.AuthConfiguration;
+import com.twb.pokergame.data.auth.AuthService;
 import com.twb.pokergame.data.auth.AuthStateManager;
 
 import javax.inject.Singleton;
@@ -27,5 +28,11 @@ public class AuthModule {
     @Singleton
     public AuthStateManager authStateManager(@ApplicationContext Context context) {
         return new AuthStateManager(context);
+    }
+
+    @Provides
+    @Singleton
+    public AuthService authService(AuthStateManager authStateManager) {
+        return new AuthService(authStateManager);
     }
 }

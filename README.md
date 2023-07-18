@@ -6,11 +6,14 @@ WORK IN PROGRESS
 
 ## Usage
 
-In your terminal use docker-compose to build and run the set of services
+In your terminal run the following command from the root directory to run the server locally:
 
 ```shell
-docker-compose up --build
+./local_run.sh
 ```
+
+To run the Android App, install Android Studio and open the folder `client/android` as a project. Once everything syncs and builds you can run it on your device.
+
 
 | Service  | Domain Name          |
 |----------|----------------------|

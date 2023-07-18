@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.twb.pokergame.R;
+import com.twb.pokergame.data.auth.AuthService;
 import com.twb.pokergame.data.model.PokerTable;
 import com.twb.pokergame.data.model.dto.appuser.AppUserDTO;
 import com.twb.pokergame.data.model.dto.playersession.PlayerSessionDTO;
@@ -18,18 +19,23 @@ import com.twb.pokergame.ui.activity.pokergame.chatbox.ChatBoxRecyclerAdapter;
 import com.twb.pokergame.ui.dialog.AlertModalDialog;
 import com.twb.pokergame.ui.dialog.DialogHelper;
 import com.twb.pokergame.ui.dialog.FinishActivityOnClickListener;
-import com.twb.pokergame.ui.layout.CardPairLayout;
+
+import javax.inject.Inject;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class PokerGameActivity extends BaseAuthActivity {
     private static final String TAG = PokerGameActivity.class.getSimpleName();
+
+    @Inject
+    AuthService authService;
+
     private PokerGameViewModel viewModel;
     private PokerTable pokerTable;
     private AlertDialog loadingSpinner;
     private ChatBoxRecyclerAdapter chatBoxAdapter;
-    private CardPairLayout[] cardPairLayouts = new CardPairLayout[6];
+    private TableController tableController;
 
     @Override
     protected int getContentView() {
@@ -45,12 +51,7 @@ public class PokerGameActivity extends BaseAuthActivity {
         loadingSpinner = DialogHelper.createLoadingSpinner(this);
         DialogHelper.show(loadingSpinner);
 
-        cardPairLayouts[0] = findViewById(R.id.playerCardPairLayout);
-        cardPairLayouts[1] = findViewById(R.id.tablePlayer1CardPairLayout);
-        cardPairLayouts[2] = findViewById(R.id.tablePlayer2CardPairLayout);
-        cardPairLayouts[3] = findViewById(R.id.tablePlayer3CardPairLayout);
-        cardPairLayouts[4] = findViewById(R.id.tablePlayer4CardPairLayout);
-        cardPairLayouts[5] = findViewById(R.id.tablePlayer5CardPairLayout);
+        tableController = new TableController(this);
 
         RecyclerView chatBoxRecyclerView = findViewById(R.id.chatBoxRecyclerView);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
@@ -80,7 +81,12 @@ public class PokerGameActivity extends BaseAuthActivity {
         viewModel.playerConnected.observe(this, playerConnected -> {
             PlayerSessionDTO playerSession = playerConnected.getSession();
             AppUserDTO appUserDTO = playerSession.getUser();
-            cardPairLayouts[0].updateDetails(playerSession);
+            String current = authService.getCurrentUser();
+            if (appUserDTO.getUsername().equals(current)) {
+                tableController.connectCurrentPlayer(playerSession);
+            } else {
+                tableController.connectOtherPlayer(playerSession);
+            }
             chatBoxAdapter.add("Connected: " + appUserDTO.getUsername());
             DialogHelper.dismiss(loadingSpinner);
         });
@@ -91,8 +97,14 @@ public class PokerGameActivity extends BaseAuthActivity {
             chatBoxAdapter.add(logMessage.getMessage());
         });
         viewModel.playerDisconnected.observe(this, playerDisconnected -> {
-            chatBoxAdapter.add("Disconnected: " + playerDisconnected.getUsername());
-            //todo: remove player to from view, if player is current player then finish activity
+            String username = playerDisconnected.getUsername();
+            chatBoxAdapter.add("Disconnected: " + username);
+            String current = authService.getCurrentUser();
+            if (username.equals(current)) {
+                finish();
+            } else {
+                tableController.disconnectOtherPlayer(username);
+            }
         });
     }
 

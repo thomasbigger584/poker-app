@@ -63,7 +63,9 @@ public class WebSocketClient {
             return;
         }
         String accessToken = authStateManager.getCurrent().getAccessToken();
-
+        if (accessToken == null) {
+            throw new RuntimeException("Cannot connect to websocket as access token is null");
+        }
         String websocketUrl = PROTOCOL + BuildConfig.API_BASE_URL + WEBSOCKET_ENDPOINT;
         stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, websocketUrl);
 

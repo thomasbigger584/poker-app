@@ -72,6 +72,12 @@ public class CardPairLayout extends FrameLayout {
         }
     }
 
+    public void deleteDetails() {
+        reset();
+        displayNameTextView.setText("--");
+        fundsTextView.setText("--");
+    }
+
     public void updateDealerChip(boolean dealer) {
         final int visibility = (dealer) ? VISIBLE : GONE;
         dealerChipLayout.setVisibility(visibility);
@@ -89,5 +95,9 @@ public class CardPairLayout extends FrameLayout {
         for (ImageView cardImageView : cardImageViews) {
             cardImageView.setVisibility(INVISIBLE);
         }
+    }
+
+    public String getUsername() {
+        return displayNameTextView.getText().toString();
     }
 }
