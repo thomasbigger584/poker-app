@@ -1,4 +1,4 @@
-package com.twb.pokergame.service.game.runnable.impl.enumeration;
+package com.twb.pokergame.service.game.impl.enumeration;
 
 public enum GameState {
     GAME_INIT,

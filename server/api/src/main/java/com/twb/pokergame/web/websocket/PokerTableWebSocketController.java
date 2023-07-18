@@ -37,14 +37,6 @@ public class PokerTableWebSocketController {
     private final ServerMessageFactory messageFactory;
     private final GameService gameService;
 
-    /*
-     * Note: Always send back to the client a ServerMessage with a specific ServerMessageType and payload.
-     * It can either be a return object with @SendTo, or be sent via MessageDispotcher. But not both.
-     * Doing both, in my mind, will make messaging to the client more confusing.
-     */
-
-
-    //connection initialization
     @SubscribeMapping("/loops.{tableId}")
     public ServerMessageDTO sendPlayerSubscribed(Principal principal, StompHeaderAccessor headerAccessor,
                                                  @DestinationVariable(POKER_TABLE_ID) UUID tableId) {

@@ -13,6 +13,7 @@ import com.twb.pokergame.data.websocket.message.server.ServerMessageDTO;
 import com.twb.pokergame.data.websocket.message.server.enumeration.ServerMessageType;
 import com.twb.pokergame.data.websocket.message.server.payload.ChatMessageDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.LogMessageDTO;
+import com.twb.pokergame.data.websocket.message.server.payload.PlayerConnectedDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.PlayerDisconnectedDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.PlayerSubscribedDTO;
 
@@ -66,6 +67,8 @@ public class ServerMessageDeserializer implements JsonDeserializer<ServerMessage
         switch (messageType) {
             case PLAYER_SUBSCRIBED:
                 return PlayerSubscribedDTO.class;
+            case PLAYER_CONNECTED:
+                return PlayerConnectedDTO.class;
             case CHAT:
                 return ChatMessageDTO.class;
             case LOG:

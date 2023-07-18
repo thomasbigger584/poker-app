@@ -16,6 +16,13 @@ public class ServerMessageFactory {
         return ServerMessageDTO.create(ServerMessageType.PLAYER_SUBSCRIBED, payload);
     }
 
+    public ServerMessageDTO playerConnected(PlayerSessionDTO playerSession) {
+        PlayerConnectedDTO payload = PlayerConnectedDTO.builder()
+                .playerSession(playerSession)
+                .build();
+        return ServerMessageDTO.create(ServerMessageType.PLAYER_CONNECTED, payload);
+    }
+
     public ServerMessageDTO logMessage(String message) {
         LogMessageDTO payload = LogMessageDTO.builder()
                 .message(message)

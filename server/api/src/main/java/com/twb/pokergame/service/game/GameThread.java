@@ -1,4 +1,4 @@
-package com.twb.pokergame.service.game.runnable;
+package com.twb.pokergame.service.game;
 
 import com.twb.pokergame.domain.PlayerSession;
 import com.twb.pokergame.domain.PokerTable;

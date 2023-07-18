@@ -10,6 +10,7 @@ import com.twb.pokergame.data.websocket.message.client.SendChatMessageDTO;
 import com.twb.pokergame.data.websocket.message.server.ServerMessageDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.ChatMessageDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.LogMessageDTO;
+import com.twb.pokergame.data.websocket.message.server.payload.PlayerConnectedDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.PlayerSubscribedDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.PlayerDisconnectedDTO;
 import com.twb.stomplib.dto.LifecycleEvent;
@@ -27,6 +28,7 @@ public class PokerGameViewModel extends ViewModel
 
     public MutableLiveData<Throwable> errors = new MutableLiveData<>();
     public MutableLiveData<PlayerSubscribedDTO> playerSubscribed = new MutableLiveData<>();
+    public MutableLiveData<PlayerConnectedDTO> playerConnected = new MutableLiveData<>();
     public MutableLiveData<ChatMessageDTO> chatMessage = new MutableLiveData<>();
     public MutableLiveData<LogMessageDTO> logMessage = new MutableLiveData<>();
     public MutableLiveData<PlayerDisconnectedDTO> playerDisconnected = new MutableLiveData<>();
@@ -58,6 +60,10 @@ public class PokerGameViewModel extends ViewModel
         switch (message.getType()) {
             case PLAYER_SUBSCRIBED: {
                 playerSubscribed.setValue((PlayerSubscribedDTO) message.getPayload());
+                break;
+            }
+            case PLAYER_CONNECTED: {
+                playerConnected.setValue((PlayerConnectedDTO) message.getPayload());
                 break;
             }
             case CHAT: {

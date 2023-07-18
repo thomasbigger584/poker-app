@@ -9,8 +9,6 @@ import com.twb.pokergame.repository.RoundRepository;
 import com.twb.pokergame.repository.TableRepository;
 import com.twb.pokergame.repository.UserRepository;
 import com.twb.pokergame.service.PlayerSessionService;
-import com.twb.pokergame.service.game.runnable.GameThread;
-import com.twb.pokergame.service.game.runnable.GameThreadFactory;
 import com.twb.pokergame.web.websocket.message.MessageDispatcher;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageFactory;
@@ -65,10 +63,14 @@ public class GameService {
             Round currentRound = currentRoundOpt.get();
 
             GameThread thread = threadFactory.createIfNotExist(pokerTable);
-            playerSessionService.connectUserToRound(appUser, currentRound);
+            PlayerSessionDTO connectedPlayerSession = playerSessionService.connectUserToRound(appUser, currentRound);
             thread.playerConnected();
 
             List<PlayerSessionDTO> playerSessionDtos = playerSessionService.getPlayerSessionsByTableId(tableId);
+
+            // send to all clients that this player has connected
+            dispatcher.send(tableId, messageFactory.playerConnected(connectedPlayerSession));
+
             return messageFactory.playerSubscribed(playerSessionDtos);
         });
     }

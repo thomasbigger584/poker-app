@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.twb.pokergame.R;
 import com.twb.pokergame.data.auth.AuthService;
 import com.twb.pokergame.data.model.PokerTable;
+import com.twb.pokergame.data.model.dto.appuser.AppUserDTO;
 import com.twb.pokergame.data.model.dto.playersession.PlayerSessionDTO;
 import com.twb.pokergame.ui.activity.login.BaseAuthActivity;
 import com.twb.pokergame.ui.activity.pokergame.chatbox.ChatBoxRecyclerAdapter;
@@ -77,20 +78,29 @@ public class PokerGameActivity extends BaseAuthActivity {
             alertModalDialog.show(getSupportFragmentManager(), "modal_alert");
             chatBoxAdapter.add(message);
         });
-        viewModel.playerSubscribed.observe(this, playerConnected -> {
+        viewModel.playerSubscribed.observe(this, playerSubscribed -> {
             String currentUsername = authService.getCurrentUser();
 
             PlayerSessionDTO currentPlayerSession =
-                    playerConnected.getCurrentPlayerSession(currentUsername);
+                    playerSubscribed.getCurrentPlayerSession(currentUsername);
             tableController.connectCurrentPlayer(currentPlayerSession);
 
-            for (PlayerSessionDTO playerSession : playerConnected.getPlayerSessions()) {
+            for (PlayerSessionDTO playerSession : playerSubscribed.getPlayerSessions()) {
                 if (!playerSession.getUser().getUsername().equals(currentUsername)) {
                     tableController.connectOtherPlayer(playerSession);
                 }
             }
             chatBoxAdapter.add("Connected: " + currentUsername);
             DialogHelper.dismiss(loadingSpinner);
+        });
+        viewModel.playerConnected.observe(this, playerConnected -> {
+            String currentUsername = authService.getCurrentUser();
+            PlayerSessionDTO playerSession = playerConnected.getPlayerSession();
+            AppUserDTO user = playerSession.getUser();
+            if (!user.getUsername().equals(currentUsername)) {
+                tableController.connectOtherPlayer(playerSession);
+                chatBoxAdapter.add("Connected: " + currentUsername);
+            }
         });
         viewModel.chatMessage.observe(this, chatMessage -> {
             chatBoxAdapter.add(chatMessage.getUsername() + ": " + chatMessage.getMessage());

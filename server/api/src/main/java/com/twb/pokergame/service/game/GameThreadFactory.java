@@ -1,9 +1,9 @@
-package com.twb.pokergame.service.game.runnable;
+package com.twb.pokergame.service.game;
 
 import com.antkorwin.xsync.XSync;
 import com.twb.pokergame.domain.PokerTable;
-import com.twb.pokergame.service.game.runnable.impl.BlackjackGameThread;
-import com.twb.pokergame.service.game.runnable.impl.TexasHoldemGameThread;
+import com.twb.pokergame.service.game.impl.BlackjackGameThread;
+import com.twb.pokergame.service.game.impl.TexasHoldemGameThread;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
