@@ -13,6 +13,12 @@ public enum ServerMessageType {
      */
     PLAYER_CONNECTED,
 
+    /*
+     * Used to notify all players on the
+     * table that a dealer has been determined for this round
+     */
+    DEALER_DETERMINED,
+
 
     // todo: add more
 

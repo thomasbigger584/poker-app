@@ -1,13 +1,18 @@
 package com.twb.pokergame.web.websocket.message.server;
 
+import com.twb.pokergame.domain.PlayerSession;
 import com.twb.pokergame.dto.playersession.PlayerSessionDTO;
+import com.twb.pokergame.mapper.PlayerSessionMapper;
 import com.twb.pokergame.web.websocket.message.server.payload.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class ServerMessageFactory {
+    private final PlayerSessionMapper playerSessionMapper;
 
     public ServerMessageDTO playerSubscribed(List<PlayerSessionDTO> playerSessions) {
         PlayerSubscribedDTO payload = PlayerSubscribedDTO.builder()
@@ -22,6 +27,15 @@ public class ServerMessageFactory {
                 .build();
         return ServerMessageDTO.create(ServerMessageType.PLAYER_CONNECTED, payload);
     }
+
+    public ServerMessageDTO dealerDetermined(PlayerSession playerSession) {
+        DealerDeterminedDTO payload = DealerDeterminedDTO.builder()
+                .playerSession(playerSessionMapper.modelToDto(playerSession))
+                .build();
+        return ServerMessageDTO.create(ServerMessageType.DEALER_DETERMINED, payload);
+    }
+
+
 
     public ServerMessageDTO logMessage(String message) {
         LogMessageDTO payload = LogMessageDTO.builder()

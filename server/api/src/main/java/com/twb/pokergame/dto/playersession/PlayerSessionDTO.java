@@ -15,5 +15,6 @@ public class PlayerSessionDTO {
     private TableDTO pokerTable;
     private RoundDTO round;
     private Integer position;
+    private Boolean dealer;
     private Double funds;
 }

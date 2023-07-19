@@ -33,6 +33,9 @@ public class PlayerSession {
     @Column(name = "position")
     private Integer position;
 
+    @Column(name = "dealer")
+    private Boolean dealer;
+
     @Column(name = "funds")
     private Double funds;
 

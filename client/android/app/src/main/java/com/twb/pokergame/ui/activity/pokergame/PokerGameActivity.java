@@ -80,11 +80,9 @@ public class PokerGameActivity extends BaseAuthActivity {
         });
         viewModel.playerSubscribed.observe(this, playerSubscribed -> {
             String currentUsername = authService.getCurrentUser();
-
             PlayerSessionDTO currentPlayerSession =
                     playerSubscribed.getCurrentPlayerSession(currentUsername);
             tableController.connectCurrentPlayer(currentPlayerSession);
-
             for (PlayerSessionDTO playerSession : playerSubscribed.getPlayerSessions()) {
                 if (!playerSession.getUser().getUsername().equals(currentUsername)) {
                     tableController.connectOtherPlayer(playerSession);
@@ -102,6 +100,10 @@ public class PokerGameActivity extends BaseAuthActivity {
                 chatBoxAdapter.add("Connected: " + currentUsername);
             }
         });
+        viewModel.dealerDetermined.observe(this, dealerDetermined -> {
+            tableController.dealerDetermined(dealerDetermined.getPlayerSession());
+        });
+
         viewModel.chatMessage.observe(this, chatMessage -> {
             chatBoxAdapter.add(chatMessage.getUsername() + ": " + chatMessage.getMessage());
         });

@@ -40,6 +40,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="position" type="tinyint"/>
+            <column name="dealer" type="boolean"/>
             <column name="funds" type="double"/>
         </createTable>
         <addPrimaryKey columnNames="id" constraintName="pk_player_session" tableName="player_session"/>

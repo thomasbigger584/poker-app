@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -25,6 +26,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public abstract class GameThread extends Thread {
     private static final Logger logger = LoggerFactory.getLogger(GameThread.class);
+    protected static final SecureRandom RANDOM = new SecureRandom();
     protected final UUID tableId;
     protected PokerTable pokerTable;
     protected Round currentRound;

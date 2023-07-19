@@ -38,6 +38,9 @@ public class TableController {
             positionCardPairs.put(thisPosition, cardPairLayouts[index]);
         }
         cardPairLayouts[0].updateDetails(playerSession);
+
+        Boolean dealer = playerSession.getDealer();
+        cardPairLayouts[0].updateDealerChip(dealer != null && dealer);
     }
 
     public void connectOtherPlayer(PlayerSessionDTO playerSession) {
@@ -47,12 +50,23 @@ public class TableController {
             throw new RuntimeException("No CardPairLayout set for position");
         }
         cardPairLayout.updateDetails(playerSession);
+
+        Boolean dealer = playerSession.getDealer();
+        cardPairLayout.updateDealerChip(dealer != null && dealer);
     }
 
     public void disconnectOtherPlayer(String username) {
         CardPairLayout cardPairLayout = findCardPairLayoutByUsername(username);
         if (cardPairLayout != null) {
             cardPairLayout.deleteDetails();
+        }
+    }
+
+    public void dealerDetermined(PlayerSessionDTO playerSession) {
+        for (Map.Entry<Integer, CardPairLayout> posCardPairEntry : positionCardPairs.entrySet()) {
+            Integer position = posCardPairEntry.getKey();
+            CardPairLayout cardPairLayout = posCardPairEntry.getValue();
+            cardPairLayout.updateDealerChip(position.equals(playerSession.getPosition()));
         }
     }
 

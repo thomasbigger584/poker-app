@@ -1,8 +1,9 @@
 package com.twb.pokergame.data.model.dto.playersession;
 
+import androidx.annotation.NonNull;
+
 import com.twb.pokergame.data.model.dto.appuser.AppUserDTO;
 import com.twb.pokergame.data.model.dto.pokertable.TableDTO;
-import com.twb.pokergame.data.model.dto.round.RoundDTO;
 
 import java.util.UUID;
 
@@ -10,8 +11,8 @@ public class PlayerSessionDTO {
     private UUID id;
     private AppUserDTO user;
     private TableDTO pokerTable;
-    private RoundDTO round;
     private Integer position;
+    private Boolean dealer;
     private Double funds;
 
     public UUID getId() {
@@ -38,14 +39,6 @@ public class PlayerSessionDTO {
         this.pokerTable = pokerTable;
     }
 
-    public RoundDTO getRound() {
-        return round;
-    }
-
-    public void setRound(RoundDTO round) {
-        this.round = round;
-    }
-
     public Integer getPosition() {
         return position;
     }
@@ -60,5 +53,26 @@ public class PlayerSessionDTO {
 
     public void setFunds(Double funds) {
         this.funds = funds;
+    }
+
+    public Boolean getDealer() {
+        return dealer;
+    }
+
+    public void setDealer(Boolean dealer) {
+        this.dealer = dealer;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "PlayerSessionDTO{" +
+                "id=" + id +
+                ", user=" + user +
+                ", pokerTable=" + pokerTable +
+                ", position=" + position +
+                ", dealer=" + dealer +
+                ", funds=" + funds +
+                '}';
     }
 }

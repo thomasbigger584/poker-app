@@ -46,7 +46,7 @@ public class CardPairLayout extends FrameLayout {
         for (ImageView imageView : cardImageViews) {
             imageView.setVisibility(INVISIBLE);
         }
-        dealerChipLayout.setVisibility(GONE);
+        updateDealerChip(false);
     }
 
     public void updateCardImageView(Card card) {

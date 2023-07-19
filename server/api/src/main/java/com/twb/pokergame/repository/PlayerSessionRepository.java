@@ -22,6 +22,7 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
 
     @Query("SELECT s " +
             "FROM PlayerSession s " +
-            "WHERE s.pokerTable.id = :tableId ")
+            "WHERE s.pokerTable.id = :tableId " +
+            "ORDER BY s.position ASC ")
     List<PlayerSession> findByTableId(@Param("tableId") UUID tableId);
 }

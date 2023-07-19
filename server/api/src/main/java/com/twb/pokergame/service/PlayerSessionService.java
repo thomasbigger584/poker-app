@@ -39,7 +39,6 @@ public class PlayerSessionService {
 
         int position = getSessionTablePosition(pokerTable);
         session.setPosition(position);
-
         session.setFunds(1000d);
 
         session = repository.saveAndFlush(session);
