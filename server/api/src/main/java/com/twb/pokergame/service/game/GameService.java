@@ -3,7 +3,6 @@ package com.twb.pokergame.service.game;
 import com.antkorwin.xsync.XSync;
 import com.twb.pokergame.domain.AppUser;
 import com.twb.pokergame.domain.PokerTable;
-import com.twb.pokergame.domain.Round;
 import com.twb.pokergame.dto.playersession.PlayerSessionDTO;
 import com.twb.pokergame.repository.RoundRepository;
 import com.twb.pokergame.repository.TableRepository;
@@ -28,7 +27,6 @@ public class GameService {
 
     private final UserRepository userRepository;
     private final TableRepository tableRepository;
-    private final RoundRepository roundRepository;
 
     private final PlayerSessionService playerSessionService;
 
@@ -52,39 +50,23 @@ public class GameService {
                 throw new RuntimeException(message);
             }
 
-            Optional<Round> currentRoundOpt = roundRepository.findCurrentByTableId(tableId);
-            if (currentRoundOpt.isEmpty()) {
-                String message = String.format("Fail to connect user %s to table as there is no current round created for table %s", username, tableId);
-                throw new RuntimeException(message);
-            }
-
             PokerTable pokerTable = pokerTableOpt.get();
             AppUser appUser = userOpt.get();
-            Round currentRound = currentRoundOpt.get();
 
-            GameThread thread = threadFactory.createIfNotExist(pokerTable);
-            PlayerSessionDTO connectedPlayerSession = playerSessionService.connectUserToRound(appUser, currentRound);
-            thread.playerConnected();
+            threadFactory.createIfNotExist(pokerTable);
 
-            List<PlayerSessionDTO> playerSessionDtos = playerSessionService.getPlayerSessionsByTableId(tableId);
+            PlayerSessionDTO connectedPlayerSession = playerSessionService.connectUserToRound(appUser, pokerTable);
+            List<PlayerSessionDTO> allPlayerSessions = playerSessionService.getPlayerSessionsByTableId(tableId);
 
-            // send to all clients that this player has connected
+            // send to all clients that this table has connected
             dispatcher.send(tableId, messageFactory.playerConnected(connectedPlayerSession));
-
-            return messageFactory.playerSubscribed(playerSessionDtos);
+            return messageFactory.playerSubscribed(allPlayerSessions);
         });
     }
 
     public void onPlayerDisconnected(UUID tableId, String username) {
         mutex.execute(tableId, () -> {
             playerSessionService.disconnectUser(tableId, username);
-            Optional<GameThread> threadOpt = threadFactory.getIfExists(tableId);
-            if (threadOpt.isPresent()) {
-
-                GameThread gameThread = threadOpt.get();
-                gameThread.playerDisconnected();
-            }
-
             ServerMessageDTO message =
                     messageFactory.playerDisconnected(username);
             dispatcher.send(tableId, message);

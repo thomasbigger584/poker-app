@@ -3,7 +3,6 @@ package com.twb.pokergame.service;
 import com.twb.pokergame.domain.AppUser;
 import com.twb.pokergame.domain.PlayerSession;
 import com.twb.pokergame.domain.PokerTable;
-import com.twb.pokergame.domain.Round;
 import com.twb.pokergame.dto.playersession.PlayerSessionDTO;
 import com.twb.pokergame.mapper.PlayerSessionMapper;
 import com.twb.pokergame.repository.PlayerSessionRepository;
@@ -22,9 +21,7 @@ public class PlayerSessionService {
     private final PlayerSessionRepository repository;
     private final PlayerSessionMapper mapper;
 
-    public PlayerSessionDTO connectUserToRound(AppUser user, Round round) {
-        PokerTable pokerTable = round.getPokerTable();
-
+    public PlayerSessionDTO connectUserToRound(AppUser user, PokerTable pokerTable) {
         UUID tableId = pokerTable.getId();
         String username = user.getUsername();
 
@@ -39,8 +36,6 @@ public class PlayerSessionService {
             session.setUser(user);
             session.setPokerTable(pokerTable);
         }
-
-        session.setRound(round);
 
         int position = getSessionTablePosition(pokerTable);
         session.setPosition(position);

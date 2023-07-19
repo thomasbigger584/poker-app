@@ -30,10 +30,6 @@ public class PlayerSession {
     @JoinColumn(name = "poker_table_id")
     private PokerTable pokerTable;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "round_id")
-    private Round round;
-
     @Column(name = "position")
     private Integer position;
 

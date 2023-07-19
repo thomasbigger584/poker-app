@@ -17,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,21 +25,12 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public abstract class GameThread extends Thread {
     private static final Logger logger = LoggerFactory.getLogger(GameThread.class);
-
     protected final UUID tableId;
-
     protected PokerTable pokerTable;
     protected Round currentRound;
-
-
-    // user session
-    // --------------------------------------------
-    protected List<PlayerSession> sessionsInPlay;
-    protected int numPlayersConnected;
-    private final Object lock = new Object();
+    protected List<PlayerSession> playerSessions;
 
     // --------------------------------------------
-
     @Autowired
     protected GameThreadFactory threadFactory;
 
@@ -77,8 +67,7 @@ public abstract class GameThread extends Thread {
                 return;
             }
         } else {
-            Optional<PokerTable> tableOpt =
-                    tableRepository.findById(tableId);
+            Optional<PokerTable> tableOpt = tableRepository.findById(tableId);
             if (tableOpt.isEmpty()) {
                 fail("Cannot start as table doesn't exist");
                 return;
@@ -96,17 +85,10 @@ public abstract class GameThread extends Thread {
 
         GameType gameType = pokerTable.getGameType();
         int minPlayerCount = gameType.getMinPlayerCount();
-        List<PlayerSession> sessionsConnected;
         do {
-            sessionsConnected = playerSessionRepository
-                    .findByTableId(tableId);
+            playerSessions = playerSessionRepository.findByTableId(tableId);
             sleepInMs(400);
-        } while (sessionsConnected.size() < minPlayerCount);
-
-        synchronized (lock) {
-            sessionsInPlay = new ArrayList<>(sessionsConnected);
-            numPlayersConnected = sessionsInPlay.size();
-        }
+        } while (playerSessions.size() < minPlayerCount);
 
         // -----------------------------------------------------------------------
 
@@ -149,16 +131,10 @@ public abstract class GameThread extends Thread {
     }
 
     public void playerConnected() {
-        synchronized (lock) {
-            numPlayersConnected++;
-            System.out.println("numPlayersConnected = " + numPlayersConnected);
-        }
+
     }
 
     public void playerDisconnected() {
-        synchronized (lock) {
-            numPlayersConnected--;
-            System.out.println("numPlayersConnected = " + numPlayersConnected);
-        }
+
     }
 }

@@ -11,8 +11,8 @@ import com.twb.pokergame.data.websocket.message.server.ServerMessageDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.ChatMessageDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.LogMessageDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.PlayerConnectedDTO;
-import com.twb.pokergame.data.websocket.message.server.payload.PlayerSubscribedDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.PlayerDisconnectedDTO;
+import com.twb.pokergame.data.websocket.message.server.payload.PlayerSubscribedDTO;
 import com.twb.stomplib.dto.LifecycleEvent;
 
 import javax.inject.Inject;

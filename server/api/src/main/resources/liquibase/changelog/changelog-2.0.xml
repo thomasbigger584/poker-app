@@ -39,9 +39,6 @@
             <column name="poker_table_id" type="uuid">
                 <constraints nullable="false"/>
             </column>
-            <column name="round_id" type="uuid">
-                <constraints nullable="false"/>
-            </column>
             <column name="position" type="tinyint"/>
             <column name="funds" type="double"/>
         </createTable>
@@ -52,8 +49,5 @@
         <addForeignKeyConstraint constraintName="fk_player_session_poker_table_id" onDelete="CASCADE"
                                  baseTableName="player_session" baseColumnNames="poker_table_id"
                                  referencedTableName="poker_table" referencedColumnNames="id"/>
-        <addForeignKeyConstraint constraintName="fk_player_session_round_id" onDelete="CASCADE"
-                                 baseTableName="player_session" baseColumnNames="round_id"
-                                 referencedTableName="round" referencedColumnNames="id"/>
     </changeSet>
 </databaseChangeLog>

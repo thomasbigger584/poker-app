@@ -15,7 +15,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class MessageDispatcher {
     private static final Logger logger = LoggerFactory.getLogger(MessageDispatcher.class);
-    //todo: change this topic to a more meaningful name
     private static final String TOPIC = "/topic/loops.%s";
 
     private final SimpMessagingTemplate template;
@@ -26,9 +25,20 @@ public class MessageDispatcher {
             String destination = String.format(TOPIC, tableId);
             String payload = objectMapper.writeValueAsString(message);
             template.convertAndSend(destination, payload);
-            logger.info("<<<< " + payload);
+            logger.info("<<<< {}", payload);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to send message", e);
+        }
+    }
+
+    public void send(UUID tableId, String username, ServerMessageDTO message) {
+        try {
+            String destination = String.format(TOPIC, tableId);
+            String payload = objectMapper.writeValueAsString(message);
+            template.convertAndSendToUser(username, destination, payload);
+            logger.info("<<<< [{}] {}", username, payload);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to send message", e);
         }
     }
 }

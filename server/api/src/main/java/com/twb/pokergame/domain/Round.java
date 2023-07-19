@@ -8,8 +8,6 @@ import lombok.Setter;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -32,9 +30,6 @@ public class Round {
     @ManyToOne(optional = false)
     @JoinColumn(name = "poker_table_id")
     private PokerTable pokerTable;
-
-    @OneToMany(mappedBy = "round", cascade = CascadeType.ALL)
-    private List<PlayerSession> playerSessions = new ArrayList<>();
 
     @Override
     public boolean equals(Object o) {
