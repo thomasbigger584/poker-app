@@ -79,7 +79,7 @@ public class TexasHoldemGameThread extends GameThread {
             for (PlayerSession playerSession : playerSessions) {
                 Card card = getCard();
                 //todo: save to database
-                dispatcher.send(tableId, messageFactory.initDeal(playerSession, card, dealIndex));
+                dispatcher.send(tableId, messageFactory.initDeal(playerSession, card));
                 sleepInMs(400);
             }
         }

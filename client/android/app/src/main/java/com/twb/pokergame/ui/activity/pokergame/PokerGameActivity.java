@@ -97,7 +97,7 @@ public class PokerGameActivity extends BaseAuthActivity {
             AppUserDTO user = playerSession.getUser();
             if (!user.getUsername().equals(currentUsername)) {
                 tableController.connectOtherPlayer(playerSession);
-                chatBoxAdapter.add("Connected: " + currentUsername);
+                chatBoxAdapter.add("Connected: " + user.getUsername());
             }
         });
         viewModel.dealerDetermined.observe(this, dealerDetermined -> {
