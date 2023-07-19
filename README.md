@@ -4,7 +4,7 @@ WORK IN PROGRESS
 
 ![logo.png](logo.png)
 
-## Usage
+## Backend Usage
 
 In your terminal run the following command from the root directory to run the server locally:
 
@@ -12,8 +12,31 @@ In your terminal run the following command from the root directory to run the se
 ./local_run.sh
 ```
 
-To run the Android App, install Android Studio and open the folder `client/android` as a project. Once everything syncs and builds you can run it on your device.
+## Client Usage
 
+### Android Studio
+
+- To run the Android App, install Android Studio and open the folder `client/android` as a project.
+- Once everything syncs and builds you can run it on your device.
+
+### CLI
+
+- Add the android tools to your PATH
+
+```shell
+export ANDROID_HOME=/Users/<username>/Library/Android/sdk
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+export PATH=$PATH:$ANDROID_HOME/tools
+export PATH=$PATH:$ANDROID_HOME/tools/bin
+export PATH=$PATH:$ANDROID_HOME/emulator
+```
+
+- Run the following command from root directory to run app to all connected android devices.
+- Useful to test multiple users at once with latest changes
+
+```shell
+./android_run.sh
+```
 
 | Service  | Domain Name          |
 |----------|----------------------|
