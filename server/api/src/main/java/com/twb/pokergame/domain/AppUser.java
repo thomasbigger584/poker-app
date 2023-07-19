@@ -69,4 +69,19 @@ public class AppUser {
         return new HashCodeBuilder(17, 37)
                 .append(id).append(username).toHashCode();
     }
+
+    @Override
+    public String toString() {
+        return "AppUser{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", email='" + email + '\'' +
+                ", emailVerified=" + emailVerified +
+                ", enabled=" + enabled +
+                ", groups=" + groups +
+                ", totalFunds=" + totalFunds +
+                '}';
+    }
 }

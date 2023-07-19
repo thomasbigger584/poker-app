@@ -26,8 +26,6 @@ public class PokerTableWebSocketController {
     private static final String POKER_TABLE_EVENTS_TOPIC = "/topic/loops.{tableId}";
     private static final String POKER_TABLE_MESSAGE_PREFIX = "/pokerTable/{tableId}";
 
-    private static final String SEND_SUBSCRIPTION = "/sendSubscription";
-    private static final String SEND_CONNECT_PLAYER = "/sendConnectPlayer";
     private static final String SEND_CHAT_MESSAGE = "/sendChatMessage";
     private static final String SEND_DISCONNECT_PLAYER = "/sendDisconnectPlayer";
 

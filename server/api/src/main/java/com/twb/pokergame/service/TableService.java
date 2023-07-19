@@ -26,7 +26,6 @@ public class TableService {
     private final TableMapper mapper;
 
     private final RoundRepository roundRepository;
-    private final RoundService roundService;
 
     @PostConstruct
     public void init() {
@@ -37,8 +36,6 @@ public class TableService {
         for (Round round : allRounds) {
             round.setRoundState(RoundState.COMPLETED);
             roundRepository.save(round);
-
-            roundService.create(round.getPokerTable());
         }
 
 
@@ -59,9 +56,6 @@ public class TableService {
     public PokerTable create(CreateTableDTO dto) {
         PokerTable table = mapper.createDtoToModel(dto);
         table = repository.save(table);
-
-        roundService.create(table);
-
         return table;
     }
 

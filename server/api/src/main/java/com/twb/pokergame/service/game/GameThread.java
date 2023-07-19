@@ -5,6 +5,7 @@ import com.twb.pokergame.domain.PokerTable;
 import com.twb.pokergame.domain.Round;
 import com.twb.pokergame.domain.enumeration.GameType;
 import com.twb.pokergame.domain.enumeration.RoundState;
+import com.twb.pokergame.old.Card;
 import com.twb.pokergame.repository.PlayerSessionRepository;
 import com.twb.pokergame.repository.RoundRepository;
 import com.twb.pokergame.repository.TableRepository;
@@ -25,12 +26,14 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 public abstract class GameThread extends Thread {
-    private static final Logger logger = LoggerFactory.getLogger(GameThread.class);
     protected static final SecureRandom RANDOM = new SecureRandom();
+    private static final Logger logger = LoggerFactory.getLogger(GameThread.class);
     protected final UUID tableId;
     protected PokerTable pokerTable;
     protected Round currentRound;
     protected List<PlayerSession> playerSessions;
+    protected List<Card> cards;
+    protected int deckCardPointer;
 
     // --------------------------------------------
     @Autowired
@@ -58,14 +61,14 @@ public abstract class GameThread extends Thread {
     public void run() {
         // -----------------------------------------------------------------------
 
-        sendLogMessage("Initializing the round...");
+        sendLogMessage("Waiting for players to join...");
         Optional<Round> roundOpt = roundRepository
                 .findCurrentByTableId(tableId);
         if (roundOpt.isPresent()) {
             currentRound = roundOpt.get();
             pokerTable = currentRound.getPokerTable();
-            if (currentRound.getRoundState() != RoundState.INIT) {
-                fail("Cannot start an existing new round not in the INIT state");
+            if (currentRound.getRoundState() != RoundState.WAITING_FOR_PLAYERS) {
+                fail("Cannot start an existing new round not in the WAITING_FOR_PLAYERS state");
                 return;
             }
         } else {
@@ -77,13 +80,6 @@ public abstract class GameThread extends Thread {
             pokerTable = tableOpt.get();
             currentRound = roundService.createSingle(pokerTable);
         }
-        sendLogMessage("Round Initialized.");
-
-        // -----------------------------------------------------------------------
-
-        currentRound.setRoundState(RoundState.WAITING_FOR_PLAYERS);
-        roundRepository.saveAndFlush(currentRound);
-        sendLogMessage("Waiting for players to join...");
 
         GameType gameType = pokerTable.getGameType();
         int minPlayerCount = gameType.getMinPlayerCount();
@@ -91,6 +87,8 @@ public abstract class GameThread extends Thread {
             playerSessions = playerSessionRepository.findByTableId(tableId);
             sleepInMs(400);
         } while (playerSessions.size() < minPlayerCount);
+
+        sendLogMessage("Round Initialized.");
 
         // -----------------------------------------------------------------------
 

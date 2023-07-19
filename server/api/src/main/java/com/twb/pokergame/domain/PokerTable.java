@@ -52,4 +52,13 @@ public class PokerTable {
         return new HashCodeBuilder(17, 37)
                 .append(id).toHashCode();
     }
+
+    @Override
+    public String toString() {
+        return "PokerTable{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", gameType=" + gameType +
+                '}';
+    }
 }

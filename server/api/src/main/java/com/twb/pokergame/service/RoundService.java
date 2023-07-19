@@ -24,33 +24,22 @@ public class RoundService {
     private final RoundMapper mapper;
 
     public Round createSingle(PokerTable pokerTable) {
-        List<Round> previousRounds =
-                repository.findByPokerTableId(pokerTable.getId());
-
+        List<Round> previousRounds = repository.findByPokerTableId(pokerTable.getId());
         for (Round round : previousRounds) {
             round.setRoundState(RoundState.COMPLETED);
             repository.save(round);
         }
-
         return create(pokerTable);
     }
 
     public Round create(PokerTable pokerTable) {
         Round round = new Round();
-        round.setRoundState(RoundState.INIT);
+        round.setRoundState(RoundState.WAITING_FOR_PLAYERS);
         round.setPokerTable(pokerTable);
 
         round = repository.saveAndFlush(round);
-        pokerTable.getRounds().add(round);
 
         return round;
-    }
-
-    private void completePreviousRounds(List<Round> previousRounds) {
-        for (Round round : previousRounds) {
-            round.setRoundState(RoundState.COMPLETED);
-            repository.save(round);
-        }
     }
 
     @Transactional(readOnly = true)

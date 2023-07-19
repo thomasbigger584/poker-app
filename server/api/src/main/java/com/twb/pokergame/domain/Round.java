@@ -25,7 +25,7 @@ public class Round {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "round_state")
-    private RoundState roundState = RoundState.INIT;
+    private RoundState roundState = RoundState.WAITING_FOR_PLAYERS;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "poker_table_id")
@@ -44,5 +44,13 @@ public class Round {
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
                 .append(id).append(roundState).toHashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "Round{" +
+                "id=" + id +
+                ", roundState=" + roundState +
+                '}';
     }
 }

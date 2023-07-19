@@ -53,4 +53,14 @@ public class PlayerSession {
         return new HashCodeBuilder(17, 37)
                 .append(id).toHashCode();
     }
+
+    @Override
+    public String toString() {
+        return "PlayerSession{" +
+                "id=" + id +
+                ", position=" + position +
+                ", dealer=" + dealer +
+                ", funds=" + funds +
+                '}';
+    }
 }

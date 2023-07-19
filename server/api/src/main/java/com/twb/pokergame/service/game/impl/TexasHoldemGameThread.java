@@ -1,6 +1,7 @@
 package com.twb.pokergame.service.game.impl;
 
 import com.twb.pokergame.domain.PlayerSession;
+import com.twb.pokergame.old.DeckOfCardsFactory;
 import com.twb.pokergame.service.game.GameThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,23 +17,24 @@ import java.util.UUID;
 public class TexasHoldemGameThread extends GameThread {
     private static final Logger logger = LoggerFactory.getLogger(TexasHoldemGameThread.class);
 
+
     public TexasHoldemGameThread(UUID tableId) {
         super(tableId);
     }
 
 
-
     @Override
     protected void onRun() {
-
-        PlayerSession dealerSession = determineNextDealer();
-        dispatcher.send(tableId, messageFactory.dealerDetermined(dealerSession));
+        init();
 
 
+    }
 
+    private void init() {
+        determineNextDealer();
 
-
-
+        cards = DeckOfCardsFactory.getCards(true);
+        deckCardPointer = 0;
 
 
     }
@@ -43,12 +45,11 @@ public class TexasHoldemGameThread extends GameThread {
      * If there is a dealer selected, get the next dealer given the position.
      * Making sure to wrap around the list if the next dealer is actually at the start of the list.
      * <p>
-     * Once we know the dealer, we want to sort the playerSession list with the dealer
-     * to the start and then position after
-     *
-     * @return PlayerSession - the dealer player session
+     * Once we know the dealer, we want to reorder the list so as to have dealer last but still in order by position
      */
-    private PlayerSession determineNextDealer() {
+    private void determineNextDealer() {
+
+        //get current dealer if already set
         PlayerSession currentDealer = null;
         for (PlayerSession playerSession : playerSessions) {
             if (Boolean.TRUE.equals(playerSession.getDealer())) {
@@ -56,6 +57,8 @@ public class TexasHoldemGameThread extends GameThread {
                 break;
             }
         }
+
+        // get next dealer
         if (currentDealer == null) {
             currentDealer = playerSessions.get(RANDOM.nextInt(playerSessions.size()));
         } else {
@@ -72,14 +75,16 @@ public class TexasHoldemGameThread extends GameThread {
                 }
             }
         }
+
+        //save to database and list
         for (PlayerSession playerSession : playerSessions) {
             playerSession.setDealer(currentDealer.getId().equals(playerSession.getId()));
         }
         playerSessionRepository.saveAllAndFlush(playerSessions);
 
-        int dealerIndex = -1;
 
-        //find dealer index
+        //reorder list for dealer last
+        int dealerIndex = -1;
         for (int index = 0; index < playerSessions.size(); index++) {
             PlayerSession playerSession = playerSessions.get(index);
             if (playerSession.getDealer()) {
@@ -92,17 +97,22 @@ public class TexasHoldemGameThread extends GameThread {
             throw new RuntimeException("Failed to sort player sessions by dealer and position, dealerIndex is -1");
         }
 
-        // sort playerSessions by dealer first, then position
+        int startIndex = dealerIndex + 1;
+        if (startIndex >= playerSessions.size()) {
+            startIndex = 0;
+        }
+
+        // sort playerSessions by positions and dealer last
         List<PlayerSession> dealerSortedList = new ArrayList<>();
-        for (int index = dealerIndex; index < playerSessions.size(); index++) {
+        for (int index = startIndex; index < playerSessions.size(); index++) {
             dealerSortedList.add(playerSessions.get(index));
         }
-        for (int index = 0; index < dealerIndex; index++) {
+        for (int index = 0; index < startIndex; index++) {
             dealerSortedList.add(playerSessions.get(index));
         }
         playerSessions = dealerSortedList;
 
-        return currentDealer;
+        dispatcher.send(tableId, messageFactory.dealerDetermined(currentDealer));
     }
 
 }
