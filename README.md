@@ -12,6 +12,10 @@ In your terminal run the following command from the root directory to run the se
 ./local_run.sh
 ```
 
+
+
+
+
 ## Client Usage
 
 ### Android Studio
@@ -21,14 +25,13 @@ In your terminal run the following command from the root directory to run the se
 
 ### CLI
 
-- Add the android tools to your PATH
+- Add the android tools to your PATH. Installed via Android Studio or separately
 
 ```shell
 export ANDROID_HOME=/Users/<username>/Library/Android/sdk
 export PATH=$PATH:$ANDROID_HOME/platform-tools
 export PATH=$PATH:$ANDROID_HOME/tools
 export PATH=$PATH:$ANDROID_HOME/tools/bin
-export PATH=$PATH:$ANDROID_HOME/emulator
 ```
 
 - Run the following command from root directory to run app to all connected android devices.
@@ -37,12 +40,6 @@ export PATH=$PATH:$ANDROID_HOME/emulator
 ```shell
 ./android_run.sh
 ```
-
-| Service  | Domain Name          |
-|----------|----------------------|
-| Landing  | twbdev.site          |
-| Keycloak | keycloak.twbdev.site |
-| API      | localhost:8081       |
 
 ## Architecture
 
@@ -90,3 +87,11 @@ export PATH=$PATH:$ANDROID_HOME/emulator
 #### PostgresQL (PSQL)
 
 - The database of choice for storing both the keycloak persistence data and backend app persistence data.
+
+## Useful links
+
+| Service  | Domain Name          |
+|----------|----------------------|
+| Landing  | twbdev.site          |
+| Keycloak | keycloak.twbdev.site |
+| API      | localhost:8081       |
