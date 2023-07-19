@@ -20,6 +20,14 @@ public enum ServerMessageType {
     DEALER_DETERMINED,
 
 
+    /*
+     * Used to notify all players the cards for the first
+     * cards being dealt held in the players hands
+     */
+    DEAL_INIT,
+
+
+
     // todo: add more
 
 

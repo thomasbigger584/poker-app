@@ -1,8 +1,10 @@
 package com.twb.pokergame.web.websocket.message.server;
 
 import com.twb.pokergame.domain.PlayerSession;
+import com.twb.pokergame.dto.card.CardDTO;
 import com.twb.pokergame.dto.playersession.PlayerSessionDTO;
 import com.twb.pokergame.mapper.PlayerSessionMapper;
+import com.twb.pokergame.old.Card;
 import com.twb.pokergame.web.websocket.message.server.payload.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -33,6 +35,14 @@ public class ServerMessageFactory {
                 .playerSession(playerSessionMapper.modelToDto(playerSession))
                 .build();
         return ServerMessageDTO.create(ServerMessageType.DEALER_DETERMINED, payload);
+    }
+
+    public ServerMessageDTO initDeal(PlayerSession playerSession, Card card) {
+        DealPlayerCardDTO payload = DealPlayerCardDTO.builder()
+                .playerSession(playerSessionMapper.modelToDto(playerSession))
+                .card(CardDTO.builder().suit(card.getSuit()).rank(card.getRank()).build())
+                .build();
+        return ServerMessageDTO.create(ServerMessageType.DEAL_INIT, payload);
     }
 
 

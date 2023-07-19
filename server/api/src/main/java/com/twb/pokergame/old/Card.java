@@ -32,7 +32,7 @@ public class Card {
     private final int rankValue;
 
     public Card(Card card) {
-        this(card.getRank(), card.getSuit(), card.getRank());
+        this(card.getRank(), card.getSuit(), card.getRankValue());
     }
 
     /**

@@ -6,6 +6,7 @@ import com.twb.pokergame.domain.Round;
 import com.twb.pokergame.domain.enumeration.GameType;
 import com.twb.pokergame.domain.enumeration.RoundState;
 import com.twb.pokergame.old.Card;
+import com.twb.pokergame.old.DeckOfCardsFactory;
 import com.twb.pokergame.repository.PlayerSessionRepository;
 import com.twb.pokergame.repository.RoundRepository;
 import com.twb.pokergame.repository.TableRepository;
@@ -93,13 +94,15 @@ public abstract class GameThread extends Thread {
         // -----------------------------------------------------------------------
 
         sendLogMessage("Game Starting...");
-        onRun();
+
+//        while (playerSessions.size() > 1) {
+            onRun();
+//        }
 
         // -----------------------------------------------------------------------
 
-        currentRound.setRoundState(RoundState.COMPLETED);
-        roundRepository.saveAndFlush(currentRound);
-        sendLogMessage("Game Completed");
+        saveRoundState(RoundState.FINISH);
+        sendLogMessage("Game Finished");
 
         // -----------------------------------------------------------------------
     }
@@ -121,6 +124,22 @@ public abstract class GameThread extends Thread {
         } catch (InterruptedException e) {
             throw new RuntimeException("Failed to sleep for " + ms, e);
         }
+    }
+
+    protected void saveRoundState(RoundState roundState) {
+        currentRound.setRoundState(roundState);
+        roundRepository.saveAndFlush(currentRound);
+    }
+
+    protected void shuffleCards() {
+        cards = DeckOfCardsFactory.getCards(true);
+        deckCardPointer = 0;
+    }
+
+    protected Card getCard() {
+        Card card = cards.get(deckCardPointer);
+        deckCardPointer++;
+        return card;
     }
 
     protected void fail(String message) {

@@ -12,6 +12,7 @@ import com.google.gson.JsonParseException;
 import com.twb.pokergame.data.websocket.message.server.ServerMessageDTO;
 import com.twb.pokergame.data.websocket.message.server.enumeration.ServerMessageType;
 import com.twb.pokergame.data.websocket.message.server.payload.ChatMessageDTO;
+import com.twb.pokergame.data.websocket.message.server.payload.DealPlayerCardDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.DealerDeterminedDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.LogMessageDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.PlayerConnectedDTO;
@@ -72,6 +73,10 @@ public class ServerMessageDeserializer implements JsonDeserializer<ServerMessage
                 return PlayerConnectedDTO.class;
             case DEALER_DETERMINED:
                 return DealerDeterminedDTO.class;
+            case DEAL_INIT:
+                return DealPlayerCardDTO.class;
+
+
             case CHAT:
                 return ChatMessageDTO.class;
             case LOG:

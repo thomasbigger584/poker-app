@@ -1,6 +1,8 @@
 package com.twb.pokergame.service.game.impl;
 
 import com.twb.pokergame.domain.PlayerSession;
+import com.twb.pokergame.domain.enumeration.RoundState;
+import com.twb.pokergame.old.Card;
 import com.twb.pokergame.old.DeckOfCardsFactory;
 import com.twb.pokergame.service.game.GameThread;
 import org.slf4j.Logger;
@@ -16,28 +18,73 @@ import java.util.UUID;
 @Scope("prototype")
 public class TexasHoldemGameThread extends GameThread {
     private static final Logger logger = LoggerFactory.getLogger(TexasHoldemGameThread.class);
+    private static final int NO_CARDS_FOR_PLAYER_DEAL = 2;
 
 
     public TexasHoldemGameThread(UUID tableId) {
         super(tableId);
     }
 
-
     @Override
     protected void onRun() {
         init();
 
+        RoundState roundState = RoundState.INIT_DEAL;
+        saveRoundState(roundState);
 
+        while (roundState != RoundState.FINISH) {
+            switch (roundState) {
+                case INIT_DEAL: {
+                    initDeal();
+                    break;
+                }
+                case INIT_DEAL_BET:
+                case FLOP_DEAL_BET:
+                case RIVER_DEAL_BET:
+                case TURN_DEAL_BET: {
+//                    pokerTable.performPlayerBetTurn();
+                    break;
+                }
+                case FLOP_DEAL: {
+//                    pokerTable.flopDeal();
+                    break;
+                }
+                case RIVER_DEAL: {
+//                    pokerTable.riverDeal();
+                    break;
+                }
+                case TURN_DEAL: {
+//                    pokerTable.turnDeal();
+                    break;
+                }
+                case EVAL: {
+//                    eval();
+                    break;
+                }
+            }
+            roundState = roundState.nextState();
+            saveRoundState(roundState);
+        }
+        // finishRound();
     }
 
     private void init() {
         determineNextDealer();
 
-        cards = DeckOfCardsFactory.getCards(true);
-        deckCardPointer = 0;
-
-
+        shuffleCards();
     }
+
+    private void initDeal() {
+        for (int dealIndex = 0; dealIndex < NO_CARDS_FOR_PLAYER_DEAL; dealIndex++) {
+            for (PlayerSession playerSession : playerSessions) {
+                Card card = getCard();
+                //todo: save to database
+                dispatcher.send(tableId, messageFactory.initDeal(playerSession, card, dealIndex));
+                sleepInMs(400);
+            }
+        }
+    }
+
 
 
     /**

@@ -32,9 +32,9 @@ public class TableService {
 
         // on application restart, complete all rounds previously saved
         // only doing this here to ensure ordering with creating dummy poker table data
-        List<Round> allRounds = roundRepository.findAllNotCompleted();
+        List<Round> allRounds = roundRepository.findAllNotFinished();
         for (Round round : allRounds) {
-            round.setRoundState(RoundState.COMPLETED);
+            round.setRoundState(RoundState.FINISH);
             roundRepository.save(round);
         }
 

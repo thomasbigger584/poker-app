@@ -103,6 +103,16 @@ public class PokerGameActivity extends BaseAuthActivity {
         viewModel.dealerDetermined.observe(this, dealerDetermined -> {
             tableController.dealerDetermined(dealerDetermined.getPlayerSession());
         });
+        viewModel.dealPlayerCard.observe(this, dealPlayerCard -> {
+            String currentUsername = authService.getCurrentUser();
+            PlayerSessionDTO playerSession = dealPlayerCard.getPlayerSession();
+            AppUserDTO user = playerSession.getUser();
+            if (user.getUsername().equals(currentUsername)) {
+                tableController.dealCurrentPlayerCard(dealPlayerCard);
+            } else {
+                tableController.dealOtherPlayerCard(dealPlayerCard);
+            }
+        });
 
         viewModel.chatMessage.observe(this, chatMessage -> {
             chatBoxAdapter.add(chatMessage.getUsername() + ": " + chatMessage.getMessage());

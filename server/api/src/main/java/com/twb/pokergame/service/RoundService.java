@@ -26,7 +26,7 @@ public class RoundService {
     public Round createSingle(PokerTable pokerTable) {
         List<Round> previousRounds = repository.findByPokerTableId(pokerTable.getId());
         for (Round round : previousRounds) {
-            round.setRoundState(RoundState.COMPLETED);
+            round.setRoundState(RoundState.FINISH);
             repository.save(round);
         }
         return create(pokerTable);
