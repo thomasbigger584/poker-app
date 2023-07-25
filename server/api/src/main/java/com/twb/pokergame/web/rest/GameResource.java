@@ -2,7 +2,7 @@ package com.twb.pokergame.web.rest;
 
 
 import com.twb.pokergame.eval.HandEvaluator;
-import com.twb.pokergame.old.Card;
+import com.twb.pokergame.old.CardDTO;
 import com.twb.pokergame.old.DeckOfCardsFactory;
 import com.twb.pokergame.old.Hand;
 import com.twb.pokergame.web.rest.dto.CardRequest;
@@ -24,10 +24,10 @@ public class GameResource {
     // this is for testing and will change, used to test end to end of hand evaluation
     @PostMapping("/rank")
     public HandRankResponse getHandRank(@RequestBody HandRankRequest request) {
-        List<Card> cards = new ArrayList<>();
+        List<CardDTO> cards = new ArrayList<>();
 
         for (CardRequest cardRequest : request.getCardList()) {
-            Card card = DeckOfCardsFactory.findCard(cardRequest.getRank(), cardRequest.getSuit());
+            CardDTO card = DeckOfCardsFactory.findCard(cardRequest.getRank(), cardRequest.getSuit());
             cards.add(card);
         }
 

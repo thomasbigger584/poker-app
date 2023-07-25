@@ -2,10 +2,12 @@ package com.twb.pokergame.old;
 
 import java.util.List;
 
+//NOTE: LEGACY - Needs refactored out
+
 /**
  * An immutable class representing a card from a normal 52-card deck.
  */
-public class Card {
+public class CardDTO {
     // Ranks
     public static final int DEUCE = 0;
     public static final int TREY = 1;
@@ -31,17 +33,17 @@ public class Card {
     private final int value;  // Format: xxxAKQJT 98765432 CDHSrrrr xxPPPPPP
     private final int rankValue;
 
-    public Card(Card card) {
+    public CardDTO(CardDTO card) {
         this(card.getRank(), card.getSuit(), card.getRankValue());
     }
 
     /**
      * Creates a new card with the given rank and suit.
      *
-     * @param rank the rank of the card, e.g. {@link Card#SIX}
-     * @param suit the suit of the card, e.g. {@link Card#CLUBS}
+     * @param rank the rank of the card, e.g. {@link CardDTO#SIX}
+     * @param suit the suit of the card, e.g. {@link CardDTO#CLUBS}
      */
-    public Card(int rank, int suit, int rankValue) {
+    public CardDTO(int rank, int suit, int rankValue) {
         if (!isValidRank(rank)) {
             throw new IllegalArgumentException("Invalid rank.");
         }
@@ -78,9 +80,9 @@ public class Card {
         return suit == CLUBS || suit == DIAMONDS || suit == HEARTS || suit == SPADES;
     }
 
-    public static Card getCard(int suit, int rank) {
-        List<Card> deckOfCards = DeckOfCardsFactory.getCards(false);
-        for (Card card : deckOfCards) {
+    public static CardDTO getCard(int suit, int rank) {
+        List<CardDTO> deckOfCards = DeckOfCardsFactory.getCards(false);
+        for (CardDTO card : deckOfCards) {
             if (card.getSuit() == suit && card.getRank() == rank) {
                 return card;
             }
@@ -93,19 +95,19 @@ public class Card {
      * Returns the rank of the card.
      *
      * @return rank of the card as an integer.
-     * @see Card#ACE
-     * @see Card#DEUCE
-     * @see Card#TREY
-     * @see Card#FOUR
-     * @see Card#FIVE
-     * @see Card#SIX
-     * @see Card#SEVEN
-     * @see Card#EIGHT
-     * @see Card#NINE
-     * @see Card#TEN
-     * @see Card#JACK
-     * @see Card#QUEEN
-     * @see Card#KING
+     * @see CardDTO#ACE
+     * @see CardDTO#DEUCE
+     * @see CardDTO#TREY
+     * @see CardDTO#FOUR
+     * @see CardDTO#FIVE
+     * @see CardDTO#SIX
+     * @see CardDTO#SEVEN
+     * @see CardDTO#EIGHT
+     * @see CardDTO#NINE
+     * @see CardDTO#TEN
+     * @see CardDTO#JACK
+     * @see CardDTO#QUEEN
+     * @see CardDTO#KING
      */
     public int getRank() {
         return (value >> 8) & 0xF;
@@ -115,10 +117,10 @@ public class Card {
      * Returns the suit of the card.
      *
      * @return Suit of the card as an integer.
-     * @see Card#SPADES
-     * @see Card#HEARTS
-     * @see Card#DIAMONDS
-     * @see Card#CLUBS
+     * @see CardDTO#SPADES
+     * @see CardDTO#HEARTS
+     * @see CardDTO#DIAMONDS
+     * @see CardDTO#CLUBS
      */
     public int getSuit() {
         return value & 0xF000;

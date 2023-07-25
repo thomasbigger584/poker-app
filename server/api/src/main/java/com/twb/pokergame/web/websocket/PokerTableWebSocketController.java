@@ -23,7 +23,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PokerTableWebSocketController {
     private static final Logger logger = LoggerFactory.getLogger(PokerTableWebSocketController.class);
-    private static final String POKER_TABLE_EVENTS_TOPIC = "/topic/loops.{tableId}";
+
+    private static final String EVENTS_TOPIC_SUFFIX = "/loops.{tableId}";
+    private static final String EVENTS_TOPIC = "/topic" + EVENTS_TOPIC_SUFFIX;
     private static final String POKER_TABLE_MESSAGE_PREFIX = "/pokerTable/{tableId}";
 
     private static final String SEND_CHAT_MESSAGE = "/sendChatMessage";
@@ -35,7 +37,7 @@ public class PokerTableWebSocketController {
     private final ServerMessageFactory messageFactory;
     private final GameService gameService;
 
-    @SubscribeMapping("/loops.{tableId}")
+    @SubscribeMapping(EVENTS_TOPIC_SUFFIX)
     public ServerMessageDTO sendPlayerSubscribed(Principal principal, StompHeaderAccessor headerAccessor,
                                                  @DestinationVariable(POKER_TABLE_ID) UUID tableId) {
         logger.info(">>>> sendPlayerSubscribed - Poker Table: {} - User: {}", tableId, principal.getName());
@@ -46,13 +48,14 @@ public class PokerTableWebSocketController {
     }
 
     @MessageMapping(POKER_TABLE_MESSAGE_PREFIX + SEND_CHAT_MESSAGE)
-    @SendTo(POKER_TABLE_EVENTS_TOPIC)
+    @SendTo(EVENTS_TOPIC)
     public ServerMessageDTO sendChatMessage(Principal principal,
                                             @DestinationVariable(POKER_TABLE_ID) UUID tableId,
                                             @Payload CreateChatMessageDTO message) {
         return messageFactory.chatMessage(principal.getName(), message.getMessage());
     }
 
+    // not returning here as called from multiple places
     @MessageMapping(POKER_TABLE_MESSAGE_PREFIX + SEND_DISCONNECT_PLAYER)
     public void sendDisconnectPlayer(Principal principal,
                                      @DestinationVariable(POKER_TABLE_ID) UUID tableId) {

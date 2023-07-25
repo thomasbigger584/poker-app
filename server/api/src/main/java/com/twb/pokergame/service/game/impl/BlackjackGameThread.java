@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @Component
 @Scope("prototype")
-public class BlackjackGameThread extends GameThread {
+public final class BlackjackGameThread extends GameThread {
     private static final Logger logger = LoggerFactory.getLogger(BlackjackGameThread.class);
 
     public BlackjackGameThread(UUID tableId) {

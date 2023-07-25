@@ -26,6 +26,12 @@ public enum ServerMessageType {
      */
     DEAL_INIT,
 
+    /*
+     * Used to notify all players of the cards
+     * coming out during community cards
+     */
+    DEAL_COMMUNITY,
+
 
 
     // todo: add more

@@ -25,16 +25,6 @@ public enum RoundState {
     }, FLOP_DEAL_BET {
         @Override
         public RoundState nextState() {
-            return RIVER_DEAL;
-        }
-    }, RIVER_DEAL {
-        @Override
-        public RoundState nextState() {
-            return RIVER_DEAL_BET;
-        }
-    }, RIVER_DEAL_BET {
-        @Override
-        public RoundState nextState() {
             return TURN_DEAL;
         }
     }, TURN_DEAL {
@@ -43,6 +33,16 @@ public enum RoundState {
             return TURN_DEAL_BET;
         }
     }, TURN_DEAL_BET {
+        @Override
+        public RoundState nextState() {
+            return RIVER_DEAL;
+        }
+    }, RIVER_DEAL {
+        @Override
+        public RoundState nextState() {
+            return RIVER_DEAL_BET;
+        }
+    }, RIVER_DEAL_BET {
         @Override
         public RoundState nextState() {
             return EVAL;

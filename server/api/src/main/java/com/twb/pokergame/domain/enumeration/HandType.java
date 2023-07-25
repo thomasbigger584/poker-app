@@ -1,4 +1,4 @@
-package com.twb.pokergame.old;
+package com.twb.pokergame.domain.enumeration;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

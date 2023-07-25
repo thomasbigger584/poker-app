@@ -5,11 +5,13 @@ import com.twb.pokergame.domain.PokerTable;
 import com.twb.pokergame.domain.Round;
 import com.twb.pokergame.domain.enumeration.GameType;
 import com.twb.pokergame.domain.enumeration.RoundState;
-import com.twb.pokergame.old.Card;
+import com.twb.pokergame.old.CardDTO;
 import com.twb.pokergame.old.DeckOfCardsFactory;
 import com.twb.pokergame.repository.PlayerSessionRepository;
 import com.twb.pokergame.repository.RoundRepository;
 import com.twb.pokergame.repository.TableRepository;
+import com.twb.pokergame.service.CardService;
+import com.twb.pokergame.service.HandService;
 import com.twb.pokergame.service.RoundService;
 import com.twb.pokergame.web.websocket.message.MessageDispatcher;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageDTO;
@@ -28,12 +30,14 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public abstract class GameThread extends Thread {
     protected static final SecureRandom RANDOM = new SecureRandom();
+    protected static final int WAIT_MS = 400;
     private static final Logger logger = LoggerFactory.getLogger(GameThread.class);
+
     protected final UUID tableId;
     protected PokerTable pokerTable;
     protected Round currentRound;
     protected List<PlayerSession> playerSessions;
-    protected List<Card> cards;
+    protected List<CardDTO> cards;
     protected int deckCardPointer;
 
     // --------------------------------------------
@@ -57,6 +61,12 @@ public abstract class GameThread extends Thread {
 
     @Autowired
     protected PlayerSessionRepository playerSessionRepository;
+
+    @Autowired
+    protected HandService handService;
+
+    @Autowired
+    protected CardService cardService;
 
     @Override
     public void run() {
@@ -96,7 +106,7 @@ public abstract class GameThread extends Thread {
         sendLogMessage("Game Starting...");
 
 //        while (playerSessions.size() > 1) {
-            onRun();
+        onRun();
 //        }
 
         // -----------------------------------------------------------------------
@@ -136,8 +146,8 @@ public abstract class GameThread extends Thread {
         deckCardPointer = 0;
     }
 
-    protected Card getCard() {
-        Card card = cards.get(deckCardPointer);
+    protected CardDTO getCard() {
+        CardDTO card = cards.get(deckCardPointer);
         deckCardPointer++;
         return card;
     }
@@ -150,10 +160,10 @@ public abstract class GameThread extends Thread {
     }
 
     public void playerConnected() {
-
+        //todo: need to do something here?
     }
 
     public void playerDisconnected() {
-
+        //todo: need to do something here?
     }
 }

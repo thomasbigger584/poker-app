@@ -1,6 +1,6 @@
 package com.twb.pokergame.domain;
 
-import com.twb.pokergame.domain.enumeration.RoundState;
+import com.twb.pokergame.domain.enumeration.HandType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -15,8 +15,8 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
-@Table(name = "round")
-public class Round {
+@Table(name = "hand")
+public class Hand {
 
     @Id
     @NotNull
@@ -26,36 +26,40 @@ public class Round {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "round_state")
-    private RoundState roundState = RoundState.WAITING_FOR_PLAYERS;
+    @Column(name = "hand_type")
+    private HandType handType;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "poker_table_id")
-    private PokerTable pokerTable;
+    @JoinColumn(name = "player_session_id")
+    private PlayerSession playerSession;
 
-    @OneToMany(mappedBy = "round")
-    private List<Card> communityCards = new ArrayList<>();
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "round_id")
+    private Round round;
+
+    @OneToMany(mappedBy = "hand")
+    private List<Card> cards = new ArrayList<>();
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Round round = (Round) o;
-        return new EqualsBuilder().append(id, round.id)
-                .append(roundState, round.roundState).isEquals();
+        Hand hand = (Hand) o;
+        return new EqualsBuilder().append(id, hand.id)
+                .append(handType, hand.handType).isEquals();
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
-                .append(id).append(roundState).toHashCode();
+                .append(id).append(handType).toHashCode();
     }
 
     @Override
     public String toString() {
-        return "Round{" +
+        return "Hand{" +
                 "id=" + id +
-                ", roundState=" + roundState +
+                ", handType=" + handType +
                 '}';
     }
 }

@@ -35,7 +35,6 @@ public class GameService {
     private final MessageDispatcher dispatcher;
     private final XSync<UUID> mutex;
 
-
     public ServerMessageDTO onPlayerSubscribed(UUID tableId, String username) {
         return mutex.evaluate(tableId, () -> {
             Optional<PokerTable> pokerTableOpt = tableRepository.findById(tableId);

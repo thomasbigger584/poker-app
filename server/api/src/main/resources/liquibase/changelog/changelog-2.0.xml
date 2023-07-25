@@ -15,7 +15,7 @@
             <column name="id" type="uuid">
                 <constraints nullable="false"/>
             </column>
-            <column name="round_state" type="text" defaultValue="INIT">
+            <column name="round_state" type="text" defaultValue="WAITING_FOR_PLAYERS">
                 <constraints nullable="false"/>
             </column>
             <column name="poker_table_id" type="uuid">
@@ -42,6 +42,7 @@
             <column name="position" type="tinyint"/>
             <column name="dealer" type="boolean"/>
             <column name="funds" type="double"/>
+            <column name="session_state" type="text"/>
         </createTable>
         <addPrimaryKey columnNames="id" constraintName="pk_player_session" tableName="player_session"/>
         <addForeignKeyConstraint constraintName="fk_player_session_user_id" onDelete="CASCADE"

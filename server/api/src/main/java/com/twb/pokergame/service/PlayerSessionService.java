@@ -3,6 +3,7 @@ package com.twb.pokergame.service;
 import com.twb.pokergame.domain.AppUser;
 import com.twb.pokergame.domain.PlayerSession;
 import com.twb.pokergame.domain.PokerTable;
+import com.twb.pokergame.domain.enumeration.SessionState;
 import com.twb.pokergame.dto.playersession.PlayerSessionDTO;
 import com.twb.pokergame.mapper.PlayerSessionMapper;
 import com.twb.pokergame.repository.PlayerSessionRepository;
@@ -36,19 +37,32 @@ public class PlayerSessionService {
             session.setUser(user);
             session.setPokerTable(pokerTable);
         }
+        session.setSessionState(SessionState.CONNECTED);
 
         int position = getSessionTablePosition(pokerTable);
         session.setPosition(position);
-        session.setFunds(1000d);
+        session.setFunds(1000d); // todo: dynamically set funds
 
         session = repository.saveAndFlush(session);
         return mapper.modelToDto(session);
     }
 
+
+    //todo: think about what to do with funds, it should be persisted elsewhere,
+    // probably on AppUser or separate Bank table
     public void disconnectUser(UUID tableId, String username) {
         Optional<PlayerSession> sessionOpt =
                 repository.findByTableIdAndUsername(tableId, username);
-        sessionOpt.ifPresent(repository::delete);
+        if (sessionOpt.isPresent()) {
+            PlayerSession playerSession = sessionOpt.get();
+
+            playerSession.setDealer(null);
+            playerSession.setFunds(null);
+
+            playerSession.setPokerTable(null);
+            playerSession.setSessionState(SessionState.DISCONNECTED);
+            repository.saveAndFlush(playerSession);
+        }
     }
 
     private int getSessionTablePosition(PokerTable pokerTable) {

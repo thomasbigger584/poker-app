@@ -1,6 +1,8 @@
 package com.twb.pokergame.domain;
 
 
+import com.twb.pokergame.domain.enumeration.SessionState;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -8,6 +10,8 @@ import lombok.Setter;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -26,7 +30,8 @@ public class PlayerSession {
     @JoinColumn(name = "user_id")
     private AppUser user;
 
-    @ManyToOne(optional = false)
+    @Nullable
+    @ManyToOne
     @JoinColumn(name = "poker_table_id")
     private PokerTable pokerTable;
 
@@ -38,6 +43,12 @@ public class PlayerSession {
 
     @Column(name = "funds")
     private Double funds;
+
+    @Column(name = "session_state")
+    private SessionState sessionState;
+
+    @OneToMany(mappedBy = "playerSession")
+    private List<Hand> hands = new ArrayList<>();
 
     @Override
     public boolean equals(Object o) {

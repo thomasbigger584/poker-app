@@ -1,9 +1,9 @@
 package com.twb.pokergame.service.game.impl;
 
 import com.twb.pokergame.domain.PlayerSession;
+import com.twb.pokergame.domain.enumeration.CardType;
 import com.twb.pokergame.domain.enumeration.RoundState;
-import com.twb.pokergame.old.Card;
-import com.twb.pokergame.old.DeckOfCardsFactory;
+import com.twb.pokergame.old.CardDTO;
 import com.twb.pokergame.service.game.GameThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,10 +16,9 @@ import java.util.UUID;
 
 @Component
 @Scope("prototype")
-public class TexasHoldemGameThread extends GameThread {
-    private static final Logger logger = LoggerFactory.getLogger(TexasHoldemGameThread.class);
-    private static final int NO_CARDS_FOR_PLAYER_DEAL = 2;
-
+public final class TexasHoldemGameThread extends GameThread {
+    private static final Logger logger =
+            LoggerFactory.getLogger(TexasHoldemGameThread.class);
 
     public TexasHoldemGameThread(UUID tableId) {
         super(tableId);
@@ -46,15 +45,15 @@ public class TexasHoldemGameThread extends GameThread {
                     break;
                 }
                 case FLOP_DEAL: {
-//                    pokerTable.flopDeal();
-                    break;
-                }
-                case RIVER_DEAL: {
-//                    pokerTable.riverDeal();
+                    dealFlop();
                     break;
                 }
                 case TURN_DEAL: {
-//                    pokerTable.turnDeal();
+                    dealTurn();
+                    break;
+                }
+                case RIVER_DEAL: {
+                    dealRiver();
                     break;
                 }
                 case EVAL: {
@@ -70,29 +69,51 @@ public class TexasHoldemGameThread extends GameThread {
 
     private void init() {
         determineNextDealer();
-
         shuffleCards();
     }
 
     private void initDeal() {
-        for (int dealIndex = 0; dealIndex < NO_CARDS_FOR_PLAYER_DEAL; dealIndex++) {
+        for (CardType cardType : CardType.PLAYER_CARD_TYPES) {
             for (PlayerSession playerSession : playerSessions) {
-                Card card = getCard();
-                //todo: save to database
-                dispatcher.send(tableId, messageFactory.initDeal(playerSession, card));
-                sleepInMs(400);
+                dealPlayerCard(cardType, playerSession);
             }
         }
     }
 
+    private void dealFlop() {
+        for (CardType cardType : CardType.FLOP_CARD_TYPES) {
+            dealCommunityCard(cardType);
+        }
+    }
 
+    private void dealTurn() {
+        dealCommunityCard(CardType.TURN_CARD);
+    }
+
+    private void dealRiver() {
+        dealCommunityCard(CardType.RIVER_CARD);
+    }
+
+    private void dealPlayerCard(CardType cardType, PlayerSession playerSession) {
+        CardDTO card = getCard();
+        handService.addPlayerCard(playerSession, currentRound, card, cardType);
+        dispatcher.send(tableId, messageFactory.initDeal(playerSession, card));
+        sleepInMs(WAIT_MS);
+    }
+
+    private void dealCommunityCard(CardType cardType) {
+        CardDTO card = getCard();
+        cardService.createCommunityCard(currentRound, card, cardType);
+        dispatcher.send(tableId, messageFactory.communityCardDeal(card, cardType));
+        sleepInMs(WAIT_MS);
+    }
 
     /**
      * If there is not a dealer already selected then pick a random dealer out of the PlayerSession list.
      * If there is a dealer selected, get the next dealer given the position.
      * Making sure to wrap around the list if the next dealer is actually at the start of the list.
      * <p>
-     * Once we know the dealer, we want to reorder the list so as to have dealer last but still in order by position
+     * Once we know the dealer, we want to reorder the list to have dealer last but still in order by position
      */
     private void determineNextDealer() {
 
@@ -128,7 +149,6 @@ public class TexasHoldemGameThread extends GameThread {
             playerSession.setDealer(currentDealer.getId().equals(playerSession.getId()));
         }
         playerSessionRepository.saveAllAndFlush(playerSessions);
-
 
         //reorder list for dealer last
         int dealerIndex = -1;

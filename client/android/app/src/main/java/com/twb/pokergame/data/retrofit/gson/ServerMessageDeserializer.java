@@ -11,13 +11,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.twb.pokergame.data.websocket.message.server.ServerMessageDTO;
 import com.twb.pokergame.data.websocket.message.server.enumeration.ServerMessageType;
-import com.twb.pokergame.data.websocket.message.server.payload.ChatMessageDTO;
-import com.twb.pokergame.data.websocket.message.server.payload.DealPlayerCardDTO;
-import com.twb.pokergame.data.websocket.message.server.payload.DealerDeterminedDTO;
-import com.twb.pokergame.data.websocket.message.server.payload.LogMessageDTO;
-import com.twb.pokergame.data.websocket.message.server.payload.PlayerConnectedDTO;
-import com.twb.pokergame.data.websocket.message.server.payload.PlayerDisconnectedDTO;
-import com.twb.pokergame.data.websocket.message.server.payload.PlayerSubscribedDTO;
 
 import java.lang.reflect.Type;
 
@@ -33,7 +26,7 @@ public class ServerMessageDeserializer implements JsonDeserializer<ServerMessage
 
         JsonObject jsonObject = json.getAsJsonObject();
         ServerMessageType messageType = getServerMessageType(jsonObject);
-        Class<?> payloadClass = getPayloadClass(messageType);
+        Class<?> payloadClass = messageType.getPayloadClass();
         long timestamp = getTimestamp(jsonObject);
 
         ServerMessageDTO<?> serverMessageDto = new ServerMessageDTO<>(messageType, jsonObject, timestamp);
@@ -63,28 +56,5 @@ public class ServerMessageDeserializer implements JsonDeserializer<ServerMessage
         }
         String messageTypeString = jsonObject.get(SERVER_MESSAGE_TYPE_KEY).getAsString();
         return ServerMessageType.valueOf(messageTypeString);
-    }
-
-    private Class<?> getPayloadClass(ServerMessageType messageType) {
-        switch (messageType) {
-            case PLAYER_SUBSCRIBED:
-                return PlayerSubscribedDTO.class;
-            case PLAYER_CONNECTED:
-                return PlayerConnectedDTO.class;
-            case DEALER_DETERMINED:
-                return DealerDeterminedDTO.class;
-            case DEAL_INIT:
-                return DealPlayerCardDTO.class;
-
-
-            case CHAT:
-                return ChatMessageDTO.class;
-            case LOG:
-                return LogMessageDTO.class;
-            case PLAYER_DISCONNECTED:
-                return PlayerDisconnectedDTO.class;
-            default:
-                throw new IllegalStateException("Unknown Server Message Type: " + messageType);
-        }
     }
 }
