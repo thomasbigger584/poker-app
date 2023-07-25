@@ -33,7 +33,6 @@ public enum ServerMessageType {
     DEAL_COMMUNITY,
 
 
-
     // todo: add more
 
 

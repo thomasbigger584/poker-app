@@ -33,38 +33,17 @@ public final class TexasHoldemGameThread extends GameThread {
 
         while (roundState != RoundState.FINISH) {
             switch (roundState) {
-                case INIT_DEAL: {
-                    initDeal();
-                    break;
-                }
-                case INIT_DEAL_BET:
-                case FLOP_DEAL_BET:
-                case RIVER_DEAL_BET:
-                case TURN_DEAL_BET: {
-//                    pokerTable.performPlayerBetTurn();
-                    break;
-                }
-                case FLOP_DEAL: {
-                    dealFlop();
-                    break;
-                }
-                case TURN_DEAL: {
-                    dealTurn();
-                    break;
-                }
-                case RIVER_DEAL: {
-                    dealRiver();
-                    break;
-                }
-                case EVAL: {
-//                    eval();
-                    break;
-                }
+                case INIT_DEAL -> initDeal();
+                case INIT_DEAL_BET, FLOP_DEAL_BET, RIVER_DEAL_BET, TURN_DEAL_BET -> waitPlayerTurn();
+                case FLOP_DEAL -> dealFlop();
+                case TURN_DEAL -> dealTurn();
+                case RIVER_DEAL -> dealRiver();
+                case EVAL -> eval();
             }
             roundState = roundState.nextState();
             saveRoundState(roundState);
         }
-        // finishRound();
+        finishRound();
     }
 
     private void init() {
@@ -73,7 +52,7 @@ public final class TexasHoldemGameThread extends GameThread {
     }
 
     private void initDeal() {
-        for (CardType cardType : CardType.PLAYER_CARD_TYPES) {
+        for (CardType cardType : CardType.PLAYER_CARDS) {
             for (PlayerSession playerSession : playerSessions) {
                 dealPlayerCard(cardType, playerSession);
             }
@@ -81,7 +60,7 @@ public final class TexasHoldemGameThread extends GameThread {
     }
 
     private void dealFlop() {
-        for (CardType cardType : CardType.FLOP_CARD_TYPES) {
+        for (CardType cardType : CardType.FLOP_CARDS) {
             dealCommunityCard(cardType);
         }
     }
@@ -106,6 +85,18 @@ public final class TexasHoldemGameThread extends GameThread {
         cardService.createCommunityCard(currentRound, card, cardType);
         dispatcher.send(tableId, messageFactory.communityCardDeal(card, cardType));
         sleepInMs(WAIT_MS);
+    }
+
+    private void waitPlayerTurn() {
+        //todo waitPlayerTurn
+    }
+
+    private void eval() {
+        //todo eval
+    }
+
+    private void finishRound() {
+        //todo finishRound
     }
 
     /**

@@ -4,7 +4,6 @@ import com.antkorwin.xsync.XSync;
 import com.twb.pokergame.domain.AppUser;
 import com.twb.pokergame.domain.PokerTable;
 import com.twb.pokergame.dto.playersession.PlayerSessionDTO;
-import com.twb.pokergame.repository.RoundRepository;
 import com.twb.pokergame.repository.TableRepository;
 import com.twb.pokergame.repository.UserRepository;
 import com.twb.pokergame.service.PlayerSessionService;

@@ -1,6 +1,7 @@
 package com.twb.pokergame.service.game.impl;
 
 import com.twb.pokergame.service.game.GameThread;
+import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -11,7 +12,8 @@ import java.util.UUID;
 @Component
 @Scope("prototype")
 public final class BlackjackGameThread extends GameThread {
-    private static final Logger logger = LoggerFactory.getLogger(BlackjackGameThread.class);
+    private static final Logger logger =
+            LoggerFactory.getLogger(BlackjackGameThread.class);
 
     public BlackjackGameThread(UUID tableId) {
         super(tableId);
@@ -19,7 +21,6 @@ public final class BlackjackGameThread extends GameThread {
 
     @Override
     protected void onRun() {
-        logger.info("BlackjackGameRunnable.onRun");
-       sleepInMs(10000);
+        throw new NotImplementedException("Blackjack not implemented yet");
     }
 }

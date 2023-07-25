@@ -1,8 +1,8 @@
 package com.twb.pokergame.eval.impl;
 
+import com.twb.pokergame.eval.HandEvaluator;
 import com.twb.pokergame.old.CardDTO;
 import com.twb.pokergame.old.Hand;
-import com.twb.pokergame.eval.HandEvaluator;
 import org.springframework.stereotype.Component;
 
 @Component
