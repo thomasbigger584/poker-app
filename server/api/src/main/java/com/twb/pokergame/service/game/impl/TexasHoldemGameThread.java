@@ -103,14 +103,17 @@ public final class TexasHoldemGameThread extends GameThread {
         List<PlayerHandDTO> playerHandsList = new ArrayList<>();
         for (PlayerSession playerSession : playerSessions) {
 
+            List<Card> playableCards = new ArrayList<>(communityCards);
+
             Optional<Hand> playerHandOpt = handRepository
                     .findHandForRound(playerSession.getId(), currentRound.getId());
 
             if (playerHandOpt.isPresent()) {
                 Hand hand = playerHandOpt.get();
 
-                List<Card> playableCards = new ArrayList<>(communityCards);
-                playableCards.addAll(hand.getCards());
+                List<Card> playerCards = cardRepository
+                        .findCardsForHand(hand.getId());
+                playableCards.addAll(playerCards);
 
                 PlayerHandDTO playerHand = new PlayerHandDTO();
                 playerHand.setPlayerSession(playerSession);
