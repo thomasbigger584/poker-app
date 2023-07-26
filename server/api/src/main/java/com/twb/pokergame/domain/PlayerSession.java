@@ -44,6 +44,8 @@ public class PlayerSession {
     @Column(name = "funds")
     private Double funds;
 
+    @NotNull
+    @Enumerated(EnumType.STRING)
     @Column(name = "session_state")
     private SessionState sessionState;
 

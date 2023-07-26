@@ -111,7 +111,6 @@ public abstract class GameThread extends Thread {
 
         // -----------------------------------------------------------------------
 
-        saveRoundState(RoundState.FINISH);
         sendLogMessage("Game Finished");
 
         // -----------------------------------------------------------------------
@@ -123,9 +122,8 @@ public abstract class GameThread extends Thread {
     // Helper Methods
     // ***************************************************************
 
-    protected void sendLogMessage(String log) {
-        ServerMessageDTO message = messageFactory.logMessage(log);
-        dispatcher.send(tableId, message);
+    protected void sendLogMessage(String message) {
+        dispatcher.send(tableId, messageFactory.logMessage(message));
     }
 
     protected void sleepInMs(long ms) {

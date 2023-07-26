@@ -113,6 +113,12 @@ public class PokerGameActivity extends BaseAuthActivity {
                 tableController.dealOtherPlayerCard(dealPlayerCard);
             }
         });
+        viewModel.dealCommunityCard.observe(this, dealCommunityCard -> {
+            tableController.dealCommunityCard(dealCommunityCard);
+        });
+
+
+        //todo: add more
 
         viewModel.chatMessage.observe(this, chatMessage -> {
             chatBoxAdapter.add(chatMessage.getUsername() + ": " + chatMessage.getMessage());

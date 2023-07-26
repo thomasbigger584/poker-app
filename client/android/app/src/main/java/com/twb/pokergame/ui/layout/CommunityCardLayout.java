@@ -8,7 +8,7 @@ import android.widget.FrameLayout;
 
 import com.twb.pokergame.R;
 import com.twb.pokergame.data.model.Card;
-import com.twb.pokergame.data.model.enumeration.CommunityCardType;
+import com.twb.pokergame.data.model.enumeration.CardType;
 
 public class CommunityCardLayout extends FrameLayout {
     private CardLayout community1CardLayout;
@@ -34,7 +34,7 @@ public class CommunityCardLayout extends FrameLayout {
         community3CardLayout = inflatedView.findViewById(R.id.community3CardLayout);
         community4CardLayout = inflatedView.findViewById(R.id.community4CardLayout);
         community5CardLayout = inflatedView.findViewById(R.id.community5CardLayout);
-        setInvisible();
+        reset();
     }
 
     public void reset() {
@@ -46,29 +46,29 @@ public class CommunityCardLayout extends FrameLayout {
         community5CardLayout.reset();
     }
 
-    public void dealCard(final Card card, CommunityCardType cardType) {
+    public void dealCard(Card card, CardType cardType) {
         switch (cardType) {
-            case FLOP_1: {
+            case FLOP_CARD_1: {
                 setFlopVisibility();
                 community1CardLayout.update(card);
                 break;
             }
-            case FLOP_2: {
+            case FLOP_CARD_2: {
                 community2CardLayout.update(card);
                 break;
             }
-            case FLOP_3: {
+            case FLOP_CARD_3: {
                 community3CardLayout.update(card);
                 break;
             }
-            case RIVER: {
-                setRiverVisibility();
-                community4CardLayout.update(card);
-                break;
-            }
-            case TURN: {
+            case TURN_CARD: {
                 setTurnVisibility();
+                community4CardLayout.update(card);
+            }
+            case RIVER_CARD: {
+                setRiverVisibility();
                 community5CardLayout.update(card);
+                break;
             }
         }
     }
@@ -79,12 +79,11 @@ public class CommunityCardLayout extends FrameLayout {
         community3CardLayout.setVisibility(VISIBLE);
     }
 
-    public void setRiverVisibility() {
+    public void setTurnVisibility() {
         community4CardLayout.setVisibility(VISIBLE);
-
     }
 
-    public void setTurnVisibility() {
+    public void setRiverVisibility() {
         community5CardLayout.setVisibility(VISIBLE);
     }
 

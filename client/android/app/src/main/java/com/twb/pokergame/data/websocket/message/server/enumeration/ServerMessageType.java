@@ -1,6 +1,7 @@
 package com.twb.pokergame.data.websocket.message.server.enumeration;
 
 import com.twb.pokergame.data.websocket.message.server.payload.ChatMessageDTO;
+import com.twb.pokergame.data.websocket.message.server.payload.DealCommunityCardDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.DealPlayerCardDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.DealerDeterminedDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.LogMessageDTO;
@@ -33,6 +34,12 @@ public enum ServerMessageType {
      * cards being dealt held in the players hands
      */
     DEAL_INIT,
+
+    /*
+     * Used to notify all players of the cards
+     * coming out during community cards
+     */
+    DEAL_COMMUNITY,
 
 
     // todo: add more
@@ -67,7 +74,9 @@ public enum ServerMessageType {
                 return DealerDeterminedDTO.class;
             case DEAL_INIT:
                 return DealPlayerCardDTO.class;
-
+            case DEAL_COMMUNITY:
+                return DealCommunityCardDTO.class;
+                //todo: add more
 
             case CHAT:
                 return ChatMessageDTO.class;

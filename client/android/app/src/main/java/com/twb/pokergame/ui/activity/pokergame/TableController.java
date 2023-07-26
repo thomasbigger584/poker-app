@@ -1,16 +1,17 @@
 package com.twb.pokergame.ui.activity.pokergame;
 
 import android.app.Activity;
-import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.twb.pokergame.R;
 import com.twb.pokergame.data.model.Card;
-import com.twb.pokergame.data.model.dto.CardDTO;
 import com.twb.pokergame.data.model.dto.playersession.PlayerSessionDTO;
+import com.twb.pokergame.data.websocket.message.server.payload.DealCommunityCardDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.DealPlayerCardDTO;
 import com.twb.pokergame.ui.layout.CardPairLayout;
+import com.twb.pokergame.ui.layout.CommunityCardLayout;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,6 +22,8 @@ public class TableController {
     private final CardPairLayout[] cardPairLayouts = new CardPairLayout[TABLE_SIZE];
     private final Map<Integer, CardPairLayout> positionCardPairs = new HashMap<>();
 
+    private final CommunityCardLayout communityCardLayout;
+
     public TableController(Activity activity) {
         cardPairLayouts[0] = activity.findViewById(R.id.playerCardPairLayout);
         cardPairLayouts[1] = activity.findViewById(R.id.tablePlayer1CardPairLayout);
@@ -28,6 +31,7 @@ public class TableController {
         cardPairLayouts[3] = activity.findViewById(R.id.tablePlayer3CardPairLayout);
         cardPairLayouts[4] = activity.findViewById(R.id.tablePlayer4CardPairLayout);
         cardPairLayouts[5] = activity.findViewById(R.id.tablePlayer5CardPairLayout);
+        communityCardLayout = activity.findViewById(R.id.communityCardLayout);
     }
 
     public void connectCurrentPlayer(PlayerSessionDTO playerSession) {
@@ -49,11 +53,7 @@ public class TableController {
     }
 
     public void connectOtherPlayer(PlayerSessionDTO playerSession) {
-        int playerPosition = playerSession.getPosition();
-        CardPairLayout cardPairLayout = positionCardPairs.get(playerPosition);
-        if (cardPairLayout == null) {
-            throw new RuntimeException("No CardPairLayout set for position");
-        }
+        CardPairLayout cardPairLayout = getCardPairLayout(playerSession.getPosition());
         cardPairLayout.updateDetails(playerSession);
 
         Boolean dealer = playerSession.getDealer();
@@ -61,7 +61,7 @@ public class TableController {
     }
 
     public void disconnectOtherPlayer(String username) {
-        CardPairLayout cardPairLayout = findCardPairLayoutByUsername(username);
+        CardPairLayout cardPairLayout = findCardPairLayout(username);
         if (cardPairLayout != null) {
             cardPairLayout.deleteDetails();
         }
@@ -77,42 +77,45 @@ public class TableController {
 
     public void dealCurrentPlayerCard(DealPlayerCardDTO dealPlayerCard) {
         PlayerSessionDTO playerSession = dealPlayerCard.getPlayerSession();
-        int position = playerSession.getPosition();
-
-        if (positionCardPairs.containsKey(position)) {
-
-            CardPairLayout cardPairLayout = positionCardPairs.get(position);
-            Card card = new Card(dealPlayerCard.getCard());
-            cardPairLayout.updateCardImageView(card);
-        } else {
-            Log.e(TAG, "dealCurrentPlayerCard: Position is not a part of the table for dealing");
-        }
+        CardPairLayout cardPairLayout = getCardPairLayout(playerSession.getPosition());
+        Card card = new Card(dealPlayerCard.getCard());
+        cardPairLayout.updateCardImageView(card);
     }
 
     //todo: dont show actual card, but show it turned around
     public void dealOtherPlayerCard(DealPlayerCardDTO dealPlayerCard) {
         PlayerSessionDTO playerSession = dealPlayerCard.getPlayerSession();
-        int position = playerSession.getPosition();
-
-        if (positionCardPairs.containsKey(position)) {
-            CardPairLayout cardPairLayout = positionCardPairs.get(position);
-            Card card = new Card(dealPlayerCard.getCard());
-            cardPairLayout.updateCardImageView(card);
-        } else {
-            Log.e(TAG, "dealCurrentPlayerCard: Position is not a part of the table for dealing");
-        }
+        CardPairLayout cardPairLayout = getCardPairLayout(playerSession.getPosition());
+        Card card = new Card(dealPlayerCard.getCard());
+        cardPairLayout.updateCardImageView(card);
     }
 
+    public void dealCommunityCard(DealCommunityCardDTO dealCommunityCard) {
+        Card card = new Card(dealCommunityCard.getCard());
+        communityCardLayout.dealCard(card, dealCommunityCard.getCardType());
+    }
 
     // ------------------------------------------------------------------------------
 
     @Nullable
-    private CardPairLayout findCardPairLayoutByUsername(String username) {
+    private CardPairLayout findCardPairLayout(String username) {
         for (CardPairLayout cardPairLayout : cardPairLayouts) {
             if (username.equals(cardPairLayout.getUsername())) {
                 return cardPairLayout;
             }
         }
         return null;
+    }
+
+    @NonNull
+    private CardPairLayout getCardPairLayout(int position) {
+        if (!positionCardPairs.containsKey(position)) {
+            throw new RuntimeException("Position is not part of the table for dealing: " + position);
+        }
+        CardPairLayout cardPairLayout = positionCardPairs.get(position);
+        if (cardPairLayout == null) {
+            throw new RuntimeException("Card pair layout is null for position: " + position);
+        }
+        return cardPairLayout;
     }
 }

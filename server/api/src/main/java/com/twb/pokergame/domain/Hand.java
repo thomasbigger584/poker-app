@@ -1,6 +1,7 @@
 package com.twb.pokergame.domain;
 
 import com.twb.pokergame.domain.enumeration.HandType;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -24,7 +25,7 @@ public class Hand {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @NotNull
+    @Nullable
     @Enumerated(EnumType.STRING)
     @Column(name = "hand_type")
     private HandType handType;

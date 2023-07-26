@@ -45,7 +45,8 @@ public class Card {
     @JoinColumn(name = "hand_id")
     private Hand hand; // player card
 
-    @ManyToOne(optional = false)
+    @Nullable
+    @ManyToOne
     @JoinColumn(name = "round_id")
     private Round round; // community card
 

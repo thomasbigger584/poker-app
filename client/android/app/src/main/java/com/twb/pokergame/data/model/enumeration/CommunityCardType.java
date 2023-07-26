@@ -1,5 +1,5 @@
 package com.twb.pokergame.data.model.enumeration;
-
+// legacy
 public enum CommunityCardType {
     NONE(-1),
     BURN_PRE_FLOP(0),

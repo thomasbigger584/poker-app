@@ -36,9 +36,7 @@
             <column name="user_id" type="uuid">
                 <constraints nullable="false"/>
             </column>
-            <column name="poker_table_id" type="uuid">
-                <constraints nullable="false"/>
-            </column>
+            <column name="poker_table_id" type="uuid"/>
             <column name="position" type="tinyint"/>
             <column name="dealer" type="boolean"/>
             <column name="funds" type="double"/>

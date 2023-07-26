@@ -43,9 +43,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="hand_id" type="uuid"/>
-            <column name="round_id" type="uuid">
-                <constraints nullable="false"/>
-            </column>
+            <column name="round_id" type="uuid"/>
         </createTable>
         <addPrimaryKey columnNames="id" constraintName="pk_card" tableName="card"/>
         <addForeignKeyConstraint constraintName="fk_card_hand_id" onDelete="CASCADE"

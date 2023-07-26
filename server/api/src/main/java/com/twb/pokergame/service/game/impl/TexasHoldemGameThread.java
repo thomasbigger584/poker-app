@@ -34,7 +34,8 @@ public final class TexasHoldemGameThread extends GameThread {
         while (roundState != RoundState.FINISH) {
             switch (roundState) {
                 case INIT_DEAL -> initDeal();
-                case INIT_DEAL_BET, FLOP_DEAL_BET, RIVER_DEAL_BET, TURN_DEAL_BET -> waitPlayerTurn();
+                case INIT_DEAL_BET,
+                        FLOP_DEAL_BET, TURN_DEAL_BET, RIVER_DEAL_BET -> waitPlayerTurn();
                 case FLOP_DEAL -> dealFlop();
                 case TURN_DEAL -> dealTurn();
                 case RIVER_DEAL -> dealRiver();
@@ -96,6 +97,7 @@ public final class TexasHoldemGameThread extends GameThread {
     }
 
     private void finishRound() {
+        saveRoundState(RoundState.FINISH);
         //todo finishRound
     }
 
