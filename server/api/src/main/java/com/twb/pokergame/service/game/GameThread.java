@@ -7,12 +7,11 @@ import com.twb.pokergame.domain.enumeration.GameType;
 import com.twb.pokergame.domain.enumeration.RoundState;
 import com.twb.pokergame.old.CardDTO;
 import com.twb.pokergame.old.DeckOfCardsFactory;
-import com.twb.pokergame.repository.PlayerSessionRepository;
-import com.twb.pokergame.repository.RoundRepository;
-import com.twb.pokergame.repository.TableRepository;
+import com.twb.pokergame.repository.*;
 import com.twb.pokergame.service.CardService;
 import com.twb.pokergame.service.HandService;
 import com.twb.pokergame.service.RoundService;
+import com.twb.pokergame.service.eval.HandEvaluator;
 import com.twb.pokergame.web.websocket.message.MessageDispatcher;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageFactory;
@@ -66,7 +65,16 @@ public abstract class GameThread extends Thread {
     protected HandService handService;
 
     @Autowired
+    protected HandRepository handRepository;
+
+    @Autowired
     protected CardService cardService;
+
+    @Autowired
+    protected CardRepository cardRepository;
+
+    @Autowired
+    protected HandEvaluator handEvaluator;
 
     @Override
     public void run() {

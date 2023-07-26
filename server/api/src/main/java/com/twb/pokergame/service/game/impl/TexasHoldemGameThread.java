@@ -1,9 +1,12 @@
 package com.twb.pokergame.service.game.impl;
 
+import com.twb.pokergame.domain.Card;
+import com.twb.pokergame.domain.Hand;
 import com.twb.pokergame.domain.PlayerSession;
 import com.twb.pokergame.domain.enumeration.CardType;
 import com.twb.pokergame.domain.enumeration.RoundState;
 import com.twb.pokergame.old.CardDTO;
+import com.twb.pokergame.service.eval.dto.PlayerHandDTO;
 import com.twb.pokergame.service.game.GameThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -93,11 +97,35 @@ public final class TexasHoldemGameThread extends GameThread {
     }
 
     private void eval() {
-        //todo eval
+        List<Card> communityCards = cardRepository
+                .findCommunityCardsForRound(currentRound.getId());
+
+        List<PlayerHandDTO> playerHandsList = new ArrayList<>();
+        for (PlayerSession playerSession : playerSessions) {
+
+            Optional<Hand> playerHandOpt = handRepository
+                    .findHandForRound(playerSession.getId(), currentRound.getId());
+
+            if (playerHandOpt.isPresent()) {
+                Hand hand = playerHandOpt.get();
+
+                List<Card> playableCards = new ArrayList<>(communityCards);
+                playableCards.addAll(hand.getCards());
+
+                PlayerHandDTO playerHand = new PlayerHandDTO();
+                playerHand.setPlayerSession(playerSession);
+                playerHand.setCards(playableCards);
+                playerHandsList.add(playerHand);
+            }
+        }
+        handEvaluator.evaluate(playerHandsList);
+
+        System.out.println("playerHandsList = " + playerHandsList);
     }
 
     private void finishRound() {
         saveRoundState(RoundState.FINISH);
+        sendLogMessage("Round Finished.");
         //todo finishRound
     }
 
