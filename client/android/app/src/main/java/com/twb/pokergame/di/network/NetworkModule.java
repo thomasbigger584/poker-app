@@ -37,6 +37,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 @Module(includes = AuthModule.class)
 @InstallIn(SingletonComponent.class)
 public class NetworkModule {
+    private static final String PROTOCOL = "http://";
     private static final String OKHTTP_CACHE_FILE = "okhttp_cache";
     private static final int MAX_CACHE_SIZE = 10 * 1000 * 1000; //10MB Cache
 
@@ -77,7 +78,7 @@ public class NetworkModule {
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .client(okHttpClient)
-                .baseUrl("http://" + API_BASE_URL)
+                .baseUrl(PROTOCOL + API_BASE_URL)
                 .build();
     }
 

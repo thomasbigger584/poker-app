@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.twb.pokergame.R;
 import com.twb.pokergame.data.auth.AuthStateManager;
-import com.twb.pokergame.data.model.PokerTable;
+import com.twb.pokergame.data.model.dto.pokertable.TableDTO;
 import com.twb.pokergame.ui.activity.login.BaseAuthActivity;
 import com.twb.pokergame.ui.activity.pokergame.PokerGameActivity;
 import com.twb.pokergame.ui.dialog.AlertModalDialog;
@@ -83,7 +83,7 @@ public class PokerTableActivity extends BaseAuthActivity implements PokerTableAd
     }
 
     @Override
-    public void onPokerTableClicked(PokerTable pokerTable) {
+    public void onPokerTableClicked(TableDTO pokerTable) {
         Intent intent = new Intent(this, PokerGameActivity.class);
         intent.putExtras(pokerTable.toBundle());
         startActivity(intent);

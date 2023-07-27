@@ -6,7 +6,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.twb.pokergame.R;
-import com.twb.pokergame.data.model.Card;
 import com.twb.pokergame.data.model.dto.playersession.PlayerSessionDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.DealCommunityCardDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.DealPlayerCardDTO;
@@ -78,21 +77,18 @@ public class TableController {
     public void dealCurrentPlayerCard(DealPlayerCardDTO dealPlayerCard) {
         PlayerSessionDTO playerSession = dealPlayerCard.getPlayerSession();
         CardPairLayout cardPairLayout = getCardPairLayout(playerSession.getPosition());
-        Card card = new Card(dealPlayerCard.getCard());
-        cardPairLayout.updateCardImageView(card);
+        cardPairLayout.updateCardImageView(dealPlayerCard.getCard());
     }
 
     //todo: dont show actual card, but show it turned around
     public void dealOtherPlayerCard(DealPlayerCardDTO dealPlayerCard) {
         PlayerSessionDTO playerSession = dealPlayerCard.getPlayerSession();
         CardPairLayout cardPairLayout = getCardPairLayout(playerSession.getPosition());
-        Card card = new Card(dealPlayerCard.getCard());
-        cardPairLayout.updateCardImageView(card);
+        cardPairLayout.updateCardImageView(dealPlayerCard.getCard());
     }
 
     public void dealCommunityCard(DealCommunityCardDTO dealCommunityCard) {
-        Card card = new Card(dealCommunityCard.getCard());
-        communityCardLayout.dealCard(card, dealCommunityCard.getCardType());
+        communityCardLayout.dealCard(dealCommunityCard.getCard(), dealCommunityCard.getCardType());
     }
 
     // ------------------------------------------------------------------------------

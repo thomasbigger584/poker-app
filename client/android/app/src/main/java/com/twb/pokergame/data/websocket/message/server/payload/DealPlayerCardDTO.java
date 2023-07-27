@@ -2,7 +2,7 @@ package com.twb.pokergame.data.websocket.message.server.payload;
 
 import androidx.annotation.NonNull;
 
-import com.twb.pokergame.data.model.dto.CardDTO;
+import com.twb.pokergame.data.model.dto.card.CardDTO;
 import com.twb.pokergame.data.model.dto.playersession.PlayerSessionDTO;
 
 

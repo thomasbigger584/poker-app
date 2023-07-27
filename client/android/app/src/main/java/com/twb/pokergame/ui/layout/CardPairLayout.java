@@ -8,9 +8,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.twb.pokergame.R;
-import com.twb.pokergame.data.model.Card;
-import com.twb.pokergame.data.model.PokerPlayer;
 import com.twb.pokergame.data.model.dto.appuser.AppUserDTO;
+import com.twb.pokergame.data.model.dto.card.CardDTO;
 import com.twb.pokergame.data.model.dto.playersession.PlayerSessionDTO;
 import com.twb.pokergame.ui.util.CardDrawableUtil;
 
@@ -49,7 +48,7 @@ public class CardPairLayout extends FrameLayout {
         updateDealerChip(false);
     }
 
-    public void updateCardImageView(Card card) {
+    public void updateCardImageView(CardDTO card) {
         int cardDrawResId = CardDrawableUtil.getDrawable(getContext(), card);
         if (cardImageViews[0].getVisibility() != INVISIBLE
                 && cardImageViews[1].getVisibility() != INVISIBLE) {

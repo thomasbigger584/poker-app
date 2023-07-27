@@ -3,7 +3,7 @@ package com.twb.pokergame.ui.activity.pokertable;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.twb.pokergame.data.model.PokerTable;
+import com.twb.pokergame.data.model.dto.pokertable.TableDTO;
 import com.twb.pokergame.data.repository.PokerTableRepository;
 
 import java.util.List;
@@ -23,7 +23,7 @@ public class PokerTableViewModel extends ViewModel {
         this.errors = repository.getErrors();
     }
 
-    public LiveData<List<PokerTable>> getPokerTables() {
+    public LiveData<List<TableDTO>> getPokerTables() {
         return repository.getPokerTables();
     }
 }

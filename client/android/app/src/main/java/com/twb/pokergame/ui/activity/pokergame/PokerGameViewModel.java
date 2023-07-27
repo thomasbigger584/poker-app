@@ -18,6 +18,8 @@ import com.twb.pokergame.data.websocket.message.server.payload.PlayerDisconnecte
 import com.twb.pokergame.data.websocket.message.server.payload.PlayerSubscribedDTO;
 import com.twb.stomplib.dto.LifecycleEvent;
 
+import java.util.UUID;
+
 import javax.inject.Inject;
 
 import dagger.hilt.android.lifecycle.HiltViewModel;
@@ -42,7 +44,7 @@ public class PokerGameViewModel extends ViewModel
     public MutableLiveData<PlayerDisconnectedDTO> playerDisconnected = new MutableLiveData<>();
     public MutableLiveData<Void> closedConnection = new MutableLiveData<>();
 
-    private String pokerTableId;
+    private UUID pokerTableId;
 
     @Inject
     public PokerGameViewModel(WebSocketClient webSocketClient) {
@@ -53,7 +55,7 @@ public class PokerGameViewModel extends ViewModel
     // WebSocket Lifecycle
     // ***************************************************************
 
-    public void connect(String pokerTableId) {
+    public void connect(UUID pokerTableId) {
         this.pokerTableId = pokerTableId;
         webSocketClient.connect(pokerTableId, this);
     }

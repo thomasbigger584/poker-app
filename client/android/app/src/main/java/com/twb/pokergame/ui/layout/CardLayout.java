@@ -7,7 +7,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import com.twb.pokergame.R;
-import com.twb.pokergame.data.model.Card;
+import com.twb.pokergame.data.model.dto.card.CardDTO;
 import com.twb.pokergame.ui.util.CardDrawableUtil;
 
 
@@ -29,7 +29,7 @@ public class CardLayout extends FrameLayout {
         reset();
     }
 
-    public void update(final Card card) {
+    public void update(final CardDTO card) {
         post(() -> {
             int cardDrawResId = CardDrawableUtil.getDrawable(getContext(), card);
             cardImageView.setImageResource(cardDrawResId);

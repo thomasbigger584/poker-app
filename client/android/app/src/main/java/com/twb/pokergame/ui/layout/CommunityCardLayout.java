@@ -7,7 +7,7 @@ import android.view.View;
 import android.widget.FrameLayout;
 
 import com.twb.pokergame.R;
-import com.twb.pokergame.data.model.Card;
+import com.twb.pokergame.data.model.dto.card.CardDTO;
 import com.twb.pokergame.data.model.enumeration.CardType;
 
 public class CommunityCardLayout extends FrameLayout {
@@ -46,7 +46,7 @@ public class CommunityCardLayout extends FrameLayout {
         community5CardLayout.reset();
     }
 
-    public void dealCard(Card card, CardType cardType) {
+    public void dealCard(CardDTO card, CardType cardType) {
         switch (cardType) {
             case FLOP_CARD_1: {
                 setFlopVisibility();

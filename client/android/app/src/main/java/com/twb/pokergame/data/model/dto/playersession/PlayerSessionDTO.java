@@ -14,6 +14,7 @@ public class PlayerSessionDTO {
     private Integer position;
     private Boolean dealer;
     private Double funds;
+    private String sessionState;
 
     public UUID getId() {
         return id;
@@ -47,6 +48,14 @@ public class PlayerSessionDTO {
         this.position = position;
     }
 
+    public Boolean getDealer() {
+        return dealer;
+    }
+
+    public void setDealer(Boolean dealer) {
+        this.dealer = dealer;
+    }
+
     public Double getFunds() {
         return funds;
     }
@@ -55,12 +64,12 @@ public class PlayerSessionDTO {
         this.funds = funds;
     }
 
-    public Boolean getDealer() {
-        return dealer;
+    public String getSessionState() {
+        return sessionState;
     }
 
-    public void setDealer(Boolean dealer) {
-        this.dealer = dealer;
+    public void setSessionState(String sessionState) {
+        this.sessionState = sessionState;
     }
 
     @NonNull
@@ -73,6 +82,7 @@ public class PlayerSessionDTO {
                 ", position=" + position +
                 ", dealer=" + dealer +
                 ", funds=" + funds +
+                ", sessionState='" + sessionState + '\'' +
                 '}';
     }
 }

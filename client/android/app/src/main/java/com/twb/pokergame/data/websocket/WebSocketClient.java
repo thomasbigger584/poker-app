@@ -18,6 +18,7 @@ import com.twb.stomplib.stomp.StompClient;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.inject.Inject;
 
@@ -57,7 +58,7 @@ public class WebSocketClient {
     // WebSocket Lifecycle
     // ***************************************************************
 
-    public void connect(String pokerTableId, WebSocketListener listener) {
+    public void connect(UUID pokerTableId, WebSocketListener listener) {
         if (stompClient != null && stompClient.isConnected()) {
             return;
         }
@@ -135,13 +136,13 @@ public class WebSocketClient {
     // WebSocket Send Methods
     // ***************************************************************
 
-    public void send(String pokerTableId, SendChatMessageDTO dto, SendListener listener) {
+    public void send(UUID pokerTableId, SendChatMessageDTO dto, SendListener listener) {
         String destination = String.format(SEND_ENDPOINT_PREFIX + SEND_CHAT_MESSAGE, pokerTableId);
         String message = gson.toJson(dto);
         send(destination, message, listener);
     }
 
-    public void send(String pokerTableId, SendPlayerDisconnectDTO dto, SendListener listener) {
+    public void send(UUID pokerTableId, SendPlayerDisconnectDTO dto, SendListener listener) {
         String destination = String.format(SEND_ENDPOINT_PREFIX + SEND_DISCONNECT_PLAYER, pokerTableId);
         String message = gson.toJson(dto);
         send(destination, message, listener);

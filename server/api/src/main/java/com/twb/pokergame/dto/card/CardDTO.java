@@ -14,7 +14,9 @@ import java.util.UUID;
 public class CardDTO {
     private UUID id;
     private RankType rankType;
+    private char rankChar;
     private int rankValue;
     private SuitType suitType;
+    private char suitChar;
     private CardType cardType;
 }

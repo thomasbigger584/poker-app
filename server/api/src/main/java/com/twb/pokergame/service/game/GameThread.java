@@ -34,7 +34,7 @@ public abstract class GameThread extends Thread {
     protected PokerTable pokerTable;
     protected Round currentRound;
     protected List<PlayerSession> playerSessions;
-    protected List<Card> cards;
+    protected List<Card> deckOfCards;
     protected int deckCardPointer;
 
     // --------------------------------------------
@@ -148,12 +148,12 @@ public abstract class GameThread extends Thread {
     }
 
     protected void shuffleCards() {
-        cards = DeckOfCardsFactory.getCards(true);
+        deckOfCards = DeckOfCardsFactory.getCards(true);
         deckCardPointer = 0;
     }
 
     protected Card getCard() {
-        Card card = cards.get(deckCardPointer);
+        Card card = new Card(deckOfCards.get(deckCardPointer));
         deckCardPointer++;
         return card;
     }

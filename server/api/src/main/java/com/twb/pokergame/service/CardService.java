@@ -18,16 +18,12 @@ public class CardService {
     private final CardMapper mapper;
 
     public Card createPlayerCard(Hand hand, Card card) {
-        Card newCard = new Card(card);
-        newCard.setHand(hand);
-
-        return repository.saveAndFlush(newCard);
+        card.setHand(hand);
+        return repository.saveAndFlush(card);
     }
 
     public Card createCommunityCard(Round round, Card card) {
-        Card newCard = new Card(card);
-        newCard.setRound(round);
-
-        return repository.saveAndFlush(newCard);
+        card.setRound(round);
+        return repository.saveAndFlush(card);
     }
 }

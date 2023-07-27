@@ -11,9 +11,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.twb.pokergame.R;
 import com.twb.pokergame.data.auth.AuthService;
-import com.twb.pokergame.data.model.PokerTable;
 import com.twb.pokergame.data.model.dto.appuser.AppUserDTO;
 import com.twb.pokergame.data.model.dto.playersession.PlayerSessionDTO;
+import com.twb.pokergame.data.model.dto.pokertable.TableDTO;
 import com.twb.pokergame.ui.activity.login.BaseAuthActivity;
 import com.twb.pokergame.ui.activity.pokergame.chatbox.ChatBoxRecyclerAdapter;
 import com.twb.pokergame.ui.dialog.AlertModalDialog;
@@ -32,7 +32,7 @@ public class PokerGameActivity extends BaseAuthActivity {
     AuthService authService;
 
     private PokerGameViewModel viewModel;
-    private PokerTable pokerTable;
+    private TableDTO pokerTable;
     private AlertDialog loadingSpinner;
     private ChatBoxRecyclerAdapter chatBoxAdapter;
     private TableController tableController;
@@ -46,7 +46,7 @@ public class PokerGameActivity extends BaseAuthActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        pokerTable = PokerTable.fromBundle(getIntent().getExtras());
+        pokerTable = TableDTO.fromBundle(getIntent().getExtras());
 
         loadingSpinner = DialogHelper.createLoadingSpinner(this);
         DialogHelper.show(loadingSpinner);

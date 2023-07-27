@@ -9,14 +9,14 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.twb.pokergame.R;
-import com.twb.pokergame.data.model.PokerTable;
+import com.twb.pokergame.data.model.dto.pokertable.TableDTO;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class PokerTableAdapter extends RecyclerView.Adapter<PokerTableAdapter.ViewHolder> {
     private final PokerTableClickListener clickListener;
-    private final List<PokerTable> dataset = new ArrayList<>();
+    private final List<TableDTO> dataset = new ArrayList<>();
 
     public PokerTableAdapter(PokerTableClickListener clickListener) {
         this.clickListener = clickListener;
@@ -33,7 +33,7 @@ public class PokerTableAdapter extends RecyclerView.Adapter<PokerTableAdapter.Vi
             int position = viewHolder.getAdapterPosition();
             if (position != RecyclerView.NO_POSITION) {
 
-                PokerTable pokerTable = dataset.get(position);
+                TableDTO pokerTable = dataset.get(position);
                 clickListener.onPokerTableClicked(pokerTable);
             }
         });
@@ -56,14 +56,14 @@ public class PokerTableAdapter extends RecyclerView.Adapter<PokerTableAdapter.Vi
         return dataset.get(position).hashCode();
     }
 
-    public void setData(List<PokerTable> list) {
+    public void setData(List<TableDTO> list) {
         dataset.clear();
         dataset.addAll(list);
         notifyDataSetChanged();
     }
 
     public interface PokerTableClickListener {
-        void onPokerTableClicked(PokerTable pokerTable);
+        void onPokerTableClicked(TableDTO pokerTable);
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
@@ -76,7 +76,7 @@ public class PokerTableAdapter extends RecyclerView.Adapter<PokerTableAdapter.Vi
             gameTypeTextView = itemView.findViewById(R.id.gameTypeTextView);
         }
 
-        public void bind(PokerTable pokerTable) {
+        public void bind(TableDTO pokerTable) {
             nameTextView.setText(pokerTable.getName());
             gameTypeTextView.setText(pokerTable.getGameType());
         }
