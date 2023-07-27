@@ -1,6 +1,7 @@
 package com.twb.pokergame.domain;
 
 import com.twb.pokergame.domain.enumeration.CardType;
+import com.twb.pokergame.domain.enumeration.RankType;
 import com.twb.pokergame.domain.enumeration.SuitType;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
@@ -24,8 +25,10 @@ public class Card {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "rank")
-    private int rank;
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rank_type")
+    private RankType rankType;
 
     @Column(name = "rank_value")
     private int rankValue;
@@ -50,31 +53,51 @@ public class Card {
     @JoinColumn(name = "round_id")
     private Round round; // community card
 
+    public Card() {
+    }
+
+    public Card(@NotNull RankType rankType,
+                @NotNull SuitType suitType, int rankValue) {
+        this.rankType = rankType;
+        this.suitType = suitType;
+        this.rankValue = rankValue;
+    }
+
+    @SuppressWarnings("CopyConstructorMissesField")
+    public Card(@NotNull Card card) {
+        this.rankType = card.getRankType();
+        this.rankValue = card.getRankValue();
+        this.suitType = card.getSuitType();
+        this.cardType = card.getCardType();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Card card = (Card) o;
         return new EqualsBuilder()
-                .append(rank, card.rank)
-                .append(id, card.id).append(suitType, card.suitType)
-                .append(cardType, card.cardType)
-                .isEquals();
+                .append(rankValue, card.rankValue)
+                .append(id, card.id)
+                .append(rankType, card.rankType)
+                .append(suitType, card.suitType)
+                .append(cardType, card.cardType).isEquals();
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
-                .append(id).append(rank)
-                .append(suitType).append(cardType)
-                .toHashCode();
+                .append(id).append(rankType)
+                .append(rankValue).append(suitType)
+                .append(cardType).toHashCode();
     }
 
     @Override
     public String toString() {
         return "Card{" +
                 "id=" + id +
-                ", rank=" + rank +
+                ", rankType=" + rankType +
+                ", rankValue=" + rankValue +
                 ", suitType=" + suitType +
                 ", cardType=" + cardType +
                 '}';

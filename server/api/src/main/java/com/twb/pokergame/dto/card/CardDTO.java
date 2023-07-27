@@ -1,12 +1,20 @@
 package com.twb.pokergame.dto.card;
 
 
-import lombok.Builder;
-import lombok.Data;
+import com.twb.pokergame.domain.enumeration.CardType;
+import com.twb.pokergame.domain.enumeration.RankType;
+import com.twb.pokergame.domain.enumeration.SuitType;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
-@Builder
+import java.util.UUID;
+
+@Getter
+@Setter
 public class CardDTO {
-    private int suit;
-    private int rank;
+    private UUID id;
+    private RankType rankType;
+    private int rankValue;
+    private SuitType suitType;
+    private CardType cardType;
 }

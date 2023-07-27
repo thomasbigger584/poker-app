@@ -30,7 +30,7 @@
             <column name="id" type="uuid">
                 <constraints nullable="false"/>
             </column>
-            <column name="rank" type="int">
+            <column name="rank_type" type="text">
                 <constraints nullable="false"/>
             </column>
             <column name="rank_value" type="int">

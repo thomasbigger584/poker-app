@@ -2,18 +2,18 @@ package com.twb.pokergame.service.eval;
 
 import com.twb.pokergame.domain.Card;
 import com.twb.pokergame.domain.enumeration.HandType;
+import com.twb.pokergame.domain.enumeration.RankType;
 import com.twb.pokergame.domain.enumeration.SuitType;
-import com.twb.pokergame.old.CardDTO;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 
 @Component
 public class HandTypeEvaluator {
-    private static final List<Integer> PARTIAL_LOWER_STRAIGHT =
-            Arrays.asList(CardDTO.DEUCE, CardDTO.TREY, CardDTO.FOUR, CardDTO.FIVE);
-    private static final List<Integer> ROYAL_FLUSH_RANKS =
-            Arrays.asList(CardDTO.TEN, CardDTO.JACK, CardDTO.QUEEN, CardDTO.KING, CardDTO.ACE);
+    private static final List<RankType> PARTIAL_LOWER_STRAIGHT =
+            Arrays.asList(RankType.DEUCE, RankType.TREY, RankType.FOUR, RankType.FIVE);
+    private static final List<RankType> ROYAL_FLUSH_RANKS =
+            Arrays.asList(RankType.TEN, RankType.JACK, RankType.QUEEN, RankType.KING, RankType.ACE);
 
     private static final int SEVEN_CARDS_NEEDED = 7;
     private static final int FIVE_CARDS_NEEDED = 5;
@@ -57,9 +57,9 @@ public class HandTypeEvaluator {
             if (flushCards == null) {
                 continue;
             }
-            List<Integer> flushedRanks = new ArrayList<>();
+            List<RankType> flushedRanks = new ArrayList<>();
             for (Card suitCard : flushCards) {
-                flushedRanks.add(suitCard.getRank());
+                flushedRanks.add(suitCard.getRankType());
             }
             if (flushedRanks.containsAll(ROYAL_FLUSH_RANKS)) {
                 return true;
@@ -93,11 +93,11 @@ public class HandTypeEvaluator {
         if (checkCardNullability(cards)) return false;
         if (checkHandSize(cards, FIVE_CARDS_NEEDED)) return false;
 
-        Map<Integer, Integer> rankToCountMap = getRankCount(cards);
+        Map<RankType, Integer> rankToCountMap = getRankCount(cards);
 
         int twosCount = 0;
         int threesCount = 0;
-        for (Map.Entry<Integer, Integer> entry : rankToCountMap.entrySet()) {
+        for (Map.Entry<RankType, Integer> entry : rankToCountMap.entrySet()) {
             Integer suitCount = entry.getValue();
             if (suitCount == TWO_CARDS_NEEDED) {
                 twosCount++;
@@ -130,16 +130,18 @@ public class HandTypeEvaluator {
         if (checkHandSize(cards, FIVE_CARDS_NEEDED)) return null;
 
         List<Card> copyHand = new ArrayList<>(cards);
-        copyHand.sort(Comparator.comparingInt(Card::getRank)
-                .thenComparing(Card::getSuitType));
+        //todo if this doesnt work try commented
+//        copyHand.sort(Comparator.comparingInt((ToIntFunction<Card>) value -> value.getRankType().getValue()).thenComparing(Card::getSuitType));
+        copyHand.sort(Comparator.comparing(Card::getRankType).thenComparing(Card::getSuitType));
+
 
         boolean reachedPartLowStraight = false;
         List<Card> currentStraight = null;
         for (Card card : copyHand) {
-            final int rank = card.getRank();
+            final RankType rank = card.getRankType();
             if (!reachedPartLowStraight) {
                 reachedPartLowStraight = containsAllPartialForStraight(currentStraight);
-            } else if (rank == CardDTO.ACE) {
+            } else if (rank == RankType.ACE) {
                 currentStraight.add(card);
                 return new ArrayList<>(currentStraight);
             }
@@ -166,10 +168,10 @@ public class HandTypeEvaluator {
         if (checkCardNullability(cards)) return false;
         if (checkHandSize(cards, FOUR_CARDS_NEEDED)) return false;
 
-        Map<Integer, Integer> rankToCountMap = getRankCount(cards);
+        Map<RankType, Integer> rankToCountMap = getRankCount(cards);
 
         int count = 0;
-        for (Map.Entry<Integer, Integer> entry : rankToCountMap.entrySet()) {
+        for (Map.Entry<RankType, Integer> entry : rankToCountMap.entrySet()) {
             Integer suitCount = entry.getValue();
             if (suitCount == 2) {
                 count++;
@@ -195,10 +197,10 @@ public class HandTypeEvaluator {
         return suitToCountMap;
     }
 
-    private Map<Integer, Integer> getRankCount(List<Card> cards) {
-        Map<Integer, Integer> rankToCountMap = new HashMap<>();
+    private Map<RankType, Integer> getRankCount(List<Card> cards) {
+        Map<RankType, Integer> rankToCountMap = new HashMap<>();
         for (Card card : cards) {
-            int rank = card.getRank();
+            RankType rank = card.getRankType();
             Integer count = rankToCountMap.get(rank);
             if (count == null) {
                 rankToCountMap.put(rank, 1);
@@ -217,9 +219,9 @@ public class HandTypeEvaluator {
         if (checkCardNullability(cards)) return false;
         if (checkHandSize(cards, kindness)) return false;
 
-        Map<Integer, Integer> rankToCountMap = new HashMap<>();
+        Map<RankType, Integer> rankToCountMap = new HashMap<>();
         for (Card card : cards) {
-            int rank = card.getRank();
+            RankType rank = card.getRankType();
             Integer count = rankToCountMap.get(rank);
             if (count == null) {
                 rankToCountMap.put(rank, 1);
@@ -249,22 +251,32 @@ public class HandTypeEvaluator {
         return potentialStraightCards;
     }
 
-    private boolean isLastElementBeforeCurrentRank(List<Card> currentStraight, int rank) {
+    private boolean isLastElementBeforeCurrentRank(List<Card> currentStraight, RankType rank) {
         if (currentStraight == null || currentStraight.isEmpty()) {
             return false;
         }
         int size = currentStraight.size();
         Card card = currentStraight.get(size - 1);
-        return (card.getRank() + 1 == rank);
+
+        RankType cardRank = card.getRankType();
+        int cardRankPosition = cardRank.getPosition();
+        int nextCardRankPosition = cardRankPosition + 1;
+
+        Optional<RankType> nextCardRankOpt = RankType.findRankByPosition(nextCardRankPosition);
+        if (nextCardRankOpt.isEmpty()) {
+            return false;
+        }
+        RankType nextCardRank = nextCardRankOpt.get();
+        return nextCardRank == rank;
     }
 
     private boolean containsAllPartialForStraight(List<Card> currentStraight) {
         if (currentStraight == null || currentStraight.isEmpty()) {
             return false;
         }
-        List<Integer> cardRanks = new ArrayList<>();
+        List<RankType> cardRanks = new ArrayList<>();
         for (Card card : currentStraight) {
-            cardRanks.add(card.getRank());
+            cardRanks.add(card.getRankType());
         }
         return cardRanks.containsAll(PARTIAL_LOWER_STRAIGHT);
     }
@@ -273,12 +285,12 @@ public class HandTypeEvaluator {
         return cards.size() < expectedSize;
     }
 
-    private boolean isRankInCurrentStraight(List<Card> currentStraight, int rank) {
+    private boolean isRankInCurrentStraight(List<Card> currentStraight, RankType rank) {
         if (currentStraight == null || currentStraight.isEmpty()) {
             return false;
         }
         for (Card card : currentStraight) {
-            if (card.getRank() == rank) {
+            if (card.getRankType() == rank) {
                 return true;
             }
         }

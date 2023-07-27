@@ -1,19 +1,17 @@
 package com.twb.pokergame.service.game;
 
+import com.twb.pokergame.domain.Card;
 import com.twb.pokergame.domain.PlayerSession;
 import com.twb.pokergame.domain.PokerTable;
 import com.twb.pokergame.domain.Round;
 import com.twb.pokergame.domain.enumeration.GameType;
 import com.twb.pokergame.domain.enumeration.RoundState;
-import com.twb.pokergame.old.CardDTO;
-import com.twb.pokergame.old.DeckOfCardsFactory;
 import com.twb.pokergame.repository.*;
 import com.twb.pokergame.service.CardService;
 import com.twb.pokergame.service.HandService;
 import com.twb.pokergame.service.RoundService;
 import com.twb.pokergame.service.eval.HandEvaluator;
 import com.twb.pokergame.web.websocket.message.MessageDispatcher;
-import com.twb.pokergame.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageFactory;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -36,7 +34,7 @@ public abstract class GameThread extends Thread {
     protected PokerTable pokerTable;
     protected Round currentRound;
     protected List<PlayerSession> playerSessions;
-    protected List<CardDTO> cards;
+    protected List<Card> cards;
     protected int deckCardPointer;
 
     // --------------------------------------------
@@ -154,8 +152,8 @@ public abstract class GameThread extends Thread {
         deckCardPointer = 0;
     }
 
-    protected CardDTO getCard() {
-        CardDTO card = cards.get(deckCardPointer);
+    protected Card getCard() {
+        Card card = cards.get(deckCardPointer);
         deckCardPointer++;
         return card;
     }

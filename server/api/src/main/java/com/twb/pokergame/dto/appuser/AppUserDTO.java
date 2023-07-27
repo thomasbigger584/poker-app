@@ -1,11 +1,12 @@
 package com.twb.pokergame.dto.appuser;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.UUID;
 
-
-@Data
+@Getter
+@Setter
 public class AppUserDTO {
     private UUID id;
     private String username;

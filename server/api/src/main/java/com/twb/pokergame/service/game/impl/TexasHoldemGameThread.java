@@ -5,7 +5,6 @@ import com.twb.pokergame.domain.Hand;
 import com.twb.pokergame.domain.PlayerSession;
 import com.twb.pokergame.domain.enumeration.CardType;
 import com.twb.pokergame.domain.enumeration.RoundState;
-import com.twb.pokergame.old.CardDTO;
 import com.twb.pokergame.service.eval.dto.PlayerHandDTO;
 import com.twb.pokergame.service.game.GameThread;
 import org.slf4j.Logger;
@@ -79,16 +78,22 @@ public final class TexasHoldemGameThread extends GameThread {
     }
 
     private void dealPlayerCard(CardType cardType, PlayerSession playerSession) {
-        CardDTO card = getCard();
-        handService.addPlayerCard(playerSession, currentRound, card, cardType);
+        Card card = getCard();
+        card.setCardType(cardType);
+
+        handService.addPlayerCard(playerSession, currentRound, card);
         dispatcher.send(tableId, messageFactory.initDeal(playerSession, card));
+
         sleepInMs(WAIT_MS);
     }
 
     private void dealCommunityCard(CardType cardType) {
-        CardDTO card = getCard();
-        cardService.createCommunityCard(currentRound, card, cardType);
-        dispatcher.send(tableId, messageFactory.communityCardDeal(card, cardType));
+        Card card = getCard();
+        card.setCardType(cardType);
+
+        cardService.createCommunityCard(currentRound, card);
+        dispatcher.send(tableId, messageFactory.communityCardDeal(card));
+
         sleepInMs(WAIT_MS);
     }
 
