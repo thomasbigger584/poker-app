@@ -123,8 +123,9 @@ public final class TexasHoldemGameThread extends GameThread {
         }
         handEvaluator.evaluate(playerHandsList);
 
-        System.out.println("playerHandsList = " + playerHandsList);
+        savePlayerHandEvaluation(playerHandsList);
     }
+
 
     private void finishRound() {
         saveRoundState(RoundState.FINISH);
@@ -205,5 +206,22 @@ public final class TexasHoldemGameThread extends GameThread {
 
         dispatcher.send(tableId, messageFactory.dealerDetermined(currentDealer));
     }
+
+    private void savePlayerHandEvaluation(List<PlayerHandDTO> playerHandsList) {
+        List<Hand> savingHands = new ArrayList<>();
+        for (PlayerHandDTO playerHand : playerHandsList) {
+            PlayerSession playerSession = playerHand.getPlayerSession();
+            Optional<Hand> handOpt = handRepository
+                    .findHandForRound(playerSession.getId(), currentRound.getId());
+            if (handOpt.isPresent()) {
+                Hand hand = handOpt.get();
+                hand.setHandType(playerHand.getHandType());
+                hand.setWinner(playerHand.isWinner());
+                savingHands.add(hand);
+            }
+        }
+        handRepository.saveAllAndFlush(savingHands);
+    }
+
 
 }

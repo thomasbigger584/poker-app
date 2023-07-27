@@ -109,6 +109,8 @@ public abstract class GameThread extends Thread {
 
         sendLogMessage("Round Initialized.");
 
+
+
         // -----------------------------------------------------------------------
 
         sendLogMessage("Game Starting...");
