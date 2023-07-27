@@ -18,7 +18,6 @@ public class HandEvaluator {
         //todo: remove folded players ... (?)
 
         evaluateRankAndHandType(playerHandList);
-        playerHandList.sort(Comparator.reverseOrder());
         setWinners(playerHandList);
     }
 
@@ -33,6 +32,8 @@ public class HandEvaluator {
     }
 
     private void setWinners(List<PlayerHandDTO> playerHandList) {
+        playerHandList.sort(Comparator.reverseOrder());
+
         PlayerHandDTO winningPlayer = playerHandList.get(0);
         int winningRankValue = winningPlayer.getRank();
         for (PlayerHandDTO playerHand : playerHandList) {

@@ -1,4 +1,4 @@
-package com.twb.pokergame.web.rest.util;
+package com.twb.pokergame.service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
