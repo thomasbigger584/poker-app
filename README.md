@@ -4,17 +4,13 @@ WORK IN PROGRESS
 
 ![logo.png](logo.png)
 
-## Backend Usage
+## Server Usage
 
 In your terminal run the following command from the root directory to run the server locally:
 
 ```shell
 ./local_run.sh
 ```
-
-
-
-
 
 ## Client Usage
 
@@ -87,11 +83,3 @@ export PATH=$PATH:$ANDROID_HOME/tools/bin
 #### PostgresQL (PSQL)
 
 - The database of choice for storing both the keycloak persistence data and backend app persistence data.
-
-## Useful links
-
-| Service  | Domain Name          |
-|----------|----------------------|
-| Landing  | twbdev.site          |
-| Keycloak | keycloak.twbdev.site |
-| API      | localhost:8081       |
