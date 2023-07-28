@@ -26,7 +26,7 @@ services:
     networks:
       - backend
   keycloak:
-    image: quay.io/keycloak/keycloak:latest
+    build: keycloak
     container_name: keycloak
     restart: always
     environment:
