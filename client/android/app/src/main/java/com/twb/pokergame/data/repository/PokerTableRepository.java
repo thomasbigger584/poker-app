@@ -36,24 +36,12 @@ public class PokerTableRepository extends BaseRepository {
                 if (response.isSuccessful()) {
                     getPokerTablesLiveData.setValue(response.body());
                 } else {
-                    try (ResponseBody errorResponseBody = response.errorBody()) {
-                        if (errorResponseBody != null) {
-                            String errorMessage = errorResponseBody.string();
-                            Log.e(TAG, "onResponse: errorMessage: " + errorMessage);
-                            errorLiveData.setValue(new Exception());
-                        }
-                    } catch (IOException e) {
-                        String errorMessage = e.getMessage();
-                        Log.e(TAG, "onResponse: errorMessage: " + errorMessage);
-                        errorLiveData.setValue(e);
-                    }
+                    errorLiveData.setValue(new RuntimeException("Failed to get poker tables"));
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<List<TableDTO>> call, @NonNull Throwable throwable) {
-                String errorMessage = throwable.getMessage();
-                Log.e(TAG, "onFailure: errorMessage: " + errorMessage);
                 errorLiveData.setValue(throwable);
             }
         });

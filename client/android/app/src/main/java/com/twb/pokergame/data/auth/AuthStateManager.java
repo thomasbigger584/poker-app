@@ -40,7 +40,6 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class AuthStateManager {
     private static final String TAG = AuthStateManager.class.getSimpleName();
-
     private static final String STORE_NAME = "com.twb.pokergame.auth.AuthState.store";
     private static final String KEY_STATE = "com.twb.pokergame.auth.AuthState.keyState";
 
@@ -60,7 +59,6 @@ public class AuthStateManager {
         if (currentAuthState.get() != null) {
             return currentAuthState.get();
         }
-
         AuthState state = readState();
         if (currentAuthState.compareAndSet(null, state)) {
             return state;
@@ -79,9 +77,8 @@ public class AuthStateManager {
 
     @AnyThread
     @NonNull
-    public AuthState updateAfterAuthorization(
-            @Nullable AuthorizationResponse response,
-            @Nullable AuthorizationException ex) {
+    public AuthState updateAfterAuthorization(@Nullable AuthorizationResponse response,
+                                              @Nullable AuthorizationException ex) {
         AuthState current = getCurrent();
         current.update(response, ex);
         return replace(current);
@@ -89,9 +86,8 @@ public class AuthStateManager {
 
     @AnyThread
     @NonNull
-    public AuthState updateAfterTokenResponse(
-            @Nullable TokenResponse response,
-            @Nullable AuthorizationException ex) {
+    public AuthState updateAfterTokenResponse(@Nullable TokenResponse response,
+                                              @Nullable AuthorizationException ex) {
         AuthState current = getCurrent();
         current.update(response, ex);
         return replace(current);
@@ -99,14 +95,12 @@ public class AuthStateManager {
 
     @AnyThread
     @NonNull
-    public AuthState updateAfterRegistration(
-            RegistrationResponse response,
-            AuthorizationException ex) {
+    public AuthState updateAfterRegistration(RegistrationResponse response,
+                                             AuthorizationException ex) {
         AuthState current = getCurrent();
         if (ex != null) {
             return current;
         }
-
         current.update(response);
         return replace(current);
     }

@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializer;
+import com.twb.pokergame.data.auth.AuthService;
 import com.twb.pokergame.data.auth.AuthStateManager;
 import com.twb.pokergame.data.retrofit.api.interceptor.AuthInterceptor;
 import com.twb.pokergame.data.retrofit.gson.ServerMessageDeserializer;
@@ -113,8 +114,8 @@ public class NetworkModule {
 
     @Provides
     @Singleton
-    public AuthInterceptor authInterceptor(AuthStateManager authStateManager) {
-        return new AuthInterceptor(authStateManager);
+    public AuthInterceptor authInterceptor(AuthService authService) {
+        return new AuthInterceptor(authService);
     }
 
     @Provides

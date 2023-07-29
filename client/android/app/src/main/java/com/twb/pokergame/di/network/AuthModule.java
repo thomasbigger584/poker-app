@@ -32,7 +32,8 @@ public class AuthModule {
 
     @Provides
     @Singleton
-    public AuthService authService(AuthStateManager authStateManager) {
-        return new AuthService(authStateManager);
+    public AuthService authService(@ApplicationContext Context context,
+                                   AuthStateManager authStateManager, AuthConfiguration authConfiguration) {
+        return new AuthService(context, authStateManager, authConfiguration);
     }
 }

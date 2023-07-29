@@ -26,7 +26,9 @@ import javax.inject.Inject;
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
-public class PokerTableActivity extends BaseAuthActivity implements PokerTableAdapter.PokerTableClickListener {
+public class PokerTableActivity extends BaseAuthActivity
+        implements PokerTableAdapter.PokerTableClickListener {
+
     @Inject
     AuthStateManager authStateManager;
     private AlertDialog loadingSpinner;
@@ -59,7 +61,17 @@ public class PokerTableActivity extends BaseAuthActivity implements PokerTableAd
             if (error != null) {
                 DialogHelper.dismiss(loadingSpinner);
                 AlertModalDialog alertModalDialog = AlertModalDialog
-                        .newInstance(AlertModalDialog.AlertModalType.ERROR, error.getMessage(), null);
+                        .newInstance(AlertModalDialog.AlertModalType.ERROR, error.getMessage(), new AlertModalDialog.OnAlertClickListener() {
+                            @Override
+                            public void onSuccessClick() {
+                                endSession();
+                            }
+
+                            @Override
+                            public void onCancelClick() {
+                                endSession();
+                            }
+                        });
                 alertModalDialog.show(getSupportFragmentManager(), "modal_alert");
             }
         });

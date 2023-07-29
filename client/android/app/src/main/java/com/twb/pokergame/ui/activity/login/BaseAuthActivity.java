@@ -164,9 +164,7 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
     }
 
     @MainThread
-    private void performTokenRequest(
-            TokenRequest request,
-            AuthorizationService.TokenResponseCallback callback) {
+    private void performTokenRequest(TokenRequest request, AuthorizationService.TokenResponseCallback callback) {
         ClientAuthentication clientAuthentication;
         try {
             clientAuthentication = authStateManager.getCurrent().getClientAuthentication();
@@ -177,10 +175,7 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
             return;
         }
 
-        authService.performTokenRequest(
-                request,
-                clientAuthentication,
-                callback);
+        authService.performTokenRequest(request, clientAuthentication, callback);
     }
 
     @WorkerThread

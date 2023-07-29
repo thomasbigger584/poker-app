@@ -85,7 +85,7 @@ public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationTo
                 authToken.setAuthenticated(true);
             }
         } catch (Exception e) {
-            logger.warn("Failed to retrieve user to populate the authentication token details");
+            logger.warn("Failed to retrieve user to populate the authentication token details", e);
         }
     }
 }

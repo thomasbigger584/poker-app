@@ -1,8 +1,6 @@
 package com.twb.pokergame.data.retrofit.api.interceptor;
 
-import android.util.Log;
-
-import com.twb.pokergame.data.auth.AuthStateManager;
+import com.twb.pokergame.data.auth.AuthService;
 
 import java.io.IOException;
 
@@ -11,23 +9,20 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class AuthInterceptor implements Interceptor {
-    private static final String TAG = AuthInterceptor.class.getSimpleName();
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String AUTHORIZATION_HEADER = "Authorization";
 
-    private final AuthStateManager authStateManager;
+    private final AuthService authService;
 
-    public AuthInterceptor(AuthStateManager authStateManager) {
-        this.authStateManager = authStateManager;
+    public AuthInterceptor(AuthService authService) {
+        this.authService = authService;
     }
 
     @Override
     public Response intercept(Chain chain) throws IOException {
         Request.Builder builder = chain.request().newBuilder();
-
-        String token = authStateManager.getCurrent().getAccessToken();
-        Log.i(TAG, "intercept: token: " + token);
-        builder.addHeader(AUTHORIZATION_HEADER, BEARER_PREFIX + token);
+        String accessToken = authService.getAccessTokenWithRefresh();
+        builder.addHeader(AUTHORIZATION_HEADER, BEARER_PREFIX + accessToken);
         return chain.proceed(builder.build());
     }
 }
