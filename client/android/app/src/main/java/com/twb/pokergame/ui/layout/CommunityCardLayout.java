@@ -63,6 +63,7 @@ public class CommunityCardLayout extends FrameLayout {
             case "TURN_CARD": {
                 setTurnVisibility();
                 community4CardLayout.update(card);
+                break;
             }
             case "RIVER_CARD": {
                 setRiverVisibility();
