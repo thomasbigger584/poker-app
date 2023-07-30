@@ -205,7 +205,17 @@ public final class TexasHoldemGameThread extends GameThread {
 
         savePlayerHandEvaluation(playerHandsList);
 
+        List<EvalPlayerHandDTO> winners =
+                playerHandsList.stream().filter(EvalPlayerHandDTO::isWinner).toList();
 
+        if (winners.size() == 1) {
+            EvalPlayerHandDTO winnerEvalHandDTO = winners.get(0);
+            PlayerSession playerSession = winnerEvalHandDTO.getPlayerSession();
+            String username = playerSession.getUser().getUsername();
+            sendLogMessage(username + " wins hand with " + winnerEvalHandDTO.getReadableCards());
+        } else {
+            sendLogMessage("Split pot situation, needs handled...");
+        }
     }
 
     private void savePlayerHandEvaluation(List<EvalPlayerHandDTO> playerHandsList) {
