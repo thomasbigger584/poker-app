@@ -8,6 +8,7 @@ import com.twb.pokergame.data.websocket.message.server.payload.LogMessageDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.PlayerConnectedDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.PlayerDisconnectedDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.PlayerSubscribedDTO;
+import com.twb.pokergame.data.websocket.message.server.payload.RoundFinishedDTO;
 
 public enum ServerMessageType {
     /*
@@ -41,6 +42,12 @@ public enum ServerMessageType {
      */
     DEAL_COMMUNITY,
 
+
+    /*
+     * Used to notify the client that the round has finished
+     * so should reset the table
+     */
+    ROUND_FINISHED,
 
     // todo: add more
 
@@ -76,6 +83,9 @@ public enum ServerMessageType {
                 return DealPlayerCardDTO.class;
             case DEAL_COMMUNITY:
                 return DealCommunityCardDTO.class;
+            case ROUND_FINISHED:
+                return RoundFinishedDTO.class;
+
                 //todo: add more
 
             case CHAT:

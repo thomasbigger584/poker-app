@@ -36,6 +36,9 @@ spring:
     dll-auto: none
   liquibase:
     change-log: classpath:liquibase/master.xml
+  jackson:
+    serialization:
+      fail_on_empty_beans: false
 jwt:
   auth:
     converter:

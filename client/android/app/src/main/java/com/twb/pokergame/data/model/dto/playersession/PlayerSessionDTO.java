@@ -3,6 +3,7 @@ package com.twb.pokergame.data.model.dto.playersession;
 import androidx.annotation.NonNull;
 
 import com.twb.pokergame.data.model.dto.appuser.AppUserDTO;
+import com.twb.pokergame.data.model.dto.hand.HandDTO;
 import com.twb.pokergame.data.model.dto.pokertable.TableDTO;
 
 import java.util.UUID;
@@ -15,6 +16,7 @@ public class PlayerSessionDTO {
     private Boolean dealer;
     private Double funds;
     private String sessionState;
+    private HandDTO currentHand;
 
     public UUID getId() {
         return id;
@@ -72,6 +74,14 @@ public class PlayerSessionDTO {
         this.sessionState = sessionState;
     }
 
+    public HandDTO getCurrentHand() {
+        return currentHand;
+    }
+
+    public void setCurrentHand(HandDTO currentHand) {
+        this.currentHand = currentHand;
+    }
+
     @NonNull
     @Override
     public String toString() {
@@ -83,6 +93,7 @@ public class PlayerSessionDTO {
                 ", dealer=" + dealer +
                 ", funds=" + funds +
                 ", sessionState='" + sessionState + '\'' +
+                ", currentHand=" + currentHand +
                 '}';
     }
 }

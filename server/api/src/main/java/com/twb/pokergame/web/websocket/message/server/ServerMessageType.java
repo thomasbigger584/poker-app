@@ -33,6 +33,12 @@ public enum ServerMessageType {
     DEAL_COMMUNITY,
 
 
+    /*
+     * Used to notify the client that the round has finished
+     * so should reset the table
+     */
+    ROUND_FINISHED,
+
     // todo: add more
 
 

@@ -1,5 +1,6 @@
 package com.twb.pokergame.service.game.impl;
 
+import com.twb.pokergame.domain.AppUser;
 import com.twb.pokergame.domain.Card;
 import com.twb.pokergame.domain.Hand;
 import com.twb.pokergame.domain.PlayerSession;
@@ -96,7 +97,6 @@ public final class TexasHoldemGameThread extends GameThread {
 
         sleepInMs(WAIT_MS);
     }
-
 
     /**
      * If there is not a dealer already selected then pick a random dealer out of the PlayerSession list.
@@ -209,12 +209,9 @@ public final class TexasHoldemGameThread extends GameThread {
                 playerHandsList.stream().filter(EvalPlayerHandDTO::isWinner).toList();
 
         if (winners.size() == 1) {
-            EvalPlayerHandDTO winnerEvalHandDTO = winners.get(0);
-            PlayerSession playerSession = winnerEvalHandDTO.getPlayerSession();
-            String username = playerSession.getUser().getUsername();
-            sendLogMessage(username + " wins hand with " + winnerEvalHandDTO.getReadableCards());
+            handleSinglePlayerWin(winners);
         } else {
-            sendLogMessage("Split pot situation, needs handled...");
+            handleMultiplePlayerWin(winners);
         }
     }
 
@@ -234,8 +231,39 @@ public final class TexasHoldemGameThread extends GameThread {
         handRepository.saveAllAndFlush(savingHands);
     }
 
+    private void handleSinglePlayerWin(List<EvalPlayerHandDTO> winners) {
+        EvalPlayerHandDTO winnerEvalHandDTO = winners.get(0);
+        PlayerSession playerSession = winnerEvalHandDTO.getPlayerSession();
+        String username = playerSession.getUser().getUsername();
+        String handTypeStr = winnerEvalHandDTO.getHandType().getValue();
+
+        sendLogMessage(String.format("%s wins round with %s", username, handTypeStr));
+    }
+
+    private void handleMultiplePlayerWin(List<EvalPlayerHandDTO> winners) {
+        String winnerNames = getReadableWinners(winners);
+        String handTypeStr = winners.get(0).getHandType().getValue();
+
+        sendLogMessage(String.format("%s draws round with %s", winnerNames, handTypeStr));
+    }
+
+    private String getReadableWinners(List<EvalPlayerHandDTO> winners) {
+        StringBuilder sb = new StringBuilder();
+        for (int index = 0; index < winners.size(); index++) {
+            EvalPlayerHandDTO eval = winners.get(index);
+            AppUser user = eval.getPlayerSession().getUser();
+            sb.append(user.getUsername());
+            if (index < winners.size() - 3) {
+                sb.append(", ");
+            } else if (index == winners.size() - 2) {
+                sb.append("& ");
+            }
+        }
+        return sb.toString();
+    }
+
     private void finishRound() {
         saveRoundState(RoundState.FINISH);
-        sendLogMessage("Round Finished.");
+        dispatcher.send(tableId, messageFactory.roundFinished());
     }
 }

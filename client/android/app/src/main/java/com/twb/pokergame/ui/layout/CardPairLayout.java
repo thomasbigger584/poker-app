@@ -7,6 +7,8 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.DrawableRes;
+
 import com.twb.pokergame.R;
 import com.twb.pokergame.data.model.dto.appuser.AppUserDTO;
 import com.twb.pokergame.data.model.dto.card.CardDTO;
@@ -50,6 +52,14 @@ public class CardPairLayout extends FrameLayout {
 
     public void updateCardImageView(CardDTO card) {
         int cardDrawResId = CardDrawableUtil.getDrawable(getContext(), card);
+        updateCardImageView(cardDrawResId);
+    }
+
+    public void updateCardImageView() {
+        updateCardImageView(R.drawable.back);
+    }
+
+    private void updateCardImageView(@DrawableRes int cardDrawResId) {
         if (cardImageViews[0].getVisibility() != INVISIBLE
                 && cardImageViews[1].getVisibility() != INVISIBLE) {
             reset();

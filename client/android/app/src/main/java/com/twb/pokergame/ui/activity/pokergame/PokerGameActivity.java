@@ -116,6 +116,9 @@ public class PokerGameActivity extends BaseAuthActivity {
         viewModel.dealCommunityCard.observe(this, dealCommunityCard -> {
             tableController.dealCommunityCard(dealCommunityCard);
         });
+        viewModel.roundFinished.observe(this, roundFinished -> {
+            tableController.reset(roundFinished);
+        });
 
 
         //todo: add more

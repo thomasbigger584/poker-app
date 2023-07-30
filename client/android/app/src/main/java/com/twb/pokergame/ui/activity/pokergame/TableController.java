@@ -9,6 +9,7 @@ import com.twb.pokergame.R;
 import com.twb.pokergame.data.model.dto.playersession.PlayerSessionDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.DealCommunityCardDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.DealPlayerCardDTO;
+import com.twb.pokergame.data.websocket.message.server.payload.RoundFinishedDTO;
 import com.twb.pokergame.ui.layout.CardPairLayout;
 import com.twb.pokergame.ui.layout.CommunityCardLayout;
 
@@ -80,11 +81,10 @@ public class TableController {
         cardPairLayout.updateCardImageView(dealPlayerCard.getCard());
     }
 
-    //todo: dont show actual card, but show it turned around
     public void dealOtherPlayerCard(DealPlayerCardDTO dealPlayerCard) {
         PlayerSessionDTO playerSession = dealPlayerCard.getPlayerSession();
         CardPairLayout cardPairLayout = getCardPairLayout(playerSession.getPosition());
-        cardPairLayout.updateCardImageView(dealPlayerCard.getCard());
+        cardPairLayout.updateCardImageView();
     }
 
     public void dealCommunityCard(DealCommunityCardDTO dealCommunityCard) {
@@ -113,5 +113,12 @@ public class TableController {
             throw new RuntimeException("Card pair layout is null for position: " + position);
         }
         return cardPairLayout;
+    }
+
+    public void reset(RoundFinishedDTO roundFinished) {
+        communityCardLayout.reset();
+        for (CardPairLayout cardPairLayout : cardPairLayouts) {
+            cardPairLayout.reset();
+        }
     }
 }

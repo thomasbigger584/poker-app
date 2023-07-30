@@ -54,6 +54,12 @@ public class ServerMessageFactory {
         return ServerMessageDTO.create(ServerMessageType.DEAL_COMMUNITY, payload);
     }
 
+    public ServerMessageDTO roundFinished() {
+        RoundFinishedDTO payload = RoundFinishedDTO.builder()
+                .build();
+        return ServerMessageDTO.create(ServerMessageType.ROUND_FINISHED, payload);
+    }
+
 
     // TODO: add more ...
 
