@@ -1,5 +1,7 @@
 package com.twb.pokergame.data.model.dto.round;
 
+import androidx.annotation.NonNull;
+
 import java.util.UUID;
 
 public class RoundDTO {
@@ -20,5 +22,14 @@ public class RoundDTO {
 
     public void setRoundState(String roundState) {
         this.roundState = roundState;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "RoundDTO{" +
+                "id=" + id +
+                ", roundState='" + roundState + '\'' +
+                '}';
     }
 }

@@ -1,5 +1,7 @@
 package com.twb.pokergame.data.model.dto.appuser;
 
+import androidx.annotation.NonNull;
+
 import java.util.UUID;
 
 public class AppUserDTO {
@@ -65,5 +67,19 @@ public class AppUserDTO {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "AppUserDTO{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", email='" + email + '\'' +
+                ", emailVerified=" + emailVerified +
+                ", enabled=" + enabled +
+                '}';
     }
 }

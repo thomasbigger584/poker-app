@@ -32,7 +32,7 @@ public class HandService {
             hand = new Hand();
             hand.setRound(round);
             hand.setPlayerSession(playerSession);
-            hand = repository.save(hand);
+            hand = repository.saveAndFlush(hand);
         }
         cardService.createPlayerCard(hand, card);
     }

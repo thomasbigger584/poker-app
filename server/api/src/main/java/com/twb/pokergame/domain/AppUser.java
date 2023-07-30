@@ -1,6 +1,9 @@
 package com.twb.pokergame.domain;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -52,9 +55,6 @@ public class AppUser {
 
     @Column(name = "total_funds")
     private double totalFunds = 0d;
-
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-    private PlayerSession playerSession;
 
     @Override
     public boolean equals(Object o) {

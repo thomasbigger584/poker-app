@@ -16,7 +16,6 @@ public class PlayerSessionDTO {
     private Boolean dealer;
     private Double funds;
     private String sessionState;
-    private HandDTO currentHand;
 
     public UUID getId() {
         return id;
@@ -73,15 +72,6 @@ public class PlayerSessionDTO {
     public void setSessionState(String sessionState) {
         this.sessionState = sessionState;
     }
-
-    public HandDTO getCurrentHand() {
-        return currentHand;
-    }
-
-    public void setCurrentHand(HandDTO currentHand) {
-        this.currentHand = currentHand;
-    }
-
     @NonNull
     @Override
     public String toString() {
@@ -93,7 +83,6 @@ public class PlayerSessionDTO {
                 ", dealer=" + dealer +
                 ", funds=" + funds +
                 ", sessionState='" + sessionState + '\'' +
-                ", currentHand=" + currentHand +
                 '}';
     }
 }

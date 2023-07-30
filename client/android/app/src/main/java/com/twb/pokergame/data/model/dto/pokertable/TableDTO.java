@@ -3,6 +3,8 @@ package com.twb.pokergame.data.model.dto.pokertable;
 
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+
 import java.util.UUID;
 
 public class TableDTO {
@@ -52,5 +54,15 @@ public class TableDTO {
 
     public void setGameType(String gameType) {
         this.gameType = gameType;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "TableDTO{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", gameType='" + gameType + '\'' +
+                '}';
     }
 }

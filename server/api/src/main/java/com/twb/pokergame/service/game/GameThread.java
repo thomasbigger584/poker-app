@@ -36,43 +36,30 @@ public abstract class GameThread extends Thread {
     protected List<Card> deckOfCards;
     protected int deckCardPointer;
 
-    // --------------------------------------------
     @Autowired
     protected GameThreadFactory threadFactory;
-
     @Autowired
     private GameThreadExceptionHandler exceptionHandler;
-
     @Autowired
     protected ServerMessageFactory messageFactory;
-
     @Autowired
     protected MessageDispatcher dispatcher;
-
     @Autowired
     protected TableRepository tableRepository;
-
     @Autowired
     protected RoundRepository roundRepository;
-
     @Autowired
     protected RoundService roundService;
-
     @Autowired
     protected PlayerSessionRepository playerSessionRepository;
-
     @Autowired
     protected HandService handService;
-
     @Autowired
     protected HandRepository handRepository;
-
     @Autowired
     protected CardService cardService;
-
     @Autowired
     protected CardRepository cardRepository;
-
     @Autowired
     protected HandEvaluator handEvaluator;
 
@@ -127,7 +114,7 @@ public abstract class GameThread extends Thread {
             if (tableOpt.isEmpty()) {
                 throw new RuntimeException("Cannot start as table doesn't exist");
             }
-            currentRound = roundService.createSingle(pokerTable);
+            currentRound = roundService.create(pokerTable);
         }
         sendLogMessage("New Round...");
     }
@@ -210,7 +197,7 @@ public abstract class GameThread extends Thread {
         logger.error(message);
         sendLogMessage(message);
         finishRound();
-        threadFactory.delete(tableId);
+        finish();
         interrupt();
     }
 }

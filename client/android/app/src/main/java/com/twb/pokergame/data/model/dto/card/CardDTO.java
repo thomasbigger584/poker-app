@@ -1,5 +1,7 @@
 package com.twb.pokergame.data.model.dto.card;
 
+import androidx.annotation.NonNull;
+
 import java.util.UUID;
 
 public class CardDTO {
@@ -67,6 +69,7 @@ public class CardDTO {
         this.cardType = cardType;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "CardDTO{" +
