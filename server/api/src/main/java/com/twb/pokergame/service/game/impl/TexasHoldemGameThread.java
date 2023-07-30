@@ -134,6 +134,7 @@ public final class TexasHoldemGameThread extends GameThread {
             playerSession.setDealer(currentDealer.getId().equals(playerSession.getId()));
         }
         playerSessions = playerSessionRepository.saveAllAndFlush(playerSessions);
+        checkAtLeastOnePlayerConnected();
 
         //reorder list for dealer last
         int dealerIndex = -1;
@@ -163,6 +164,7 @@ public final class TexasHoldemGameThread extends GameThread {
             dealerSortedList.add(playerSessions.get(index));
         }
         playerSessions = dealerSortedList;
+        checkAtLeastOnePlayerConnected();
 
         dispatcher.send(tableId, messageFactory.dealerDetermined(currentDealer));
     }

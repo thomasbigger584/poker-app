@@ -14,6 +14,7 @@ import com.twb.pokergame.service.eval.HandEvaluator;
 import com.twb.pokergame.web.websocket.message.MessageDispatcher;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageFactory;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -102,6 +103,7 @@ public abstract class GameThread extends Thread {
         GameType gameType = pokerTable.getGameType();
         do {
             playerSessions = playerSessionRepository.findConnectedByTableId(tableId);
+            checkAtLeastOnePlayerConnected();
             sleepInMs(WAIT_MS);
         } while (playerSessions.size() < gameType.getMinPlayerCount());
     }
@@ -124,14 +126,23 @@ public abstract class GameThread extends Thread {
         sendLogMessage("New Round...");
     }
 
-
     private boolean isPlayersJoined() {
-        return isPlayersJoined(pokerTable.getGameType().getMinPlayerCount());
+        GameType gameType = pokerTable.getGameType();
+        int minPlayerCount = gameType.getMinPlayerCount();
+        return isPlayersJoined(minPlayerCount);
     }
 
     private boolean isPlayersJoined(int count) {
-        playerSessions = playerSessionRepository.findConnectedByTableId(tableId);
+        playerSessions = playerSessionRepository
+                .findConnectedByTableId(tableId);
+        checkAtLeastOnePlayerConnected();
         return playerSessions.size() >= count;
+    }
+
+    protected void checkAtLeastOnePlayerConnected() {
+        if (CollectionUtils.isEmpty(playerSessions)) {
+            throw new RuntimeException("No more players connected");
+        }
     }
 
     private void initRound() {
