@@ -126,7 +126,7 @@ public abstract class GameThread extends Thread {
 
 
     private boolean isPlayersJoined() {
-        isPlayersJoined(pokerTable.getGameType().getMinPlayerCount());
+        return isPlayersJoined(pokerTable.getGameType().getMinPlayerCount());
     }
 
     private boolean isPlayersJoined(int count) {
