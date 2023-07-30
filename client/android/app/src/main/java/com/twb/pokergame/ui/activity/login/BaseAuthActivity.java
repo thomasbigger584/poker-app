@@ -148,13 +148,6 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
         executor.shutdownNow();
     }
 
-    protected void refreshAccessToken() {
-        Log.i(TAG, "Refreshing access token...");
-        performTokenRequest(
-                authStateManager.getCurrent().createTokenRefreshRequest(),
-                this::handleAccessTokenResponse);
-    }
-
     @MainThread
     private void exchangeAuthorizationCode(AuthorizationResponse authorizationResponse) {
         Log.i(TAG, "Exchanging authorization code...");
@@ -164,7 +157,8 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
     }
 
     @MainThread
-    private void performTokenRequest(TokenRequest request, AuthorizationService.TokenResponseCallback callback) {
+    private void performTokenRequest(TokenRequest request,
+                                     AuthorizationService.TokenResponseCallback callback) {
         ClientAuthentication clientAuthentication;
         try {
             clientAuthentication = authStateManager.getCurrent().getClientAuthentication();
@@ -179,13 +173,8 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
     }
 
     @WorkerThread
-    private void handleAccessTokenResponse(@Nullable TokenResponse tokenResponse, @Nullable AuthorizationException authException) {
-        authStateManager.updateAfterTokenResponse(tokenResponse, authException);
-        runOnUiThread(this::onAuthorized);
-    }
-
-    @WorkerThread
-    private void handleCodeExchangeResponse(@Nullable TokenResponse tokenResponse, @Nullable AuthorizationException authException) {
+    private void handleCodeExchangeResponse(@Nullable TokenResponse tokenResponse,
+                                            @Nullable AuthorizationException authException) {
         authStateManager.updateAfterTokenResponse(tokenResponse, authException);
         if (!authStateManager.getCurrent().isAuthorized()) {
             runOnUiThread(() -> onNotAuthorized("Authorization Code exchange failed", authException));
@@ -210,7 +199,7 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
         AuthState currentState = authStateManager.getCurrent();
         AuthorizationServiceConfiguration config =
                 currentState.getAuthorizationServiceConfiguration();
-        if (config.endSessionEndpoint != null) {
+        if (config != null && config.endSessionEndpoint != null) {
             Intent endSessionIntent = authService.getEndSessionRequestIntent(
                     new EndSessionRequest.Builder(config)
                             .setIdTokenHint(currentState.getIdToken())
@@ -227,11 +216,14 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
         // discard the authorization and token state, but retain the configuration and
         // dynamic client registration (if applicable), to save from retrieving them again.
         AuthState currentState = authStateManager.getCurrent();
-        AuthState clearedState = new AuthState(currentState.getAuthorizationServiceConfiguration());
-        if (currentState.getLastRegistrationResponse() != null) {
-            clearedState.update(currentState.getLastRegistrationResponse());
+        AuthorizationServiceConfiguration config = currentState.getAuthorizationServiceConfiguration();
+        if (config != null) {
+            AuthState clearedState = new AuthState(config);
+            if (currentState.getLastRegistrationResponse() != null) {
+                clearedState.update(currentState.getLastRegistrationResponse());
+            }
+            authStateManager.replace(clearedState);
         }
-        authStateManager.replace(clearedState);
 
         Intent mainIntent = new Intent(this, LoginActivity.class);
         mainIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);

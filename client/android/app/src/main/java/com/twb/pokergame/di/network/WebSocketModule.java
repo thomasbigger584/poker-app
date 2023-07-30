@@ -1,7 +1,7 @@
 package com.twb.pokergame.di.network;
 
 import com.google.gson.Gson;
-import com.twb.pokergame.data.auth.AuthStateManager;
+import com.twb.pokergame.data.auth.AuthService;
 import com.twb.pokergame.data.websocket.WebSocketClient;
 
 import javax.inject.Singleton;
@@ -17,7 +17,7 @@ public class WebSocketModule {
 
     @Provides
     @Singleton
-    public WebSocketClient webSocketClient(AuthStateManager authStateManager, Gson gson) {
-        return new WebSocketClient(authStateManager, gson);
+    public WebSocketClient webSocketClient(AuthService authService, Gson gson) {
+        return new WebSocketClient(authService, gson);
     }
 }

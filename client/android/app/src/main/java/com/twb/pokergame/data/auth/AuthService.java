@@ -14,10 +14,14 @@ import net.openid.appauth.AuthorizationService;
 import net.openid.appauth.ClientAuthentication;
 import net.openid.appauth.TokenRequest;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 public class AuthService {
     private static final String TAG = AuthService.class.getSimpleName();
     private static final String USERNAME_CLAIM = "preferred_username";
     private static final int TOKEN_EXPIRY_LEEWAY_SECONDS = 10;
+    private static final int REFRESH_TIMEOUT_SECONDS = 3;
     private final AuthStateManager authStateManager;
     private final AuthorizationService authService;
 
@@ -43,19 +47,19 @@ public class AuthService {
     public String getAccessTokenWithRefresh() {
         JWT jwt = getJwt();
         if (jwt.isExpired(TOKEN_EXPIRY_LEEWAY_SECONDS)) {
-            Thread thread = new Thread(() -> {
-                AuthState currentAuthState = authStateManager.getCurrent();
-                TokenRequest tokenRefreshRequest = currentAuthState.createTokenRefreshRequest();
-                performTokenRequest(tokenRefreshRequest, (response, ex) -> {
-                    authStateManager.updateAfterTokenResponse(response, ex);
-                });
+            CountDownLatch latch = new CountDownLatch(1);
+            AuthState currentAuthState = authStateManager.getCurrent();
+            TokenRequest tokenRefreshRequest = currentAuthState.createTokenRefreshRequest();
+            performTokenRequest(tokenRefreshRequest, (response, ex) -> {
+                authStateManager.updateAfterTokenResponse(response, ex);
+                latch.countDown();
             });
-            thread.start();
             try {
-                thread.join();
-                return authStateManager.getCurrent().getAccessToken();
+                if (latch.await(REFRESH_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+                    return currentAuthState.getAccessToken();
+                }
             } catch (InterruptedException e) {
-                throw new RuntimeException("Failed to wait for refresh thread", e);
+                throw new RuntimeException("Failed to wait for refresh token", e);
             }
         }
         return jwt.toString();

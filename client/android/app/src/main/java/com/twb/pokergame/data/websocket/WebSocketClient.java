@@ -6,7 +6,7 @@ import androidx.annotation.MainThread;
 
 import com.google.gson.Gson;
 import com.twb.pokergame.BuildConfig;
-import com.twb.pokergame.data.auth.AuthStateManager;
+import com.twb.pokergame.data.auth.AuthService;
 import com.twb.pokergame.data.websocket.message.client.SendChatMessageDTO;
 import com.twb.pokergame.data.websocket.message.client.SendPlayerDisconnectDTO;
 import com.twb.pokergame.data.websocket.message.server.ServerMessageDTO;
@@ -37,20 +37,19 @@ public class WebSocketClient {
     private static final String TOPIC_PREFIX = "/topic/loops.";
     private static final String SEND_ENDPOINT_PREFIX = "/app/pokerTable/%s";
     private static final String SEND_CHAT_MESSAGE = "/sendChatMessage";
-    private static final String SEND_CONNECT_PLAYER = "/sendConnectPlayer";
     private static final String SEND_DISCONNECT_PLAYER = "/sendDisconnectPlayer";
     private static final String AUTHORIZATION_HEADER = "X-Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
 
-    private final AuthStateManager authStateManager;
+    private final AuthService authService;
     private final Gson gson;
 
     private StompClient stompClient;
     private CompositeDisposable compositeDisposable;
 
     @Inject
-    public WebSocketClient(AuthStateManager authStateManager, Gson gson) {
-        this.authStateManager = authStateManager;
+    public WebSocketClient(AuthService authService, Gson gson) {
+        this.authService = authService;
         this.gson = gson;
     }
 
@@ -62,7 +61,7 @@ public class WebSocketClient {
         if (stompClient != null && stompClient.isConnected()) {
             return;
         }
-        String accessToken = authStateManager.getCurrent().getAccessToken();
+        String accessToken = authService.getAccessToken();
         if (accessToken == null) {
             throw new RuntimeException("Cannot connect to websocket as access token is null");
         }
