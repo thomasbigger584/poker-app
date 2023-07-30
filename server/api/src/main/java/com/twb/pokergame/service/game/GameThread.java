@@ -27,6 +27,7 @@ import java.util.UUID;
 public abstract class GameThread extends Thread {
     protected static final SecureRandom RANDOM = new SecureRandom();
     protected static final int WAIT_MS = 1000;
+    private static final int TABLE_NOT_EMPTY = 1;
     private static final Logger logger = LoggerFactory.getLogger(GameThread.class);
 
     protected final UUID tableId;
@@ -38,8 +39,6 @@ public abstract class GameThread extends Thread {
 
     @Autowired
     protected GameThreadFactory threadFactory;
-    @Autowired
-    private GameThreadExceptionHandler exceptionHandler;
     @Autowired
     protected ServerMessageFactory messageFactory;
     @Autowired
@@ -62,18 +61,24 @@ public abstract class GameThread extends Thread {
     protected CardRepository cardRepository;
     @Autowired
     protected HandEvaluator handEvaluator;
+    @Autowired
+    private GameThreadExceptionHandler exceptionHandler;
 
     @Override
     public void run() {
         initializeThread();
         initializeTable();
-        waitForPlayersToJoin();
-        while (isPlayersJoined()) {
-            createNewRound();
-            initRound();
-            runRound();
-            finishRound();
+
+        while (isPlayersJoined(TABLE_NOT_EMPTY)) {
+            waitForPlayersToJoin();
+            while (isPlayersJoined()) {
+                createNewRound();
+                initRound();
+                runRound();
+                finishRound();
+            }
         }
+
         finish();
     }
 
@@ -121,9 +126,12 @@ public abstract class GameThread extends Thread {
 
 
     private boolean isPlayersJoined() {
-        GameType gameType = pokerTable.getGameType();
+        isPlayersJoined(pokerTable.getGameType().getMinPlayerCount());
+    }
+
+    private boolean isPlayersJoined(int count) {
         playerSessions = playerSessionRepository.findConnectedByTableId(tableId);
-        return playerSessions.size() >= gameType.getMinPlayerCount();
+        return playerSessions.size() >= count;
     }
 
     private void initRound() {

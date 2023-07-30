@@ -33,7 +33,7 @@ public class CommunityCardLayout extends FrameLayout {
         community3CardLayout = inflatedView.findViewById(R.id.community3CardLayout);
         community4CardLayout = inflatedView.findViewById(R.id.community4CardLayout);
         community5CardLayout = inflatedView.findViewById(R.id.community5CardLayout);
-        reset();
+        setInvisible();
     }
 
     public void reset() {
