@@ -20,6 +20,7 @@ services:
       SPRING_PROFILES_ACTIVE: local
     ports:
       - 8081:8081
+      - 5005:5005 # debug port
     depends_on:
       - postgres
     networks:
