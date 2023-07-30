@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-
 @RequiredArgsConstructor
 public abstract class GameThread extends Thread {
     protected static final SecureRandom RANDOM = new SecureRandom();
@@ -40,6 +39,9 @@ public abstract class GameThread extends Thread {
     // --------------------------------------------
     @Autowired
     protected GameThreadFactory threadFactory;
+
+    @Autowired
+    private GameThreadExceptionHandler exceptionHandler;
 
     @Autowired
     protected ServerMessageFactory messageFactory;
@@ -76,6 +78,7 @@ public abstract class GameThread extends Thread {
 
     @Override
     public void run() {
+        initializeThread();
         initializeTable();
         waitForPlayersToJoin();
         while (isPlayersJoined()) {
@@ -87,13 +90,19 @@ public abstract class GameThread extends Thread {
         finish();
     }
 
+    private void initializeThread() {
+        setName(tableId.toString());
+        setUncaughtExceptionHandler(exceptionHandler);
+        setDefaultUncaughtExceptionHandler(exceptionHandler);
+        setPriority(Thread.MAX_PRIORITY);
+    }
+
     private void initializeTable() {
         Optional<PokerTable> tableOpt = tableRepository.findById(tableId);
-        if (tableOpt.isPresent()) {
-            pokerTable = tableOpt.get();
-        } else {
-            fail("No table found, cannot start game");
+        if (tableOpt.isEmpty()) {
+            throw new RuntimeException("No table found, cannot start game");
         }
+        pokerTable = tableOpt.get();
     }
 
     private void waitForPlayersToJoin() {
@@ -111,15 +120,14 @@ public abstract class GameThread extends Thread {
         if (roundOpt.isPresent()) {
             currentRound = roundOpt.get();
             if (currentRound.getRoundState() != RoundState.WAITING_FOR_PLAYERS) {
-                fail("Cannot start an existing new round not in the WAITING_FOR_PLAYERS state");
+                throw new RuntimeException("Cannot start an existing new round not in the WAITING_FOR_PLAYERS state");
             }
         } else {
             Optional<PokerTable> tableOpt = tableRepository.findById(tableId);
             if (tableOpt.isEmpty()) {
-                fail("Cannot start as table doesn't exist");
-            } else {
-                currentRound = roundService.createSingle(pokerTable);
+                throw new RuntimeException("Cannot start as table doesn't exist");
             }
+            currentRound = roundService.createSingle(pokerTable);
         }
         sendLogMessage("New Round...");
     }
