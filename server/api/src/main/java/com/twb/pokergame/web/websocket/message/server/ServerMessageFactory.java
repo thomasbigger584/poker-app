@@ -2,18 +2,19 @@ package com.twb.pokergame.web.websocket.message.server;
 
 import com.twb.pokergame.domain.Card;
 import com.twb.pokergame.domain.PlayerSession;
-import com.twb.pokergame.domain.enumeration.CardType;
 import com.twb.pokergame.dto.playersession.PlayerSessionDTO;
 import com.twb.pokergame.mapper.CardMapper;
 import com.twb.pokergame.mapper.PlayerSessionMapper;
 import com.twb.pokergame.web.websocket.message.server.payload.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Component
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ServerMessageFactory {
     private final PlayerSessionMapper playerSessionMapper;
     private final CardMapper cardMapper;

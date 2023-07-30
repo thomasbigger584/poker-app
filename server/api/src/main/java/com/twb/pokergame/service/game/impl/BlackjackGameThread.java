@@ -1,5 +1,6 @@
 package com.twb.pokergame.service.game.impl;
 
+import com.twb.pokergame.domain.enumeration.RoundState;
 import com.twb.pokergame.service.game.GameThread;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
@@ -20,7 +21,17 @@ public final class BlackjackGameThread extends GameThread {
     }
 
     @Override
-    protected void onRun() {
+    protected void onRoundInit() {
+        throw new NotImplementedException("Blackjack not implemented yet");
+    }
+
+    @Override
+    protected void onRunRound(RoundState roundState) {
+        throw new NotImplementedException("Blackjack not implemented yet");
+    }
+
+    @Override
+    protected RoundState getNextRoundState(RoundState roundState) {
         throw new NotImplementedException("Blackjack not implemented yet");
     }
 }

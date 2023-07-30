@@ -29,31 +29,26 @@ public final class TexasHoldemGameThread extends GameThread {
     }
 
     @Override
-    protected void onRun() {
-        init();
-
-        RoundState roundState = RoundState.INIT_DEAL;
-        saveRoundState(roundState);
-
-        while (roundState != RoundState.FINISH) {
-            switch (roundState) {
-                case INIT_DEAL -> initDeal();
-                case INIT_DEAL_BET,
-                        FLOP_DEAL_BET, TURN_DEAL_BET, RIVER_DEAL_BET -> waitPlayerTurn();
-                case FLOP_DEAL -> dealFlop();
-                case TURN_DEAL -> dealTurn();
-                case RIVER_DEAL -> dealRiver();
-                case EVAL -> eval();
-            }
-            roundState = roundState.nextState();
-            saveRoundState(roundState);
-        }
-        finishRound();
+    protected void onRoundInit() {
+        determineNextDealer();
     }
 
-    private void init() {
-        determineNextDealer();
-        shuffleCards();
+    @Override
+    protected void onRunRound(RoundState roundState) {
+        switch (roundState) {
+            case INIT_DEAL -> initDeal();
+            case INIT_DEAL_BET,
+                    FLOP_DEAL_BET, TURN_DEAL_BET, RIVER_DEAL_BET -> waitPlayerTurn();
+            case FLOP_DEAL -> dealFlop();
+            case TURN_DEAL -> dealTurn();
+            case RIVER_DEAL -> dealRiver();
+            case EVAL -> eval();
+        }
+    }
+
+    @Override
+    protected RoundState getNextRoundState(RoundState roundState) {
+        return roundState.nextTexasHoldemState();
     }
 
     private void initDeal() {
@@ -138,7 +133,7 @@ public final class TexasHoldemGameThread extends GameThread {
         for (PlayerSession playerSession : playerSessions) {
             playerSession.setDealer(currentDealer.getId().equals(playerSession.getId()));
         }
-        playerSessionRepository.saveAllAndFlush(playerSessions);
+        playerSessions = playerSessionRepository.saveAllAndFlush(playerSessions);
 
         //reorder list for dealer last
         int dealerIndex = -1;
@@ -237,14 +232,14 @@ public final class TexasHoldemGameThread extends GameThread {
         String username = playerSession.getUser().getUsername();
         String handTypeStr = winnerEvalHandDTO.getHandType().getValue();
 
-        sendLogMessage(String.format("%s wins round with %s", username, handTypeStr));
+        sendLogMessage(String.format("%s wins round with a %s", username, handTypeStr));
     }
 
     private void handleMultiplePlayerWin(List<EvalPlayerHandDTO> winners) {
         String winnerNames = getReadableWinners(winners);
         String handTypeStr = winners.get(0).getHandType().getValue();
 
-        sendLogMessage(String.format("%s draws round with %s", winnerNames, handTypeStr));
+        sendLogMessage(String.format("%s draws round with a %s", winnerNames, handTypeStr));
     }
 
     private String getReadableWinners(List<EvalPlayerHandDTO> winners) {
@@ -260,10 +255,5 @@ public final class TexasHoldemGameThread extends GameThread {
             }
         }
         return sb.toString();
-    }
-
-    private void finishRound() {
-        saveRoundState(RoundState.FINISH);
-        dispatcher.send(tableId, messageFactory.roundFinished());
     }
 }

@@ -66,7 +66,7 @@ public class PlayerSessionService {
     }
 
     private int getSessionTablePosition(PokerTable pokerTable) {
-        List<PlayerSession> sessions = repository.findByTableId(pokerTable.getId());
+        List<PlayerSession> sessions = repository.findConnectedByTableId(pokerTable.getId());
         int otherPlayersMaxCount = pokerTable.getGameType().getMaxPlayerCount() - 1;
         for (int position = 1; position <= otherPlayersMaxCount; position++) {
             if (!isPositionAlreadyTaken(sessions, position)) {
@@ -95,7 +95,7 @@ public class PlayerSessionService {
 
     @Transactional(readOnly = true)
     public List<PlayerSessionDTO> getByTableId(UUID tableId) {
-        return repository.findByTableId(tableId)
+        return repository.findConnectedByTableId(tableId)
                 .stream().map(mapper::modelToDto).toList();
     }
 }

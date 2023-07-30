@@ -42,7 +42,8 @@ public class Hand {
     @JoinColumn(name = "round_id")
     private Round round;
 
-    @OneToMany(mappedBy = "hand")
+    //this will be a small amount (i.e. 2 for TexasHoldem)
+    @OneToMany(mappedBy = "hand", fetch = FetchType.EAGER)
     private List<Card> cards = new ArrayList<>();
 
     @Override

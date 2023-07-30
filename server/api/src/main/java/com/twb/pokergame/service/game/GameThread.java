@@ -76,58 +76,115 @@ public abstract class GameThread extends Thread {
 
     @Override
     public void run() {
-        // -----------------------------------------------------------------------
+        initializeTable();
+        waitForPlayersToJoin();
+        while (isPlayersJoined()) {
+            createNewRound();
+            initRound();
+            runRound();
+            finishRound();
+        }
+        finish();
+    }
 
+    private void initializeTable() {
+        Optional<PokerTable> tableOpt = tableRepository.findById(tableId);
+        if (tableOpt.isPresent()) {
+            pokerTable = tableOpt.get();
+        } else {
+            fail("No table found, cannot start game");
+        }
+    }
+
+    private void waitForPlayersToJoin() {
         sendLogMessage("Waiting for players to join...");
+        GameType gameType = pokerTable.getGameType();
+        do {
+            playerSessions = playerSessionRepository.findConnectedByTableId(tableId);
+            sleepInMs(WAIT_MS);
+        } while (playerSessions.size() < gameType.getMinPlayerCount());
+    }
+
+    private void createNewRound() {
         Optional<Round> roundOpt = roundRepository
                 .findCurrentByTableId(tableId);
         if (roundOpt.isPresent()) {
             currentRound = roundOpt.get();
-            pokerTable = currentRound.getPokerTable();
             if (currentRound.getRoundState() != RoundState.WAITING_FOR_PLAYERS) {
                 fail("Cannot start an existing new round not in the WAITING_FOR_PLAYERS state");
-                return;
             }
         } else {
             Optional<PokerTable> tableOpt = tableRepository.findById(tableId);
             if (tableOpt.isEmpty()) {
                 fail("Cannot start as table doesn't exist");
-                return;
+            } else {
+                currentRound = roundService.createSingle(pokerTable);
             }
-            pokerTable = tableOpt.get();
-            currentRound = roundService.createSingle(pokerTable);
         }
-
-        GameType gameType = pokerTable.getGameType();
-        int minPlayerCount = gameType.getMinPlayerCount();
-        do {
-            playerSessions = playerSessionRepository.findByTableId(tableId);
-            sleepInMs(400);
-        } while (playerSessions.size() < minPlayerCount);
-
-        sendLogMessage("Round Initialized.");
-
-
-        // -----------------------------------------------------------------------
-
-        sendLogMessage("Game Starting...");
-
-//        while (playerSessions.size() > 1) {
-        onRun();
-//        }
-
-        // -----------------------------------------------------------------------
-
-        sendLogMessage("Game Finished");
-
-        // -----------------------------------------------------------------------
+        sendLogMessage("New Round...");
     }
 
-    abstract protected void onRun();
+
+    private boolean isPlayersJoined() {
+        GameType gameType = pokerTable.getGameType();
+        playerSessions = playerSessionRepository.findConnectedByTableId(tableId);
+        return playerSessions.size() >= gameType.getMinPlayerCount();
+    }
+
+    private void initRound() {
+        shuffleCards();
+        onRoundInit();
+    }
+
+    private void runRound() {
+        RoundState roundState = RoundState.INIT_DEAL;
+        saveRoundState(roundState);
+        while (roundState != RoundState.FINISH) {
+            onRunRound(roundState);
+            roundState = getNextRoundState(roundState);
+            saveRoundState(roundState);
+        }
+    }
+
+    // ***************************************************************
+    // Abstract Methods
+    // ***************************************************************
+
+    abstract protected void onRoundInit();
+
+    abstract protected void onRunRound(RoundState roundState);
+
+    abstract protected RoundState getNextRoundState(RoundState roundState);
 
     // ***************************************************************
     // Helper Methods
     // ***************************************************************
+
+    protected void shuffleCards() {
+        deckOfCards = DeckOfCardsFactory.getCards(true);
+        deckCardPointer = 0;
+    }
+
+    protected Card getCard() {
+        Card card = new Card(deckOfCards.get(deckCardPointer));
+        deckCardPointer++;
+        return card;
+    }
+
+    protected void saveRoundState(RoundState roundState) {
+        currentRound.setRoundState(roundState);
+        roundRepository.saveAndFlush(currentRound);
+    }
+
+    private void finishRound() {
+        saveRoundState(RoundState.FINISH);
+        dispatcher.send(tableId, messageFactory.roundFinished());
+    }
+
+    private void finish() {
+        threadFactory.delete(tableId);
+        sendLogMessage("Game Finished");
+    }
 
     protected void sendLogMessage(String message) {
         dispatcher.send(tableId, messageFactory.logMessage(message));
@@ -141,34 +198,11 @@ public abstract class GameThread extends Thread {
         }
     }
 
-    protected void saveRoundState(RoundState roundState) {
-        currentRound.setRoundState(roundState);
-        roundRepository.saveAndFlush(currentRound);
-    }
-
-    protected void shuffleCards() {
-        deckOfCards = DeckOfCardsFactory.getCards(true);
-        deckCardPointer = 0;
-    }
-
-    protected Card getCard() {
-        Card card = new Card(deckOfCards.get(deckCardPointer));
-        deckCardPointer++;
-        return card;
-    }
-
     protected void fail(String message) {
         logger.error(message);
         sendLogMessage(message);
+        finishRound();
         threadFactory.delete(tableId);
         interrupt();
-    }
-
-    public void playerConnected() {
-        //todo: need to do something here?
-    }
-
-    public void playerDisconnected() {
-        //todo: need to do something here?
     }
 }
