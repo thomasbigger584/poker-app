@@ -52,6 +52,9 @@ public class PlayerSession {
     @OneToMany(mappedBy = "playerSession")
     private List<Hand> hands = new ArrayList<>();
 
+    @OneToOne(mappedBy = "playerSession")
+    private Hand currentHand;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

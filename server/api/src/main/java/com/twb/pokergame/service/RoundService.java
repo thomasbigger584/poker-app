@@ -23,7 +23,7 @@ public class RoundService {
     private final RoundMapper mapper;
 
     public Round createSingle(PokerTable pokerTable) {
-        List<Round> previousRounds = repository.findByPokerTableId(pokerTable.getId());
+        List<Round> previousRounds = repository.findByTableId(pokerTable.getId());
         for (Round round : previousRounds) {
             round.setRoundState(RoundState.FINISH);
             repository.save(round);
@@ -48,5 +48,11 @@ public class RoundService {
             throw new NotFoundException("Round not found for table: " + tableId);
         }
         return mapper.modelToDto(roundOpt.get());
+    }
+
+    @Transactional(readOnly = true)
+    public List<RoundDTO> getByTableId(UUID tableId) {
+        return repository.findByTableId(tableId)
+                .stream().map(mapper::modelToDto).toList();
     }
 }

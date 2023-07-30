@@ -27,7 +27,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public abstract class GameThread extends Thread {
     protected static final SecureRandom RANDOM = new SecureRandom();
-    protected static final int WAIT_MS = 400;
+    protected static final int WAIT_MS = 1000;
     private static final Logger logger = LoggerFactory.getLogger(GameThread.class);
 
     protected final UUID tableId;
@@ -106,7 +106,6 @@ public abstract class GameThread extends Thread {
         } while (playerSessions.size() < minPlayerCount);
 
         sendLogMessage("Round Initialized.");
-
 
 
         // -----------------------------------------------------------------------

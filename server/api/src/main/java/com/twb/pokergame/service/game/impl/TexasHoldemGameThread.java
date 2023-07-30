@@ -5,7 +5,7 @@ import com.twb.pokergame.domain.Hand;
 import com.twb.pokergame.domain.PlayerSession;
 import com.twb.pokergame.domain.enumeration.CardType;
 import com.twb.pokergame.domain.enumeration.RoundState;
-import com.twb.pokergame.service.eval.dto.PlayerHandDTO;
+import com.twb.pokergame.service.eval.dto.EvalPlayerHandDTO;
 import com.twb.pokergame.service.game.GameThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,46 +97,6 @@ public final class TexasHoldemGameThread extends GameThread {
         sleepInMs(WAIT_MS);
     }
 
-    private void waitPlayerTurn() {
-        //todo waitPlayerTurn
-    }
-
-    private void eval() {
-        List<Card> communityCards = cardRepository
-                .findCommunityCardsForRound(currentRound.getId());
-
-        List<PlayerHandDTO> playerHandsList = new ArrayList<>();
-        for (PlayerSession playerSession : playerSessions) {
-
-            List<Card> playableCards = new ArrayList<>(communityCards);
-
-            Optional<Hand> playerHandOpt = handRepository
-                    .findHandForRound(playerSession.getId(), currentRound.getId());
-
-            if (playerHandOpt.isPresent()) {
-                Hand hand = playerHandOpt.get();
-
-                List<Card> playerCards = cardRepository
-                        .findCardsForHand(hand.getId());
-                playableCards.addAll(playerCards);
-
-                PlayerHandDTO playerHand = new PlayerHandDTO();
-                playerHand.setPlayerSession(playerSession);
-                playerHand.setCards(playableCards);
-                playerHandsList.add(playerHand);
-            }
-        }
-        handEvaluator.evaluate(playerHandsList);
-
-        savePlayerHandEvaluation(playerHandsList);
-    }
-
-
-    private void finishRound() {
-        saveRoundState(RoundState.FINISH);
-        sendLogMessage("Round Finished.");
-        //todo finishRound
-    }
 
     /**
      * If there is not a dealer already selected then pick a random dealer out of the PlayerSession list.
@@ -212,9 +172,45 @@ public final class TexasHoldemGameThread extends GameThread {
         dispatcher.send(tableId, messageFactory.dealerDetermined(currentDealer));
     }
 
-    private void savePlayerHandEvaluation(List<PlayerHandDTO> playerHandsList) {
+    private void waitPlayerTurn() {
+        //todo waitPlayerTurn
+    }
+
+    private void eval() {
+        List<Card> communityCards = cardRepository
+                .findCommunityCardsForRound(currentRound.getId());
+
+        List<EvalPlayerHandDTO> playerHandsList = new ArrayList<>();
+        for (PlayerSession playerSession : playerSessions) {
+
+            List<Card> playableCards = new ArrayList<>(communityCards);
+
+            Optional<Hand> playerHandOpt = handRepository
+                    .findHandForRound(playerSession.getId(), currentRound.getId());
+
+            if (playerHandOpt.isPresent()) {
+                Hand hand = playerHandOpt.get();
+
+                List<Card> playerCards = cardRepository
+                        .findCardsForHand(hand.getId());
+                playableCards.addAll(playerCards);
+
+                EvalPlayerHandDTO playerHand = new EvalPlayerHandDTO();
+                playerHand.setPlayerSession(playerSession);
+                playerHand.setCards(playableCards);
+                playerHandsList.add(playerHand);
+            }
+        }
+        handEvaluator.evaluate(playerHandsList);
+
+        savePlayerHandEvaluation(playerHandsList);
+
+
+    }
+
+    private void savePlayerHandEvaluation(List<EvalPlayerHandDTO> playerHandsList) {
         List<Hand> savingHands = new ArrayList<>();
-        for (PlayerHandDTO playerHand : playerHandsList) {
+        for (EvalPlayerHandDTO playerHand : playerHandsList) {
             PlayerSession playerSession = playerHand.getPlayerSession();
             Optional<Hand> handOpt = handRepository
                     .findHandForRound(playerSession.getId(), currentRound.getId());
@@ -228,5 +224,8 @@ public final class TexasHoldemGameThread extends GameThread {
         handRepository.saveAllAndFlush(savingHands);
     }
 
-
+    private void finishRound() {
+        saveRoundState(RoundState.FINISH);
+        sendLogMessage("Round Finished.");
+    }
 }

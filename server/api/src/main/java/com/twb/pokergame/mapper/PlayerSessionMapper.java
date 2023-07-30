@@ -5,7 +5,7 @@ import com.twb.pokergame.dto.playersession.PlayerSessionDTO;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring",
-        uses = {UserMapper.class, TableMapper.class,})
+        uses = {UserMapper.class, TableMapper.class, HandMapper.class})
 public interface PlayerSessionMapper {
 
     PlayerSessionDTO modelToDto(PlayerSession model);

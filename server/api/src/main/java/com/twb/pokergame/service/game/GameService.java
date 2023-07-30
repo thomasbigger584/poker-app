@@ -54,7 +54,7 @@ public class GameService {
             threadFactory.createIfNotExist(pokerTable);
 
             PlayerSessionDTO connectedPlayerSession = playerSessionService.connectUserToRound(appUser, pokerTable);
-            List<PlayerSessionDTO> allPlayerSessions = playerSessionService.getPlayerSessionsByTableId(tableId);
+            List<PlayerSessionDTO> allPlayerSessions = playerSessionService.getByTableId(tableId);
 
             // send to all clients that this table has connected
             dispatcher.send(tableId, messageFactory.playerConnected(connectedPlayerSession));

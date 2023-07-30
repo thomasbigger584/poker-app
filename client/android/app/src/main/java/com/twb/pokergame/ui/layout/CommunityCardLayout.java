@@ -8,7 +8,6 @@ import android.widget.FrameLayout;
 
 import com.twb.pokergame.R;
 import com.twb.pokergame.data.model.dto.card.CardDTO;
-import com.twb.pokergame.data.model.enumeration.CardType;
 
 public class CommunityCardLayout extends FrameLayout {
     private CardLayout community1CardLayout;
@@ -46,26 +45,26 @@ public class CommunityCardLayout extends FrameLayout {
         community5CardLayout.reset();
     }
 
-    public void dealCard(CardDTO card, CardType cardType) {
-        switch (cardType) {
-            case FLOP_CARD_1: {
+    public void dealCard(CardDTO card) {
+        switch (card.getCardType()) {
+            case "FLOP_CARD_1": {
                 setFlopVisibility();
                 community1CardLayout.update(card);
                 break;
             }
-            case FLOP_CARD_2: {
+            case "FLOP_CARD_2": {
                 community2CardLayout.update(card);
                 break;
             }
-            case FLOP_CARD_3: {
+            case "FLOP_CARD_3": {
                 community3CardLayout.update(card);
                 break;
             }
-            case TURN_CARD: {
+            case "TURN_CARD": {
                 setTurnVisibility();
                 community4CardLayout.update(card);
             }
-            case RIVER_CARD: {
+            case "RIVER_CARD": {
                 setRiverVisibility();
                 community5CardLayout.update(card);
                 break;

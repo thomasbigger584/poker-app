@@ -88,7 +88,7 @@ public class TableController {
     }
 
     public void dealCommunityCard(DealCommunityCardDTO dealCommunityCard) {
-        communityCardLayout.dealCard(dealCommunityCard.getCard(), dealCommunityCard.getCardType());
+        communityCardLayout.dealCard(dealCommunityCard.getCard());
     }
 
     // ------------------------------------------------------------------------------

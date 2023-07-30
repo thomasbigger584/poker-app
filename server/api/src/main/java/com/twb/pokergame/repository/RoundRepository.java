@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @Repository
 public interface RoundRepository extends JpaRepository<Round, UUID> {
-    List<Round> findByPokerTableId(UUID tableId);
+    List<Round> findByTableId(UUID tableId);
 
     @Query("SELECT r " +
             "FROM Round r " +

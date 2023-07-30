@@ -9,6 +9,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="hand_type" type="text"/>
+            <column name="winner" type="boolean"/>
             <column name="player_session_id" type="uuid">
                 <constraints nullable="false"/>
             </column>

@@ -94,7 +94,7 @@ public class PlayerSessionService {
     }
 
     @Transactional(readOnly = true)
-    public List<PlayerSessionDTO> getPlayerSessionsByTableId(UUID tableId) {
+    public List<PlayerSessionDTO> getByTableId(UUID tableId) {
         return repository.findByTableId(tableId)
                 .stream().map(mapper::modelToDto).toList();
     }

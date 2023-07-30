@@ -11,7 +11,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class PlayerHandDTO implements Comparable<PlayerHandDTO> {
+public class EvalPlayerHandDTO implements Comparable<EvalPlayerHandDTO> {
     private PlayerSession playerSession;
     private List<Card> cards;
     private Integer rank;
@@ -19,7 +19,7 @@ public class PlayerHandDTO implements Comparable<PlayerHandDTO> {
     private boolean winner = false;
 
     @Override
-    public int compareTo(@NotNull PlayerHandDTO otherHand) {
+    public int compareTo(@NotNull EvalPlayerHandDTO otherHand) {
         if (getRank() == null || otherHand.getRank() == null) {
             return 0;
         }
