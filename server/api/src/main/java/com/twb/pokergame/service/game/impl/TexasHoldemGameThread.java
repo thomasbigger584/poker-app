@@ -80,7 +80,7 @@ public final class TexasHoldemGameThread extends GameThread {
         handService.addPlayerCard(playerSession, currentRound, card);
         dispatcher.send(tableId, messageFactory.initDeal(playerSession, card));
 
-        sleepInMs(WAIT_MS);
+        sleepInMs(DEAL_WAIT_MS);
     }
 
     private void dealCommunityCard(CardType cardType) {
@@ -90,7 +90,7 @@ public final class TexasHoldemGameThread extends GameThread {
         cardService.createCommunityCard(currentRound, card);
         dispatcher.send(tableId, messageFactory.communityCardDeal(card));
 
-        sleepInMs(WAIT_MS);
+        sleepInMs(DEAL_WAIT_MS);
     }
 
     /**
@@ -211,6 +211,8 @@ public final class TexasHoldemGameThread extends GameThread {
         } else {
             handleMultiplePlayerWin(winners);
         }
+
+        sleepInMs(EVALUATION_WAIT_MS);
     }
 
     private void savePlayerHandEvaluation(List<EvalPlayerHandDTO> playerHandsList) {
