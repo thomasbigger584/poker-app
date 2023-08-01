@@ -22,7 +22,6 @@ public class GameThreadFactory {
     private static final Map<UUID, GameThread> POKER_GAME_RUNNABLE_MAP = new ConcurrentHashMap<>();
     private final XSync<UUID> mutex;
     private final ApplicationContext context;
-    private final AsyncTaskExecutor taskExecutor;
 
     public GameThread createIfNotExist(PokerTable pokerTable) {
         return mutex.evaluate(pokerTable.getId(), () -> {
@@ -31,18 +30,22 @@ public class GameThreadFactory {
                 return threadOpt.get();
             }
             GameThread thread = create(pokerTable);
-            taskExecutor.execute(thread);
+            thread.start();
             POKER_GAME_RUNNABLE_MAP.put(pokerTable.getId(), thread);
             return thread;
         });
     }
 
-    public void delete(UUID tableId) {
-        mutex.execute(tableId, () -> {
+    public boolean delete(UUID tableId) {
+        return mutex.evaluate(tableId, () -> {
             Optional<GameThread> runnableOpt = getIfExists(tableId);
             if (runnableOpt.isPresent()) {
+                GameThread thread = runnableOpt.get();
                 POKER_GAME_RUNNABLE_MAP.remove(tableId);
+                thread.interrupt();
+                return true;
             }
+            return false;
         });
     }
 

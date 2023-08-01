@@ -147,7 +147,8 @@ public final class TexasHoldemGameThread extends GameThread {
         }
 
         if (dealerIndex == -1) {
-            throw new RuntimeException("Failed to sort player sessions by dealer and position, dealerIndex is -1");
+            fail("Failed to sort player sessions by dealer and position, dealerIndex is -1");
+            return;
         }
 
         int startIndex = dealerIndex + 1;
@@ -253,7 +254,7 @@ public final class TexasHoldemGameThread extends GameThread {
             if (index < winners.size() - 3) {
                 sb.append(", ");
             } else if (index == winners.size() - 2) {
-                sb.append("& ");
+                sb.append(" & ");
             }
         }
         return sb.toString();

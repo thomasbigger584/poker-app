@@ -68,6 +68,8 @@ public class GameService {
             ServerMessageDTO message =
                     messageFactory.playerDisconnected(username);
             dispatcher.send(tableId, message);
+            threadFactory.getIfExists(tableId)
+                    .ifPresent(gameThread -> gameThread.onPlayerDisconnected(username));
         });
     }
 }
