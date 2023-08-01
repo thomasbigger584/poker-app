@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public abstract class GameThread extends Thread {
     protected static final SecureRandom RANDOM = new SecureRandom();
     protected static final int DEAL_WAIT_MS = 1000;
+    protected static final int DB_POLL_WAIT_MS = 1000;
     protected static final int EVALUATION_WAIT_MS = 4000;
     private static final int MINIMUM_PLAYERS_CONNECTED = 1;
     private static final String NO_MORE_PLAYERS_CONNECTED = "No more players connected";
@@ -39,10 +40,10 @@ public abstract class GameThread extends Thread {
 
     private List<Card> deckOfCards;
     private int deckCardPointer;
-
     protected PokerTable pokerTable;
     protected Round currentRound;
     protected List<PlayerSession> playerSessions;
+
     @Autowired
     protected GameThreadFactory threadFactory;
     @Autowired
@@ -67,7 +68,6 @@ public abstract class GameThread extends Thread {
     protected CardRepository cardRepository;
     @Autowired
     protected HandEvaluator handEvaluator;
-
 
     @Override
     public void run() {
@@ -115,7 +115,7 @@ public abstract class GameThread extends Thread {
             if (isGameInterrupted()) return;
             playerSessions = playerSessionRepository.findConnectedByTableId(tableId);
             checkAtLeastOnePlayerConnected();
-            sleepInMs(DEAL_WAIT_MS);
+            sleepInMs(DB_POLL_WAIT_MS);
         } while (playerSessions.size() < gameType.getMinPlayerCount());
     }
 
@@ -245,7 +245,7 @@ public abstract class GameThread extends Thread {
         interruptGame.compareAndSet(false, true);
     }
 
-    private boolean isGameInterrupted() {
+    protected boolean isGameInterrupted() {
         if (interruptGame.get() || interrupted()) {
             finishRound();
             finish();

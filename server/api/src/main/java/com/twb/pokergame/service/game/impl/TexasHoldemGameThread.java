@@ -54,6 +54,7 @@ public final class TexasHoldemGameThread extends GameThread {
     private void initDeal() {
         for (CardType cardType : CardType.PLAYER_CARDS) {
             for (PlayerSession playerSession : playerSessions) {
+                if (isGameInterrupted()) return;
                 dealPlayerCard(cardType, playerSession);
             }
         }
@@ -61,6 +62,7 @@ public final class TexasHoldemGameThread extends GameThread {
 
     private void dealFlop() {
         for (CardType cardType : CardType.FLOP_CARDS) {
+            if (isGameInterrupted()) return;
             dealCommunityCard(cardType);
         }
     }
@@ -94,6 +96,7 @@ public final class TexasHoldemGameThread extends GameThread {
     }
 
     /**
+     * TODO: NEEDS FIXED FOR MULTIPLE ROUNDS
      * If there is not a dealer already selected then pick a random dealer out of the PlayerSession list.
      * If there is a dealer selected, get the next dealer given the position.
      * Making sure to wrap around the list if the next dealer is actually at the start of the list.
