@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -17,8 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @RequiredArgsConstructor
-public class GameThreadFactory {
-    private static final Logger logger = LoggerFactory.getLogger(GameThreadFactory.class);
+public class GameThreadManager {
+    private static final Logger logger = LoggerFactory.getLogger(GameThreadManager.class);
     private static final Map<UUID, GameThread> POKER_GAME_RUNNABLE_MAP = new ConcurrentHashMap<>();
     private final XSync<UUID> mutex;
     private final ApplicationContext context;
@@ -38,11 +37,9 @@ public class GameThreadFactory {
 
     public boolean delete(UUID tableId) {
         return mutex.evaluate(tableId, () -> {
-            Optional<GameThread> runnableOpt = getIfExists(tableId);
-            if (runnableOpt.isPresent()) {
-                GameThread thread = runnableOpt.get();
+            Optional<GameThread> threadOpt = getIfExists(tableId);
+            if (threadOpt.isPresent()) {
                 POKER_GAME_RUNNABLE_MAP.remove(tableId);
-                thread.interrupt();
                 return true;
             }
             return false;
@@ -60,10 +57,6 @@ public class GameThreadFactory {
 
     public Optional<GameThread> getIfExists(PokerTable pokerTable) {
         return getIfExists(pokerTable.getId());
-    }
-
-    public Optional<GameThread> getIfExists(String tableId) {
-        return getIfExists(UUID.fromString(tableId));
     }
 
     public Optional<GameThread> getIfExists(UUID tableId) {

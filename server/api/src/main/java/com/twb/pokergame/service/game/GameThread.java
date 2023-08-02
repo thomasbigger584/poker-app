@@ -45,7 +45,7 @@ public abstract class GameThread extends Thread {
     protected List<PlayerSession> playerSessions;
 
     @Autowired
-    protected GameThreadFactory threadFactory;
+    protected GameThreadManager threadManager;
     @Autowired
     protected ServerMessageFactory messageFactory;
     @Autowired
@@ -90,7 +90,7 @@ public abstract class GameThread extends Thread {
                 if (isGameInterrupted()) return;
             }
         }
-        finish();
+        finishGame();
     }
 
     private void initializeThread() {
@@ -210,10 +210,9 @@ public abstract class GameThread extends Thread {
         }
     }
 
-    private void finish() {
-        if (threadFactory.delete(tableId)) {
-            sendLogMessage("Game Finished");
-        }
+    private void finishGame() {
+        sendLogMessage("Game Finished");
+        threadManager.delete(tableId);
     }
 
     protected void sendLogMessage(String message) {
@@ -227,7 +226,6 @@ public abstract class GameThread extends Thread {
             fail("Failed to sleep for " + ms);
         }
     }
-
 
     public void onPlayerDisconnected(String username) {
         // potentially fold username
@@ -248,7 +246,7 @@ public abstract class GameThread extends Thread {
     protected boolean isGameInterrupted() {
         if (interruptGame.get() || interrupted()) {
             finishRound();
-            finish();
+            finishGame();
             return true;
         }
         return false;

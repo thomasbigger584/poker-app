@@ -1,6 +1,6 @@
 package com.twb.pokergame.web.websocket;
 
-import com.twb.pokergame.service.game.GameService;
+import com.twb.pokergame.service.game.GameConnectionService;
 import com.twb.pokergame.web.websocket.message.client.CreateChatMessageDTO;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageFactory;
@@ -35,14 +35,14 @@ public class PokerTableWebSocketController {
 
     private final SessionService sessionService;
     private final ServerMessageFactory messageFactory;
-    private final GameService gameService;
+    private final GameConnectionService gameConnectionService;
 
     @SubscribeMapping(EVENTS_TOPIC_SUFFIX)
     public ServerMessageDTO sendPlayerSubscribed(Principal principal, StompHeaderAccessor headerAccessor,
                                                  @DestinationVariable(POKER_TABLE_ID) UUID tableId) {
         logger.info(">>>> sendPlayerSubscribed - Poker Table: {} - User: {}", tableId, principal.getName());
         sessionService.putPokerTableId(headerAccessor, tableId);
-        ServerMessageDTO message = gameService.onPlayerSubscribed(tableId, principal.getName());
+        ServerMessageDTO message = gameConnectionService.onPlayerSubscribed(tableId, principal.getName());
         logger.info("<<<< sendPlayerSubscribed - " + message);
         return message;
     }
@@ -60,6 +60,6 @@ public class PokerTableWebSocketController {
     public void sendDisconnectPlayer(Principal principal,
                                      @DestinationVariable(POKER_TABLE_ID) UUID tableId) {
         logger.info(">>>> sendDisconnectPlayer - Poker Table: {} - User: {}", tableId, principal.getName());
-        gameService.onPlayerDisconnected(tableId, principal.getName());
+        gameConnectionService.onPlayerDisconnected(tableId, principal.getName());
     }
 }

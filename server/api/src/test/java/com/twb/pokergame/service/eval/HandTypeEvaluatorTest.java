@@ -8,7 +8,6 @@ import com.twb.pokergame.exception.NotFoundException;
 import com.twb.pokergame.service.game.DeckOfCardsFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 
 import java.util.ArrayList;
 import java.util.List;

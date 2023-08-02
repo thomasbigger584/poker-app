@@ -78,13 +78,17 @@ public class TableController {
     public void dealCurrentPlayerCard(DealPlayerCardDTO dealPlayerCard) {
         PlayerSessionDTO playerSession = dealPlayerCard.getPlayerSession();
         CardPairLayout cardPairLayout = getCardPairLayout(playerSession.getPosition());
-        cardPairLayout.updateCardImageView(dealPlayerCard.getCard());
+        if (playerSession.getUser().getUsername().equals(cardPairLayout.getUsername())) {
+            cardPairLayout.updateCardImageView(dealPlayerCard.getCard());
+        }
     }
 
     public void dealOtherPlayerCard(DealPlayerCardDTO dealPlayerCard) {
         PlayerSessionDTO playerSession = dealPlayerCard.getPlayerSession();
         CardPairLayout cardPairLayout = getCardPairLayout(playerSession.getPosition());
-        cardPairLayout.updateCardImageView();
+        if (playerSession.getUser().getUsername().equals(cardPairLayout.getUsername())) {
+            cardPairLayout.updateCardImageView();
+        }
     }
 
     public void dealCommunityCard(DealCommunityCardDTO dealCommunityCard) {

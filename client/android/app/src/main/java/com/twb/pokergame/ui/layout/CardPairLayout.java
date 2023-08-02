@@ -18,6 +18,7 @@ import com.twb.pokergame.ui.util.CardDrawableUtil;
 import java.util.Locale;
 
 public class CardPairLayout extends FrameLayout {
+    private static final String PLAYER_NOT_CONNECTED_TEXT = "--";
     private final ImageView[] cardImageViews = new ImageView[2];
     private TextView displayNameTextView;
     private TextView fundsTextView;
@@ -83,8 +84,8 @@ public class CardPairLayout extends FrameLayout {
 
     public void deleteDetails() {
         reset();
-        displayNameTextView.setText("--");
-        fundsTextView.setText("--");
+        displayNameTextView.setText(PLAYER_NOT_CONNECTED_TEXT);
+        fundsTextView.setText(PLAYER_NOT_CONNECTED_TEXT);
     }
 
     public void updateDealerChip(boolean dealer) {

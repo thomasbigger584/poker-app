@@ -21,15 +21,15 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
-public class GameService {
-    private static final Logger logger = LoggerFactory.getLogger(GameService.class);
+public class GameConnectionService {
+    private static final Logger logger = LoggerFactory.getLogger(GameConnectionService.class);
 
     private final UserRepository userRepository;
     private final TableRepository tableRepository;
 
     private final PlayerSessionService playerSessionService;
 
-    private final GameThreadFactory threadFactory;
+    private final GameThreadManager threadManager;
     private final ServerMessageFactory messageFactory;
     private final MessageDispatcher dispatcher;
     private final XSync<UUID> mutex;
@@ -51,7 +51,7 @@ public class GameService {
             PokerTable pokerTable = pokerTableOpt.get();
             AppUser appUser = userOpt.get();
 
-            threadFactory.createIfNotExist(pokerTable);
+            threadManager.createIfNotExist(pokerTable);
 
             PlayerSessionDTO connectedPlayerSession = playerSessionService.connectUserToRound(appUser, pokerTable);
             List<PlayerSessionDTO> allPlayerSessions = playerSessionService.getByTableId(tableId);
@@ -68,7 +68,7 @@ public class GameService {
             ServerMessageDTO message =
                     messageFactory.playerDisconnected(username);
             dispatcher.send(tableId, message);
-            threadFactory.getIfExists(tableId)
+            threadManager.getIfExists(tableId)
                     .ifPresent(gameThread -> gameThread.onPlayerDisconnected(username));
         });
     }
