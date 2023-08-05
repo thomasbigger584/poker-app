@@ -14,7 +14,7 @@ services:
     networks:
       - backend
   api:
-    build: api
+    build: .
     container_name: api
     environment:
       SPRING_PROFILES_ACTIVE: local

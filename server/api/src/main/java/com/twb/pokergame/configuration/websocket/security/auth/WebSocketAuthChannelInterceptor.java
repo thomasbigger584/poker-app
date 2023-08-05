@@ -1,6 +1,7 @@
 package com.twb.pokergame.configuration.websocket.security.auth;
 
 import com.twb.pokergame.configuration.jwt.JwtAuthConverter;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,13 +28,23 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
     private final JwtAuthConverter jwtAuthConverter;
 
     @Override
-    public Message<?> preSend(Message<?> message, MessageChannel channel) {
+    public Message<?> preSend(@NotNull Message<?> message, @NotNull MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor
                 .getAccessor(message, StompHeaderAccessor.class);
 
-        if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+        if (accessor == null) {
+            logger.warn("MessageHeaderAccessor is null");
+            return message;
+        }
 
+        if (StompCommand.CONNECT.equals(accessor.getCommand())) {
             List<String> authorization = accessor.getNativeHeader(AUTHENTICATION_HEADER);
+
+            if (authorization == null) {
+                logger.warn("Header {} is null", AUTHENTICATION_HEADER);
+                return message;
+            }
+
             String accessToken = authorization.get(0).split(" ")[1];
             Jwt jwt = jwtDecoder.decode(accessToken);
 

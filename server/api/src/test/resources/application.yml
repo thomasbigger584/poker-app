@@ -1,0 +1,26 @@
+spring:
+  profiles:
+    active: local
+  application:
+    name: poker-game-backend
+  datasource:
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: false
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  hibernate:
+    dll-auto: none
+  liquibase:
+    change-log: classpath:liquibase/master.xml
+  jackson:
+    serialization:
+      fail_on_empty_beans: false
+server:
+  port:
+    5555
+#logging:
+#  level:
+#    org.springframework.security: DEBUG
