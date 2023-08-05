@@ -1,19 +1,16 @@
 package com.twb.pokergame.service.game.impl;
 
+import com.twb.pokergame.dto.pokertable.TableDTO;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 
-import java.net.URI;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TexasHoldemGameIT extends BaseTestContainersIT {
 
     @Test
-    public void testActuator() throws Exception {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(API_BASE_URL + "/actuator"))
-                .GET().build();
-        HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
-        System.out.println("response = " + response.body());
+    public void testGetPokerTables() throws Exception {
+        ApiHttpResponse<TableDTO[]> tableResponse = get(TableDTO[].class, "/poker-table");
+        assertEquals(HttpStatus.OK.value(), tableResponse.getHttpResponse().statusCode());
     }
 }

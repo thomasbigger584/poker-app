@@ -1,6 +1,7 @@
 package com.twb.pokergame.configuration;
 
 import jakarta.ws.rs.client.Client;
+import lombok.Setter;
 import org.jboss.resteasy.client.jaxrs.internal.ResteasyClientBuilderImpl;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
@@ -14,6 +15,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+@Setter
 @Configuration
 @ConditionalOnProperty(value = "keycloak.server-url")
 public class KeycloakConfiguration {
