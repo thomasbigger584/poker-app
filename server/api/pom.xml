@@ -231,6 +231,7 @@
                             <goal>build</goal>
                         </goals>
                         <configuration>
+                            <verbose>true</verbose>
                             <images>
                                 <image>
                                     <name>${docker.image.name}:latest</name>

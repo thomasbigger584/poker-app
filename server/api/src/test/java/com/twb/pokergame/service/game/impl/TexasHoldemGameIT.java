@@ -1,6 +1,7 @@
 package com.twb.pokergame.service.game.impl;
 
 import com.twb.pokergame.dto.pokertable.TableDTO;
+import com.twb.pokergame.testcontainers.BaseTestContainersIT;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 

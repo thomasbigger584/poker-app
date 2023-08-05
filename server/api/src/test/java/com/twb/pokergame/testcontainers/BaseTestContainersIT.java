@@ -1,4 +1,4 @@
-package com.twb.pokergame.service.game.impl;
+package com.twb.pokergame.testcontainers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.twb.pokergame.configuration.KeycloakConfiguration;
@@ -34,9 +34,9 @@ public abstract class BaseTestContainersIT {
     private static final int EXPOSED_PORT = 8081;
     protected static final String API_BASE_URL = String.format("http://localhost:%d", EXPOSED_PORT);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    public static final String BEARER_PREFIX = "Bearer ";
     private static DockerComposeContainer<?> dockerComposeContainer;
     private static Keycloak keycloak;
-
 
     @BeforeAll
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -59,7 +59,7 @@ public abstract class BaseTestContainersIT {
         String json = OBJECT_MAPPER.writeValueAsString(requestBody);
         HttpRequest request = HttpRequest.newBuilder()
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + getAccessToken())
+                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken())
                 .uri(URI.create(API_BASE_URL + endpoint))
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
@@ -68,7 +68,7 @@ public abstract class BaseTestContainersIT {
 
     protected static <ResultBody> ApiHttpResponse<ResultBody> get(Class<ResultBody> resultClass, String endpoint) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + getAccessToken())
+                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken())
                 .uri(URI.create(API_BASE_URL + endpoint))
                 .GET().build();
         return executeRequest(resultClass, request);
@@ -76,7 +76,7 @@ public abstract class BaseTestContainersIT {
 
     protected static ApiHttpResponse<?> delete(String endpoint) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + getAccessToken())
+                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken())
                 .uri(URI.create(API_BASE_URL + endpoint))
                 .DELETE().build();
         return executeRequest(request);
