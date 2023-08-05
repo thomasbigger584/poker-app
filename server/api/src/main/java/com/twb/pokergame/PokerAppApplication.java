@@ -4,9 +4,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class PokerGameApplication {
+public class PokerAppApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(PokerGameApplication.class, args);
+        SpringApplication.run(PokerAppApplication.class, args);
     }
 }

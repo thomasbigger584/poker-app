@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -20,6 +21,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
+@ConditionalOnBean(JwtDecoder.class)
 public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
     private static final Logger logger = LoggerFactory.getLogger(WebSocketAuthChannelInterceptor.class);
     private static final String AUTHENTICATION_HEADER = "X-Authorization";

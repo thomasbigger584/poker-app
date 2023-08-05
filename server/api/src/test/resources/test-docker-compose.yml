@@ -2,23 +2,16 @@ version: '3.1'
 services:
   postgres:
     image: postgres:13.1-alpine
-    container_name: postgres
     environment:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=db
     ports:
       - 5432:5432
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     networks:
       - backend
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile.local
     image: com.twb.pokerapp/api:latest
-    container_name: api
     environment:
       SPRING_PROFILES_ACTIVE: local
     ports:
@@ -31,6 +24,3 @@ services:
 networks:
   backend:
     driver: bridge
-volumes:
-  postgres_data:
-    driver: local

@@ -22,6 +22,7 @@ public class SecurityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         //todo: fix this
         http.authorizeHttpRequests()
+                .requestMatchers("/actuator", "/actuator/**").permitAll()
 
                 // public endpoint
                 .requestMatchers("/public", "/public/**").permitAll()

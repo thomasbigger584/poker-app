@@ -4,11 +4,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class TexasHoldemGameIT {
+public class TexasHoldemGameIT extends BaseTestContainersIT {
 
     @Test
     public void testActiveProfile() {
-        System.out.println("TexasHoldemGameIntegrationTest.testActiveProfile");
+        System.out.println("TexasHoldemGameIT.testActiveProfile");
         assertTrue(true);
     }
 }
