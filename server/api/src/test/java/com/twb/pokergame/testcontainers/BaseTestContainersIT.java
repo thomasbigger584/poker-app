@@ -93,7 +93,7 @@ public abstract class BaseTestContainersIT {
         return new ApiHttpResponse<>(response, Void.class);
     }
 
-    private static String getAccessToken() {
+    protected static String getAccessToken() {
         TokenManager tokenManager = keycloak.tokenManager();
         AccessTokenResponse accessTokenResponse = tokenManager.getAccessToken();
         return accessTokenResponse.getToken();

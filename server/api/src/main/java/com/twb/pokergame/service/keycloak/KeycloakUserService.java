@@ -1,6 +1,5 @@
 package com.twb.pokergame.service.keycloak;
 
-import com.twb.pokergame.configuration.KeycloakConfiguration;
 import com.twb.pokergame.domain.AppUser;
 import com.twb.pokergame.mapper.UserMapper;
 import com.twb.pokergame.repository.UserRepository;
@@ -13,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -22,7 +20,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
-@ConditionalOnBean(KeycloakConfiguration.class)
 public class KeycloakUserService {
     private static final Logger logger = LoggerFactory.getLogger(KeycloakUserService.class);
 
