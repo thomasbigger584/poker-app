@@ -1,4 +1,4 @@
-package com.twb.pokergame.utils.game;
+package com.twb.pokergame.utils.game.player;
 
 import com.twb.pokergame.utils.keycloak.KeycloakHelper;
 import com.twb.pokergame.utils.message.ServerMessageConverter;
@@ -21,19 +21,18 @@ import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class TestPlayer implements StompSessionHandler, StompFrameHandler {
-    private static final Logger logger = LoggerFactory.getLogger(TestPlayer.class);
+public abstract class AbstractTestPlayer implements StompSessionHandler, StompFrameHandler {
+    private static final Logger logger = LoggerFactory.getLogger(AbstractTestPlayer.class);
     private static final String CONNECTION_URL = "ws://localhost:8081/looping";
     private static final String SUBSCRIPTION_TOPIC_SUFFIX = "/topic/loops.";
     private final UUID tableId;
-    private final CountDownLatch testLatch;
+    protected final CountDownLatch testLatch;
     @Getter
     private final String username;
     private final WebSocketStompClient client;
@@ -42,7 +41,7 @@ public class TestPlayer implements StompSessionHandler, StompFrameHandler {
     @Getter
     private final AtomicReference<Throwable> exceptionThrown = new AtomicReference<>();
 
-    public TestPlayer(UUID tableId, CountDownLatch testLatch, String username, String password) {
+    public AbstractTestPlayer(UUID tableId, CountDownLatch testLatch, String username, String password) {
         this.tableId = tableId;
         this.testLatch = testLatch;
         this.username = username;
@@ -51,8 +50,7 @@ public class TestPlayer implements StompSessionHandler, StompFrameHandler {
     }
 
     public void connect() throws InterruptedException {
-        logger.info("Connecting {}  to {}", username, tableId);
-
+        logger.info("Connecting {} to {}", username, tableId);
         URI url = URI.create(CONNECTION_URL);
         WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
         String accessToken = KeycloakHelper.getAccessToken(keycloak);
@@ -67,15 +65,12 @@ public class TestPlayer implements StompSessionHandler, StompFrameHandler {
 
     @Override
     public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
-        logger.info("session = " + session + ", connectedHeaders = " + connectedHeaders);
         session.subscribe(SUBSCRIPTION_TOPIC_SUFFIX + tableId, this);
     }
 
     @Override
     public void handleException(StompSession session, StompCommand command,
                                 StompHeaders headers, byte[] payload, Throwable exception) {
-        logger.error("session = " + session + ", command = " + command
-                + ", headers = " + headers + ", payload = " + Arrays.toString(payload), exception);
         exceptionThrown.set(exception);
         connectLatch.countDown();
         testLatch.countDown();
@@ -83,7 +78,6 @@ public class TestPlayer implements StompSessionHandler, StompFrameHandler {
 
     @Override
     public void handleTransportError(StompSession session, Throwable exception) {
-        logger.error("session = " + session, exception);
         exceptionThrown.set(exception);
         connectLatch.countDown();
         testLatch.countDown();
@@ -97,8 +91,15 @@ public class TestPlayer implements StompSessionHandler, StompFrameHandler {
     @Override
     public void handleFrame(StompHeaders headers, Object payload) {
         connectLatch.countDown();
-        logger.info("headers = " + headers + ", payload = " + payload);
+        handleMessage(headers, (ServerMessageDTO) payload);
     }
+
+
+    // ***************************************************************
+    // Abstract Methods
+    // ***************************************************************
+
+    protected abstract void handleMessage(StompHeaders headers, ServerMessageDTO message);
 
     // ***************************************************************
     // Helper Methods
