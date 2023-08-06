@@ -4,13 +4,11 @@ package com.twb.pokergame.dto.card;
 import com.twb.pokergame.domain.enumeration.CardType;
 import com.twb.pokergame.domain.enumeration.RankType;
 import com.twb.pokergame.domain.enumeration.SuitType;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.util.UUID;
 
-@Getter
-@Setter
+@Data
 public class CardDTO {
     private UUID id;
     private RankType rankType;

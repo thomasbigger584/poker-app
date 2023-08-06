@@ -17,4 +17,12 @@ public class ServerMessageDTO {
                 .payload(payload)
                 .build();
     }
+
+    public static ServerMessageDTO create(ServerMessageType type, long timestamp, Object payload) {
+        return ServerMessageDTO.builder()
+                .type(type)
+                .timestamp(timestamp)
+                .payload(payload)
+                .build();
+    }
 }

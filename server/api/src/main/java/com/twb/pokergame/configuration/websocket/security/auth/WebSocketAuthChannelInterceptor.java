@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -22,7 +23,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
     private static final Logger logger = LoggerFactory.getLogger(WebSocketAuthChannelInterceptor.class);
-    private static final String AUTHENTICATION_HEADER = "X-Authorization";
 
     private final JwtDecoder jwtDecoder;
     private final JwtAuthConverter jwtAuthConverter;
@@ -38,10 +38,10 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
         }
 
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-            List<String> authorization = accessor.getNativeHeader(AUTHENTICATION_HEADER);
+            List<String> authorization = accessor.getNativeHeader(HttpHeaders.AUTHORIZATION);
 
             if (authorization == null) {
-                logger.warn("Header {} is null", AUTHENTICATION_HEADER);
+                logger.warn("Header {} is null", HttpHeaders.AUTHORIZATION);
                 return message;
             }
 

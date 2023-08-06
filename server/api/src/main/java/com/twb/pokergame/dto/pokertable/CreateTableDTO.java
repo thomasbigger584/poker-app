@@ -1,11 +1,9 @@
 package com.twb.pokergame.dto.pokertable;
 
 import com.twb.pokergame.domain.enumeration.GameType;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 public class CreateTableDTO {
     private String name;
     private GameType gameType;

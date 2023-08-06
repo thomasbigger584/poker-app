@@ -1,29 +1,22 @@
-package com.twb.pokergame.testcontainers;
+package com.twb.pokergame.utils.testcontainers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.twb.pokergame.configuration.KeycloakConfiguration;
-import jakarta.ws.rs.client.Client;
+import com.twb.pokergame.utils.keycloak.KeycloakHelper;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.token.TokenManager;
-import org.keycloak.representations.AccessTokenResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.DockerComposeContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
-import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.Map;
 
 public abstract class BaseTestContainersIT {
     protected static final HttpClient HTTP_CLIENT = HttpClient.newBuilder().build();
@@ -46,7 +39,7 @@ public abstract class BaseTestContainersIT {
                 .withExposedService(EXPOSED_SERVICE, EXPOSED_PORT)
                 .withLogConsumer(EXPOSED_SERVICE, new Slf4jLogConsumer(logger).withPrefix(EXPOSED_SERVICE));
         dockerComposeContainer.start();
-        keycloak = getKeycloak();
+        keycloak = KeycloakHelper.getKeycloak("admin", "admin");
     }
 
     @AfterAll
@@ -59,7 +52,7 @@ public abstract class BaseTestContainersIT {
         String json = OBJECT_MAPPER.writeValueAsString(requestBody);
         HttpRequest request = HttpRequest.newBuilder()
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken())
+                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + KeycloakHelper.getAccessToken(keycloak))
                 .uri(URI.create(API_BASE_URL + endpoint))
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
@@ -68,7 +61,7 @@ public abstract class BaseTestContainersIT {
 
     protected static <ResultBody> ApiHttpResponse<ResultBody> get(Class<ResultBody> resultClass, String endpoint) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
-                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken())
+                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + KeycloakHelper.getAccessToken(keycloak))
                 .uri(URI.create(API_BASE_URL + endpoint))
                 .GET().build();
         return executeRequest(resultClass, request);
@@ -76,7 +69,7 @@ public abstract class BaseTestContainersIT {
 
     protected static ApiHttpResponse<?> delete(String endpoint) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
-                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken())
+                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + KeycloakHelper.getAccessToken(keycloak))
                 .uri(URI.create(API_BASE_URL + endpoint))
                 .DELETE().build();
         return executeRequest(request);
@@ -93,41 +86,6 @@ public abstract class BaseTestContainersIT {
         return new ApiHttpResponse<>(response, Void.class);
     }
 
-    protected static String getAccessToken() {
-        TokenManager tokenManager = keycloak.tokenManager();
-        AccessTokenResponse accessTokenResponse = tokenManager.getAccessToken();
-        return accessTokenResponse.getToken();
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Keycloak getKeycloak() {
-        Map<String, Object> props = getProps();
-        Map<String, Object> keycloakProps = (Map<String, Object>) props.get("keycloak");
-
-        KeycloakConfiguration configuration = new KeycloakConfiguration();
-        configuration.setServerUrl((String) keycloakProps.get("server-url"));
-        configuration.setRealm((String) keycloakProps.get("realm"));
-        configuration.setClientId((String) keycloakProps.get("client-id"));
-        configuration.setUsername((String) keycloakProps.get("username"));
-        configuration.setPassword((String) keycloakProps.get("password"));
-        configuration.setAdminGroupId((String) keycloakProps.get("admin-group-id"));
-        configuration.setUserGroupId((String) keycloakProps.get("user-group-id"));
-
-        Client client = configuration.resteasyClient();
-        return configuration.keycloak(client);
-    }
-
-    private static Map<String, Object> getProps() {
-        Yaml yaml = new Yaml();
-        return yaml.load(BaseTestContainersIT.class
-                .getClassLoader()
-                .getResourceAsStream("application.yml"));
-    }
-
-    @Getter
-    @RequiredArgsConstructor
-    protected static class ApiHttpResponse<ResultBody> {
-        private final HttpResponse<String> httpResponse;
-        private final ResultBody resultBody;
+    protected record ApiHttpResponse<ResultBody>(HttpResponse<String> httpResponse, ResultBody resultBody) {
     }
 }

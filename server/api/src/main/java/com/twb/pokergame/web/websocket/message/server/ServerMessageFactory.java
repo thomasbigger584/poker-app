@@ -20,44 +20,38 @@ public class ServerMessageFactory {
     private final CardMapper cardMapper;
 
     public ServerMessageDTO playerSubscribed(List<PlayerSessionDTO> playerSessions) {
-        PlayerSubscribedDTO payload = PlayerSubscribedDTO.builder()
-                .playerSessions(playerSessions)
-                .build();
+        PlayerSubscribedDTO payload = new PlayerSubscribedDTO();
+        payload.setPlayerSessions(playerSessions);
         return ServerMessageDTO.create(ServerMessageType.PLAYER_SUBSCRIBED, payload);
     }
 
     public ServerMessageDTO playerConnected(PlayerSessionDTO playerSession) {
-        PlayerConnectedDTO payload = PlayerConnectedDTO.builder()
-                .playerSession(playerSession)
-                .build();
+        PlayerConnectedDTO payload = new PlayerConnectedDTO();
+        payload.setPlayerSession(playerSession);
         return ServerMessageDTO.create(ServerMessageType.PLAYER_CONNECTED, payload);
     }
 
     public ServerMessageDTO dealerDetermined(PlayerSession playerSession) {
-        DealerDeterminedDTO payload = DealerDeterminedDTO.builder()
-                .playerSession(playerSessionMapper.modelToDto(playerSession))
-                .build();
+        DealerDeterminedDTO payload = new DealerDeterminedDTO();
+        payload.setPlayerSession(playerSessionMapper.modelToDto(playerSession));
         return ServerMessageDTO.create(ServerMessageType.DEALER_DETERMINED, payload);
     }
 
     public ServerMessageDTO initDeal(PlayerSession playerSession, Card card) {
-        DealPlayerCardDTO payload = DealPlayerCardDTO.builder()
-                .playerSession(playerSessionMapper.modelToDto(playerSession))
-                .card(cardMapper.modelToDto(card))
-                .build();
+        DealPlayerCardDTO payload = new DealPlayerCardDTO();
+        payload.setPlayerSession(playerSessionMapper.modelToDto(playerSession));
+        payload.setCard(cardMapper.modelToDto(card));
         return ServerMessageDTO.create(ServerMessageType.DEAL_INIT, payload);
     }
 
     public ServerMessageDTO communityCardDeal(Card card) {
-        DealCommunityCardDTO payload = DealCommunityCardDTO.builder()
-                .card(cardMapper.modelToDto(card))
-                .build();
+        DealCommunityCardDTO payload = new DealCommunityCardDTO();
+        payload.setCard(cardMapper.modelToDto(card));
         return ServerMessageDTO.create(ServerMessageType.DEAL_COMMUNITY, payload);
     }
 
     public ServerMessageDTO roundFinished() {
-        RoundFinishedDTO payload = RoundFinishedDTO.builder()
-                .build();
+        RoundFinishedDTO payload = new RoundFinishedDTO();
         return ServerMessageDTO.create(ServerMessageType.ROUND_FINISHED, payload);
     }
 
@@ -66,26 +60,21 @@ public class ServerMessageFactory {
 
 
     public ServerMessageDTO logMessage(String message) {
-        LogMessageDTO payload = LogMessageDTO.builder()
-                .message(message)
-                .build();
+        LogMessageDTO payload = new LogMessageDTO();
+        payload.setMessage(message);
         return ServerMessageDTO.create(ServerMessageType.LOG, payload);
     }
 
     public ServerMessageDTO playerDisconnected(String username) {
-        PlayerDisconnectedDTO payload = PlayerDisconnectedDTO.builder()
-                .username(username)
-                .build();
+        PlayerDisconnectedDTO payload = new PlayerDisconnectedDTO();
+        payload.setUsername(username);
         return ServerMessageDTO.create(ServerMessageType.PLAYER_DISCONNECTED, payload);
     }
 
     public ServerMessageDTO chatMessage(String username, String message) {
-        ChatMessageDTO payload = ChatMessageDTO.builder()
-                .username(username)
-                .message(message)
-                .build();
+        ChatMessageDTO payload = new ChatMessageDTO();
+        payload.setUsername(username);
+        payload.setMessage(message);
         return ServerMessageDTO.create(ServerMessageType.CHAT, payload);
     }
-
-
 }

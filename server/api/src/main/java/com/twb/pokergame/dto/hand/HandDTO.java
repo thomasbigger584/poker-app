@@ -3,15 +3,13 @@ package com.twb.pokergame.dto.hand;
 
 import com.twb.pokergame.domain.enumeration.HandType;
 import com.twb.pokergame.dto.card.CardDTO;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Getter
-@Setter
+@Data
 public class HandDTO {
     private UUID id;
     private HandType handType;

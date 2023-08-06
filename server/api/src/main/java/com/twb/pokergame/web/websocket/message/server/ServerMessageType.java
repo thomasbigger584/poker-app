@@ -1,5 +1,7 @@
 package com.twb.pokergame.web.websocket.message.server;
 
+import com.twb.pokergame.web.websocket.message.server.payload.*;
+
 public enum ServerMessageType {
     /*
      * Used when a user connects via a subscription
@@ -58,5 +60,34 @@ public enum ServerMessageType {
      * Used to notify all players on the
      * table that a player has disconnected
      */
-    PLAYER_DISCONNECTED
+    PLAYER_DISCONNECTED;
+
+
+    public Class<?> getPayloadClass() {
+        switch (this) {
+            case PLAYER_SUBSCRIBED:
+                return PlayerSubscribedDTO.class;
+            case PLAYER_CONNECTED:
+                return PlayerConnectedDTO.class;
+            case DEALER_DETERMINED:
+                return DealerDeterminedDTO.class;
+            case DEAL_INIT:
+                return DealPlayerCardDTO.class;
+            case DEAL_COMMUNITY:
+                return DealCommunityCardDTO.class;
+            case ROUND_FINISHED:
+                return RoundFinishedDTO.class;
+
+            //todo: add more
+
+            case CHAT:
+                return ChatMessageDTO.class;
+            case LOG:
+                return LogMessageDTO.class;
+            case PLAYER_DISCONNECTED:
+                return PlayerDisconnectedDTO.class;
+            default:
+                throw new IllegalStateException("Unknown Server Message Type: " + this);
+        }
+    }
 }

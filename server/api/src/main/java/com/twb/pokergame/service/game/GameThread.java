@@ -204,6 +204,8 @@ public abstract class GameThread extends Thread {
     }
 
     private void finishRound() {
+
+        //todo: test if this is getting called, is round already finished ?
         if (currentRound.getRoundState() != RoundState.FINISH) {
             saveRoundState(RoundState.FINISH);
             dispatcher.send(tableId, messageFactory.roundFinished());
