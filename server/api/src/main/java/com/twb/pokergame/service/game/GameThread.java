@@ -116,7 +116,7 @@ public abstract class GameThread extends Thread {
         GameType gameType = pokerTable.getGameType();
         do {
             if (isGameInterrupted()) return;
-            playerSessions = playerSessionRepository.findConnectedByTableIdPessimistic(params.getTableId());
+            playerSessions = playerSessionRepository.findConnectedPlayersByTableId(params.getTableId());
             if (CollectionUtils.isEmpty(playerSessions)) {
                 fail(NO_MORE_PLAYERS_CONNECTED);
                 return;
@@ -132,7 +132,7 @@ public abstract class GameThread extends Thread {
     private void waitForPlayersToJoin(int minPlayerCount) {
         do {
             if (isGameInterrupted()) return;
-            playerSessions = playerSessionRepository.findConnectedByTableIdPessimistic(params.getTableId());
+            playerSessions = playerSessionRepository.findConnectedPlayersByTableId(params.getTableId());
             if (playerSessions.size() >= minPlayerCount) {
                 return;
             }
@@ -168,7 +168,7 @@ public abstract class GameThread extends Thread {
 
     private boolean isPlayersJoined(int count) {
         playerSessions = playerSessionRepository
-                .findConnectedByTableIdPessimistic(params.getTableId());
+                .findConnectedPlayersByTableId(params.getTableId());
         return playerSessions.size() >= count;
     }
 
@@ -258,7 +258,7 @@ public abstract class GameThread extends Thread {
 
 
         List<PlayerSession> playerSessions =
-                playerSessionRepository.findConnectedByTableIdPessimistic(params.getTableId());
+                playerSessionRepository.findConnectedPlayersByTableId(params.getTableId());
         if (CollectionUtils.isEmpty(playerSessions)) {
             fail(NO_MORE_PLAYERS_CONNECTED);
         }

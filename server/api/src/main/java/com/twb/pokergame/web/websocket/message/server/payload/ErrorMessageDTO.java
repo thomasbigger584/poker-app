@@ -3,6 +3,7 @@ package com.twb.pokergame.web.websocket.message.server.payload;
 import lombok.Data;
 
 @Data
-public class LogMessageDTO {
+public class ErrorMessageDTO {
     private String message;
+    private String subscriptionId;
 }

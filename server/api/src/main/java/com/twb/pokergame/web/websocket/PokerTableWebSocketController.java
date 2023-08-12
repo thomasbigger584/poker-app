@@ -1,5 +1,6 @@
 package com.twb.pokergame.web.websocket;
 
+import com.twb.pokergame.domain.enumeration.ConnectionType;
 import com.twb.pokergame.service.game.GameConnectionService;
 import com.twb.pokergame.web.websocket.message.client.CreateChatMessageDTO;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageDTO;
@@ -17,6 +18,7 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
+import java.util.Optional;
 import java.util.UUID;
 
 @Controller
@@ -24,9 +26,9 @@ import java.util.UUID;
 public class PokerTableWebSocketController {
     private static final Logger logger = LoggerFactory.getLogger(PokerTableWebSocketController.class);
 
-    private static final String EVENTS_TOPIC_SUFFIX = "/loops.{tableId}";
-    private static final String EVENTS_TOPIC = "/topic" + EVENTS_TOPIC_SUFFIX;
-    private static final String POKER_TABLE_MESSAGE_PREFIX = "/pokerTable/{tableId}";
+    private static final String TOPIC = "/loops.{tableId}";
+    private static final String SERVER_MESSAGE_TOPIC = "/topic" + TOPIC;
+    private static final String INBOUND_MESSAGE_PREFIX = "/pokerTable/{tableId}";
 
     private static final String SEND_CHAT_MESSAGE = "/sendChatMessage";
     private static final String SEND_DISCONNECT_PLAYER = "/sendDisconnectPlayer";
@@ -37,18 +39,26 @@ public class PokerTableWebSocketController {
     private final ServerMessageFactory messageFactory;
     private final GameConnectionService gameConnectionService;
 
-    @SubscribeMapping(EVENTS_TOPIC_SUFFIX)
+    @SubscribeMapping(TOPIC)
     public ServerMessageDTO sendPlayerSubscribed(Principal principal, StompHeaderAccessor headerAccessor,
                                                  @DestinationVariable(POKER_TABLE_ID) UUID tableId) {
-        logger.info(">>>> sendPlayerSubscribed - Poker Table: {} - User: {}", tableId, principal.getName());
+        ConnectionType connectionType = getConnectionType(headerAccessor);
+
+        logger.info(">>>> sendPlayerSubscribed - Poker Table: {} - User: {} - Type: {}", tableId, principal.getName(), connectionType);
         sessionService.putPokerTableId(headerAccessor, tableId);
-        ServerMessageDTO message = gameConnectionService.onPlayerSubscribed(tableId, principal.getName());
-        logger.info("<<<< sendPlayerSubscribed - " + message);
+        ServerMessageDTO message;
+        try {
+            message = gameConnectionService.onPlayerSubscribed(tableId, connectionType, principal.getName());
+            logger.info("<<<< sendPlayerSubscribed - " + message);
+        } catch (Exception exception) {
+            message = messageFactory.errorMessage(exception.getMessage(), headerAccessor.getSubscriptionId());
+            logger.info("<<<< sendPlayerSubscribed FAILED - " + message);
+        }
         return message;
     }
 
-    @MessageMapping(POKER_TABLE_MESSAGE_PREFIX + SEND_CHAT_MESSAGE)
-    @SendTo(EVENTS_TOPIC)
+    @MessageMapping(INBOUND_MESSAGE_PREFIX + SEND_CHAT_MESSAGE)
+    @SendTo(SERVER_MESSAGE_TOPIC)
     public ServerMessageDTO sendChatMessage(Principal principal,
                                             @DestinationVariable(POKER_TABLE_ID) UUID tableId,
                                             @Payload CreateChatMessageDTO message) {
@@ -56,10 +66,15 @@ public class PokerTableWebSocketController {
     }
 
     // not returning here as called from multiple places
-    @MessageMapping(POKER_TABLE_MESSAGE_PREFIX + SEND_DISCONNECT_PLAYER)
+    @MessageMapping(INBOUND_MESSAGE_PREFIX + SEND_DISCONNECT_PLAYER)
     public void sendDisconnectPlayer(Principal principal,
                                      @DestinationVariable(POKER_TABLE_ID) UUID tableId) {
         logger.info(">>>> sendDisconnectPlayer - Poker Table: {} - User: {}", tableId, principal.getName());
         gameConnectionService.onPlayerDisconnected(tableId, principal.getName());
+    }
+
+    private ConnectionType getConnectionType(StompHeaderAccessor headerAccessor) {
+        Optional<ConnectionType> connectionTypeOpt = sessionService.getConnectionType(headerAccessor);
+        return connectionTypeOpt.orElse(ConnectionType.LISTENER);
     }
 }

@@ -55,10 +55,16 @@ public enum ServerMessageType {
     CHAT,
 
     /*
-     * Generic log message sent from server t
-     * o be displayed in chatbox
+     * Generic log message sent from server
+     * to be displayed in chatbox
      */
     LOG,
+
+    /*
+     * Error message sent from server which can either be sent
+     * to a specific user or all users subscribed to the table
+     */
+    ERROR,
 
     /*
      * Used to notify all players on the
@@ -89,6 +95,8 @@ public enum ServerMessageType {
                 return ChatMessageDTO.class;
             case LOG:
                 return LogMessageDTO.class;
+            case ERROR:
+                return ErrorMessageDTO.class;
             case PLAYER_DISCONNECTED:
                 return PlayerDisconnectedDTO.class;
             default:

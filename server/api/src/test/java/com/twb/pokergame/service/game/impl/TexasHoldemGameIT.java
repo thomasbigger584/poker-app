@@ -3,9 +3,10 @@ package com.twb.pokergame.service.game.impl;
 import com.twb.pokergame.domain.enumeration.GameType;
 import com.twb.pokergame.dto.pokertable.TableDTO;
 import com.twb.pokergame.exception.NotFoundException;
-import com.twb.pokergame.utils.game.player.AbstractTestPlayer;
-import com.twb.pokergame.utils.game.player.AbstractTestPlayer.CountdownLatches;
-import com.twb.pokergame.utils.game.player.impl.TestTexasHoldemPlayer;
+import com.twb.pokergame.utils.game.player.AbstractTestUser;
+import com.twb.pokergame.utils.game.player.AbstractTestUser.CountdownLatches;
+import com.twb.pokergame.utils.game.player.impl.TestGameListenerUser;
+import com.twb.pokergame.utils.game.player.impl.TestTexasHoldemPlayerUser;
 import com.twb.pokergame.utils.testcontainers.BaseTestContainersIT;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -23,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class TexasHoldemGameIT extends BaseTestContainersIT {
     private static final Logger logger = LoggerFactory.getLogger(TexasHoldemGameIT.class);
     private static final int LATCH_TIMEOUT_IN_SECS = 100;
+    private static final String LISTENER_USERNAME = "viewer";
     private static final String PLAYER_1_USERNAME = "thomas";
     private static final String PLAYER_2_USERNAME = "rory";
     private static final String PASSWORD = "password";
@@ -35,25 +37,31 @@ public class TexasHoldemGameIT extends BaseTestContainersIT {
 
         CountdownLatches latches = CountdownLatches.create();
 
-        List<AbstractTestPlayer> players = new ArrayList<>();
-        players.add(new TestTexasHoldemPlayer(table.getId(), latches, PLAYER_1_USERNAME, PASSWORD, NUM_OF_ROUNDS));
-        players.add(new TestTexasHoldemPlayer(table.getId(), latches, PLAYER_2_USERNAME, PASSWORD, NUM_OF_ROUNDS));
+        AbstractTestUser listener = new TestGameListenerUser(table.getId(), latches, LISTENER_USERNAME, PASSWORD, NUM_OF_ROUNDS);
+        listener.connect();
+        Thread.sleep(PLAYER_WAIT);
 
-        for (AbstractTestPlayer player : players) {
+        List<AbstractTestUser> players = new ArrayList<>();
+        players.add(new TestTexasHoldemPlayerUser(table.getId(), latches, PLAYER_1_USERNAME, PASSWORD));
+        players.add(new TestTexasHoldemPlayerUser(table.getId(), latches, PLAYER_2_USERNAME, PASSWORD));
+
+        for (AbstractTestUser player : players) {
             player.connect();
             Thread.sleep(PLAYER_WAIT);
         }
 
         latches.roundLatch().await(LATCH_TIMEOUT_IN_SECS, TimeUnit.SECONDS);
 
-        for (AbstractTestPlayer player : players) {
+        for (AbstractTestUser player : players) {
             player.disconnect();
             Thread.sleep(PLAYER_WAIT);
         }
 
         latches.gameLatch().await(LATCH_TIMEOUT_IN_SECS, TimeUnit.SECONDS);
 
-        for (AbstractTestPlayer player : players) {
+        listener.disconnect();
+
+        for (AbstractTestUser player : players) {
             AtomicReference<Throwable> exceptionThrown = player.getExceptionThrown();
             if (exceptionThrown.get() != null) {
                 throw new RuntimeException("Test Failure for player: " + player, exceptionThrown.get());

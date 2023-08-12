@@ -3,6 +3,7 @@ package com.twb.pokergame.service;
 import com.twb.pokergame.domain.AppUser;
 import com.twb.pokergame.domain.PlayerSession;
 import com.twb.pokergame.domain.PokerTable;
+import com.twb.pokergame.domain.enumeration.ConnectionType;
 import com.twb.pokergame.domain.enumeration.SessionState;
 import com.twb.pokergame.dto.playersession.PlayerSessionDTO;
 import com.twb.pokergame.mapper.PlayerSessionMapper;
@@ -22,7 +23,7 @@ public class PlayerSessionService {
     private final PlayerSessionRepository repository;
     private final PlayerSessionMapper mapper;
 
-    public PlayerSessionDTO connectUserToRound(AppUser user, PokerTable pokerTable) {
+    public PlayerSessionDTO connectUserToRound(AppUser user, ConnectionType connectionType, PokerTable pokerTable) {
         UUID tableId = pokerTable.getId();
         String username = user.getUsername();
 
@@ -37,11 +38,15 @@ public class PlayerSessionService {
             session.setUser(user);
             session.setPokerTable(pokerTable);
         }
+
+        session.setConnectionType(connectionType);
         session.setSessionState(SessionState.CONNECTED);
 
-        int position = getSessionTablePosition(pokerTable);
-        session.setPosition(position);
-        session.setFunds(1000d); // todo: dynamically set funds
+        if (connectionType == ConnectionType.PLAYER) {
+            int position = getSessionTablePosition(pokerTable);
+            session.setPosition(position);
+            session.setFunds(1000d); // todo: dynamically set funds
+        }
 
         session = repository.saveAndFlush(session);
         return mapper.modelToDto(session);
@@ -60,6 +65,7 @@ public class PlayerSessionService {
             playerSession.setDealer(null);
             playerSession.setFunds(null);
             playerSession.setPokerTable(null);
+            playerSession.setConnectionType(null);
             playerSession.setSessionState(SessionState.DISCONNECTED);
 
             repository.saveAndFlush(playerSession);
@@ -67,7 +73,7 @@ public class PlayerSessionService {
     }
 
     private int getSessionTablePosition(PokerTable pokerTable) {
-        List<PlayerSession> sessions = repository.findConnectedByTableId(pokerTable.getId());
+        List<PlayerSession> sessions = repository.findConnectedPlayersByTableId(pokerTable.getId());
         int otherPlayersMaxCount = pokerTable.getGameType().getMaxPlayerCount() - 1;
         for (int position = 1; position <= otherPlayersMaxCount; position++) {
             if (!isPositionAlreadyTaken(sessions, position)) {

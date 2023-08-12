@@ -1,17 +1,21 @@
 package com.twb.pokergame.web.websocket.session;
 
+import com.twb.pokergame.domain.enumeration.ConnectionType;
 import com.twb.pokergame.web.websocket.PokerTableWebSocketController;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.messaging.SessionConnectedEvent;
-import org.springframework.web.socket.messaging.SessionDisconnectEvent;
-import org.springframework.web.socket.messaging.SessionSubscribeEvent;
+import org.springframework.web.socket.messaging.*;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,21 +23,44 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class SessionEventListener {
     private static final Logger logger = LoggerFactory.getLogger(SessionEventListener.class);
+    private static final String HEADER_CONNECTION_TYPE = "X-Connection-Type";
+
     private final SessionService sessionService;
     private final PokerTableWebSocketController webSocketController;
 
     @EventListener
-    public void handleWebSocketSubscribeListener(SessionSubscribeEvent event) {
-        logger.info("Received a new web socket subscription + " + new String(event.getMessage().getPayload()));
+    public void handleEvent(SessionConnectEvent event) {
+        logger.info("Attempting to connect: {}", event);
+
+        StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
+        List<String> connectionTypeHeader = headerAccessor.getNativeHeader(HEADER_CONNECTION_TYPE);
+        if (CollectionUtils.isNotEmpty(connectionTypeHeader)) {
+            ConnectionType connectionType = ConnectionType.valueOf(connectionTypeHeader.get(0));
+            sessionService.putConnectionType(headerAccessor, connectionType);
+        } else {
+            sessionService.putConnectionType(headerAccessor, ConnectionType.LISTENER);
+        }
     }
 
     @EventListener
-    public void handleWebSocketConnectListener(SessionConnectedEvent event) {
-        logger.info("Received a new web socket connection + " + new String(event.getMessage().getPayload()));
+    public void handleEvent(SessionConnectedEvent event) {
+        logger.info("Connected: {}", event);
     }
 
     @EventListener
-    public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
+    public void handleEvent(SessionSubscribeEvent event) {
+        logger.info("New Subscription: {}", event);
+    }
+
+    @EventListener
+    public void handleEvent(SessionUnsubscribeEvent event) {
+        logger.info("Unsubscription: {}", event);
+    }
+
+    @EventListener
+    public void handleEvent(SessionDisconnectEvent event) {
+        logger.info("Disconnecting: {}", event);
+
         Principal principal = event.getUser();
         if (principal == null) {
             logger.warn("Session disconnect cannot disconnect player as principal is null");

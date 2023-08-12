@@ -1,6 +1,7 @@
 package com.twb.pokergame.domain;
 
 
+import com.twb.pokergame.domain.enumeration.ConnectionType;
 import com.twb.pokergame.domain.enumeration.SessionState;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
@@ -49,6 +50,10 @@ public class PlayerSession {
     @Column(name = "session_state")
     private SessionState sessionState;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "connection_type")
+    private ConnectionType connectionType;
+
     @OneToMany(mappedBy = "playerSession")
     private List<Hand> hands = new ArrayList<>();
 
@@ -74,6 +79,8 @@ public class PlayerSession {
                 ", position=" + position +
                 ", dealer=" + dealer +
                 ", funds=" + funds +
+                ", sessionState=" + sessionState +
+                ", connectionType=" + connectionType +
                 '}';
     }
 }

@@ -1,5 +1,6 @@
 package com.twb.pokergame.dto.playersession;
 
+import com.twb.pokergame.domain.enumeration.ConnectionType;
 import com.twb.pokergame.domain.enumeration.SessionState;
 import com.twb.pokergame.dto.appuser.AppUserDTO;
 import com.twb.pokergame.dto.pokertable.TableDTO;
@@ -16,4 +17,5 @@ public class PlayerSessionDTO {
     private Boolean dealer;
     private Double funds;
     private SessionState sessionState;
+    private ConnectionType connectionType;
 }

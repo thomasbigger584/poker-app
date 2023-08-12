@@ -1,11 +1,13 @@
 package com.twb.pokergame.utils.game.player;
 
+import com.twb.pokergame.domain.enumeration.ConnectionType;
 import com.twb.pokergame.utils.keycloak.KeycloakHelper;
 import com.twb.pokergame.utils.message.ServerMessageConverter;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageDTO;
+import com.twb.pokergame.web.websocket.message.server.payload.ErrorMessageDTO;
+import com.twb.pokergame.web.websocket.message.server.payload.LogMessageDTO;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import org.keycloak.admin.client.Keycloak;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,17 +23,16 @@ import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
 import java.lang.reflect.Type;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-public abstract class AbstractTestPlayer implements StompSessionHandler, StompFrameHandler {
-    private static final Logger logger = LoggerFactory.getLogger(AbstractTestPlayer.class);
+public abstract class AbstractTestUser implements StompSessionHandler, StompFrameHandler {
+    private static final Logger logger = LoggerFactory.getLogger(AbstractTestUser.class);
     private static final String CONNECTION_URL = "ws://localhost:8081/looping";
-    private static final String SUBSCRIPTION_TOPIC_SUFFIX = "/topic/loops.";
+    private static final String SUBSCRIPTION_TOPIC_SUFFIX = "/topic/loops.%s";
+    private static final String HEADER_CONNECTION_TYPE = "X-Connection-Type";
     private final UUID tableId;
     protected final CountdownLatches latches;
     @Getter
@@ -43,8 +44,8 @@ public abstract class AbstractTestPlayer implements StompSessionHandler, StompFr
     private final AtomicReference<Throwable> exceptionThrown = new AtomicReference<>();
     private StompSession session;
 
-    public AbstractTestPlayer(UUID tableId, CountdownLatches latches,
-                              String username, String password) {
+    public AbstractTestUser(UUID tableId, CountdownLatches latches,
+                            String username, String password) {
         this.tableId = tableId;
         this.latches = latches;
         this.username = username;
@@ -59,7 +60,12 @@ public abstract class AbstractTestPlayer implements StompSessionHandler, StompFr
         WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
         String accessToken = KeycloakHelper.getAccessToken(keycloak);
         headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
-        client.connectAsync(url, headers, new StompHeaders(), this);
+        headers.add(HEADER_CONNECTION_TYPE, getConnectionType().toString());
+
+        StompHeaders stompHeaders = new StompHeaders();
+        stompHeaders.put(HEADER_CONNECTION_TYPE, Collections.singletonList(getConnectionType().toString()));
+
+        client.connectAsync(url, headers, stompHeaders, this);
         connectLatch.await(10, TimeUnit.SECONDS);
     }
 
@@ -78,7 +84,7 @@ public abstract class AbstractTestPlayer implements StompSessionHandler, StompFr
     @Override
     public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
         this.session = session;
-        session.subscribe(SUBSCRIPTION_TOPIC_SUFFIX + tableId, this);
+        session.subscribe(String.format(SUBSCRIPTION_TOPIC_SUFFIX, tableId), this);
     }
 
     @Override
@@ -105,7 +111,20 @@ public abstract class AbstractTestPlayer implements StompSessionHandler, StompFr
     @Override
     public void handleFrame(StompHeaders headers, Object payload) {
         connectLatch.countDown();
-        handleMessage(headers, (ServerMessageDTO) payload);
+        ServerMessageDTO message = (ServerMessageDTO) payload;
+        if (message.getPayload() instanceof ErrorMessageDTO error) {
+            String subscriptionId = error.getSubscriptionId();
+            if (Objects.equals(headers.getSubscription(), subscriptionId)) {
+                logger.error("{} (subscription: {}) received personal error message: {}", username, subscriptionId, error.getMessage());
+            } else {
+                logger.error("{} received error message: {}", username, error.getMessage());
+            }
+            return;
+        } else if (message.getPayload() instanceof LogMessageDTO log) {
+            logger.info("{} received log message: {}", username, log.getMessage());
+            return;
+        }
+        handleMessage(headers, message);
     }
 
     // ***************************************************************
@@ -113,6 +132,8 @@ public abstract class AbstractTestPlayer implements StompSessionHandler, StompFr
     // ***************************************************************
 
     protected abstract void handleMessage(StompHeaders headers, ServerMessageDTO message);
+
+    protected abstract ConnectionType getConnectionType();
 
     // ***************************************************************
     // Helper Methods
