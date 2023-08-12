@@ -34,6 +34,7 @@ public enum ServerMessageType {
      */
     DEAL_COMMUNITY,
 
+    // todo: add more
 
     /*
      * Used to notify the client that the round has finished
@@ -41,8 +42,11 @@ public enum ServerMessageType {
      */
     ROUND_FINISHED,
 
-    // todo: add more
-
+    /*
+     * Used to notify the client that the game has finished
+     * so should quit from the table
+     */
+    GAME_FINISHED,
 
     /*
      * Chat message sent from a client to be forwarded
@@ -62,7 +66,6 @@ public enum ServerMessageType {
      */
     PLAYER_DISCONNECTED;
 
-
     public Class<?> getPayloadClass() {
         switch (this) {
             case PLAYER_SUBSCRIBED:
@@ -75,11 +78,13 @@ public enum ServerMessageType {
                 return DealPlayerCardDTO.class;
             case DEAL_COMMUNITY:
                 return DealCommunityCardDTO.class;
-            case ROUND_FINISHED:
-                return RoundFinishedDTO.class;
 
             //todo: add more
 
+            case ROUND_FINISHED:
+                return RoundFinishedDTO.class;
+            case GAME_FINISHED:
+                return GameFinishedDTO.class;
             case CHAT:
                 return ChatMessageDTO.class;
             case LOG:

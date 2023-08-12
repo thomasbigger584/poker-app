@@ -5,6 +5,7 @@ import com.twb.pokergame.utils.message.ServerMessageConverter;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageDTO;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.keycloak.admin.client.Keycloak;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +33,7 @@ public abstract class AbstractTestPlayer implements StompSessionHandler, StompFr
     private static final String CONNECTION_URL = "ws://localhost:8081/looping";
     private static final String SUBSCRIPTION_TOPIC_SUFFIX = "/topic/loops.";
     private final UUID tableId;
-    protected final CountDownLatch testLatch;
+    protected final CountdownLatches latches;
     @Getter
     private final String username;
     private final WebSocketStompClient client;
@@ -40,13 +41,16 @@ public abstract class AbstractTestPlayer implements StompSessionHandler, StompFr
     private final CountDownLatch connectLatch = new CountDownLatch(1);
     @Getter
     private final AtomicReference<Throwable> exceptionThrown = new AtomicReference<>();
+    private StompSession session;
 
-    public AbstractTestPlayer(UUID tableId, CountDownLatch testLatch, String username, String password) {
+    public AbstractTestPlayer(UUID tableId, CountdownLatches latches,
+                              String username, String password) {
         this.tableId = tableId;
-        this.testLatch = testLatch;
+        this.latches = latches;
         this.username = username;
         this.client = createClient();
         this.keycloak = KeycloakHelper.getKeycloak(username, password);
+        this.session = null;
     }
 
     public void connect() throws InterruptedException {
@@ -59,12 +63,21 @@ public abstract class AbstractTestPlayer implements StompSessionHandler, StompFr
         connectLatch.await(10, TimeUnit.SECONDS);
     }
 
+    public void disconnect() {
+        if (session != null && session.isConnected()) {
+            logger.info("Disconnecting {} from {}", username, tableId);
+            session.disconnect();
+        }
+        session = null;
+    }
+
     // ***************************************************************
     // Interface Methods
     // ***************************************************************
 
     @Override
     public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
+        this.session = session;
         session.subscribe(SUBSCRIPTION_TOPIC_SUFFIX + tableId, this);
     }
 
@@ -73,14 +86,15 @@ public abstract class AbstractTestPlayer implements StompSessionHandler, StompFr
                                 StompHeaders headers, byte[] payload, Throwable exception) {
         exceptionThrown.set(exception);
         connectLatch.countDown();
-        testLatch.countDown();
+        latches.roundLatch().countDown();
+        latches.gameLatch().countDown();
     }
 
     @Override
     public void handleTransportError(StompSession session, Throwable exception) {
         exceptionThrown.set(exception);
         connectLatch.countDown();
-        testLatch.countDown();
+        latches.roundLatch().countDown();
     }
 
     @Override
@@ -93,7 +107,6 @@ public abstract class AbstractTestPlayer implements StompSessionHandler, StompFr
         connectLatch.countDown();
         handleMessage(headers, (ServerMessageDTO) payload);
     }
-
 
     // ***************************************************************
     // Abstract Methods
@@ -115,5 +128,18 @@ public abstract class AbstractTestPlayer implements StompSessionHandler, StompFr
         WebSocketStompClient stompClient = new WebSocketStompClient(sockJsClient);
         stompClient.setMessageConverter(new ServerMessageConverter());
         return stompClient;
+    }
+
+    public record CountdownLatches(
+            CountDownLatch roundLatch,
+            CountDownLatch gameLatch
+    ) {
+        private static final int SINGLE = 1;
+
+        public static CountdownLatches create() {
+            CountDownLatch roundLatch = new CountDownLatch(SINGLE);
+            CountDownLatch gameLatch = new CountDownLatch(SINGLE);
+            return new CountdownLatches(roundLatch, gameLatch);
+        }
     }
 }

@@ -13,12 +13,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
 public class GameThreadManager {
     private static final Logger logger = LoggerFactory.getLogger(GameThreadManager.class);
     private static final Map<UUID, GameThread> POKER_GAME_RUNNABLE_MAP = new ConcurrentHashMap<>();
+    private static final int GAME_START_TIMEOUT_IN_SECS = 10;
     private final XSync<UUID> mutex;
     private final ApplicationContext context;
 
@@ -28,10 +31,19 @@ public class GameThreadManager {
             if (threadOpt.isPresent()) {
                 return threadOpt.get();
             }
-            GameThread thread = create(pokerTable);
+            GameThreadParams params = getGameThreadParams(pokerTable);
+            GameThread thread = create(params);
+            long startTime = System.currentTimeMillis();
             thread.start();
-            POKER_GAME_RUNNABLE_MAP.put(pokerTable.getId(), thread);
-            return thread;
+            try {
+                if (!params.getStartLatch().await(GAME_START_TIMEOUT_IN_SECS, TimeUnit.SECONDS)) {
+                    throw new RuntimeException("Failed to wait for game to start");
+                }
+                POKER_GAME_RUNNABLE_MAP.put(pokerTable.getId(), thread);
+                return thread;
+            } catch (InterruptedException e) {
+                throw new RuntimeException("Exception thrown while waiting for game to start", e);
+            }
         });
     }
 
@@ -48,11 +60,17 @@ public class GameThreadManager {
 
     // -------------------------------------------------------------------------------------
 
-    private GameThread create(PokerTable pokerTable) {
-        UUID tableId = pokerTable.getId();
-        GameType gameType = pokerTable.getGameType();
+    private GameThreadParams getGameThreadParams(PokerTable pokerTable) {
+        return GameThreadParams.builder()
+                .tableId(pokerTable.getId())
+                .gameType(pokerTable.getGameType())
+                .startLatch(new CountDownLatch(1))
+                .build();
+    }
 
-        return gameType.getGameThread(context, tableId);
+    private GameThread create(GameThreadParams params) {
+        GameType gameType = params.getGameType();
+        return gameType.getGameThread(context, params);
     }
 
     public Optional<GameThread> getIfExists(PokerTable pokerTable) {

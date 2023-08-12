@@ -54,13 +54,14 @@ public class PlayerSessionService {
         Optional<PlayerSession> sessionOpt =
                 repository.findByTableIdAndUsername(tableId, username);
         if (sessionOpt.isPresent()) {
+
             PlayerSession playerSession = sessionOpt.get();
 
             playerSession.setDealer(null);
             playerSession.setFunds(null);
-
             playerSession.setPokerTable(null);
             playerSession.setSessionState(SessionState.DISCONNECTED);
+
             repository.saveAndFlush(playerSession);
         }
     }

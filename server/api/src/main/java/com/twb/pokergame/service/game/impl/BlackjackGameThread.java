@@ -2,6 +2,7 @@ package com.twb.pokergame.service.game.impl;
 
 import com.twb.pokergame.domain.enumeration.RoundState;
 import com.twb.pokergame.service.game.GameThread;
+import com.twb.pokergame.service.game.GameThreadParams;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,8 +17,8 @@ public final class BlackjackGameThread extends GameThread {
     private static final Logger logger =
             LoggerFactory.getLogger(BlackjackGameThread.class);
 
-    public BlackjackGameThread(UUID tableId) {
-        super(tableId);
+    public BlackjackGameThread(GameThreadParams params) {
+        super(params);
     }
 
     @Override

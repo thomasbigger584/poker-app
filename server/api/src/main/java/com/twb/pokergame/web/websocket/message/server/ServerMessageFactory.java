@@ -55,6 +55,10 @@ public class ServerMessageFactory {
         return ServerMessageDTO.create(ServerMessageType.ROUND_FINISHED, payload);
     }
 
+    public ServerMessageDTO gameFinished() {
+        GameFinishedDTO payload = new GameFinishedDTO();
+        return ServerMessageDTO.create(ServerMessageType.GAME_FINISHED, payload);
+    }
 
     // TODO: add more ...
 

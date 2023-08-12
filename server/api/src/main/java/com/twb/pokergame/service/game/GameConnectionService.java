@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -62,6 +63,11 @@ public class GameConnectionService {
         });
     }
 
+    /*
+     * Transactional is required here to manage player disconnects within the game thread.
+     * When the last person disconnects the query will see a size of 0 and fail/finish and interrupt game
+     */
+    @Transactional
     public void onPlayerDisconnected(UUID tableId, String username) {
         mutex.execute(tableId, () -> {
             playerSessionService.disconnectUser(tableId, username);

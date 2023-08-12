@@ -1,6 +1,7 @@
 package com.twb.pokergame.domain.enumeration;
 
 import com.twb.pokergame.service.game.GameThread;
+import com.twb.pokergame.service.game.GameThreadParams;
 import com.twb.pokergame.service.game.impl.BlackjackGameThread;
 import com.twb.pokergame.service.game.impl.TexasHoldemGameThread;
 import org.springframework.context.ApplicationContext;
@@ -33,10 +34,10 @@ public enum GameType {
         };
     }
 
-    public GameThread getGameThread(ApplicationContext context, UUID tableId) {
+    public GameThread getGameThread(ApplicationContext context, GameThreadParams params) {
         return switch (this) {
-            case TEXAS_HOLDEM -> context.getBean(TexasHoldemGameThread.class, tableId);
-            case BLACKJACK -> context.getBean(BlackjackGameThread.class, tableId);
+            case TEXAS_HOLDEM -> context.getBean(TexasHoldemGameThread.class, params);
+            case BLACKJACK -> context.getBean(BlackjackGameThread.class, params);
         };
     }
 }

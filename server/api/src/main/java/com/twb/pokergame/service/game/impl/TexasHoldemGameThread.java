@@ -1,6 +1,5 @@
 package com.twb.pokergame.service.game.impl;
 
-import com.twb.pokergame.domain.AppUser;
 import com.twb.pokergame.domain.Card;
 import com.twb.pokergame.domain.Hand;
 import com.twb.pokergame.domain.PlayerSession;
@@ -8,6 +7,7 @@ import com.twb.pokergame.domain.enumeration.CardType;
 import com.twb.pokergame.domain.enumeration.RoundState;
 import com.twb.pokergame.service.eval.dto.EvalPlayerHandDTO;
 import com.twb.pokergame.service.game.GameThread;
+import com.twb.pokergame.service.game.GameThreadParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
@@ -16,16 +16,15 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Component
 @Scope("prototype")
-public final class TexasHoldemGameThread extends GameThread {
+public class TexasHoldemGameThread extends GameThread {
     private static final Logger logger =
             LoggerFactory.getLogger(TexasHoldemGameThread.class);
 
-    public TexasHoldemGameThread(UUID tableId) {
-        super(tableId);
+    public TexasHoldemGameThread(GameThreadParams params) {
+        super(params);
     }
 
     @Override
@@ -80,7 +79,7 @@ public final class TexasHoldemGameThread extends GameThread {
         card.setCardType(cardType);
 
         handService.addPlayerCard(playerSession, currentRound, card);
-        dispatcher.send(tableId, messageFactory.initDeal(playerSession, card));
+        dispatcher.send(params.getTableId(), messageFactory.initDeal(playerSession, card));
 
         sleepInMs(DEAL_WAIT_MS);
     }
@@ -90,7 +89,7 @@ public final class TexasHoldemGameThread extends GameThread {
         card.setCardType(cardType);
 
         cardService.createCommunityCard(currentRound, card);
-        dispatcher.send(tableId, messageFactory.communityCardDeal(card));
+        dispatcher.send(params.getTableId(), messageFactory.communityCardDeal(card));
 
         sleepInMs(DEAL_WAIT_MS);
     }
@@ -170,7 +169,7 @@ public final class TexasHoldemGameThread extends GameThread {
         playerSessions = dealerSortedList;
         checkAtLeastOnePlayerConnected();
 
-        dispatcher.send(tableId, messageFactory.dealerDetermined(currentDealer));
+        dispatcher.send(params.getTableId(), messageFactory.dealerDetermined(currentDealer));
     }
 
     private void waitPlayerTurn() {
@@ -209,11 +208,7 @@ public final class TexasHoldemGameThread extends GameThread {
         List<EvalPlayerHandDTO> winners =
                 playerHandsList.stream().filter(EvalPlayerHandDTO::isWinner).toList();
 
-        if (winners.size() == 1) {
-            handleSinglePlayerWin(winners);
-        } else {
-            handleMultiplePlayerWin(winners);
-        }
+        handleWinners(winners);
 
         sleepInMs(EVALUATION_WAIT_MS);
     }
@@ -232,36 +227,5 @@ public final class TexasHoldemGameThread extends GameThread {
             }
         }
         handRepository.saveAllAndFlush(savingHands);
-    }
-
-    private void handleSinglePlayerWin(List<EvalPlayerHandDTO> winners) {
-        EvalPlayerHandDTO winnerEvalHandDTO = winners.get(0);
-        PlayerSession playerSession = winnerEvalHandDTO.getPlayerSession();
-        String username = playerSession.getUser().getUsername();
-        String handTypeStr = winnerEvalHandDTO.getHandType().getValue();
-
-        sendLogMessage(String.format("%s wins round with a %s", username, handTypeStr));
-    }
-
-    private void handleMultiplePlayerWin(List<EvalPlayerHandDTO> winners) {
-        String winnerNames = getReadableWinners(winners);
-        String handTypeStr = winners.get(0).getHandType().getValue();
-
-        sendLogMessage(String.format("%s draws round with a %s", winnerNames, handTypeStr));
-    }
-
-    private String getReadableWinners(List<EvalPlayerHandDTO> winners) {
-        StringBuilder sb = new StringBuilder();
-        for (int index = 0; index < winners.size(); index++) {
-            EvalPlayerHandDTO eval = winners.get(index);
-            AppUser user = eval.getPlayerSession().getUser();
-            sb.append(user.getUsername());
-            if (index < winners.size() - 3) {
-                sb.append(", ");
-            } else if (index == winners.size() - 2) {
-                sb.append(" & ");
-            }
-        }
-        return sb.toString();
     }
 }
