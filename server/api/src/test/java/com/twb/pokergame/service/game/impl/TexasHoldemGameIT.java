@@ -8,6 +8,8 @@ import com.twb.pokergame.utils.game.player.AbstractTestUser.CountdownLatches;
 import com.twb.pokergame.utils.game.player.impl.TestGameListenerUser;
 import com.twb.pokergame.utils.game.player.impl.TestTexasHoldemPlayerUser;
 import com.twb.pokergame.utils.testcontainers.BaseTestContainersIT;
+import com.twb.pokergame.web.websocket.message.server.ServerMessageDTO;
+import com.twb.pokergame.web.websocket.message.server.ServerMessageType;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,8 +20,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TexasHoldemGameIT extends BaseTestContainersIT {
     private static final Logger logger = LoggerFactory.getLogger(TexasHoldemGameIT.class);
@@ -68,7 +70,25 @@ public class TexasHoldemGameIT extends BaseTestContainersIT {
             }
         }
 
-        assertTrue(true);
+        List<ServerMessageDTO> listenerMessages = listener.getReceivedMessages();
+
+        // Note: assertions aren't tight as we cut off a round when players disconnect, so treating as good enough
+
+        assertThat(listenerMessages).filteredOn(message -> message.getType().equals(ServerMessageType.DEAL_INIT))
+                .hasSizeBetween((players.size() * NUM_OF_ROUNDS) * 2, Integer.MAX_VALUE);
+
+        assertThat(listenerMessages).filteredOn(message -> message.getType().equals(ServerMessageType.DEAL_COMMUNITY))
+                .hasSizeBetween(NUM_OF_ROUNDS * 5, Integer.MAX_VALUE);
+
+        assertThat(listenerMessages)
+                .filteredOn(message -> message.getType()
+                        .equals(ServerMessageType.ROUND_FINISHED))
+                .hasSizeBetween(NUM_OF_ROUNDS, NUM_OF_ROUNDS + 1);
+
+        assertThat(listenerMessages)
+                .filteredOn(message -> message.getType()
+                        .equals(ServerMessageType.GAME_FINISHED))
+                .hasSize(1);
     }
 
     // *****************************************************************************************

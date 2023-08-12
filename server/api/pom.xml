@@ -36,6 +36,7 @@
         <testcontainers.version>1.18.3</testcontainers.version>
         <testcontainers-keycloak.version>3.0.0</testcontainers-keycloak.version>
 
+        <assertj-core.version>3.24.2</assertj-core.version>
     </properties>
 
     <dependencyManagement>
@@ -158,6 +159,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj-core.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

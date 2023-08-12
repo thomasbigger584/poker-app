@@ -32,6 +32,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private static final Logger logger = LoggerFactory.getLogger(AbstractTestUser.class);
     private static final String CONNECTION_URL = "ws://localhost:8081/looping";
     private static final String SUBSCRIPTION_TOPIC_SUFFIX = "/topic/loops.%s";
+    private static final String BEARER_PREFIX = "Bearer ";
     private static final String HEADER_CONNECTION_TYPE = "X-Connection-Type";
     private final UUID tableId;
     protected final CountdownLatches latches;
@@ -42,6 +43,8 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private final CountDownLatch connectLatch = new CountDownLatch(1);
     @Getter
     private final AtomicReference<Throwable> exceptionThrown = new AtomicReference<>();
+    @Getter
+    private List<ServerMessageDTO> receivedMessages = Collections.synchronizedList(new ArrayList<>());
     private StompSession session;
 
     public AbstractTestUser(UUID tableId, CountdownLatches latches,
@@ -59,8 +62,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         URI url = URI.create(CONNECTION_URL);
         WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
         String accessToken = KeycloakHelper.getAccessToken(keycloak);
-        headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
-        headers.add(HEADER_CONNECTION_TYPE, getConnectionType().toString());
+        headers.add(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + accessToken);
 
         StompHeaders stompHeaders = new StompHeaders();
         stompHeaders.put(HEADER_CONNECTION_TYPE, Collections.singletonList(getConnectionType().toString()));
@@ -112,6 +114,8 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     public void handleFrame(StompHeaders headers, Object payload) {
         connectLatch.countDown();
         ServerMessageDTO message = (ServerMessageDTO) payload;
+        receivedMessages.add(message);
+
         if (message.getPayload() instanceof ErrorMessageDTO error) {
             String subscriptionId = error.getSubscriptionId();
             if (Objects.equals(headers.getSubscription(), subscriptionId)) {
