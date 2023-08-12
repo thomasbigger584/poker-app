@@ -43,15 +43,15 @@ public class PokerTableWebSocketController {
     public ServerMessageDTO sendPlayerSubscribed(Principal principal, StompHeaderAccessor headerAccessor,
                                                  @DestinationVariable(POKER_TABLE_ID) UUID tableId) {
         ConnectionType connectionType = getConnectionType(headerAccessor);
+        sessionService.putPokerTableId(headerAccessor, tableId);
 
         logger.info(">>>> sendPlayerSubscribed - Poker Table: {} - User: {} - Type: {}", tableId, principal.getName(), connectionType);
-        sessionService.putPokerTableId(headerAccessor, tableId);
         ServerMessageDTO message;
         try {
             message = gameConnectionService.onPlayerSubscribed(tableId, connectionType, principal.getName());
             logger.info("<<<< sendPlayerSubscribed - " + message);
         } catch (Exception exception) {
-            message = messageFactory.errorMessage(exception.getMessage(), headerAccessor.getSubscriptionId());
+            message = messageFactory.errorMessage(exception.getMessage());
             logger.info("<<<< sendPlayerSubscribed FAILED - " + message);
         }
         return message;

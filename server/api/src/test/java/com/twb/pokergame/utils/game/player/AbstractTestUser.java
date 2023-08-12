@@ -23,7 +23,10 @@ import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
 import java.lang.reflect.Type;
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -34,8 +37,8 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private static final String SUBSCRIPTION_TOPIC_SUFFIX = "/topic/loops.%s";
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String HEADER_CONNECTION_TYPE = "X-Connection-Type";
-    private final UUID tableId;
     protected final CountdownLatches latches;
+    private final UUID tableId;
     @Getter
     private final String username;
     private final WebSocketStompClient client;
@@ -44,7 +47,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     @Getter
     private final AtomicReference<Throwable> exceptionThrown = new AtomicReference<>();
     @Getter
-    private List<ServerMessageDTO> receivedMessages = Collections.synchronizedList(new ArrayList<>());
+    private final List<ServerMessageDTO> receivedMessages = Collections.synchronizedList(new ArrayList<>());
     private StompSession session;
 
     public AbstractTestUser(UUID tableId, CountdownLatches latches,
@@ -117,12 +120,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         receivedMessages.add(message);
 
         if (message.getPayload() instanceof ErrorMessageDTO error) {
-            String subscriptionId = error.getSubscriptionId();
-            if (Objects.equals(headers.getSubscription(), subscriptionId)) {
-                logger.error("{} (subscription: {}) received personal error message: {}", username, subscriptionId, error.getMessage());
-            } else {
-                logger.error("{} received error message: {}", username, error.getMessage());
-            }
+            logger.error("{} received error message: {}", username, error.getMessage());
             return;
         } else if (message.getPayload() instanceof LogMessageDTO log) {
             logger.info("{} received log message: {}", username, log.getMessage());

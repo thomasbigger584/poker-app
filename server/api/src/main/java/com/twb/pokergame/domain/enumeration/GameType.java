@@ -6,8 +6,6 @@ import com.twb.pokergame.service.game.impl.BlackjackGameThread;
 import com.twb.pokergame.service.game.impl.TexasHoldemGameThread;
 import org.springframework.context.ApplicationContext;
 
-import java.util.UUID;
-
 public enum GameType {
     TEXAS_HOLDEM,
     BLACKJACK;

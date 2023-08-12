@@ -1,8 +1,8 @@
 package com.twb.pokergame.web.rest;
 
 import com.twb.pokergame.dto.pokertable.TableDTO;
-import com.twb.pokergame.service.TableService;
 import com.twb.pokergame.service.PaginationService;
+import com.twb.pokergame.service.TableService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

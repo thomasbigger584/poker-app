@@ -75,20 +75,52 @@ public class TexasHoldemGameIT extends BaseTestContainersIT {
         // Note: assertions aren't tight as we cut off a round when players disconnect, so treating as good enough
 
         assertThat(listenerMessages).filteredOn(message -> message.getType().equals(ServerMessageType.DEAL_INIT))
-                .hasSizeBetween((players.size() * NUM_OF_ROUNDS) * 2, Integer.MAX_VALUE);
+                .hasSizeBetween((players.size() * NUM_OF_ROUNDS) * 2, (players.size() * NUM_OF_ROUNDS + 1) * 2);
 
         assertThat(listenerMessages).filteredOn(message -> message.getType().equals(ServerMessageType.DEAL_COMMUNITY))
-                .hasSizeBetween(NUM_OF_ROUNDS * 5, Integer.MAX_VALUE);
+                .hasSizeBetween(NUM_OF_ROUNDS * 5, (NUM_OF_ROUNDS + 1) * 5);
 
-        assertThat(listenerMessages)
-                .filteredOn(message -> message.getType()
-                        .equals(ServerMessageType.ROUND_FINISHED))
+        assertThat(listenerMessages).filteredOn(message -> message.getType().equals(ServerMessageType.ROUND_FINISHED))
                 .hasSizeBetween(NUM_OF_ROUNDS, NUM_OF_ROUNDS + 1);
 
-        assertThat(listenerMessages)
-                .filteredOn(message -> message.getType()
-                        .equals(ServerMessageType.GAME_FINISHED))
+        assertThat(listenerMessages).filteredOn(message -> message.getType().equals(ServerMessageType.GAME_FINISHED))
                 .hasSize(1);
+    }
+
+    @Test
+    public void testTexasHoldemGamePlayerAlreadyConnected() throws Throwable {
+        TableDTO table = getTexasHoldemTable();
+
+        CountdownLatches latches = CountdownLatches.create();
+
+        List<AbstractTestUser> players = new ArrayList<>();
+        players.add(new TestTexasHoldemPlayerUser(table.getId(), latches, PLAYER_1_USERNAME, PASSWORD));
+        players.add(new TestTexasHoldemPlayerUser(table.getId(), latches, PLAYER_1_USERNAME, PASSWORD));
+
+
+        for (AbstractTestUser player : players) {
+            player.connect();
+            Thread.sleep(PLAYER_WAIT);
+        }
+
+        for (AbstractTestUser player : players) {
+            player.disconnect();
+            Thread.sleep(PLAYER_WAIT);
+        }
+
+        AbstractTestUser player1 = players.get(0);
+        AbstractTestUser player2 = players.get(1);
+
+        assertThat(player1.getReceivedMessages()).filteredOn(message -> message.getType().equals(ServerMessageType.ERROR))
+                .hasSize(0);
+
+
+        assertThat(player2.getReceivedMessages())
+                .filteredOn(message -> message.getType().equals(ServerMessageType.ERROR))
+                .hasSize(1)
+                .last()
+                .extracting("payload.message")
+                .asString().contains("User thomas already connected to table");
     }
 
     // *****************************************************************************************

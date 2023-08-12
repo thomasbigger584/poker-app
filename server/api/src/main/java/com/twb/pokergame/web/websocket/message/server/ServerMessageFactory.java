@@ -69,13 +69,6 @@ public class ServerMessageFactory {
         return ServerMessageDTO.create(ServerMessageType.LOG, payload);
     }
 
-    public ServerMessageDTO errorMessage(String message, String subscriptionId) {
-        ErrorMessageDTO payload = new ErrorMessageDTO();
-        payload.setMessage(message);
-        payload.setSubscriptionId(subscriptionId);
-        return ServerMessageDTO.create(ServerMessageType.ERROR, payload);
-    }
-
     public ServerMessageDTO errorMessage(String message) {
         ErrorMessageDTO payload = new ErrorMessageDTO();
         payload.setMessage(message);

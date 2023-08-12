@@ -4,7 +4,6 @@ import com.twb.pokergame.domain.Card;
 import com.twb.pokergame.domain.Hand;
 import com.twb.pokergame.domain.PlayerSession;
 import com.twb.pokergame.domain.Round;
-import com.twb.pokergame.domain.enumeration.CardType;
 import com.twb.pokergame.mapper.HandMapper;
 import com.twb.pokergame.repository.HandRepository;
 import lombok.RequiredArgsConstructor;

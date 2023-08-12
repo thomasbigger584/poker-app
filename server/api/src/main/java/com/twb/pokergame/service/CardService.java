@@ -3,7 +3,6 @@ package com.twb.pokergame.service;
 import com.twb.pokergame.domain.Card;
 import com.twb.pokergame.domain.Hand;
 import com.twb.pokergame.domain.Round;
-import com.twb.pokergame.domain.enumeration.CardType;
 import com.twb.pokergame.mapper.CardMapper;
 import com.twb.pokergame.repository.CardRepository;
 import lombok.RequiredArgsConstructor;

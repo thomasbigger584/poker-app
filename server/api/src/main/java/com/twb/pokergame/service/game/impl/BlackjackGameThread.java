@@ -9,8 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.util.UUID;
-
 @Component
 @Scope("prototype")
 public final class BlackjackGameThread extends GameThread {

@@ -7,10 +7,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
-import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.*;
 
@@ -60,7 +57,6 @@ public class SessionEventListener {
     @EventListener
     public void handleEvent(SessionDisconnectEvent event) {
         logger.info("Disconnecting: {}", event);
-
         Principal principal = event.getUser();
         if (principal == null) {
             logger.warn("Session disconnect cannot disconnect player as principal is null");

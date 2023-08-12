@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.twb.pokergame.utils.keycloak.KeycloakHelper;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.keycloak.admin.client.Keycloak;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,27 +25,11 @@ public abstract class BaseTestContainersIT {
     private static final String TEST_DOCKER_COMPOSE_YML = "test-docker-compose.yml";
     private static final String EXPOSED_SERVICE = "api";
     private static final int EXPOSED_PORT = 8081;
+    private static final String BEARER_PREFIX = "Bearer ";
     protected static final String API_BASE_URL = String.format("http://localhost:%d", EXPOSED_PORT);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    public static final String BEARER_PREFIX = "Bearer ";
     private static DockerComposeContainer<?> dockerComposeContainer;
     private static Keycloak keycloak;
-
-    @BeforeAll
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public static void beforeAll() {
-        File file = new File(DOCKER_COMPOSE_LOCATION + TEST_DOCKER_COMPOSE_YML);
-        dockerComposeContainer = new DockerComposeContainer(file)
-                .withExposedService(EXPOSED_SERVICE, EXPOSED_PORT)
-                .withLogConsumer(EXPOSED_SERVICE, new Slf4jLogConsumer(logger).withPrefix(EXPOSED_SERVICE));
-        dockerComposeContainer.start();
-        keycloak = KeycloakHelper.getKeycloak("admin", "admin");
-    }
-
-    @AfterAll
-    public static void afterAll() {
-        dockerComposeContainer.stop();
-    }
 
     protected static <ResultBody, RequestBody> ApiHttpResponse<ResultBody> post(Class<ResultBody> resultClass,
                                                                                 RequestBody requestBody, String endpoint) throws Exception {
@@ -84,6 +68,22 @@ public abstract class BaseTestContainersIT {
     private static ApiHttpResponse<?> executeRequest(HttpRequest request) throws Exception {
         HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
         return new ApiHttpResponse<>(response, Void.class);
+    }
+
+    @BeforeEach
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public void beforeEach() {
+        File file = new File(DOCKER_COMPOSE_LOCATION + TEST_DOCKER_COMPOSE_YML);
+        dockerComposeContainer = new DockerComposeContainer(file)
+                .withExposedService(EXPOSED_SERVICE, EXPOSED_PORT)
+                .withLogConsumer(EXPOSED_SERVICE, new Slf4jLogConsumer(logger).withPrefix(EXPOSED_SERVICE));
+        dockerComposeContainer.start();
+        keycloak = KeycloakHelper.getKeycloak("admin", "admin");
+    }
+
+    @AfterEach
+    public void afterEach() {
+        dockerComposeContainer.stop();
     }
 
     protected record ApiHttpResponse<ResultBody>(HttpResponse<String> httpResponse, ResultBody resultBody) {
