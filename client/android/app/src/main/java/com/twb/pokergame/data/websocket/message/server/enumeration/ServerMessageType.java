@@ -4,6 +4,8 @@ import com.twb.pokergame.data.websocket.message.server.payload.ChatMessageDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.DealCommunityCardDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.DealPlayerCardDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.DealerDeterminedDTO;
+import com.twb.pokergame.data.websocket.message.server.payload.ErrorMessageDTO;
+import com.twb.pokergame.data.websocket.message.server.payload.GameFinishedDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.LogMessageDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.PlayerConnectedDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.PlayerDisconnectedDTO;
@@ -42,6 +44,7 @@ public enum ServerMessageType {
      */
     DEAL_COMMUNITY,
 
+    // todo: add more
 
     /*
      * Used to notify the client that the round has finished
@@ -49,8 +52,11 @@ public enum ServerMessageType {
      */
     ROUND_FINISHED,
 
-    // todo: add more
-
+    /*
+     * Used to notify the client that the game has finished
+     * so should quit from the table
+     */
+    GAME_FINISHED,
 
     /*
      * Chat message sent from a client to be forwarded
@@ -59,17 +65,22 @@ public enum ServerMessageType {
     CHAT,
 
     /*
-     * Generic log message sent from server t
-     * o be displayed in chatbox
+     * Generic log message sent from server
+     * to be displayed in chatbox
      */
     LOG,
+
+    /*
+     * Error message sent from server which can either be sent
+     * to a specific user or all users subscribed to the table
+     */
+    ERROR,
 
     /*
      * Used to notify all players on the
      * table that a player has disconnected
      */
     PLAYER_DISCONNECTED;
-
 
     public Class<?> getPayloadClass() {
         switch (this) {
@@ -85,6 +96,8 @@ public enum ServerMessageType {
                 return DealCommunityCardDTO.class;
             case ROUND_FINISHED:
                 return RoundFinishedDTO.class;
+            case GAME_FINISHED:
+                return GameFinishedDTO.class;
 
                 //todo: add more
 
@@ -92,6 +105,8 @@ public enum ServerMessageType {
                 return ChatMessageDTO.class;
             case LOG:
                 return LogMessageDTO.class;
+            case ERROR:
+                return ErrorMessageDTO.class;
             case PLAYER_DISCONNECTED:
                 return PlayerDisconnectedDTO.class;
             default:

@@ -73,7 +73,6 @@ public class TexasHoldemGameIT extends BaseTestContainersIT {
         List<ServerMessageDTO> listenerMessages = listener.getReceivedMessages();
 
         // Note: assertions aren't tight as we cut off a round when players disconnect, so treating as good enough
-
         assertThat(listenerMessages).filteredOn(message -> message.getType().equals(ServerMessageType.DEAL_INIT))
                 .hasSizeBetween((players.size() * NUM_OF_ROUNDS) * 2, (players.size() * NUM_OF_ROUNDS + 1) * 2);
 
@@ -97,7 +96,6 @@ public class TexasHoldemGameIT extends BaseTestContainersIT {
         players.add(new TestTexasHoldemPlayerUser(table.getId(), latches, PLAYER_1_USERNAME, PASSWORD));
         players.add(new TestTexasHoldemPlayerUser(table.getId(), latches, PLAYER_1_USERNAME, PASSWORD));
 
-
         for (AbstractTestUser player : players) {
             player.connect();
             Thread.sleep(PLAYER_WAIT);
@@ -113,7 +111,6 @@ public class TexasHoldemGameIT extends BaseTestContainersIT {
 
         assertThat(player1.getReceivedMessages()).filteredOn(message -> message.getType().equals(ServerMessageType.ERROR))
                 .hasSize(0);
-
 
         assertThat(player2.getReceivedMessages())
                 .filteredOn(message -> message.getType().equals(ServerMessageType.ERROR))

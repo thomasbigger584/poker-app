@@ -119,6 +119,13 @@ public class PokerGameActivity extends BaseAuthActivity {
         viewModel.roundFinished.observe(this, roundFinished -> {
             tableController.reset(roundFinished);
         });
+        viewModel.gameFinished.observe(this, gameFinished -> {
+            FinishActivityOnClickListener clickListener = new FinishActivityOnClickListener(this);
+            AlertModalDialog alertModalDialog = AlertModalDialog
+                    .newInstance(AlertModalDialog.AlertModalType.INFO, "Game Finished", clickListener);
+            alertModalDialog.show(getSupportFragmentManager(), "modal_alert");
+            chatBoxAdapter.add("Game Finished");
+        });
 
 
         //todo: add more
@@ -128,6 +135,9 @@ public class PokerGameActivity extends BaseAuthActivity {
         });
         viewModel.logMessage.observe(this, logMessage -> {
             chatBoxAdapter.add(logMessage.getMessage());
+        });
+        viewModel.errorMessage.observe(this, errorMessage -> {
+            handleErrorMessage(errorMessage.getMessage());
         });
         viewModel.playerDisconnected.observe(this, playerDisconnected -> {
             String username = playerDisconnected.getUsername();
@@ -148,9 +158,14 @@ public class PokerGameActivity extends BaseAuthActivity {
 
     @Override
     protected void onNotAuthorized(String message, @Nullable Throwable throwable) {
+        handleErrorMessage(message);
+    }
+
+    private void handleErrorMessage(String message) {
         DialogHelper.dismiss(loadingSpinner);
+        FinishActivityOnClickListener clickListener = new FinishActivityOnClickListener(this);
         AlertModalDialog alertModalDialog = AlertModalDialog
-                .newInstance(AlertModalDialog.AlertModalType.ERROR, message, new FinishActivityOnClickListener(this));
+                .newInstance(AlertModalDialog.AlertModalType.ERROR, message, clickListener);
         alertModalDialog.show(getSupportFragmentManager(), "modal_alert");
         chatBoxAdapter.add(message);
     }

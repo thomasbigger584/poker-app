@@ -38,9 +38,10 @@ public class WebSocketClient {
     private static final String SEND_ENDPOINT_PREFIX = "/app/pokerTable/%s";
     private static final String SEND_CHAT_MESSAGE = "/sendChatMessage";
     private static final String SEND_DISCONNECT_PLAYER = "/sendDisconnectPlayer";
-    private static final String AUTHORIZATION_HEADER = "X-Authorization";
+    private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
-
+    private static final String CONNECTION_TYPE_HEADER = "X-Connection-Type";
+    private static final String PLAYER_CONNECTION_TYPE = "PLAYER";
     private final AuthService authService;
     private final Gson gson;
 
@@ -70,6 +71,7 @@ public class WebSocketClient {
 
         List<StompHeader> headers = new ArrayList<>();
         headers.add(new StompHeader(AUTHORIZATION_HEADER, BEARER_PREFIX + accessToken));
+        headers.add(new StompHeader(CONNECTION_TYPE_HEADER, PLAYER_CONNECTION_TYPE));
 
         stompClient.withClientHeartbeat(CLIENT_HEARTBEAT_MS)
                 .withServerHeartbeat(SERVER_HEARTBEAT_MS);

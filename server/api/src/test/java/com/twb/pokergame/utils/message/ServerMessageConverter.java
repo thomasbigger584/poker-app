@@ -3,6 +3,7 @@ package com.twb.pokergame.utils.message;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageType;
 import org.apache.commons.lang3.NotImplementedException;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -22,7 +23,7 @@ public class ServerMessageConverter implements MessageConverter {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public Object fromMessage(Message<?> message, Class<?> targetClass) {
+    public Object fromMessage(Message<?> message, @NotNull Class<?> targetClass) {
         byte[] payload = (byte[]) message.getPayload();
         JSONObject jsonObject = getJsonObject(payload);
         ServerMessageType messageType = getServerMessageType(jsonObject);
@@ -77,7 +78,7 @@ public class ServerMessageConverter implements MessageConverter {
     }
 
     @Override
-    public Message<?> toMessage(Object payload, MessageHeaders headers) {
+    public Message<?> toMessage(@NotNull Object payload, MessageHeaders headers) {
         throw new NotImplementedException("Not implemented as not necessary. We do not create Message on the server manually");
     }
 }

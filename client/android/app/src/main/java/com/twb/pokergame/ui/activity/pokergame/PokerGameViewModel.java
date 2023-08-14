@@ -12,6 +12,8 @@ import com.twb.pokergame.data.websocket.message.server.payload.ChatMessageDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.DealCommunityCardDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.DealPlayerCardDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.DealerDeterminedDTO;
+import com.twb.pokergame.data.websocket.message.server.payload.ErrorMessageDTO;
+import com.twb.pokergame.data.websocket.message.server.payload.GameFinishedDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.LogMessageDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.PlayerConnectedDTO;
 import com.twb.pokergame.data.websocket.message.server.payload.PlayerDisconnectedDTO;
@@ -39,10 +41,13 @@ public class PokerGameViewModel extends ViewModel
     public MutableLiveData<DealPlayerCardDTO> dealPlayerCard = new MutableLiveData<>();
     public MutableLiveData<DealCommunityCardDTO> dealCommunityCard = new MutableLiveData<>();
     public MutableLiveData<RoundFinishedDTO> roundFinished = new MutableLiveData<>();
+    public MutableLiveData<GameFinishedDTO> gameFinished = new MutableLiveData<>();
 
+    //todo: add more
 
     public MutableLiveData<ChatMessageDTO> chatMessage = new MutableLiveData<>();
     public MutableLiveData<LogMessageDTO> logMessage = new MutableLiveData<>();
+    public MutableLiveData<ErrorMessageDTO> errorMessage = new MutableLiveData<>();
     public MutableLiveData<PlayerDisconnectedDTO> playerDisconnected = new MutableLiveData<>();
     public MutableLiveData<Void> closedConnection = new MutableLiveData<>();
 
@@ -94,6 +99,10 @@ public class PokerGameViewModel extends ViewModel
                 roundFinished.setValue((RoundFinishedDTO) message.getPayload());
                 break;
             }
+            case GAME_FINISHED: {
+                gameFinished.setValue((GameFinishedDTO) message.getPayload());
+                break;
+            }
 
             //todo: add more
 
@@ -103,6 +112,10 @@ public class PokerGameViewModel extends ViewModel
             }
             case LOG: {
                 logMessage.setValue((LogMessageDTO) message.getPayload());
+                break;
+            }
+            case ERROR: {
+                errorMessage.setValue((ErrorMessageDTO) message.getPayload());
                 break;
             }
             case PLAYER_DISCONNECTED: {
