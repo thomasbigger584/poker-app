@@ -11,6 +11,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Component
 @Transactional
@@ -19,11 +20,14 @@ public class DealerService {
     private static final SecureRandom RANDOM = new SecureRandom();
     private final PlayerSessionRepository playerSessionRepository;
 
-    public List<PlayerSession> nextDealerReorder(List<PlayerSession> playerSessions) {
+    public List<PlayerSession> nextDealerReorder(UUID tableId, List<PlayerSession> playerSessions) {
         List<PlayerSession> copyPlayerSessions = new ArrayList<>(playerSessions);
 
         PlayerSession nextDealer = getNextDealer(copyPlayerSessions);
         setNextDealer(playerSessions, nextDealer);
+
+        copyPlayerSessions = playerSessionRepository
+                .findConnectedPlayersByTableId(tableId);
 
         int dealerIndex = getDealerIndex(copyPlayerSessions);
         dealerIndex = dealerIndex + 1;
@@ -65,10 +69,14 @@ public class DealerService {
     }
 
     private void setNextDealer(List<PlayerSession> playerSessions, PlayerSession nextDealer) {
+        List<UUID> notDealerList = new ArrayList<>();
         for (PlayerSession playerSession : playerSessions) {
-            playerSession.setDealer(nextDealer.getId().equals(playerSession.getId()));
+            if (!nextDealer.getId().equals(playerSession.getId())) {
+                notDealerList.add(playerSession.getId());
+            }
         }
-        playerSessionRepository.saveAllAndFlush(playerSessions);
+        playerSessionRepository.updateNotDealer(notDealerList);
+        playerSessionRepository.updateDealer(nextDealer.getId());
     }
 
     //todo: maybe tidy with dto
@@ -94,7 +102,7 @@ public class DealerService {
     private int getDealerIndex(List<PlayerSession> playerSessions) {
         for (int index = 0; index < playerSessions.size(); index++) {
             PlayerSession playerSession = playerSessions.get(index);
-            if (playerSession.getDealer()) {
+            if (Boolean.TRUE.equals(playerSession.getDealer())) {
                 return index;
             }
         }

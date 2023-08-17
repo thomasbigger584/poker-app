@@ -95,7 +95,7 @@ public class TexasHoldemGameThread extends GameThread {
     }
 
     private void determineNextDealer() {
-        playerSessions = dealerService.nextDealerReorder(playerSessions);
+        playerSessions = dealerService.nextDealerReorder(params.getTableId(), playerSessions);
         PlayerSession currentDealer = dealerService.getCurrentDealer(playerSessions);
         dispatcher.send(params.getTableId(), messageFactory.dealerDetermined(currentDealer));
     }
