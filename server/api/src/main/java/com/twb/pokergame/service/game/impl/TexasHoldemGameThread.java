@@ -53,7 +53,7 @@ public class TexasHoldemGameThread extends GameThread {
     private void initDeal() {
         for (CardType cardType : CardType.PLAYER_CARDS) {
             for (PlayerSession playerSession : playerSessions) {
-                if (isGameInterrupted()) return;
+                checkGameInterrupted();
                 dealPlayerCard(cardType, playerSession);
             }
         }
@@ -61,7 +61,7 @@ public class TexasHoldemGameThread extends GameThread {
 
     private void dealFlop() {
         for (CardType cardType : CardType.FLOP_CARDS) {
-            if (isGameInterrupted()) return;
+            checkGameInterrupted();
             dealCommunityCard(cardType);
         }
     }
@@ -95,13 +95,9 @@ public class TexasHoldemGameThread extends GameThread {
     }
 
     private void determineNextDealer() {
-        try {
-            playerSessions = dealerService.nextDealerReorder(playerSessions);
-            PlayerSession currentDealer = dealerService.getCurrentDealer(playerSessions);
-            dispatcher.send(params.getTableId(), messageFactory.dealerDetermined(currentDealer));
-        } catch (Exception e) {
-            fail(e.getMessage());
-        }
+        playerSessions = dealerService.nextDealerReorder(playerSessions);
+        PlayerSession currentDealer = dealerService.getCurrentDealer(playerSessions);
+        dispatcher.send(params.getTableId(), messageFactory.dealerDetermined(currentDealer));
     }
 
     private void waitPlayerTurn() {

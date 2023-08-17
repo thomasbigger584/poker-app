@@ -18,7 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -41,7 +41,7 @@ public abstract class GameThread extends Thread {
     private int deckCardPointer;
     protected PokerTable pokerTable;
     protected Round currentRound;
-    protected List<PlayerSession> playerSessions;
+    protected List<PlayerSession> playerSessions = new ArrayList<>();
 
     @Autowired
     protected GameThreadManager threadManager;
@@ -73,33 +73,39 @@ public abstract class GameThread extends Thread {
     @Override
     public void run() {
         initializeThread();
-        initializeTable();
+        try {
+            initializeTable();
 
-        waitForPlayersToJoin(MINIMUM_PLAYERS_CONNECTED);
+            waitForPlayersToJoin(MINIMUM_PLAYERS_CONNECTED);
 
-        while (isPlayersJoined(MINIMUM_PLAYERS_CONNECTED)) {
-            if (isGameInterrupted()) return;
-            waitForPlayersToJoinNotZero();
-            if (isGameInterrupted()) return;
-            while (isPlayersJoined()) {
-                if (isGameInterrupted()) return;
-                createNewRound();
-                if (isGameInterrupted()) return;
-                initRound();
-                if (isGameInterrupted()) return;
-                runRound();
-                if (isGameInterrupted()) return;
-                finishRound();
-                if (isGameInterrupted()) return;
+            while (isPlayersJoined(MINIMUM_PLAYERS_CONNECTED)) {
+                checkGameInterrupted();
+                waitForPlayersToJoinNotZero();
+                checkGameInterrupted();
+                while (isPlayersJoined()) {
+                    checkGameInterrupted();
+                    createNewRound();
+                    checkGameInterrupted();
+                    initRound();
+                    checkGameInterrupted();
+                    runRound();
+                    checkGameInterrupted();
+                    finishRound();
+                    checkGameInterrupted();
+                }
             }
+            finishGame();
+        } catch (Exception e) {
+            finishRound();
+            finishGame();
+            logger.error(e.getMessage());
+            sendErrorMessage(e.getMessage());
         }
-        finishGame();
     }
 
     private void initializeThread() {
         setName(params.getTableId().toString());
         setPriority(Thread.MAX_PRIORITY);
-        interruptGame.set(false);
         gameInProgress.set(true);
         roundInProgress.set(false);
         params.getStartLatch().countDown();
@@ -108,24 +114,25 @@ public abstract class GameThread extends Thread {
     private void initializeTable() {
         Optional<PokerTable> tableOpt = tableRepository.findById(params.getTableId());
         if (tableOpt.isEmpty()) {
-            fail("No table found, cannot start game");
-        } else {
-            pokerTable = tableOpt.get();
+            throw new RuntimeException("No table found cannot start game");
         }
+        pokerTable = tableOpt.get();
     }
 
     private void waitForPlayersToJoinNotZero() {
         GameType gameType = pokerTable.getGameType();
         do {
-            if (isGameInterrupted()) return;
-            playerSessions = playerSessionRepository.findConnectedPlayersByTableId(params.getTableId());
+            checkGameInterrupted();
+            List<PlayerSession> playerSessions = playerSessionRepository
+                    .findConnectedPlayersByTableId(params.getTableId());
             if (CollectionUtils.isEmpty(playerSessions)) {
-                fail(NO_MORE_PLAYERS_CONNECTED);
-                return;
+                throw new RuntimeException(NO_MORE_PLAYERS_CONNECTED);
             }
             if (playerSessions.size() >= gameType.getMinPlayerCount()) {
+                this.playerSessions = playerSessions;
                 return;
             }
+            System.out.println("--> playerSessions = " + playerSessions);
             sendLogMessage("Waiting for players to join...");
             sleepInMs(DB_POLL_WAIT_MS);
         } while (playerSessions.size() < gameType.getMinPlayerCount());
@@ -133,10 +140,11 @@ public abstract class GameThread extends Thread {
 
     private void waitForPlayersToJoin(int minPlayerCount) {
         do {
-            if (isGameInterrupted()) return;
-            playerSessions = playerSessionRepository
+            checkGameInterrupted();
+            List<PlayerSession> playerSessions = playerSessionRepository
                     .findConnectedPlayersByTableId(params.getTableId());
             if (playerSessions.size() >= minPlayerCount) {
+                this.playerSessions = playerSessions;
                 return;
             }
             sendLogMessage("Waiting for players to join...");
@@ -150,15 +158,14 @@ public abstract class GameThread extends Thread {
         if (roundOpt.isPresent()) {
             currentRound = roundOpt.get();
             if (currentRound.getRoundState() != RoundState.WAITING_FOR_PLAYERS) {
-                fail("Cannot start an existing new round not in the WAITING_FOR_PLAYERS state");
+                throw new RuntimeException("Cannot start an existing new round not in the WAITING_FOR_PLAYERS state");
             }
         } else {
             Optional<PokerTable> tableOpt = tableRepository.findById(params.getTableId());
             if (tableOpt.isEmpty()) {
-                fail("Cannot start as table doesn't exist");
-            } else {
-                currentRound = roundService.create(pokerTable);
+                throw new RuntimeException("Cannot start as table doesn't exist");
             }
+            currentRound = roundService.create(pokerTable);
         }
         sendLogMessage("New Round...");
     }
@@ -175,12 +182,6 @@ public abstract class GameThread extends Thread {
         return playerSessions.size() >= count;
     }
 
-    protected void checkAtLeastOnePlayerConnected() {
-        if (CollectionUtils.isEmpty(playerSessions)) {
-            fail(NO_MORE_PLAYERS_CONNECTED);
-        }
-    }
-
     private void initRound() {
         roundInProgress.set(true);
         shuffleCards();
@@ -191,7 +192,7 @@ public abstract class GameThread extends Thread {
         RoundState roundState = RoundState.INIT_DEAL;
         saveRoundState(roundState);
         while (roundState != RoundState.FINISH) {
-            if (isGameInterrupted()) return;
+            checkGameInterrupted();
             onRunRound(roundState);
             roundState = getNextRoundState(roundState);
             saveRoundState(roundState);
@@ -248,38 +249,33 @@ public abstract class GameThread extends Thread {
         dispatcher.send(params.getTableId(), messageFactory.logMessage(message));
     }
 
+    protected void sendErrorMessage(String message) {
+        dispatcher.send(params.getTableId(), messageFactory.errorMessage(message));
+    }
+
     protected void sleepInMs(long ms) {
         try {
             Thread.sleep(ms);
         } catch (InterruptedException e) {
-            fail("Failed to sleep for " + ms);
+            //NOTE: this exception is needed to stop the flow when the thread gets interrupted.
+            // Subsequently, it will send an ERROR message to the client, how can we stop this?
+            throw new RuntimeException("Failed to sleep for " + ms + "ms", e);
         }
     }
 
     public void onPlayerDisconnected(String username) {
-        // potentially fold username
+        //todo: potentially fold username
+    }
 
-
-        List<PlayerSession> playerSessions =
-                playerSessionRepository.findConnectedPlayersByTableId(params.getTableId());
-        if (CollectionUtils.isEmpty(playerSessions)) {
-            fail(NO_MORE_PLAYERS_CONNECTED);
+    protected void checkGameInterrupted() {
+        if (interruptGame.get() || isInterrupted()) {
+            throw new RuntimeException("Game is interrupted");
         }
     }
 
-    protected void fail(String message) {
-        logger.error(message);
-        sendLogMessage(message);
+    public void stopThread() {
         interruptGame.set(true);
-    }
-
-    protected boolean isGameInterrupted() {
-        if (interruptGame.get() || interrupted()) {
-            finishRound();
-            finishGame();
-            return true;
-        }
-        return false;
+        interrupt();
     }
 
     protected void handleWinners(List<EvalPlayerHandDTO> winners) {

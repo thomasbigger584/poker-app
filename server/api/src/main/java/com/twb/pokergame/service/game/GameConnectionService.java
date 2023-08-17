@@ -14,6 +14,7 @@ import com.twb.pokergame.web.websocket.message.MessageDispatcher;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageFactory;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -79,12 +80,24 @@ public class GameConnectionService {
 
     public void onPlayerDisconnected(UUID tableId, String username) {
         mutex.execute(tableId, () -> {
+            Optional<GameThread> threadOpt = threadManager.getIfExists(tableId);
+
+            if (threadOpt.isPresent()) {
+                GameThread thread = threadOpt.get();
+                List<PlayerSession> playerSessions =
+                        playerSessionRepository.findOtherConnectedPlayersByTableId(tableId, username);
+
+                if (CollectionUtils.isEmpty(playerSessions)) {
+                    thread.stopThread();
+                } else {
+                    thread.onPlayerDisconnected(username);
+                }
+            }
+
             playerSessionService.disconnectUser(tableId, username);
             ServerMessageDTO message =
                     messageFactory.playerDisconnected(username);
             dispatcher.send(tableId, message);
-            threadManager.getIfExists(tableId)
-                    .ifPresent(gameThread -> gameThread.onPlayerDisconnected(username));
         });
     }
 }

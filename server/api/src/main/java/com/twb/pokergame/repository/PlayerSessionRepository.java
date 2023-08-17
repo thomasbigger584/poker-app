@@ -51,4 +51,13 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
     @Transactional
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     List<PlayerSession> findConnectedPlayersByTableId(@Param("tableId") UUID tableId);
+
+    @Query("SELECT s " +
+            "FROM PlayerSession s " +
+            "WHERE s.pokerTable.id = :tableId " +
+            "AND s.sessionState = com.twb.pokergame.domain.enumeration.SessionState.CONNECTED " +
+            "AND s.connectionType = com.twb.pokergame.domain.enumeration.ConnectionType.PLAYER " +
+            "AND s.user.username != :username " +
+            "ORDER BY s.position ASC ")
+    List<PlayerSession> findOtherConnectedPlayersByTableId(@Param("tableId") UUID tableId, @Param("username") String username);
 }
