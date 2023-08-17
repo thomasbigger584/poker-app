@@ -52,7 +52,6 @@ public class PlayerSessionService {
         return mapper.modelToDto(session);
     }
 
-
     //todo: think about what to do with funds, it should be persisted elsewhere,
     // probably on AppUser or separate Bank table
     public void disconnectUser(UUID tableId, String username) {

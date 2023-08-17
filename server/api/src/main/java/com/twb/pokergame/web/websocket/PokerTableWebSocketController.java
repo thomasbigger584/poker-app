@@ -48,7 +48,7 @@ public class PokerTableWebSocketController {
         logger.info(">>>> sendPlayerSubscribed - Poker Table: {} - User: {} - Type: {}", tableId, principal.getName(), connectionType);
         ServerMessageDTO message;
         try {
-            message = gameConnectionService.onPlayerSubscribed(tableId, connectionType, principal.getName());
+            message = gameConnectionService.onUserConnected(tableId, connectionType, principal.getName());
             logger.info("<<<< sendPlayerSubscribed - " + message);
         } catch (Exception exception) {
             message = messageFactory.errorMessage(exception.getMessage());
@@ -70,7 +70,7 @@ public class PokerTableWebSocketController {
     public void sendDisconnectPlayer(Principal principal,
                                      @DestinationVariable(POKER_TABLE_ID) UUID tableId) {
         logger.info(">>>> sendDisconnectPlayer - Poker Table: {} - User: {}", tableId, principal.getName());
-        gameConnectionService.onPlayerDisconnected(tableId, principal.getName());
+        gameConnectionService.onUserDisconnected(tableId, principal.getName());
     }
 
     private ConnectionType getConnectionType(StompHeaderAccessor headerAccessor) {
