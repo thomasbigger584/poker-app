@@ -42,65 +42,58 @@ public class GameConnectionService {
     private final XSync<UUID> mutex;
 
     public ServerMessageDTO onUserConnected(UUID tableId, ConnectionType connectionType, String username) {
-        return mutex.evaluate(tableId, () -> connectUser(tableId, connectionType, username));
+        return mutex.evaluate(tableId, () -> {
+            Optional<PokerTable> pokerTableOpt = tableRepository.findById(tableId);
+            if (pokerTableOpt.isEmpty()) {
+                String message = String.format("Failed to connect user %s to table %s as table not found", username, tableId);
+                throw new RuntimeException(message);
+            }
+
+            Optional<AppUser> userOpt = userRepository.findByUsername(username);
+            if (userOpt.isEmpty()) {
+                String message = String.format("Failed to connect user %s to table %s as user not found", username, tableId);
+                throw new RuntimeException(message);
+            }
+
+            Optional<PlayerSession> playerSessionOpt = playerSessionRepository.findByTableIdAndUsername(tableId, username);
+            if (playerSessionOpt.isPresent()) {
+                String message = String.format("User %s already connected to table %s", username, tableId);
+                throw new RuntimeException(message);
+            }
+
+            PokerTable pokerTable = pokerTableOpt.get();
+            AppUser appUser = userOpt.get();
+
+            if (connectionType == ConnectionType.PLAYER) {
+                threadManager.createIfNotExist(pokerTable);
+            }
+
+            PlayerSessionDTO connectedPlayerSession = playerSessionService.connectUserToRound(appUser, connectionType, pokerTable);
+            List<PlayerSessionDTO> allPlayerSessions = playerSessionService.getByTableId(tableId);
+
+            // send to all clients that this table has connected
+            dispatcher.send(tableId, messageFactory.playerConnected(connectedPlayerSession));
+            return messageFactory.playerSubscribed(allPlayerSessions);
+        });
     }
 
     public void onUserDisconnected(UUID tableId, String username) {
-        mutex.execute(tableId, () -> disconnectUser(tableId, username));
-    }
-
-    @Transactional
-    public ServerMessageDTO connectUser(UUID tableId, ConnectionType connectionType, String username) {
-        Optional<PokerTable> pokerTableOpt = tableRepository.findById(tableId);
-        if (pokerTableOpt.isEmpty()) {
-            String message = String.format("Failed to connect user %s to table %s as table not found", username, tableId);
-            throw new RuntimeException(message);
-        }
-
-        Optional<AppUser> userOpt = userRepository.findByUsername(username);
-        if (userOpt.isEmpty()) {
-            String message = String.format("Failed to connect user %s to table %s as user not found", username, tableId);
-            throw new RuntimeException(message);
-        }
-
-        Optional<PlayerSession> playerSessionOpt = playerSessionRepository.findByTableIdAndUsername(tableId, username);
-        if (playerSessionOpt.isPresent()) {
-            String message = String.format("User %s already connected to table %s", username, tableId);
-            throw new RuntimeException(message);
-        }
-
-        PokerTable pokerTable = pokerTableOpt.get();
-        AppUser appUser = userOpt.get();
-
-        if (connectionType == ConnectionType.PLAYER) {
-            threadManager.createIfNotExist(pokerTable);
-        }
-
-        PlayerSessionDTO connectedPlayerSession = playerSessionService.connectUserToRound(appUser, connectionType, pokerTable);
-        List<PlayerSessionDTO> allPlayerSessions = playerSessionService.getByTableId(tableId);
-
-        // send to all clients that this table has connected
-        dispatcher.send(tableId, messageFactory.playerConnected(connectedPlayerSession));
-        return messageFactory.playerSubscribed(allPlayerSessions);
-    }
-
-    @Transactional(readOnly = true)
-    public void disconnectUser(UUID tableId, String username) {
-        Optional<GameThread> threadOpt = threadManager.getIfExists(tableId);
-        if (threadOpt.isPresent()) {
-            GameThread thread = threadOpt.get();
-            List<PlayerSession> playerSessions =
-                    playerSessionRepository.findOtherConnectedPlayersByTableId(tableId, username);
-
-            if (CollectionUtils.isEmpty(playerSessions)) {
-                thread.stopThread();
-            } else {
-                thread.onPlayerDisconnected(username);
+        mutex.execute(tableId, () -> {
+            playerSessionService.disconnectUser(tableId, username);
+            Optional<GameThread> threadOpt = threadManager.getIfExists(tableId);
+            if (threadOpt.isPresent()) {
+                GameThread thread = threadOpt.get();
+                List<PlayerSession> playerSessions =
+                        playerSessionRepository.findConnectedPlayersByTableIdNoLock(tableId);
+                if (CollectionUtils.isEmpty(playerSessions)) {
+                    thread.stopThread();
+                } else {
+                    thread.onPlayerDisconnected(username);
+                }
             }
-        }
-        playerSessionService.disconnectUser(tableId, username);
-        ServerMessageDTO message =
-                messageFactory.playerDisconnected(username);
-        dispatcher.send(tableId, message);
+            ServerMessageDTO message =
+                    messageFactory.playerDisconnected(username);
+            dispatcher.send(tableId, message);
+        });
     }
 }

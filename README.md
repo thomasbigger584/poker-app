@@ -20,7 +20,7 @@ In your terminal run the following command from the root directory to run the se
 - To run the Android App, install Android Studio and open the folder `client/android` as a project.
 - Once everything syncs and builds you can run it on your device.
 
-### CLI
+### CLI (Mac)
 
 - Add the android tools to your PATH. Installed via Android Studio or separately
 
@@ -29,6 +29,12 @@ export ANDROID_HOME=/Users/<username>/Library/Android/sdk
 export PATH=$PATH:$ANDROID_HOME/platform-tools
 export PATH=$PATH:$ANDROID_HOME/tools
 export PATH=$PATH:$ANDROID_HOME/tools/bin
+```
+
+### CLI (Linux)
+
+```shell
+sudo apt install adb
 ```
 
 - Run the following command from root directory to run app to all connected android devices.

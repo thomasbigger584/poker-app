@@ -109,6 +109,7 @@ public abstract class GameThread extends Thread {
     private void initializeThread() {
         setName(params.getTableId().toString());
         setPriority(Thread.MAX_PRIORITY);
+        interruptGame.set(false);
         gameInProgress.set(true);
         roundInProgress.set(false);
         params.getStartLatch().countDown();
@@ -201,20 +202,6 @@ public abstract class GameThread extends Thread {
             saveRoundState(roundState);
         }
     }
-
-    // ***************************************************************
-    // Abstract Methods
-    // ***************************************************************
-
-    abstract protected void onInitRound();
-
-    abstract protected void onRunRound(RoundState roundState);
-
-    abstract protected RoundState getNextRoundState(RoundState roundState);
-
-    // ***************************************************************
-    // Helper Methods
-    // ***************************************************************
 
     protected void shuffleCards() {
         deckOfCards = DeckOfCardsFactory.getCards(true);
@@ -316,4 +303,14 @@ public abstract class GameThread extends Thread {
         }
         return sb.toString();
     }
+
+    // ***************************************************************
+    // Abstract Methods
+    // ***************************************************************
+
+    abstract protected void onInitRound();
+
+    abstract protected void onRunRound(RoundState roundState);
+
+    abstract protected RoundState getNextRoundState(RoundState roundState);
 }

@@ -24,7 +24,7 @@ public class DealerService {
         List<PlayerSession> copyPlayerSessions = new ArrayList<>(playerSessions);
 
         PlayerSession nextDealer = getNextDealer(copyPlayerSessions);
-        setNextDealer(playerSessions, nextDealer);
+        setNextDealer(tableId, nextDealer);
 
         copyPlayerSessions = playerSessionRepository
                 .findConnectedPlayersByTableId(tableId);
@@ -37,8 +37,8 @@ public class DealerService {
         return sortDealerLast(copyPlayerSessions, dealerIndex);
     }
 
-    private PlayerSession getNextDealer(List<PlayerSession> copyPlayerSessions) {
-        Optional<Pair<Integer, PlayerSession>> currentDealerOpt = getCurrentDealerWithIndex(copyPlayerSessions);
+    private PlayerSession getNextDealer(List<PlayerSession> playerSessions) {
+        Optional<Pair<Integer, PlayerSession>> currentDealerOpt = getCurrentDealerWithIndex(playerSessions);
 
         PlayerSession currentDealer;
         if (currentDealerOpt.isPresent()) {
@@ -47,11 +47,11 @@ public class DealerService {
             int dealerIndex = currentDealerWithIndex.getFirst();
             currentDealer = currentDealerWithIndex.getSecond();
 
-            copyPlayerSessions = sortDealerLast(copyPlayerSessions, dealerIndex);
+            playerSessions = sortDealerLast(playerSessions, dealerIndex);
 
-            int numPlayers = copyPlayerSessions.size();
+            int numPlayers = playerSessions.size();
             for (int index = 0; index < numPlayers; index++) {
-                PlayerSession thisPlayerSession = copyPlayerSessions.get(index);
+                PlayerSession thisPlayerSession = playerSessions.get(index);
 
                 if (thisPlayerSession.getPosition()
                         .equals(currentDealer.getPosition())) {
@@ -59,23 +59,17 @@ public class DealerService {
                     if (nextIndex >= numPlayers) {
                         nextIndex = 0;
                     }
-                    return copyPlayerSessions.get(nextIndex);
+                    return playerSessions.get(nextIndex);
                 }
             }
         } else {
-            return copyPlayerSessions.get(RANDOM.nextInt(copyPlayerSessions.size()));
+            return playerSessions.get(RANDOM.nextInt(playerSessions.size()));
         }
         throw new RuntimeException("Failed to get next dealer");
     }
 
-    private void setNextDealer(List<PlayerSession> playerSessions, PlayerSession nextDealer) {
-        List<UUID> notDealerList = new ArrayList<>();
-        for (PlayerSession playerSession : playerSessions) {
-            if (!nextDealer.getId().equals(playerSession.getId())) {
-                notDealerList.add(playerSession.getId());
-            }
-        }
-        playerSessionRepository.updateNotDealer(notDealerList);
+    private void setNextDealer(UUID tableId, PlayerSession nextDealer) {
+        playerSessionRepository.resetDealerForTableId(tableId);
         playerSessionRepository.updateDealer(nextDealer.getId());
     }
 
