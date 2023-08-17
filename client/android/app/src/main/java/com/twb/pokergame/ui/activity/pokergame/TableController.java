@@ -40,22 +40,22 @@ public class TableController {
         positionCardPairs.clear();
 
         int index = 0;
-        for (int thisPosition = playerPosition; thisPosition <= 6; thisPosition++, index++) {
+        for (int thisPosition = playerPosition; thisPosition <= TABLE_SIZE; thisPosition++, index++) {
             positionCardPairs.put(thisPosition, cardPairLayouts[index]);
         }
         for (int thisPosition = 1; thisPosition < playerPosition; thisPosition++, index++) {
             positionCardPairs.put(thisPosition, cardPairLayouts[index]);
         }
-        cardPairLayouts[0].updateDetails(playerSession);
-
-        Boolean dealer = playerSession.getDealer();
-        cardPairLayouts[0].updateDealerChip(dealer != null && dealer);
+        connectPlayer(playerSession, cardPairLayouts[0]);
     }
 
     public void connectOtherPlayer(PlayerSessionDTO playerSession) {
         CardPairLayout cardPairLayout = getCardPairLayout(playerSession.getPosition());
-        cardPairLayout.updateDetails(playerSession);
+        connectPlayer(playerSession, cardPairLayout);
+    }
 
+    private void connectPlayer(PlayerSessionDTO playerSession, CardPairLayout cardPairLayout) {
+        cardPairLayout.updateDetails(playerSession);
         Boolean dealer = playerSession.getDealer();
         cardPairLayout.updateDealerChip(dealer != null && dealer);
     }

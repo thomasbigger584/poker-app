@@ -20,7 +20,7 @@ public final class BlackjackGameThread extends GameThread {
     }
 
     @Override
-    protected void onRoundInit() {
+    protected void onInitRound() {
         throw new NotImplementedException("Blackjack not implemented yet");
     }
 

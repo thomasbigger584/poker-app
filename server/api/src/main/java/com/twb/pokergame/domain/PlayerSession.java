@@ -76,6 +76,7 @@ public class PlayerSession {
     public String toString() {
         return "PlayerSession{" +
                 "id=" + id +
+                ", user=" + user +
                 ", position=" + position +
                 ", dealer=" + dealer +
                 ", funds=" + funds +

@@ -5,6 +5,7 @@ import com.twb.pokergame.domain.enumeration.GameType;
 import com.twb.pokergame.domain.enumeration.RoundState;
 import com.twb.pokergame.repository.*;
 import com.twb.pokergame.service.CardService;
+import com.twb.pokergame.service.DealerService;
 import com.twb.pokergame.service.HandService;
 import com.twb.pokergame.service.RoundService;
 import com.twb.pokergame.service.eval.HandEvaluator;
@@ -24,7 +25,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @RequiredArgsConstructor
 public abstract class GameThread extends Thread {
-    protected static final SecureRandom RANDOM = new SecureRandom();
     protected static final int DEAL_WAIT_MS = 1000;
     protected static final int DB_POLL_WAIT_MS = 1000;
     protected static final int EVALUATION_WAIT_MS = 4000;
@@ -55,6 +55,8 @@ public abstract class GameThread extends Thread {
     protected RoundRepository roundRepository;
     @Autowired
     protected RoundService roundService;
+    @Autowired
+    protected DealerService dealerService;
     @Autowired
     protected PlayerSessionRepository playerSessionRepository;
     @Autowired
@@ -132,7 +134,8 @@ public abstract class GameThread extends Thread {
     private void waitForPlayersToJoin(int minPlayerCount) {
         do {
             if (isGameInterrupted()) return;
-            playerSessions = playerSessionRepository.findConnectedPlayersByTableId(params.getTableId());
+            playerSessions = playerSessionRepository
+                    .findConnectedPlayersByTableId(params.getTableId());
             if (playerSessions.size() >= minPlayerCount) {
                 return;
             }
@@ -181,7 +184,7 @@ public abstract class GameThread extends Thread {
     private void initRound() {
         roundInProgress.set(true);
         shuffleCards();
-        onRoundInit();
+        onInitRound();
     }
 
     private void runRound() {
@@ -199,7 +202,7 @@ public abstract class GameThread extends Thread {
     // Abstract Methods
     // ***************************************************************
 
-    abstract protected void onRoundInit();
+    abstract protected void onInitRound();
 
     abstract protected void onRunRound(RoundState roundState);
 
