@@ -3,6 +3,7 @@ package com.twb.pokergame.service.game;
 import com.twb.pokergame.domain.*;
 import com.twb.pokergame.domain.enumeration.GameType;
 import com.twb.pokergame.domain.enumeration.RoundState;
+import com.twb.pokergame.exception.GameThreadException;
 import com.twb.pokergame.repository.*;
 import com.twb.pokergame.service.CardService;
 import com.twb.pokergame.service.DealerService;
@@ -99,7 +100,9 @@ public abstract class GameThread extends Thread {
             finishRound();
             finishGame();
             logger.error(e.getMessage());
-            sendErrorMessage(e.getMessage());
+            if (e instanceof GameThreadException) {
+                sendErrorMessage(e.getMessage());
+            }
         }
     }
 
@@ -114,7 +117,7 @@ public abstract class GameThread extends Thread {
     private void initializeTable() {
         Optional<PokerTable> tableOpt = tableRepository.findById(params.getTableId());
         if (tableOpt.isEmpty()) {
-            throw new RuntimeException("No table found cannot start game");
+            throw new GameThreadException("No table found cannot start game");
         }
         pokerTable = tableOpt.get();
     }
@@ -126,7 +129,7 @@ public abstract class GameThread extends Thread {
             List<PlayerSession> playerSessions = playerSessionRepository
                     .findConnectedPlayersByTableId(params.getTableId());
             if (CollectionUtils.isEmpty(playerSessions)) {
-                throw new RuntimeException(NO_MORE_PLAYERS_CONNECTED);
+                throw new GameThreadException(NO_MORE_PLAYERS_CONNECTED);
             }
             if (playerSessions.size() >= gameType.getMinPlayerCount()) {
                 this.playerSessions = playerSessions;
@@ -158,12 +161,12 @@ public abstract class GameThread extends Thread {
         if (roundOpt.isPresent()) {
             currentRound = roundOpt.get();
             if (currentRound.getRoundState() != RoundState.WAITING_FOR_PLAYERS) {
-                throw new RuntimeException("Cannot start an existing new round not in the WAITING_FOR_PLAYERS state");
+                throw new GameThreadException("Cannot start an existing new round not in the WAITING_FOR_PLAYERS state");
             }
         } else {
             Optional<PokerTable> tableOpt = tableRepository.findById(params.getTableId());
             if (tableOpt.isEmpty()) {
-                throw new RuntimeException("Cannot start as table doesn't exist");
+                throw new GameThreadException("Cannot start as table doesn't exist");
             }
             currentRound = roundService.create(pokerTable);
         }
@@ -257,8 +260,6 @@ public abstract class GameThread extends Thread {
         try {
             Thread.sleep(ms);
         } catch (InterruptedException e) {
-            //NOTE: this exception is needed to stop the flow when the thread gets interrupted.
-            // Subsequently, it will send an ERROR message to the client, how can we stop this?
             throw new RuntimeException("Failed to sleep for " + ms + "ms", e);
         }
     }
@@ -269,7 +270,7 @@ public abstract class GameThread extends Thread {
 
     protected void checkGameInterrupted() {
         if (interruptGame.get() || isInterrupted()) {
-            throw new RuntimeException("Game is interrupted");
+            throw new GameThreadException("Game is interrupted");
         }
     }
 
