@@ -19,9 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @RequiredArgsConstructor
@@ -151,7 +149,6 @@ public abstract class GameThread extends Thread {
             playerSessions = playerSessionRepository
                     .findConnectedPlayersByTableId(params.getTableId());
             if (playerSessions.size() >= minPlayerCount) {
-                this.playerSessions = playerSessions;
                 return;
             }
             if (pollCount % MESSAGE_POLL_DIVISOR == 0) {
@@ -177,6 +174,10 @@ public abstract class GameThread extends Thread {
             }
             currentRound = roundService.create(pokerTable);
         }
+
+
+
+
         sendLogMessage("New Round...");
     }
 

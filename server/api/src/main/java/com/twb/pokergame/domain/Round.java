@@ -27,7 +27,7 @@ public class Round {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "round_state")
-    private RoundState roundState = RoundState.WAITING_FOR_PLAYERS;
+    private RoundState roundState;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "poker_table_id")
@@ -35,6 +35,9 @@ public class Round {
 
     @OneToMany(mappedBy = "round")
     private List<Card> communityCards = new ArrayList<>();
+
+    @OneToMany(mappedBy = "round")
+    private List<PlayerAction> playerActions = new ArrayList<>();
 
     @Override
     public boolean equals(Object o) {

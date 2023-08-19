@@ -15,12 +15,10 @@ public class HandTypeEvaluator {
     private static final List<RankType> ROYAL_FLUSH_RANKS =
             Arrays.asList(RankType.TEN, RankType.JACK, RankType.QUEEN, RankType.KING, RankType.ACE);
 
-    private static final int SEVEN_CARDS_NEEDED = 7;
     private static final int FIVE_CARDS_NEEDED = 5;
     private static final int FOUR_CARDS_NEEDED = 4;
     private static final int THREE_CARDS_NEEDED = 3;
     private static final int TWO_CARDS_NEEDED = 2;
-    private static final int ONE_CARD_NEEDED = 1;
 
     public HandType evaluate(List<Card> cards) {
         if (isRoyalFlush(cards)) {
@@ -41,7 +39,7 @@ public class HandTypeEvaluator {
             return HandType.TWO_PAIR;
         } else if (isPair(cards)) {
             return HandType.PAIR;
-        } else if (cards.size() >= ONE_CARD_NEEDED) {
+        } else if (!cards.isEmpty()) {
             return HandType.HIGH_CARD;
         }
         return HandType.EMPTY_HAND;
