@@ -75,5 +75,5 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             "WHERE s.sessionState = com.twb.pokergame.domain.enumeration.SessionState.CONNECTED " +
             "AND s.connectionType = com.twb.pokergame.domain.enumeration.ConnectionType.PLAYER " +
             "AND s.id = :id ")
-    void updateDealer(@Param("id") UUID id);
+    void setDealer(@Param("id") UUID id);
 }

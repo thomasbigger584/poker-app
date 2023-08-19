@@ -29,12 +29,7 @@ public class DealerService {
         copyPlayerSessions = playerSessionRepository
                 .findConnectedPlayersByTableId(tableId);
 
-        int dealerIndex = getDealerIndex(copyPlayerSessions);
-        dealerIndex = dealerIndex + 1;
-        if (dealerIndex >= copyPlayerSessions.size()) {
-            dealerIndex = 0;
-        }
-        return sortDealerLast(copyPlayerSessions, dealerIndex);
+        return dealerReorder(copyPlayerSessions);
     }
 
     private PlayerSession getNextDealer(List<PlayerSession> playerSessions) {
@@ -70,7 +65,12 @@ public class DealerService {
 
     private void setNextDealer(UUID tableId, PlayerSession nextDealer) {
         playerSessionRepository.resetDealerForTableId(tableId);
-        playerSessionRepository.updateDealer(nextDealer.getId());
+        playerSessionRepository.setDealer(nextDealer.getId());
+    }
+
+    private List<PlayerSession> dealerReorder(List<PlayerSession> playerSessions) {
+        int dealerIndex = getDealerIndex(playerSessions);
+        return sortDealerLast(playerSessions, dealerIndex);
     }
 
     //todo: maybe tidy with dto
@@ -90,7 +90,7 @@ public class DealerService {
                 return playerSession;
             }
         }
-        throw new RuntimeException("No Dealer Found in player sessions");
+        throw new RuntimeException("No Dealer Found in player sessions (getCurrentDealer)");
     }
 
     private int getDealerIndex(List<PlayerSession> playerSessions) {
@@ -100,7 +100,7 @@ public class DealerService {
                 return index;
             }
         }
-        throw new RuntimeException("No Dealer Found in player sessions");
+        throw new RuntimeException("No Dealer Found in player sessions (getDealerIndex)");
     }
 
     private List<PlayerSession> sortDealerLast(List<PlayerSession> playerSessions, int dealerIndex) {

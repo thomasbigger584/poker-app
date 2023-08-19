@@ -71,7 +71,6 @@ public class GameConnectionService {
             PlayerSessionDTO connectedPlayerSession = playerSessionService.connectUserToRound(appUser, connectionType, pokerTable);
             List<PlayerSessionDTO> allPlayerSessions = playerSessionService.getByTableId(tableId);
 
-            // send to all clients that this table has connected
             dispatcher.send(tableId, messageFactory.playerConnected(connectedPlayerSession));
             return messageFactory.playerSubscribed(allPlayerSessions);
         });

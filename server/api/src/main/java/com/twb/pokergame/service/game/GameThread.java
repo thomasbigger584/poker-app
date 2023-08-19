@@ -29,6 +29,7 @@ public abstract class GameThread extends Thread {
     protected static final int DEAL_WAIT_MS = 1000;
     protected static final int DB_POLL_WAIT_MS = 1000;
     protected static final int EVALUATION_WAIT_MS = 4000;
+    private static final int MESSAGE_POLL_DIVISOR = 5;
     private static final int MINIMUM_PLAYERS_CONNECTED = 1;
     private static final String NO_MORE_PLAYERS_CONNECTED = "No more players connected";
     private static final Logger logger = LoggerFactory.getLogger(GameThread.class);
@@ -125,34 +126,39 @@ public abstract class GameThread extends Thread {
 
     private void waitForPlayersToJoinNotZero() {
         GameType gameType = pokerTable.getGameType();
+        int pollCount = 0;
+        List<PlayerSession> playerSessions;
         do {
             checkGameInterrupted();
-            List<PlayerSession> playerSessions = playerSessionRepository
+            playerSessions = playerSessionRepository
                     .findConnectedPlayersByTableId(params.getTableId());
-            if (CollectionUtils.isEmpty(playerSessions)) {
-                throw new GameThreadException(NO_MORE_PLAYERS_CONNECTED);
-            }
             if (playerSessions.size() >= gameType.getMinPlayerCount()) {
-                this.playerSessions = playerSessions;
                 return;
             }
-            System.out.println("--> playerSessions = " + playerSessions);
-            sendLogMessage("Waiting for players to join...");
+            if (pollCount % MESSAGE_POLL_DIVISOR == 0) {
+                sendLogMessage("Waiting for players to join...");
+            }
             sleepInMs(DB_POLL_WAIT_MS);
+            pollCount++;
         } while (playerSessions.size() < gameType.getMinPlayerCount());
     }
 
     private void waitForPlayersToJoin(int minPlayerCount) {
+        int pollCount = 0;
+        List<PlayerSession> playerSessions;
         do {
             checkGameInterrupted();
-            List<PlayerSession> playerSessions = playerSessionRepository
+            playerSessions = playerSessionRepository
                     .findConnectedPlayersByTableId(params.getTableId());
             if (playerSessions.size() >= minPlayerCount) {
                 this.playerSessions = playerSessions;
                 return;
             }
-            sendLogMessage("Waiting for players to join...");
+            if (pollCount % MESSAGE_POLL_DIVISOR == 0) {
+                sendLogMessage("Waiting for players to join...");
+            }
             sleepInMs(DB_POLL_WAIT_MS);
+            pollCount++;
         } while (playerSessions.size() < minPlayerCount);
     }
 
@@ -181,9 +187,17 @@ public abstract class GameThread extends Thread {
     }
 
     private boolean isPlayersJoined(int count) {
-        playerSessions = playerSessionRepository
-                .findConnectedPlayersByTableId(params.getTableId());
+        List<PlayerSession> playerSessions = getPlayerSessionsNotZero();
         return playerSessions.size() >= count;
+    }
+
+    protected List<PlayerSession> getPlayerSessionsNotZero() {
+        List<PlayerSession> playerSessions = playerSessionRepository
+                .findConnectedPlayersByTableId(params.getTableId());
+        if (CollectionUtils.isEmpty(playerSessions)) {
+            throw new GameThreadException(NO_MORE_PLAYERS_CONNECTED);
+        }
+        return playerSessions;
     }
 
     private void initRound() {
@@ -227,6 +241,11 @@ public abstract class GameThread extends Thread {
         roundInProgress.set(false);
     }
 
+    // NOTE: called on a different thread (i.e. not game thread)
+    public void onPlayerDisconnected(String username) {
+        //todo: potentially fold username
+    }
+
     private void finishGame() {
         if (gameInProgress.get()) {
             dispatcher.send(params.getTableId(), messageFactory.gameFinished());
@@ -234,6 +253,10 @@ public abstract class GameThread extends Thread {
         }
         gameInProgress.set(false);
     }
+
+    // *****************************************************************************************
+    // Logging Dispatch Methods
+    // *****************************************************************************************
 
     protected void sendLogMessage(String message) {
         dispatcher.send(params.getTableId(), messageFactory.logMessage(message));
@@ -243,16 +266,16 @@ public abstract class GameThread extends Thread {
         dispatcher.send(params.getTableId(), messageFactory.errorMessage(message));
     }
 
+    // *****************************************************************************************
+    // Thread Utility Methods
+    // *****************************************************************************************
+
     protected void sleepInMs(long ms) {
         try {
             Thread.sleep(ms);
         } catch (InterruptedException e) {
             throw new RuntimeException("Failed to sleep for " + ms + "ms", e);
         }
-    }
-
-    public void onPlayerDisconnected(String username) {
-        //todo: potentially fold username
     }
 
     protected void checkGameInterrupted() {
@@ -265,6 +288,10 @@ public abstract class GameThread extends Thread {
         interruptGame.set(true);
         interrupt();
     }
+
+    // *****************************************************************************************
+    // Evaluation
+    // *****************************************************************************************
 
     protected void handleWinners(List<EvalPlayerHandDTO> winners) {
         if (winners.size() == 1) {
