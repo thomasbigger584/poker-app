@@ -20,7 +20,7 @@
             <column name="action_type" type="text">
                 <constraints nullable="false"/>
             </column>
-            <column name="funds" type="double"/>
+            <column name="amount" type="double"/>
         </createTable>
         <addPrimaryKey columnNames="id" constraintName="pk_player_action" tableName="player_action"/>
         <addForeignKeyConstraint constraintName="fk_player_action_player_session_id" onDelete="CASCADE"

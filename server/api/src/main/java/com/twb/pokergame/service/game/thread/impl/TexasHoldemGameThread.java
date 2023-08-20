@@ -1,4 +1,4 @@
-package com.twb.pokergame.service.game.impl;
+package com.twb.pokergame.service.game.thread.impl;
 
 import com.twb.pokergame.domain.Card;
 import com.twb.pokergame.domain.Hand;
@@ -6,8 +6,8 @@ import com.twb.pokergame.domain.PlayerSession;
 import com.twb.pokergame.domain.enumeration.CardType;
 import com.twb.pokergame.domain.enumeration.RoundState;
 import com.twb.pokergame.service.eval.dto.EvalPlayerHandDTO;
-import com.twb.pokergame.service.game.GameThread;
-import com.twb.pokergame.service.game.GameThreadParams;
+import com.twb.pokergame.service.game.thread.GameThread;
+import com.twb.pokergame.service.game.thread.GameThreadParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;

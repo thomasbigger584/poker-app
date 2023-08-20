@@ -1,9 +1,9 @@
 package com.twb.pokergame.domain.enumeration;
 
-import com.twb.pokergame.service.game.GameThread;
-import com.twb.pokergame.service.game.GameThreadParams;
-import com.twb.pokergame.service.game.impl.BlackjackGameThread;
-import com.twb.pokergame.service.game.impl.TexasHoldemGameThread;
+import com.twb.pokergame.service.game.thread.GameThread;
+import com.twb.pokergame.service.game.thread.GameThreadParams;
+import com.twb.pokergame.service.game.thread.impl.BlackjackGameThread;
+import com.twb.pokergame.service.game.thread.impl.TexasHoldemGameThread;
 import org.springframework.context.ApplicationContext;
 
 public enum GameType {

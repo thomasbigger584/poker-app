@@ -1,74 +1,56 @@
-package com.twb.pokergame.service.game;
+package com.twb.pokergame.service.game.thread;
 
 import com.twb.pokergame.domain.*;
 import com.twb.pokergame.domain.enumeration.GameType;
 import com.twb.pokergame.domain.enumeration.RoundState;
 import com.twb.pokergame.exception.GameThreadException;
-import com.twb.pokergame.repository.*;
-import com.twb.pokergame.service.CardService;
-import com.twb.pokergame.service.DealerService;
-import com.twb.pokergame.service.HandService;
-import com.twb.pokergame.service.RoundService;
-import com.twb.pokergame.service.eval.HandEvaluator;
 import com.twb.pokergame.service.eval.dto.EvalPlayerHandDTO;
-import com.twb.pokergame.web.websocket.message.MessageDispatcher;
-import com.twb.pokergame.web.websocket.message.server.ServerMessageFactory;
+import com.twb.pokergame.service.game.DeckOfCardsFactory;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @RequiredArgsConstructor
-public abstract class GameThread extends Thread {
+public abstract class GameThread extends BaseGameThread {
+
+    // *****************************************************************************************
+    // Constants
+    // *****************************************************************************************
+    private static final Logger logger = LoggerFactory.getLogger(GameThread.class);
     protected static final int DEAL_WAIT_MS = 1000;
     protected static final int DB_POLL_WAIT_MS = 1000;
     protected static final int EVALUATION_WAIT_MS = 4000;
     private static final int MESSAGE_POLL_DIVISOR = 5;
     private static final int MINIMUM_PLAYERS_CONNECTED = 1;
     private static final String NO_MORE_PLAYERS_CONNECTED = "No more players connected";
-    private static final Logger logger = LoggerFactory.getLogger(GameThread.class);
+    // @formatter:on
 
+    // *****************************************************************************************
+    // Constructor Fields
+    // *****************************************************************************************
     protected final GameThreadParams params;
+
+    // *****************************************************************************************
+    // Flags
+    // *****************************************************************************************
     private final AtomicBoolean interruptGame = new AtomicBoolean(false);
     private final AtomicBoolean roundInProgress = new AtomicBoolean(false);
     private final AtomicBoolean gameInProgress = new AtomicBoolean(false);
 
-    private List<Card> deckOfCards;
-    private int deckCardPointer;
+    // *****************************************************************************************
+    // Flags
+    // *****************************************************************************************
     protected PokerTable pokerTable;
     protected Round currentRound;
     protected List<PlayerSession> playerSessions = new ArrayList<>();
-
-    @Autowired
-    protected GameThreadManager threadManager;
-    @Autowired
-    protected ServerMessageFactory messageFactory;
-    @Autowired
-    protected MessageDispatcher dispatcher;
-    @Autowired
-    protected TableRepository tableRepository;
-    @Autowired
-    protected RoundRepository roundRepository;
-    @Autowired
-    protected RoundService roundService;
-    @Autowired
-    protected DealerService dealerService;
-    @Autowired
-    protected PlayerSessionRepository playerSessionRepository;
-    @Autowired
-    protected HandService handService;
-    @Autowired
-    protected HandRepository handRepository;
-    @Autowired
-    protected CardService cardService;
-    @Autowired
-    protected CardRepository cardRepository;
-    @Autowired
-    protected HandEvaluator handEvaluator;
+    private List<Card> deckOfCards;
+    private int deckCardPointer;
 
     @Override
     public void run() {
@@ -128,8 +110,7 @@ public abstract class GameThread extends Thread {
         List<PlayerSession> playerSessions;
         do {
             checkGameInterrupted();
-            playerSessions = playerSessionRepository
-                    .findConnectedPlayersByTableId(params.getTableId());
+            playerSessions = playerSessionRepository.findConnectedPlayersByTableId(params.getTableId());
             if (playerSessions.size() >= gameType.getMinPlayerCount()) {
                 return;
             }
@@ -146,8 +127,7 @@ public abstract class GameThread extends Thread {
         List<PlayerSession> playerSessions;
         do {
             checkGameInterrupted();
-            playerSessions = playerSessionRepository
-                    .findConnectedPlayersByTableId(params.getTableId());
+            playerSessions = playerSessionRepository.findConnectedPlayersByTableId(params.getTableId());
             if (playerSessions.size() >= minPlayerCount) {
                 return;
             }
@@ -160,8 +140,7 @@ public abstract class GameThread extends Thread {
     }
 
     private void createNewRound() {
-        Optional<Round> roundOpt = roundRepository
-                .findCurrentByTableId(params.getTableId());
+        Optional<Round> roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
         if (roundOpt.isPresent()) {
             currentRound = roundOpt.get();
             if (currentRound.getRoundState() != RoundState.WAITING_FOR_PLAYERS) {
@@ -174,8 +153,6 @@ public abstract class GameThread extends Thread {
             }
             currentRound = roundService.create(pokerTable);
         }
-
-
 
 
         sendLogMessage("New Round...");
@@ -193,8 +170,7 @@ public abstract class GameThread extends Thread {
     }
 
     protected List<PlayerSession> getPlayerSessionsNotZero() {
-        List<PlayerSession> playerSessions = playerSessionRepository
-                .findConnectedPlayersByTableId(params.getTableId());
+        List<PlayerSession> playerSessions = playerSessionRepository.findConnectedPlayersByTableId(params.getTableId());
         if (CollectionUtils.isEmpty(playerSessions)) {
             throw new GameThreadException(NO_MORE_PLAYERS_CONNECTED);
         }

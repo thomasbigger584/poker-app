@@ -1,4 +1,4 @@
-package com.twb.pokergame.service.game;
+package com.twb.pokergame.service.game.thread;
 
 import com.twb.pokergame.domain.enumeration.GameType;
 import lombok.Builder;

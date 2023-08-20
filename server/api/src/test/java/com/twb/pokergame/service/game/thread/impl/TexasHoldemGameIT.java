@@ -1,4 +1,4 @@
-package com.twb.pokergame.service.game.impl;
+package com.twb.pokergame.service.game.thread.impl;
 
 import com.twb.pokergame.domain.enumeration.GameType;
 import com.twb.pokergame.dto.pokertable.TableDTO;
@@ -30,8 +30,10 @@ public class TexasHoldemGameIT extends BaseTestContainersIT {
     private static final String PLAYER_1_USERNAME = "thomas";
     private static final String PLAYER_2_USERNAME = "rory";
     private static final String PASSWORD = "password";
-    private static final int PLAYER_WAIT = 1 * 1000;
+    private static final int PLAYER_WAIT_MS = 1 * 1000;
     private static final int NUM_OF_ROUNDS = 3;
+    private static final int COMMUNITY_CARD_COUNT = 5;
+    private static final int PLAYER_CARD_COUNT = 2;
 
     @Test
     public void testTexasHoldemGame() throws Throwable {
@@ -41,7 +43,7 @@ public class TexasHoldemGameIT extends BaseTestContainersIT {
 
         AbstractTestUser listener = new TestGameListenerUser(table.getId(), latches, LISTENER_USERNAME, PASSWORD, NUM_OF_ROUNDS);
         listener.connect();
-        Thread.sleep(PLAYER_WAIT);
+        Thread.sleep(PLAYER_WAIT_MS);
 
         List<AbstractTestUser> players = new ArrayList<>();
         players.add(new TestTexasHoldemPlayerUser(table.getId(), latches, PLAYER_1_USERNAME, PASSWORD));
@@ -49,14 +51,14 @@ public class TexasHoldemGameIT extends BaseTestContainersIT {
 
         for (AbstractTestUser player : players) {
             player.connect();
-            Thread.sleep(PLAYER_WAIT);
+            Thread.sleep(PLAYER_WAIT_MS);
         }
 
         latches.roundLatch().await(LATCH_TIMEOUT_IN_SECS, TimeUnit.SECONDS);
 
         for (AbstractTestUser player : players) {
             player.disconnect();
-            Thread.sleep(PLAYER_WAIT);
+            Thread.sleep(PLAYER_WAIT_MS);
         }
 
         latches.gameLatch().await(LATCH_TIMEOUT_IN_SECS, TimeUnit.SECONDS);
@@ -70,19 +72,19 @@ public class TexasHoldemGameIT extends BaseTestContainersIT {
             }
         }
 
-        List<ServerMessageDTO> listenerMessages = listener.getReceivedMessages();
+        List<ServerMessageDTO> allMessages = listener.getReceivedMessages();
 
         // Note: assertions aren't tight as we cut off a round when players disconnect, so treating as good enough
-        assertThat(listenerMessages).filteredOn(message -> message.getType().equals(ServerMessageType.DEAL_INIT))
-                .hasSizeBetween((players.size() * NUM_OF_ROUNDS) * 2, (players.size() * NUM_OF_ROUNDS + 1) * 2);
+        assertThat(allMessages).filteredOn(message -> message.getType().equals(ServerMessageType.DEAL_INIT))
+                .hasSizeBetween((players.size() * NUM_OF_ROUNDS) * PLAYER_CARD_COUNT, (players.size() * NUM_OF_ROUNDS + 1) * PLAYER_CARD_COUNT);
 
-        assertThat(listenerMessages).filteredOn(message -> message.getType().equals(ServerMessageType.DEAL_COMMUNITY))
-                .hasSizeBetween(NUM_OF_ROUNDS * 5, (NUM_OF_ROUNDS + 1) * 5);
+        assertThat(allMessages).filteredOn(message -> message.getType().equals(ServerMessageType.DEAL_COMMUNITY))
+                .hasSizeBetween(NUM_OF_ROUNDS * COMMUNITY_CARD_COUNT, (NUM_OF_ROUNDS + 1) * COMMUNITY_CARD_COUNT);
 
-        assertThat(listenerMessages).filteredOn(message -> message.getType().equals(ServerMessageType.ROUND_FINISHED))
+        assertThat(allMessages).filteredOn(message -> message.getType().equals(ServerMessageType.ROUND_FINISHED))
                 .hasSizeBetween(NUM_OF_ROUNDS, NUM_OF_ROUNDS + 1);
 
-        assertThat(listenerMessages).filteredOn(message -> message.getType().equals(ServerMessageType.GAME_FINISHED))
+        assertThat(allMessages).filteredOn(message -> message.getType().equals(ServerMessageType.GAME_FINISHED))
                 .hasSize(1);
     }
 
@@ -98,12 +100,12 @@ public class TexasHoldemGameIT extends BaseTestContainersIT {
 
         for (AbstractTestUser player : players) {
             player.connect();
-            Thread.sleep(PLAYER_WAIT);
+            Thread.sleep(PLAYER_WAIT_MS);
         }
 
         for (AbstractTestUser player : players) {
             player.disconnect();
-            Thread.sleep(PLAYER_WAIT);
+            Thread.sleep(PLAYER_WAIT_MS);
         }
 
         AbstractTestUser player1 = players.get(0);

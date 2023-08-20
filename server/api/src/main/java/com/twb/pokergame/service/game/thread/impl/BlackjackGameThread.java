@@ -1,8 +1,8 @@
-package com.twb.pokergame.service.game.impl;
+package com.twb.pokergame.service.game.thread.impl;
 
 import com.twb.pokergame.domain.enumeration.RoundState;
-import com.twb.pokergame.service.game.GameThread;
-import com.twb.pokergame.service.game.GameThreadParams;
+import com.twb.pokergame.service.game.thread.GameThread;
+import com.twb.pokergame.service.game.thread.GameThreadParams;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
