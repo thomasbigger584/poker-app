@@ -29,7 +29,6 @@ public abstract class GameThread extends BaseGameThread {
     private static final int MESSAGE_POLL_DIVISOR = 5;
     private static final int MINIMUM_PLAYERS_CONNECTED = 1;
     private static final String NO_MORE_PLAYERS_CONNECTED = "No more players connected";
-    // @formatter:on
 
     // *****************************************************************************************
     // Constructor Fields
@@ -44,7 +43,7 @@ public abstract class GameThread extends BaseGameThread {
     private final AtomicBoolean gameInProgress = new AtomicBoolean(false);
 
     // *****************************************************************************************
-    // Flags
+    // Fields
     // *****************************************************************************************
     protected PokerTable pokerTable;
     protected Round currentRound;
