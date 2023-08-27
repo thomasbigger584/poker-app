@@ -1,12 +1,13 @@
 package com.twb.pokergame.configuration.websocket;
 
 import com.twb.pokergame.configuration.ProfileConfiguration;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
@@ -49,9 +50,6 @@ public class RabbitMqWebsocketConfiguration implements WebSocketMessageBrokerCon
     @Value("${app.websocket.disconnect-delay:30000}") //30 * 1000
     private long disconnectDelayMs;
 
-    @Autowired
-    private TaskScheduler taskScheduler;
-
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         // - /app used for MessageMapping
@@ -66,7 +64,7 @@ public class RabbitMqWebsocketConfiguration implements WebSocketMessageBrokerCon
                 .setClientPasscode(clientPasscode)
                 .setSystemLogin(systemLogin)
                 .setSystemPasscode(systemPasscode)
-                .setTaskScheduler(taskScheduler);
+                .setTaskScheduler(heartBeatScheduler());
         registry.setPreservePublishOrder(true);
     }
 
@@ -79,5 +77,9 @@ public class RabbitMqWebsocketConfiguration implements WebSocketMessageBrokerCon
                 .setDisconnectDelay(disconnectDelayMs);
     }
 
-
+    @Bean
+    public TaskScheduler heartBeatScheduler() {
+        // required to get a valid response from heartbeat
+        return new ThreadPoolTaskScheduler();
+    }
 }
