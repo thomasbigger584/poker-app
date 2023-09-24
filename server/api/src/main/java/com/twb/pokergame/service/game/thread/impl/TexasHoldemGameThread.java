@@ -36,12 +36,11 @@ public class TexasHoldemGameThread extends GameThread {
     protected void onRunRound(RoundState roundState) {
         switch (roundState) {
             case INIT_DEAL -> initDeal();
-            case INIT_DEAL_BET,
-                    FLOP_DEAL_BET, TURN_DEAL_BET, RIVER_DEAL_BET -> waitPlayerTurn();
+            case INIT_DEAL_BET, FLOP_DEAL_BET, TURN_DEAL_BET, RIVER_DEAL_BET -> waitAllPlayerTurns();
             case FLOP_DEAL -> dealFlop();
             case TURN_DEAL -> dealTurn();
             case RIVER_DEAL -> dealRiver();
-            case EVAL -> eval();
+            case EVAL -> evaluate();
         }
     }
 
@@ -53,10 +52,33 @@ public class TexasHoldemGameThread extends GameThread {
     private void initDeal() {
         for (CardType cardType : CardType.PLAYER_CARDS) {
             for (PlayerSession playerSession : playerSessions) {
-                checkGameInterrupted();
-                dealPlayerCard(cardType, playerSession);
+                if (!isPlayerFolded(playerSession)) {
+                    checkGameInterrupted();
+                    dealPlayerCard(cardType, playerSession);
+                }
             }
         }
+    }
+
+    private void waitAllPlayerTurns() {
+        for (PlayerSession playerSession : playerSessions) {
+            checkGameInterrupted();
+
+            String username = playerSession.getUser().getUsername();
+            dispatcher.send(params.getTableId(), messageFactory.playerTurn(username));
+//            waitPlayerTurn();
+            sleepInMs(3000L);
+        }
+    }
+
+    private void dealPlayerCard(CardType cardType, PlayerSession playerSession) {
+        Card card = getCard();
+        card.setCardType(cardType);
+
+        handService.addPlayerCard(playerSession, currentRound, card);
+        dispatcher.send(params.getTableId(), messageFactory.initDeal(playerSession, card));
+
+        sleepInMs(DEAL_WAIT_MS);
     }
 
     private void dealFlop() {
@@ -72,16 +94,6 @@ public class TexasHoldemGameThread extends GameThread {
 
     private void dealRiver() {
         dealCommunityCard(CardType.RIVER_CARD);
-    }
-
-    private void dealPlayerCard(CardType cardType, PlayerSession playerSession) {
-        Card card = getCard();
-        card.setCardType(cardType);
-
-        handService.addPlayerCard(playerSession, currentRound, card);
-        dispatcher.send(params.getTableId(), messageFactory.initDeal(playerSession, card));
-
-        sleepInMs(DEAL_WAIT_MS);
     }
 
     private void dealCommunityCard(CardType cardType) {
@@ -101,11 +113,7 @@ public class TexasHoldemGameThread extends GameThread {
         dispatcher.send(params.getTableId(), messageFactory.dealerDetermined(currentDealer));
     }
 
-    private void waitPlayerTurn() {
-        //todo waitPlayerTurn
-    }
-
-    private void eval() {
+    private void evaluate() {
         List<Card> communityCards = cardRepository
                 .findCommunityCardsForRound(currentRound.getId());
 

@@ -76,4 +76,20 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             "AND s.connectionType = com.twb.pokergame.domain.enumeration.ConnectionType.PLAYER " +
             "AND s.id = :id ")
     void setDealer(@Param("id") UUID id);
+
+    @Modifying(flushAutomatically = true)
+    @Query("UPDATE PlayerSession s " +
+            "SET s.current = false " +
+            "WHERE s.sessionState = com.twb.pokergame.domain.enumeration.SessionState.CONNECTED " +
+            "AND s.connectionType = com.twb.pokergame.domain.enumeration.ConnectionType.PLAYER " +
+            "AND s.pokerTable.id = :tableId ")
+    void resetCurrentForTableId(@Param("tableId") UUID tableId);
+
+    @Modifying(flushAutomatically = true)
+    @Query("UPDATE PlayerSession s " +
+            "SET s.current = true " +
+            "WHERE s.sessionState = com.twb.pokergame.domain.enumeration.SessionState.CONNECTED " +
+            "AND s.connectionType = com.twb.pokergame.domain.enumeration.ConnectionType.PLAYER " +
+            "AND s.id = :id ")
+    void setCurrent(@Param("id") UUID id);
 }

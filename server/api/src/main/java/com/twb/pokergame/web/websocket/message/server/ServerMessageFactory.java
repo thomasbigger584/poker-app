@@ -50,6 +50,12 @@ public class ServerMessageFactory {
         return ServerMessageDTO.create(ServerMessageType.DEAL_COMMUNITY, payload);
     }
 
+    public ServerMessageDTO playerTurn(String username) {
+        PlayerTurnDTO payload = new PlayerTurnDTO();
+        payload.setUsername(username);
+        return ServerMessageDTO.create(ServerMessageType.PLAYER_TURN, payload);
+    }
+
     public ServerMessageDTO roundFinished() {
         RoundFinishedDTO payload = new RoundFinishedDTO();
         return ServerMessageDTO.create(ServerMessageType.ROUND_FINISHED, payload);
@@ -87,4 +93,5 @@ public class ServerMessageFactory {
         payload.setMessage(message);
         return ServerMessageDTO.create(ServerMessageType.CHAT, payload);
     }
+
 }

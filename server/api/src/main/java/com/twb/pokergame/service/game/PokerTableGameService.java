@@ -13,6 +13,7 @@ import com.twb.pokergame.service.PlayerSessionService;
 import com.twb.pokergame.service.game.thread.GameThread;
 import com.twb.pokergame.service.game.thread.GameThreadManager;
 import com.twb.pokergame.web.websocket.message.MessageDispatcher;
+import com.twb.pokergame.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageFactory;
 import lombok.RequiredArgsConstructor;
@@ -29,8 +30,8 @@ import java.util.UUID;
 @Component
 @Transactional
 @RequiredArgsConstructor
-public class GameConnectionService {
-    private static final Logger logger = LoggerFactory.getLogger(GameConnectionService.class);
+public class PokerTableGameService {
+    private static final Logger logger = LoggerFactory.getLogger(PokerTableGameService.class);
 
     private final UserRepository userRepository;
     private final TableRepository tableRepository;
@@ -75,6 +76,16 @@ public class GameConnectionService {
 
             dispatcher.send(tableId, messageFactory.playerConnected(connectedPlayerSession));
             return messageFactory.playerSubscribed(allPlayerSessions);
+        });
+    }
+
+    public void onPlayerAction(UUID tableId, String username, CreatePlayerActionDTO action) {
+        mutex.execute(tableId, () -> {
+            Optional<GameThread> threadOpt = threadManager.getIfExists(tableId);
+            if (threadOpt.isPresent()) {
+                GameThread thread = threadOpt.get();
+                thread.playerAction(username, action);
+            }
         });
     }
 

@@ -6,26 +6,30 @@ import com.twb.pokergame.domain.enumeration.RoundState;
 import com.twb.pokergame.exception.GameThreadException;
 import com.twb.pokergame.service.eval.dto.EvalPlayerHandDTO;
 import com.twb.pokergame.service.game.DeckOfCardsFactory;
+import com.twb.pokergame.web.websocket.message.client.CreatePlayerActionDTO;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @RequiredArgsConstructor
 public abstract class GameThread extends BaseGameThread {
-
     // *****************************************************************************************
     // Constants
     // *****************************************************************************************
+    protected static final long DEAL_WAIT_MS = 1000;
+    protected static final long DB_POLL_WAIT_MS = 1000;
+    protected static final long EVALUATION_WAIT_MS = 4 * 1000;
+    protected static final long PLAYER_TURN_WAIT_MS = 40 * 1000;
     private static final Logger logger = LoggerFactory.getLogger(GameThread.class);
-    protected static final int DEAL_WAIT_MS = 1000;
-    protected static final int DB_POLL_WAIT_MS = 1000;
-    protected static final int EVALUATION_WAIT_MS = 4000;
     private static final int MESSAGE_POLL_DIVISOR = 5;
     private static final int MINIMUM_PLAYERS_CONNECTED = 1;
     private static final String NO_MORE_PLAYERS_CONNECTED = "No more players connected";
@@ -48,6 +52,8 @@ public abstract class GameThread extends BaseGameThread {
     protected PokerTable pokerTable;
     protected Round currentRound;
     protected List<PlayerSession> playerSessions = new ArrayList<>();
+    protected final List<String> foldedPlayers = Collections.synchronizedList(new ArrayList<>());
+    private CountDownLatch playerTurnLatch;
     private List<Card> deckOfCards;
     private int deckCardPointer;
 
@@ -152,8 +158,6 @@ public abstract class GameThread extends BaseGameThread {
             }
             currentRound = roundService.create(pokerTable);
         }
-
-
         sendLogMessage("New Round...");
     }
 
@@ -178,6 +182,7 @@ public abstract class GameThread extends BaseGameThread {
 
     private void initRound() {
         roundInProgress.set(true);
+        foldedPlayers.clear();
         shuffleCards();
         onInitRound();
     }
@@ -209,6 +214,23 @@ public abstract class GameThread extends BaseGameThread {
         roundRepository.saveAndFlush(currentRound);
     }
 
+    protected void waitPlayerTurn() {
+        playerTurnLatch = new CountDownLatch(1);
+        try {
+            boolean await = playerTurnLatch.await(PLAYER_TURN_WAIT_MS, TimeUnit.MILLISECONDS);
+            if (!await) {
+                // user has timed out, so fold user here
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Failed to wait for player turn latch", e);
+        }
+    }
+
+    public void playerAction(String username, CreatePlayerActionDTO actionDto) {
+
+        playerTurnLatch.countDown();
+    }
+
     private void finishRound() {
         if (roundInProgress.get()) {
             saveRoundState(RoundState.FINISH);
@@ -219,7 +241,20 @@ public abstract class GameThread extends BaseGameThread {
 
     // NOTE: called on a different thread (i.e. not game thread)
     public void onPlayerDisconnected(String username) {
-        //todo: potentially fold username
+        fold(username);
+    }
+
+    protected boolean isPlayerFolded(PlayerSession playerSession) {
+        AppUser user = playerSession.getUser();
+        return foldedPlayers.contains(user.getUsername());
+    }
+
+    protected void fold(String username) {
+        synchronized (foldedPlayers) {
+            if (!foldedPlayers.contains(username)) {
+                foldedPlayers.add(username);
+            }
+        }
     }
 
     private void finishGame() {

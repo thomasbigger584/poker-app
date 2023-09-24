@@ -2,15 +2,8 @@
 <databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" logicalFilePath="db.changelog-1.0.xml"
                    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
-    <changeSet author="tbigg" id="3">
-        <addColumn tableName="app_user">
-            <column name="total_funds" type="double" defaultValueNumeric="0">
-                <constraints nullable="false"/>
-            </column>
-        </addColumn>
-    </changeSet>
 
-    <changeSet author="tbigg" id="4">
+    <changeSet author="tbigg" id="3">
         <createTable tableName="round">
             <column name="id" type="uuid">
                 <constraints nullable="false"/>
@@ -28,7 +21,7 @@
                                  referencedTableName="poker_table" referencedColumnNames="id"/>
     </changeSet>
 
-    <changeSet author="tbigg" id="5">
+    <changeSet author="tbigg" id="4">
         <createTable tableName="player_session">
             <column name="id" type="uuid">
                 <constraints nullable="false"/>
@@ -38,8 +31,9 @@
             </column>
             <column name="poker_table_id" type="uuid"/>
             <column name="position" type="tinyint"/>
-            <column name="dealer" type="boolean"/>
-            <column name="funds" type="double"/>
+            <column name="dealer" type="boolean" defaultValue="0"/>
+            <column name="current" type="boolean" defaultValue="0"/>
+            <column name="funds" type="double" defaultValueNumeric="0"/>
             <column name="session_state" type="text"/>
             <column name="connection_type" type="text"/>
         </createTable>

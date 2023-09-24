@@ -42,6 +42,9 @@ public class PlayerSession {
     @Column(name = "dealer")
     private Boolean dealer;
 
+    @Column(name = "current")
+    private Boolean current;
+
     @Column(name = "funds")
     private Double funds;
 
@@ -82,6 +85,7 @@ public class PlayerSession {
                 ", user=" + user +
                 ", position=" + position +
                 ", dealer=" + dealer +
+                ", current=" + current +
                 ", funds=" + funds +
                 ", sessionState=" + sessionState +
                 ", connectionType=" + connectionType +

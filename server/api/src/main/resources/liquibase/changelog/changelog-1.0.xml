@@ -17,6 +17,9 @@
             <column name="email_verified" type="boolean" defaultValue="0">
                 <constraints nullable="false"/>
             </column>
+            <column name="total_funds" type="double" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
             <column name="enabled" type="boolean" defaultValue="0">
                 <constraints nullable="false"/>
             </column>

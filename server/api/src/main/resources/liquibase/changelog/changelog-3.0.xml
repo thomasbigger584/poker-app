@@ -3,7 +3,7 @@
                    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
 
-    <changeSet author="tbigg" id="6">
+    <changeSet author="tbigg" id="5">
         <createTable tableName="hand">
             <column name="id" type="uuid">
                 <constraints nullable="false"/>
@@ -26,7 +26,7 @@
                                  referencedTableName="round" referencedColumnNames="id"/>
     </changeSet>
 
-    <changeSet author="tbigg" id="7">
+    <changeSet author="tbigg" id="6">
         <createTable tableName="card">
             <column name="id" type="uuid">
                 <constraints nullable="false"/>

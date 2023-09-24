@@ -34,6 +34,11 @@ public enum ServerMessageType {
      */
     DEAL_COMMUNITY,
 
+    /*
+     * Used to notify all players of the current player turn
+     */
+    PLAYER_TURN,
+
     // todo: add more
 
     /*
@@ -84,6 +89,8 @@ public enum ServerMessageType {
                 return DealPlayerCardDTO.class;
             case DEAL_COMMUNITY:
                 return DealCommunityCardDTO.class;
+            case PLAYER_TURN:
+                return PlayerTurnDTO.class;
 
             //todo: add more
 

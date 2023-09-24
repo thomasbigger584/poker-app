@@ -1,8 +1,9 @@
 package com.twb.pokergame.web.websocket;
 
 import com.twb.pokergame.domain.enumeration.ConnectionType;
-import com.twb.pokergame.service.game.GameConnectionService;
+import com.twb.pokergame.service.game.PokerTableGameService;
 import com.twb.pokergame.web.websocket.message.client.CreateChatMessageDTO;
+import com.twb.pokergame.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokergame.web.websocket.message.server.ServerMessageFactory;
 import com.twb.pokergame.web.websocket.session.SessionService;
@@ -31,13 +32,14 @@ public class PokerTableWebSocketController {
     private static final String INBOUND_MESSAGE_PREFIX = "/pokerTable/{tableId}";
 
     private static final String SEND_CHAT_MESSAGE = "/sendChatMessage";
+    private static final String SEND_PLAYER_ACTION = "/sendPlayerAction";
     private static final String SEND_DISCONNECT_PLAYER = "/sendDisconnectPlayer";
 
     private static final String POKER_TABLE_ID = "tableId";
 
     private final SessionService sessionService;
     private final ServerMessageFactory messageFactory;
-    private final GameConnectionService gameConnectionService;
+    private final PokerTableGameService pokerTableGameService;
 
     @SubscribeMapping(TOPIC)
     public ServerMessageDTO sendPlayerSubscribed(Principal principal, StompHeaderAccessor headerAccessor,
@@ -48,7 +50,7 @@ public class PokerTableWebSocketController {
         logger.info(">>>> sendPlayerSubscribed - Poker Table: {} - User: {} - Type: {}", tableId, principal.getName(), connectionType);
         ServerMessageDTO message;
         try {
-            message = gameConnectionService.onUserConnected(tableId, connectionType, principal.getName());
+            message = pokerTableGameService.onUserConnected(tableId, connectionType, principal.getName());
             logger.info("<<<< sendPlayerSubscribed - " + message);
         } catch (Exception exception) {
             message = messageFactory.errorMessage(exception.getMessage());
@@ -65,12 +67,20 @@ public class PokerTableWebSocketController {
         return messageFactory.chatMessage(principal.getName(), message.getMessage());
     }
 
+    @MessageMapping(INBOUND_MESSAGE_PREFIX + SEND_PLAYER_ACTION)
+    @SendTo(SERVER_MESSAGE_TOPIC)
+    public void sendPlayerAction(Principal principal,
+                                 @DestinationVariable(POKER_TABLE_ID) UUID tableId,
+                                 @Payload CreatePlayerActionDTO action) {
+        pokerTableGameService.onPlayerAction(tableId, principal.getName(), action);
+    }
+
     // not returning here as called from multiple places
     @MessageMapping(INBOUND_MESSAGE_PREFIX + SEND_DISCONNECT_PLAYER)
     public void sendDisconnectPlayer(Principal principal,
                                      @DestinationVariable(POKER_TABLE_ID) UUID tableId) {
         logger.info(">>>> sendDisconnectPlayer - Poker Table: {} - User: {}", tableId, principal.getName());
-        gameConnectionService.onUserDisconnected(tableId, principal.getName());
+        pokerTableGameService.onUserDisconnected(tableId, principal.getName());
     }
 
     private ConnectionType getConnectionType(StompHeaderAccessor headerAccessor) {
