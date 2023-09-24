@@ -1,3 +1,0 @@
-[submodule "server/digitalocean/keycloak/keywind"]
-	path = server/digitalocean/keycloak/keywind
-	url = https://github.com/lukin/keywind
