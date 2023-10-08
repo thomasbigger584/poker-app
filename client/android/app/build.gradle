@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace 'com.twb.pokergame'
+    namespace 'com.twb.pokerapp'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.twb.pokergame"
+        applicationId "com.twb.pokerapp"
         minSdk 19
         targetSdk 34
         versionCode 1
@@ -21,7 +21,7 @@ android {
         vectorDrawables {
             useSupportLibrary true
         }
-        manifestPlaceholders = ['appAuthRedirectScheme': 'com.twb.pokergame']
+        manifestPlaceholders = ['appAuthRedirectScheme': 'com.twb.pokerapp']
         buildConfigField "String", "API_BASE_URL", '"192.168.1.70:8081"'
     }
 

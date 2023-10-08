@@ -1,7 +1,7 @@
 {
   "client_id": "poker-game-android-client",
-  "redirect_uri": "com.twb.pokergame:/oauth2redirect",
-  "end_session_redirect_uri": "com.twb.pokergame:/oauth2redirect",
+  "redirect_uri": "com.twb.pokerapp:/oauth2redirect",
+  "end_session_redirect_uri": "com.twb.pokerapp:/oauth2redirect",
   "authorization_scope": "openid email profile",
   "discovery_uri": "http://keycloak.twbdev.site/realms/poker-app/.well-known/openid-configuration",
   "authorization_endpoint_uri": "",

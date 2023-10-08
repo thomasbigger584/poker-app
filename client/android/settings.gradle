@@ -12,6 +12,6 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "pokergame"
+rootProject.name = "pokerapp"
 include ':app'
 include ':stomp-lib'

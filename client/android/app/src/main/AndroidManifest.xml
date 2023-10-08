@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.twb.pokergame">
+    package="com.twb.pokerapp">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
@@ -33,7 +33,7 @@
             android:exported="false"
             android:label="@string/title_activity_poker_tables" />
         <activity
-            android:name=".ui.activity.pokergame.PokerGameActivity"
+            android:name=".ui.activity.pokerapp.PokerGameActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="false"
             android:label="@string/title_activity_poker_game"
