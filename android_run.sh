@@ -11,7 +11,7 @@ adb devices -l | {
     adb -s "$device_id" uninstall com.twb.pokerapp
     adb -s "$device_id" install -r app/build/outputs/apk/debug/app-debug.apk
 
-    # running forked as adb shell doesnt allow the next iteration for some reason
+    # running forked as adb shell doesn't allow the next iteration for some reason
     adb -s "$device_id" shell am start -n com.twb.pokerapp/com.twb.pokerapp.ui.activity.login.LoginActivity &
   done
 }

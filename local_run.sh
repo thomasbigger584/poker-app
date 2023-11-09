@@ -5,4 +5,5 @@ function ctrl_c() {
   docker compose -f api/docker-compose.yml rm --force
 }
 
-docker compose -f api/docker-compose.yml up --build --remove-orphans
+docker compose -f api/docker-compose.yml build --no-cache
+docker compose -f api/docker-compose.yml up --remove-orphans
