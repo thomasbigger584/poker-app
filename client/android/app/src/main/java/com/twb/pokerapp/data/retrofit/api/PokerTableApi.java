@@ -12,5 +12,6 @@ import retrofit2.http.QueryMap;
 public interface PokerTableApi {
 
     @GET("/poker-table")
-    Call<List<TableDTO>> getPokerTables(@QueryMap(encoded = true) Map<String, Integer> queryParamsMap);
+    Call<List<TableDTO>> getPokerTables(
+            @QueryMap(encoded = true) Map<String, Integer> params);
 }

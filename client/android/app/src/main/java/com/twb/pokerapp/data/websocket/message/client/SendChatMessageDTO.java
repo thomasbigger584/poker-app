@@ -1,5 +1,7 @@
 package com.twb.pokerapp.data.websocket.message.client;
 
+import androidx.annotation.NonNull;
+
 public class SendChatMessageDTO {
     private String message;
 
@@ -11,6 +13,7 @@ public class SendChatMessageDTO {
         this.message = message;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "SendChatMessageDTO{" +

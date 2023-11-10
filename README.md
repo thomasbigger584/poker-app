@@ -62,6 +62,11 @@ sudo apt install adb
 - Can be very basic for now but I would want this in place to make configuration easier once the application is
   deployed.
 
+#### CLI App
+
+- A CLI application used primarily for test purpose to listen to websocket messages.
+- The user will log in as a listener user, and will select a Table ID and receive all messages on that table.
+
 #### Nginx
 
 - A reverse proxy used to forward requests from the outside towards their respective internal services.
