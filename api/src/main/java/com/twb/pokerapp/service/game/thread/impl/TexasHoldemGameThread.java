@@ -3,6 +3,7 @@ package com.twb.pokerapp.service.game.thread.impl;
 import com.twb.pokerapp.domain.Card;
 import com.twb.pokerapp.domain.Hand;
 import com.twb.pokerapp.domain.PlayerSession;
+import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.domain.enumeration.CardType;
 import com.twb.pokerapp.domain.enumeration.RoundState;
 import com.twb.pokerapp.service.eval.dto.EvalPlayerHandDTO;
@@ -65,7 +66,12 @@ public class TexasHoldemGameThread extends GameThread {
             checkGameInterrupted();
 
             String username = playerSession.getUser().getUsername();
-            dispatcher.send(params.getTableId(), messageFactory.playerTurn(username));
+
+            //todo: temporary measure, need to use the previous action
+            // to determine the next instead of null here
+            ActionType[] nextActions = ActionType.getNextActions(null);
+
+            dispatcher.send(params.getTableId(), messageFactory.playerTurn(username, nextActions));
 //            waitPlayerTurn();
             sleepInMs(3000L);
         }

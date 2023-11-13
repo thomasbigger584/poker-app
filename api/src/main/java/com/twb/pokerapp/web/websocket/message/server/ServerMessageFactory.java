@@ -2,6 +2,7 @@ package com.twb.pokerapp.web.websocket.message.server;
 
 import com.twb.pokerapp.domain.Card;
 import com.twb.pokerapp.domain.PlayerSession;
+import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.mapper.CardMapper;
 import com.twb.pokerapp.mapper.PlayerSessionMapper;
@@ -50,9 +51,10 @@ public class ServerMessageFactory {
         return ServerMessageDTO.create(ServerMessageType.DEAL_COMMUNITY, payload);
     }
 
-    public ServerMessageDTO playerTurn(String username) {
+    public ServerMessageDTO playerTurn(String username, ActionType[] actions) {
         PlayerTurnDTO payload = new PlayerTurnDTO();
         payload.setUsername(username);
+        payload.setActions(actions);
         return ServerMessageDTO.create(ServerMessageType.PLAYER_TURN, payload);
     }
 
