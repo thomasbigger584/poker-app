@@ -6,11 +6,12 @@ keycloak:
   password: admin
   admin-group-id: 900d795d-15e2-407a-8952-d16ca8aa2c6b
   user-group-id: 1ecf1db5-4a66-48ec-8064-47e59dd0a4f1
+  connection-pool-size: 10
 spring:
   profiles:
     active: local
   application:
-    name: poker-game-backend
+    name: poker-app-backend
   security:
     oauth2:
       resourceserver:

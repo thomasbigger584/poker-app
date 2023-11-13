@@ -38,9 +38,6 @@ public class RabbitMqWebsocketConfiguration implements WebSocketMessageBrokerCon
     @Value("${app.system.passcode:admin}")
     private String systemPasscode;
 
-    @Value("${app.cors.allow-origins}")
-    private String allowOrigins;
-
     @Value("${app.websocket.stream-bytes-limit:524288}") // 512 * 1024
     private int streamBytesLimit;
 

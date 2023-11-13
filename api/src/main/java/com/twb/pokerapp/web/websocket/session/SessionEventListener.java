@@ -51,7 +51,7 @@ public class SessionEventListener {
 
     @EventListener
     public void handleEvent(SessionUnsubscribeEvent event) {
-        logger.info("Unsubscription: {}", event);
+        logger.info("Un-subscription: {}", event);
     }
 
     @EventListener

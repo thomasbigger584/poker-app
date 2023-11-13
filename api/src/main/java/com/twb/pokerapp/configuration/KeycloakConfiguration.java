@@ -37,10 +37,13 @@ public class KeycloakConfiguration {
     @Value("${keycloak.user-group-id}")
     private String userGroupId;
 
+    @Value("${keycloak.connection-pool-size:10}")
+    private int connectionPoolSize;
+
     @Bean
     public Client resteasyClient() {
         return new ResteasyClientBuilderImpl()
-                .connectionPoolSize(10)
+                .connectionPoolSize(connectionPoolSize)
                 .build();
     }
 
