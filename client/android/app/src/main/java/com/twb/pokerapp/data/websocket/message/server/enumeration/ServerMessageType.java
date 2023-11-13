@@ -10,6 +10,7 @@ import com.twb.pokerapp.data.websocket.message.server.payload.LogMessageDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerConnectedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerDisconnectedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerSubscribedDTO;
+import com.twb.pokerapp.data.websocket.message.server.payload.PlayerTurnDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.RoundFinishedDTO;
 
 public enum ServerMessageType {
@@ -43,6 +44,11 @@ public enum ServerMessageType {
      * coming out during community cards
      */
     DEAL_COMMUNITY,
+
+    /*
+     * Used to notify all players of the current player turn
+     */
+    PLAYER_TURN,
 
     // todo: add more
 
@@ -94,13 +100,15 @@ public enum ServerMessageType {
                 return DealPlayerCardDTO.class;
             case DEAL_COMMUNITY:
                 return DealCommunityCardDTO.class;
+            case PLAYER_TURN:
+                return PlayerTurnDTO.class;
+
+            //todo: add more
+
             case ROUND_FINISHED:
                 return RoundFinishedDTO.class;
             case GAME_FINISHED:
                 return GameFinishedDTO.class;
-
-                //todo: add more
-
             case CHAT:
                 return ChatMessageDTO.class;
             case LOG:

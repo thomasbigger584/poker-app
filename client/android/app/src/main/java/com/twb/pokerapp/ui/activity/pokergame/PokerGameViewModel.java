@@ -1,4 +1,4 @@
-package com.twb.pokerapp.ui.activity.pokerapp;
+package com.twb.pokerapp.ui.activity.pokergame;
 
 import android.util.Log;
 
@@ -18,6 +18,7 @@ import com.twb.pokerapp.data.websocket.message.server.payload.LogMessageDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerConnectedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerDisconnectedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerSubscribedDTO;
+import com.twb.pokerapp.data.websocket.message.server.payload.PlayerTurnDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.RoundFinishedDTO;
 import com.twb.stomplib.dto.LifecycleEvent;
 
@@ -40,6 +41,7 @@ public class PokerGameViewModel extends ViewModel
     public MutableLiveData<DealerDeterminedDTO> dealerDetermined = new MutableLiveData<>();
     public MutableLiveData<DealPlayerCardDTO> dealPlayerCard = new MutableLiveData<>();
     public MutableLiveData<DealCommunityCardDTO> dealCommunityCard = new MutableLiveData<>();
+    public MutableLiveData<PlayerTurnDTO> playerTurn = new MutableLiveData<>();
     public MutableLiveData<RoundFinishedDTO> roundFinished = new MutableLiveData<>();
     public MutableLiveData<GameFinishedDTO> gameFinished = new MutableLiveData<>();
 
@@ -93,6 +95,10 @@ public class PokerGameViewModel extends ViewModel
             }
             case DEAL_COMMUNITY: {
                 dealCommunityCard.setValue((DealCommunityCardDTO) message.getPayload());
+                break;
+            }
+            case PLAYER_TURN: {
+                playerTurn.setValue((PlayerTurnDTO) message.getPayload());
                 break;
             }
             case ROUND_FINISHED: {

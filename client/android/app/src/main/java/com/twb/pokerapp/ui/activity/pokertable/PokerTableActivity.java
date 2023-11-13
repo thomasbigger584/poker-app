@@ -17,7 +17,7 @@ import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.auth.AuthStateManager;
 import com.twb.pokerapp.data.model.dto.pokertable.TableDTO;
 import com.twb.pokerapp.ui.activity.login.BaseAuthActivity;
-import com.twb.pokerapp.ui.activity.pokerapp.PokerGameActivity;
+import com.twb.pokerapp.ui.activity.pokergame.PokerGameActivity;
 import com.twb.pokerapp.ui.dialog.AlertModalDialog;
 import com.twb.pokerapp.ui.dialog.DialogHelper;
 

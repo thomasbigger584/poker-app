@@ -2,10 +2,11 @@ package com.twb.pokerapp.data.websocket.message.server.payload;
 
 import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class PlayerSubscribedDTO {
-    private List<PlayerSessionDTO> playerSessions;
+    private List<PlayerSessionDTO> playerSessions = new ArrayList<>();
 
     public PlayerSessionDTO getCurrentPlayerSession(String username) {
         for (PlayerSessionDTO playerSession : playerSessions) {

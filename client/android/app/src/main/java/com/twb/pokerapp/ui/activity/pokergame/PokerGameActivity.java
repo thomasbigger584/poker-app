@@ -1,6 +1,7 @@
-package com.twb.pokerapp.ui.activity.pokerapp;
+package com.twb.pokerapp.ui.activity.pokergame;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.WindowManager;
 
 import androidx.annotation.Nullable;
@@ -15,7 +16,7 @@ import com.twb.pokerapp.data.model.dto.appuser.AppUserDTO;
 import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.data.model.dto.pokertable.TableDTO;
 import com.twb.pokerapp.ui.activity.login.BaseAuthActivity;
-import com.twb.pokerapp.ui.activity.pokerapp.chatbox.ChatBoxRecyclerAdapter;
+import com.twb.pokerapp.ui.activity.pokergame.chatbox.ChatBoxRecyclerAdapter;
 import com.twb.pokerapp.ui.dialog.AlertModalDialog;
 import com.twb.pokerapp.ui.dialog.DialogHelper;
 import com.twb.pokerapp.ui.dialog.FinishActivityOnClickListener;
@@ -112,6 +113,9 @@ public class PokerGameActivity extends BaseAuthActivity {
             } else {
                 tableController.dealOtherPlayerCard(dealPlayerCard);
             }
+        });
+        viewModel.playerTurn.observe(this, playerTurn -> {
+            Log.i(TAG, "onCreate: playerTurn - " + playerTurn);
         });
         viewModel.dealCommunityCard.observe(this, dealCommunityCard -> {
             tableController.dealCommunityCard(dealCommunityCard);

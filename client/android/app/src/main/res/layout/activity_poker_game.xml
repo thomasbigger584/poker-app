@@ -8,7 +8,7 @@
     android:orientation="vertical"
     android:padding="10dp"
     android:weightSum="1"
-    tools:context=".ui.activity.pokerapp.PokerGameActivity">
+    tools:context=".ui.activity.pokergame.PokerGameActivity">
 
     <LinearLayout
         android:layout_width="match_parent"

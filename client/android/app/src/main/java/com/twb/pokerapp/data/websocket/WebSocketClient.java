@@ -10,7 +10,7 @@ import com.twb.pokerapp.data.auth.AuthService;
 import com.twb.pokerapp.data.websocket.message.client.SendChatMessageDTO;
 import com.twb.pokerapp.data.websocket.message.client.SendPlayerDisconnectDTO;
 import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
-import com.twb.pokerapp.ui.activity.pokerapp.PokerGameViewModel;
+import com.twb.pokerapp.ui.activity.pokergame.PokerGameViewModel;
 import com.twb.stomplib.dto.LifecycleEvent;
 import com.twb.stomplib.dto.StompHeader;
 import com.twb.stomplib.stomp.Stomp;
@@ -28,7 +28,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 
 public class WebSocketClient {
-    private static final String TAG = PokerGameViewModel.class.getSimpleName();
+    private static final String TAG = WebSocketClient.class.getSimpleName();
 
     private static final String PROTOCOL = "ws://";
     private static final String WEBSOCKET_ENDPOINT = "/looping/websocket";

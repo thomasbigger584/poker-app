@@ -1,4 +1,4 @@
-package com.twb.pokerapp.ui.activity.pokerapp.chatbox;
+package com.twb.pokerapp.ui.activity.pokergame.chatbox;
 
 import android.view.LayoutInflater;
 import android.view.View;

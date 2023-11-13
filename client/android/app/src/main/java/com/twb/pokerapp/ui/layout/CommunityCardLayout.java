@@ -10,6 +10,11 @@ import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.model.dto.card.CardDTO;
 
 public class CommunityCardLayout extends FrameLayout {
+    private static final String FLOP_CARD_1 = "FLOP_CARD_1";
+    private static final String FLOP_CARD_2 = "FLOP_CARD_2";
+    private static final String FLOP_CARD_3 = "FLOP_CARD_3";
+    private static final String TURN_CARD = "TURN_CARD";
+    private static final String RIVER_CARD = "RIVER_CARD";
     private CardLayout community1CardLayout;
     private CardLayout community2CardLayout;
     private CardLayout community3CardLayout;
@@ -47,25 +52,25 @@ public class CommunityCardLayout extends FrameLayout {
 
     public void dealCard(CardDTO card) {
         switch (card.getCardType()) {
-            case "FLOP_CARD_1": {
+            case FLOP_CARD_1: {
                 setFlopVisibility();
                 community1CardLayout.update(card);
                 break;
             }
-            case "FLOP_CARD_2": {
+            case FLOP_CARD_2: {
                 community2CardLayout.update(card);
                 break;
             }
-            case "FLOP_CARD_3": {
+            case FLOP_CARD_3: {
                 community3CardLayout.update(card);
                 break;
             }
-            case "TURN_CARD": {
+            case TURN_CARD: {
                 setTurnVisibility();
                 community4CardLayout.update(card);
                 break;
             }
-            case "RIVER_CARD": {
+            case RIVER_CARD: {
                 setRiverVisibility();
                 community5CardLayout.update(card);
                 break;

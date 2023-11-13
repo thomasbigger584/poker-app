@@ -1,4 +1,4 @@
-package com.twb.pokerapp.ui.activity.pokerapp;
+package com.twb.pokerapp.ui.activity.pokergame;
 
 import android.app.Activity;
 
