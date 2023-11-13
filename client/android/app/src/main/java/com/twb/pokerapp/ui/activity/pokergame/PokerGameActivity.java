@@ -1,8 +1,11 @@
 package com.twb.pokerapp.ui.activity.pokergame;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -46,8 +49,18 @@ public class PokerGameActivity extends BaseAuthActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Intent intent = getIntent();
+        if (intent == null) {
+            Toast.makeText(this, "Intent is null", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Bundle extras = intent.getExtras();
+        if (extras == null) {
+            Toast.makeText(this, "Bundle extras is null", Toast.LENGTH_SHORT).show();
+            return;
+        }
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        pokerTable = TableDTO.fromBundle(getIntent().getExtras());
+        pokerTable = TableDTO.fromBundle(extras);
 
         loadingSpinner = DialogHelper.createLoadingSpinner(this);
         DialogHelper.show(loadingSpinner);
