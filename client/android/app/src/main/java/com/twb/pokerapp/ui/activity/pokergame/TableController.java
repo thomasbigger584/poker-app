@@ -75,6 +75,14 @@ public class TableController {
         }
     }
 
+    public void updatePlayerTurn(PlayerSessionDTO playerSession) {
+        for (Map.Entry<Integer, CardPairLayout> posCardPairEntry : positionCardPairs.entrySet()) {
+            Integer position = posCardPairEntry.getKey();
+            CardPairLayout cardPairLayout = posCardPairEntry.getValue();
+            cardPairLayout.updateTurnPlayer(position.equals(playerSession.getPosition()));
+        }
+    }
+
     public void dealCurrentPlayerCard(DealPlayerCardDTO dealPlayerCard) {
         PlayerSessionDTO playerSession = dealPlayerCard.getPlayerSession();
         CardPairLayout cardPairLayout = getCardPairLayout(playerSession.getPosition());

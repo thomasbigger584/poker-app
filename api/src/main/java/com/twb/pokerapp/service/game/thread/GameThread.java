@@ -52,7 +52,8 @@ public abstract class GameThread extends BaseGameThread {
     protected PokerTable pokerTable;
     protected Round currentRound;
     protected List<PlayerSession> playerSessions = new ArrayList<>();
-    protected final List<String> foldedPlayers = Collections.synchronizedList(new ArrayList<>());
+    protected final List<String> foldedPlayers
+            = Collections.synchronizedList(new ArrayList<>());
     private CountDownLatch playerTurnLatch;
     private List<Card> deckOfCards;
     private int deckCardPointer;
@@ -102,7 +103,8 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     private void initializeTable() {
-        Optional<PokerTable> tableOpt = tableRepository.findById(params.getTableId());
+        Optional<PokerTable> tableOpt =
+                tableRepository.findById(params.getTableId());
         if (tableOpt.isEmpty()) {
             throw new GameThreadException("No table found cannot start game");
         }
@@ -115,7 +117,8 @@ public abstract class GameThread extends BaseGameThread {
         List<PlayerSession> playerSessions;
         do {
             checkGameInterrupted();
-            playerSessions = playerSessionRepository.findConnectedPlayersByTableId(params.getTableId());
+            playerSessions = playerSessionRepository
+                    .findConnectedPlayersByTableId(params.getTableId());
             if (playerSessions.size() >= gameType.getMinPlayerCount()) {
                 return;
             }
@@ -132,7 +135,8 @@ public abstract class GameThread extends BaseGameThread {
         List<PlayerSession> playerSessions;
         do {
             checkGameInterrupted();
-            playerSessions = playerSessionRepository.findConnectedPlayersByTableId(params.getTableId());
+            playerSessions = playerSessionRepository
+                    .findConnectedPlayersByTableId(params.getTableId());
             if (playerSessions.size() >= minPlayerCount) {
                 return;
             }
@@ -145,7 +149,8 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     private void createNewRound() {
-        Optional<Round> roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
+        Optional<Round> roundOpt = roundRepository
+                .findCurrentByTableId(params.getTableId());
         if (roundOpt.isPresent()) {
             currentRound = roundOpt.get();
             if (currentRound.getRoundState() != RoundState.WAITING_FOR_PLAYERS) {
@@ -173,7 +178,8 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     protected List<PlayerSession> getPlayerSessionsNotZero() {
-        List<PlayerSession> playerSessions = playerSessionRepository.findConnectedPlayersByTableId(params.getTableId());
+        List<PlayerSession> playerSessions = playerSessionRepository
+                .findConnectedPlayersByTableId(params.getTableId());
         if (CollectionUtils.isEmpty(playerSessions)) {
             throw new GameThreadException(NO_MORE_PLAYERS_CONNECTED);
         }

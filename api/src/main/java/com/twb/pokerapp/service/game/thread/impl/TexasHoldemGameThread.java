@@ -11,6 +11,7 @@ import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Component
-@Scope("prototype")
+@Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class TexasHoldemGameThread extends GameThread {
     private static final Logger logger =
             LoggerFactory.getLogger(TexasHoldemGameThread.class);
@@ -65,13 +66,10 @@ public class TexasHoldemGameThread extends GameThread {
         for (PlayerSession playerSession : playerSessions) {
             checkGameInterrupted();
 
-            String username = playerSession.getUser().getUsername();
-
             //todo: temporary measure, need to use the previous action
             // to determine the next instead of null here
             ActionType[] nextActions = ActionType.getNextActions(null);
-
-            dispatcher.send(params.getTableId(), messageFactory.playerTurn(username, nextActions));
+            dispatcher.send(params.getTableId(), messageFactory.playerTurn(playerSession, nextActions));
 //            waitPlayerTurn();
             sleepInMs(3000L);
         }

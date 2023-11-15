@@ -1,18 +1,20 @@
 package com.twb.pokerapp.data.websocket.message.server.payload;
 
+import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class PlayerTurnDTO {
-    private String username;
+    private PlayerSessionDTO playerSession;
     private List<String> actions = new ArrayList<>();
 
-    public String getUsername() {
-        return username;
+    public PlayerSessionDTO getPlayerSession() {
+        return playerSession;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setPlayerSession(PlayerSessionDTO playerSession) {
+        this.playerSession = playerSession;
     }
 
     public List<String> getActions() {
@@ -26,7 +28,7 @@ public class PlayerTurnDTO {
     @Override
     public String toString() {
         return "PlayerTurnDTO{" +
-                "username='" + username + '\'' +
+                "playerSession=" + playerSession +
                 ", actions=" + actions +
                 '}';
     }

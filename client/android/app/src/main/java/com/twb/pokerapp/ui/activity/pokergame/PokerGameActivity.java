@@ -128,7 +128,7 @@ public class PokerGameActivity extends BaseAuthActivity {
             }
         });
         viewModel.playerTurn.observe(this, playerTurn -> {
-            Log.i(TAG, "onCreate: playerTurn - " + playerTurn);
+            tableController.updatePlayerTurn(playerTurn.getPlayerSession());
         });
         viewModel.dealCommunityCard.observe(this, dealCommunityCard -> {
             tableController.dealCommunityCard(dealCommunityCard);

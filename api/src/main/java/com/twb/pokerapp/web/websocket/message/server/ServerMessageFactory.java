@@ -51,9 +51,9 @@ public class ServerMessageFactory {
         return ServerMessageDTO.create(ServerMessageType.DEAL_COMMUNITY, payload);
     }
 
-    public ServerMessageDTO playerTurn(String username, ActionType[] actions) {
+    public ServerMessageDTO playerTurn(PlayerSession playerSession, ActionType[] actions) {
         PlayerTurnDTO payload = new PlayerTurnDTO();
-        payload.setUsername(username);
+        payload.setPlayerSession(playerSessionMapper.modelToDto(playerSession));
         payload.setActions(actions);
         return ServerMessageDTO.create(ServerMessageType.PLAYER_TURN, payload);
     }
