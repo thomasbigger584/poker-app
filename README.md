@@ -3,7 +3,7 @@
 [![Android CI](https://github.com/thomasbigger584/poker-app/actions/workflows/android.yml/badge.svg)](https://github.com/thomasbigger584/poker-app/actions/workflows/android.yml)
 [![API CI](https://github.com/thomasbigger584/poker-app/actions/workflows/api.yml/badge.svg)](https://github.com/thomasbigger584/poker-app/actions/workflows/api.yml)
 
-![logo.png](logo.png)
+![logo.png](images/logo.png)
 
 ## Server Usage
 
@@ -46,7 +46,7 @@ sudo apt install adb
 
 ## Architecture
 
-![PokerApp-Architecture.png](drawio%2FPokerApp-Architecture.png)
+![PokerApp-Architecture.png](images/PokerApp-Architecture.png)
 
 #### Consumer Mobile App
 

@@ -28,6 +28,8 @@ public abstract class BaseTestContainersIT {
     private static final String BEARER_PREFIX = "Bearer ";
     protected static final String API_BASE_URL = String.format("http://localhost:%d", EXPOSED_PORT);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final String ADMIN_USERNAME = "admin";
+    private static final String ADMIN_PASSWORD = "admin";
     private static DockerComposeContainer<?> dockerComposeContainer;
     private static Keycloak keycloak;
 
@@ -78,7 +80,7 @@ public abstract class BaseTestContainersIT {
                 .withExposedService(EXPOSED_SERVICE, EXPOSED_PORT)
                 .withLogConsumer(EXPOSED_SERVICE, new Slf4jLogConsumer(logger).withPrefix(EXPOSED_SERVICE));
         dockerComposeContainer.start();
-        keycloak = KeycloakHelper.getKeycloak("admin", "admin");
+        keycloak = KeycloakHelper.getKeycloak(ADMIN_USERNAME, ADMIN_PASSWORD);
     }
 
     @AfterEach
