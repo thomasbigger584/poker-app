@@ -44,6 +44,14 @@ sudo apt install adb
 ./android_run.sh
 ```
 
+### Windows (WSL2)
+
+- On windows consider using WSL2 for your build environment. 
+- Install Docker and Intellij CE on the Windows host machine and clone the project into WSL2.
+- Install JDK in your WSL2 vm and point your intellij to the project and JDK in WSL2.
+- Intellij may run incredibly slow. This is due to Windows Defender. 
+- Consider running this ps1 script which will add exclusions to Windows Defender: https://gist.github.com/dkorobtsov/963f3b90418e51d12aecb1eaf6106958
+
 ## Architecture
 
 ![PokerApp-Architecture.png](images/PokerApp-Architecture.png)
