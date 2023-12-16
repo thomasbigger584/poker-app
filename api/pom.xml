@@ -20,6 +20,7 @@
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
         <javax.servlet-api.version>4.0.1</javax.servlet-api.version>
         <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
+        <error-prone.version>2.23.0</error-prone.version>
         <spring-security-jwt.version>1.1.1.RELEASE</spring-security-jwt.version>
         <keycloak.version>23.0.1</keycloak.version>
         <liquibase-core.version>4.25.0</liquibase-core.version>
@@ -35,8 +36,8 @@
         <maven-failsafe-plugin.version>3.2.2</maven-failsafe-plugin.version>
         <testcontainers.version>1.19.3</testcontainers.version>
         <testcontainers-keycloak.version>3.2.0</testcontainers-keycloak.version>
-
         <assertj-core.version>3.24.2</assertj-core.version>
+
     </properties>
 
     <dependencyManagement>
@@ -210,6 +211,11 @@
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
+                    <encoding>UTF-8</encoding>
+                    <compilerArgs>
+                        <arg>-XDcompilePolicy=simple</arg>
+                        <arg>-Xplugin:ErrorProne</arg>
+                    </compilerArgs>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>
@@ -220,6 +226,11 @@
                             <groupId>org.mapstruct</groupId>
                             <artifactId>mapstruct-processor</artifactId>
                             <version>${org.mapstruct.version}</version>
+                        </path>
+                        <path>
+                            <groupId>com.google.errorprone</groupId>
+                            <artifactId>error_prone_core</artifactId>
+                            <version>${error-prone.version}</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>

@@ -35,12 +35,11 @@ public class DealerService {
     private PlayerSession getNextDealer(List<PlayerSession> playerSessions) {
         Optional<Pair<Integer, PlayerSession>> currentDealerOpt = getCurrentDealerWithIndex(playerSessions);
 
-        PlayerSession currentDealer;
         if (currentDealerOpt.isPresent()) {
             Pair<Integer, PlayerSession> currentDealerWithIndex = currentDealerOpt.get();
 
             int dealerIndex = currentDealerWithIndex.getFirst();
-            currentDealer = currentDealerWithIndex.getSecond();
+            PlayerSession currentDealer = currentDealerWithIndex.getSecond();
 
             playerSessions = sortDealerLast(playerSessions, dealerIndex);
 
