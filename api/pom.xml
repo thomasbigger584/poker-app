@@ -23,7 +23,7 @@
         <error-prone.version>2.24.1</error-prone.version>
         <spring-security-jwt.version>1.1.1.RELEASE</spring-security-jwt.version>
         <keycloak.version>23.0.5</keycloak.version>
-        <liquibase-core.version>4.25.0</liquibase-core.version>
+        <liquibase-core.version>4.25.1</liquibase-core.version>
         <commons-lang3.version>3.14.0</commons-lang3.version>
         <postgresql.version>42.7.1</postgresql.version>
         <keycloak-admin-client.version>23.0.3</keycloak-admin-client.version>
