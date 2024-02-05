@@ -36,7 +36,7 @@
         <maven-failsafe-plugin.version>3.2.5</maven-failsafe-plugin.version>
         <testcontainers.version>1.19.3</testcontainers.version>
         <testcontainers-keycloak.version>3.2.0</testcontainers-keycloak.version>
-        <assertj-core.version>3.25.2</assertj-core.version>
+        <assertj-core.version>3.25.3</assertj-core.version>
 
     </properties>
 
