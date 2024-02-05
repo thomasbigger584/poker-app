@@ -8,7 +8,7 @@ services:
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=db
     ports:
-      - 5432:5432
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -22,8 +22,8 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: local
     ports:
-      - 8081:8081
-      - 5005:5005 # debug port
+      - "8081:8081"
+      - "5005:5005" # debug port
     depends_on:
       - postgres
     networks:
