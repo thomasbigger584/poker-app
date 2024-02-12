@@ -81,7 +81,7 @@ dependencies {
     implementation "androidx.startup:startup-runtime:1.1.1"
 
     //app auth
-    implementation 'com.squareup.okio:okio:3.4.0'
+    implementation 'com.squareup.okio:okio:3.8.0'
     implementation 'joda-time:joda-time:2.12.5'
     implementation 'net.openid:appauth:0.11.1'
     implementation 'com.auth0.android:jwtdecode:2.0.2'
