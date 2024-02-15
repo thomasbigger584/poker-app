@@ -2,8 +2,6 @@ package com.twb.pokerapp.ui.activity.pokergame;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
@@ -15,11 +13,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.auth.AuthService;
-import com.twb.pokerapp.data.model.dto.appuser.AppUserDTO;
 import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.data.model.dto.pokertable.TableDTO;
 import com.twb.pokerapp.ui.activity.login.BaseAuthActivity;
 import com.twb.pokerapp.ui.activity.pokergame.chatbox.ChatBoxRecyclerAdapter;
+import com.twb.pokerapp.ui.activity.pokergame.controller.ControlsController;
+import com.twb.pokerapp.ui.activity.pokergame.controller.TableController;
 import com.twb.pokerapp.ui.dialog.AlertModalDialog;
 import com.twb.pokerapp.ui.dialog.DialogHelper;
 import com.twb.pokerapp.ui.dialog.FinishActivityOnClickListener;
@@ -40,6 +39,7 @@ public class PokerGameActivity extends BaseAuthActivity {
     private AlertDialog loadingSpinner;
     private ChatBoxRecyclerAdapter chatBoxAdapter;
     private TableController tableController;
+    private ControlsController controlsController;
 
     @Override
     protected int getContentView() {
@@ -66,6 +66,7 @@ public class PokerGameActivity extends BaseAuthActivity {
         DialogHelper.show(loadingSpinner);
 
         tableController = new TableController(this);
+        controlsController = new ControlsController(this);
 
         RecyclerView chatBoxRecyclerView = findViewById(R.id.chatBoxRecyclerView);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
@@ -106,29 +107,31 @@ public class PokerGameActivity extends BaseAuthActivity {
             DialogHelper.dismiss(loadingSpinner);
         });
         viewModel.playerConnected.observe(this, playerConnected -> {
-            String currentUsername = authService.getCurrentUser();
             PlayerSessionDTO playerSession = playerConnected.getPlayerSession();
-            AppUserDTO user = playerSession.getUser();
-            if (!user.getUsername().equals(currentUsername)) {
+            if (!authService.isCurrentUser(playerSession.getUser())) {
                 tableController.connectOtherPlayer(playerSession);
-                chatBoxAdapter.add("Connected: " + user.getUsername());
+                chatBoxAdapter.add("Connected: " + playerSession.getUser().getUsername());
             }
         });
         viewModel.dealerDetermined.observe(this, dealerDetermined -> {
             tableController.dealerDetermined(dealerDetermined.getPlayerSession());
         });
         viewModel.dealPlayerCard.observe(this, dealPlayerCard -> {
-            String currentUsername = authService.getCurrentUser();
             PlayerSessionDTO playerSession = dealPlayerCard.getPlayerSession();
-            AppUserDTO user = playerSession.getUser();
-            if (user.getUsername().equals(currentUsername)) {
+            if (authService.isCurrentUser(playerSession.getUser())) {
                 tableController.dealCurrentPlayerCard(dealPlayerCard);
             } else {
                 tableController.dealOtherPlayerCard(dealPlayerCard);
             }
         });
         viewModel.playerTurn.observe(this, playerTurn -> {
-            tableController.updatePlayerTurn(playerTurn.getPlayerSession());
+            PlayerSessionDTO playerSession = playerTurn.getPlayerSession();
+            tableController.updatePlayerTurn(playerSession);
+            if (authService.isCurrentUser(playerSession.getUser())) {
+                controlsController.show(playerTurn.getActions());
+            } else {
+                controlsController.hide();
+            }
         });
         viewModel.dealCommunityCard.observe(this, dealCommunityCard -> {
             tableController.dealCommunityCard(dealCommunityCard);

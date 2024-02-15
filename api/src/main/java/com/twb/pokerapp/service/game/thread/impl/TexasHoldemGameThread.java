@@ -2,6 +2,7 @@ package com.twb.pokerapp.service.game.thread.impl;
 
 import com.twb.pokerapp.domain.Card;
 import com.twb.pokerapp.domain.Hand;
+import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.domain.enumeration.CardType;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,16 +65,25 @@ public class TexasHoldemGameThread extends GameThread {
     }
 
     private void waitAllPlayerTurns() {
-        for (PlayerSession playerSession : playerSessions) {
+        PlayerSession previousPlayer = null;
+        for (PlayerSession curentPlayer : playerSessions) {
             checkGameInterrupted();
 
-            //todo: temporary measure, need to use the previous action
-            // to determine the next instead of null here
-            ActionType[] nextActions = ActionType.getNextActions(null);
-            dispatcher.send(params.getTableId(), messageFactory.playerTurn(playerSession, nextActions));
-//            waitPlayerTurn();
+            sendPlayerAction(curentPlayer, previousPlayer);
+            previousPlayer = curentPlayer;
+
             sleepInMs(3000L);
         }
+    }
+
+    private void sendPlayerAction(PlayerSession playerSession, PlayerSession previousPlayer) {
+        PlayerAction previousPlayerAction = null;
+        if (previousPlayer != null) {
+            List<PlayerAction> playerActions = previousPlayer.getPlayerActions();
+            previousPlayerAction = CollectionUtils.lastElement(playerActions);
+        }
+        ActionType[] nextActions = ActionType.getNextActions(previousPlayerAction.getActionType());
+        dispatcher.send(params.getTableId(), messageFactory.playerTurn(playerSession, nextActions));
     }
 
     private void dealPlayerCard(CardType cardType, PlayerSession playerSession) {

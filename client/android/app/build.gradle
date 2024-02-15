@@ -22,7 +22,7 @@ android {
             useSupportLibrary true
         }
         manifestPlaceholders = ['appAuthRedirectScheme': 'com.twb.pokerapp']
-        buildConfigField "String", "API_BASE_URL", '"192.168.1.70:8081"'
+        buildConfigField "String", "API_BASE_URL", '"192.168.0.186:8081"'
     }
 
     buildTypes {

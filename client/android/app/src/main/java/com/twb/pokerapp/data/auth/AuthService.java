@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
 import com.auth0.android.jwt.JWT;
+import com.twb.pokerapp.data.model.dto.appuser.AppUserDTO;
 
 import net.openid.appauth.AppAuthConfiguration;
 import net.openid.appauth.AuthState;
@@ -37,6 +38,10 @@ public class AuthService {
     public String getCurrentUser() {
         JWT jwt = getJwt();
         return jwt.getClaim(USERNAME_CLAIM).asString();
+    }
+
+    public boolean isCurrentUser(AppUserDTO user) {
+        return user.getUsername().equals(getCurrentUser());
     }
 
     public String getAccessToken() {
