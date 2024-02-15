@@ -77,13 +77,19 @@ public class TexasHoldemGameThread extends GameThread {
     }
 
     private void sendPlayerAction(PlayerSession playerSession, PlayerSession previousPlayer) {
-        PlayerAction previousPlayerAction = null;
+        ActionType[] nextActions = getNextActions(previousPlayer);
+        dispatcher.send(params.getTableId(), messageFactory.playerTurn(playerSession, nextActions));
+    }
+
+    private ActionType[] getNextActions(PlayerSession previousPlayer) {
         if (previousPlayer != null) {
             List<PlayerAction> playerActions = previousPlayer.getPlayerActions();
-            previousPlayerAction = CollectionUtils.lastElement(playerActions);
+            PlayerAction previousPlayerAction = CollectionUtils.lastElement(playerActions);
+            if (previousPlayerAction != null) {
+                return ActionType.getNextActions(previousPlayerAction.getActionType());
+            }
         }
-        ActionType[] nextActions = ActionType.getNextActions(previousPlayerAction.getActionType());
-        dispatcher.send(params.getTableId(), messageFactory.playerTurn(playerSession, nextActions));
+        return ActionType.getActionTypes();
     }
 
     private void dealPlayerCard(CardType cardType, PlayerSession playerSession) {

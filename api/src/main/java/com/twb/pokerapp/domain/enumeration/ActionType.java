@@ -9,9 +9,13 @@ public enum ActionType {
 
     public static ActionType[] getNextActions(ActionType actionType) {
         if (actionType == null) {
-            return new ActionType[]{CHECK, BET};
+            return getActionTypes();
         }
         return actionType.getNextActions();
+    }
+
+    public static ActionType[] getActionTypes() {
+        return new ActionType[]{CHECK, BET};
     }
 
     private ActionType[] getNextActions() {
