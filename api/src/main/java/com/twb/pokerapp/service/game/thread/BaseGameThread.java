@@ -54,4 +54,7 @@ public abstract class BaseGameThread extends Thread {
 
     @Autowired
     protected HandEvaluator handEvaluator;
+
+    @Autowired
+    protected PlayerActionRepository playerActionRepository;
 }

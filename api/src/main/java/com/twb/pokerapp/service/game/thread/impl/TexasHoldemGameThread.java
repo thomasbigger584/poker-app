@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -83,10 +82,10 @@ public class TexasHoldemGameThread extends GameThread {
 
     private ActionType[] getNextActions(PlayerSession previousPlayer) {
         if (previousPlayer != null) {
-            List<PlayerAction> playerActions = previousPlayer.getPlayerActions();
-            PlayerAction previousPlayerAction = CollectionUtils.lastElement(playerActions);
-            if (previousPlayerAction != null) {
-                return ActionType.getNextActions(previousPlayerAction.getActionType());
+            Optional<PlayerAction> previousActionOpt = playerActionRepository
+                    .findByRoundAndPlayerSession(currentRound.getId(), previousPlayer.getId());
+            if (previousActionOpt.isPresent()) {
+                return ActionType.getNextActions(previousActionOpt.get().getActionType());
             }
         }
         return ActionType.getActionTypes();
