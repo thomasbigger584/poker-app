@@ -12,7 +12,7 @@ import java.util.UUID;
 @Repository
 public interface PlayerActionRepository extends JpaRepository<PlayerAction, UUID> {
 
-    @Query("SELECT a" +
+    @Query("SELECT a " +
             "FROM PlayerAction a " +
             "WHERE a.round.id = :roundId " +
             "AND a.playerSession.id = :playerSessionId")
