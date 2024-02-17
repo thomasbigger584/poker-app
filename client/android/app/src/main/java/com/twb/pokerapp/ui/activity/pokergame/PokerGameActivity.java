@@ -2,6 +2,7 @@ package com.twb.pokerapp.ui.activity.pokergame;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
@@ -30,6 +31,7 @@ import dagger.hilt.android.AndroidEntryPoint;
 @AndroidEntryPoint
 public class PokerGameActivity extends BaseAuthActivity {
     private static final String TAG = PokerGameActivity.class.getSimpleName();
+    private static final String MODAL_TAG = "modal_alert";
 
     @Inject
     AuthService authService;
@@ -82,7 +84,7 @@ public class PokerGameActivity extends BaseAuthActivity {
             DialogHelper.dismiss(loadingSpinner);
             AlertModalDialog alertModalDialog = AlertModalDialog
                     .newInstance(AlertModalDialog.AlertModalType.ERROR, throwable.getMessage(), null);
-            alertModalDialog.show(getSupportFragmentManager(), "modal_alert");
+            alertModalDialog.show(getSupportFragmentManager(), MODAL_TAG);
             chatBoxAdapter.add(throwable.getMessage());
         });
         viewModel.closedConnection.observe(this, aVoid -> {
@@ -90,7 +92,7 @@ public class PokerGameActivity extends BaseAuthActivity {
             String message = "Lost connection with server";
             AlertModalDialog alertModalDialog = AlertModalDialog
                     .newInstance(AlertModalDialog.AlertModalType.ERROR, message, new FinishActivityOnClickListener(this));
-            alertModalDialog.show(getSupportFragmentManager(), "modal_alert");
+            alertModalDialog.show(getSupportFragmentManager(), MODAL_TAG);
             chatBoxAdapter.add(message);
         });
         viewModel.playerSubscribed.observe(this, playerSubscribed -> {
@@ -117,6 +119,8 @@ public class PokerGameActivity extends BaseAuthActivity {
             tableController.dealerDetermined(dealerDetermined.getPlayerSession());
         });
         viewModel.dealPlayerCard.observe(this, dealPlayerCard -> {
+            tableController.hidePlayerTurns();
+            controlsController.hide();
             PlayerSessionDTO playerSession = dealPlayerCard.getPlayerSession();
             if (authService.isCurrentUser(playerSession.getUser())) {
                 tableController.dealCurrentPlayerCard(dealPlayerCard);
@@ -134,16 +138,19 @@ public class PokerGameActivity extends BaseAuthActivity {
             }
         });
         viewModel.dealCommunityCard.observe(this, dealCommunityCard -> {
+            controlsController.hide();
             tableController.dealCommunityCard(dealCommunityCard);
         });
         viewModel.roundFinished.observe(this, roundFinished -> {
+            tableController.hidePlayerTurns();
+            controlsController.hide();
             tableController.reset(roundFinished);
         });
         viewModel.gameFinished.observe(this, gameFinished -> {
             FinishActivityOnClickListener clickListener = new FinishActivityOnClickListener(this);
             AlertModalDialog alertModalDialog = AlertModalDialog
                     .newInstance(AlertModalDialog.AlertModalType.INFO, "Game Finished", clickListener);
-            alertModalDialog.show(getSupportFragmentManager(), "modal_alert");
+            alertModalDialog.show(getSupportFragmentManager(), MODAL_TAG);
             chatBoxAdapter.add("Game Finished");
         });
 
@@ -181,18 +188,48 @@ public class PokerGameActivity extends BaseAuthActivity {
         handleErrorMessage(message);
     }
 
+    @Override
+    protected void onDestroy() {
+        viewModel.disconnect();
+        super.onDestroy();
+    }
+
+    /*
+     * Button onClick event methods
+     * ****************************************************************************
+     */
+
+    public void onFoldClick(View view) {
+        viewModel.onPlayerAction("FOLD");
+    }
+
+    public void onRaiseClick(View view) {
+        viewModel.onPlayerAction("RAISE");
+    }
+
+    public void onBetClick(View view) {
+        viewModel.onPlayerAction("BET");
+    }
+
+    public void onCallClick(View view) {
+        viewModel.onPlayerAction("CALL");
+    }
+
+    public void onCheckClick(View view) {
+        viewModel.onPlayerAction("CHECK");
+    }
+
+    /*
+     * Helper Methods
+     * ****************************************************************************
+     */
+
     private void handleErrorMessage(String message) {
         DialogHelper.dismiss(loadingSpinner);
         FinishActivityOnClickListener clickListener = new FinishActivityOnClickListener(this);
         AlertModalDialog alertModalDialog = AlertModalDialog
                 .newInstance(AlertModalDialog.AlertModalType.ERROR, message, clickListener);
-        alertModalDialog.show(getSupportFragmentManager(), "modal_alert");
+        alertModalDialog.show(getSupportFragmentManager(), MODAL_TAG);
         chatBoxAdapter.add(message);
-    }
-
-    @Override
-    protected void onDestroy() {
-        viewModel.disconnect();
-        super.onDestroy();
     }
 }

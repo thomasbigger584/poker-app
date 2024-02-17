@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel;
 
 import com.twb.pokerapp.data.websocket.WebSocketClient;
 import com.twb.pokerapp.data.websocket.message.client.SendChatMessageDTO;
+import com.twb.pokerapp.data.websocket.message.client.SendPlayerActionDTO;
 import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.ChatMessageDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.DealCommunityCardDTO;
@@ -136,7 +137,13 @@ public class PokerGameViewModel extends ViewModel
     public void sendChatMessage(String message) {
         SendChatMessageDTO dto = new SendChatMessageDTO();
         dto.setMessage(message);
-        webSocketClient.send(pokerTableId, dto, this);
+        webSocketClient.sendChatMessage(pokerTableId, dto, this);
+    }
+
+    public void onPlayerAction(String action) {
+        SendPlayerActionDTO dto = new SendPlayerActionDTO();
+        dto.setAction(action);
+        webSocketClient.sendPlayerAction(pokerTableId, dto, this);
     }
 
     @Override

@@ -83,6 +83,13 @@ public class TableController {
         }
     }
 
+    public void hidePlayerTurns() {
+        for (Map.Entry<Integer, CardPairLayout> posCardPairEntry : positionCardPairs.entrySet()) {
+            CardPairLayout cardPairLayout = posCardPairEntry.getValue();
+            cardPairLayout.updateTurnPlayer(false);
+        }
+    }
+
     public void dealCurrentPlayerCard(DealPlayerCardDTO dealPlayerCard) {
         PlayerSessionDTO playerSession = dealPlayerCard.getPlayerSession();
         CardPairLayout cardPairLayout = getCardPairLayout(playerSession.getPosition());
@@ -128,6 +135,7 @@ public class TableController {
     }
 
     public void reset(RoundFinishedDTO roundFinished) {
+        hidePlayerTurns();
         communityCardLayout.reset();
         for (CardPairLayout cardPairLayout : cardPairLayouts) {
             cardPairLayout.reset();

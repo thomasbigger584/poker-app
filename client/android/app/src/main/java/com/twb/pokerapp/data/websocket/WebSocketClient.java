@@ -8,9 +8,8 @@ import com.google.gson.Gson;
 import com.twb.pokerapp.BuildConfig;
 import com.twb.pokerapp.data.auth.AuthService;
 import com.twb.pokerapp.data.websocket.message.client.SendChatMessageDTO;
-import com.twb.pokerapp.data.websocket.message.client.SendPlayerDisconnectDTO;
+import com.twb.pokerapp.data.websocket.message.client.SendPlayerActionDTO;
 import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
-import com.twb.pokerapp.ui.activity.pokergame.PokerGameViewModel;
 import com.twb.stomplib.dto.LifecycleEvent;
 import com.twb.stomplib.dto.StompHeader;
 import com.twb.stomplib.stomp.Stomp;
@@ -37,7 +36,7 @@ public class WebSocketClient {
     private static final String TOPIC_PREFIX = "/topic/loops.";
     private static final String SEND_ENDPOINT_PREFIX = "/app/pokerTable/%s";
     private static final String SEND_CHAT_MESSAGE = "/sendChatMessage";
-    private static final String SEND_DISCONNECT_PLAYER = "/sendDisconnectPlayer";
+    private static final String SEND_PLAYER_ACTION = "/sendPlayerAction";
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String CONNECTION_TYPE_HEADER = "X-Connection-Type";
@@ -137,22 +136,22 @@ public class WebSocketClient {
     // WebSocket Send Methods
     // ***************************************************************
 
-    public void send(UUID pokerTableId, SendChatMessageDTO dto, SendListener listener) {
+    public void sendChatMessage(UUID pokerTableId, SendChatMessageDTO dto, SendListener listener) {
         String destination = String.format(SEND_ENDPOINT_PREFIX + SEND_CHAT_MESSAGE, pokerTableId);
         String message = gson.toJson(dto);
-        send(destination, message, listener);
+        sendMessage(destination, message, listener);
     }
 
-    public void send(UUID pokerTableId, SendPlayerDisconnectDTO dto, SendListener listener) {
-        String destination = String.format(SEND_ENDPOINT_PREFIX + SEND_DISCONNECT_PLAYER, pokerTableId);
+    public void sendPlayerAction(UUID pokerTableId, SendPlayerActionDTO dto, SendListener listener) {
+        String destination = String.format(SEND_ENDPOINT_PREFIX + SEND_PLAYER_ACTION, pokerTableId);
         String message = gson.toJson(dto);
-        send(destination, message, listener);
+        sendMessage(destination, message, listener);
     }
 
     // WebSocket Send Helper Methods
     // ----------------------------------------------------------------
 
-    private void send(String destination, String message, SendListener listener) {
+    private void sendMessage(String destination, String message, SendListener listener) {
         compositeDisposable.add(stompClient.send(destination, message)
                 .compose(applySchedulers())
                 .subscribe(listener::onSendSuccess, listener::onSendFailure));
