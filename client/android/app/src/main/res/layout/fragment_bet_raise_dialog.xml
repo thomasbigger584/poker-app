@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="500dp"
+    android:layout_height="wrap_content"
+    android:background="@color/colorPrimaryDark"
+    android:minWidth="500dp"
+    android:orientation="vertical"
+    android:padding="32dp">
+
+    <TextView
+        android:id="@+id/titleTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Bet or Raise"
+        android:textColor="@android:color/white" />
+
+    <SeekBar
+        android:id="@+id/betRaiseSeekBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="30dp"
+        android:progressDrawable="@drawable/seekbar_background"
+        android:theme="@style/PokerSeekBar"
+        android:thumb="@drawable/seekbar_thumb">
+
+    </SeekBar>
+
+    <Button
+        android:id="@+id/successButton"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|right"
+        android:text="OK" />
+
+</LinearLayout>

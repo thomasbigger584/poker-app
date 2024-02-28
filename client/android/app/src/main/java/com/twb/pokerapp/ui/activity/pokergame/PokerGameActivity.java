@@ -16,11 +16,14 @@ import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.auth.AuthService;
 import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.data.model.dto.pokertable.TableDTO;
+import com.twb.pokerapp.data.model.enumeration.ActionType;
 import com.twb.pokerapp.ui.activity.login.BaseAuthActivity;
 import com.twb.pokerapp.ui.activity.pokergame.chatbox.ChatBoxRecyclerAdapter;
 import com.twb.pokerapp.ui.activity.pokergame.controller.ControlsController;
 import com.twb.pokerapp.ui.activity.pokergame.controller.TableController;
 import com.twb.pokerapp.ui.dialog.AlertModalDialog;
+import com.twb.pokerapp.ui.dialog.BasePokerGameDialog;
+import com.twb.pokerapp.ui.dialog.BetRaisePokerGameDialog;
 import com.twb.pokerapp.ui.dialog.DialogHelper;
 import com.twb.pokerapp.ui.dialog.FinishActivityOnClickListener;
 
@@ -29,7 +32,7 @@ import javax.inject.Inject;
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
-public class PokerGameActivity extends BaseAuthActivity {
+public class PokerGameActivity extends BaseAuthActivity implements BetRaisePokerGameDialog.BetRaiseClickListener {
     private static final String TAG = PokerGameActivity.class.getSimpleName();
     private static final String MODAL_TAG = "modal_alert";
 
@@ -39,6 +42,7 @@ public class PokerGameActivity extends BaseAuthActivity {
     private PokerGameViewModel viewModel;
     private TableDTO pokerTable;
     private AlertDialog loadingSpinner;
+    private BasePokerGameDialog betRaisePokerGameDialog;
     private ChatBoxRecyclerAdapter chatBoxAdapter;
     private TableController tableController;
     private ControlsController controlsController;
@@ -88,7 +92,7 @@ public class PokerGameActivity extends BaseAuthActivity {
             chatBoxAdapter.add(throwable.getMessage());
         });
         viewModel.closedConnection.observe(this, aVoid -> {
-            DialogHelper.dismiss(loadingSpinner);
+            dismissDialogs();
             String message = "Lost connection with server";
             AlertModalDialog alertModalDialog = AlertModalDialog
                     .newInstance(AlertModalDialog.AlertModalType.ERROR, message, new FinishActivityOnClickListener(this));
@@ -106,7 +110,7 @@ public class PokerGameActivity extends BaseAuthActivity {
                 }
             }
             chatBoxAdapter.add("Connected: " + currentUsername);
-            DialogHelper.dismiss(loadingSpinner);
+            dismissDialogs();
         });
         viewModel.playerConnected.observe(this, playerConnected -> {
             PlayerSessionDTO playerSession = playerConnected.getPlayerSession();
@@ -116,9 +120,11 @@ public class PokerGameActivity extends BaseAuthActivity {
             }
         });
         viewModel.dealerDetermined.observe(this, dealerDetermined -> {
+            dismissDialogs();
             tableController.dealerDetermined(dealerDetermined.getPlayerSession());
         });
         viewModel.dealPlayerCard.observe(this, dealPlayerCard -> {
+            dismissDialogs();
             tableController.hidePlayerTurns();
             controlsController.hide();
             PlayerSessionDTO playerSession = dealPlayerCard.getPlayerSession();
@@ -138,10 +144,12 @@ public class PokerGameActivity extends BaseAuthActivity {
             }
         });
         viewModel.dealCommunityCard.observe(this, dealCommunityCard -> {
+            dismissDialogs();
             controlsController.hide();
             tableController.dealCommunityCard(dealCommunityCard);
         });
         viewModel.roundFinished.observe(this, roundFinished -> {
+            dismissDialogs();
             tableController.hidePlayerTurns();
             controlsController.hide();
             tableController.reset(roundFinished);
@@ -195,7 +203,7 @@ public class PokerGameActivity extends BaseAuthActivity {
     }
 
     /*
-     * Button onClick event methods
+     * Button onClick Event Methods
      * ****************************************************************************
      */
 
@@ -204,11 +212,19 @@ public class PokerGameActivity extends BaseAuthActivity {
     }
 
     public void onRaiseClick(View view) {
-        viewModel.onPlayerAction("RAISE");
+        dismissDialogs();
+        double funds = 1000d; //todo: get current player funds
+        double minimumBet = 10d; //todo: get minimum bet
+        betRaisePokerGameDialog = BetRaisePokerGameDialog.newInstance(ActionType.RAISE, funds, minimumBet, this);
+        betRaisePokerGameDialog.show(getSupportFragmentManager());
     }
 
     public void onBetClick(View view) {
-        viewModel.onPlayerAction("BET");
+        dismissDialogs();
+        double funds = 1000d; //todo: get current player funds
+        double minimumBet = 10d; //todo: get current minimum bet
+        betRaisePokerGameDialog = BetRaisePokerGameDialog.newInstance(ActionType.BET, funds, minimumBet, this);
+        betRaisePokerGameDialog.show(getSupportFragmentManager());
     }
 
     public void onCallClick(View view) {
@@ -217,6 +233,25 @@ public class PokerGameActivity extends BaseAuthActivity {
 
     public void onCheckClick(View view) {
         viewModel.onPlayerAction("CHECK");
+    }
+
+    /*
+     * Modal Callbacks
+     * ****************************************************************************
+     */
+
+    @Override
+    public void onBetSelected(ActionType type, double betAmount) {
+        switch (type) {
+            case BET: {
+                viewModel.onPlayerAction("BET");
+                break;
+            }
+            case RAISE: {
+                viewModel.onPlayerAction("RAISE");
+                break;
+            }
+        }
     }
 
     /*
@@ -231,5 +266,13 @@ public class PokerGameActivity extends BaseAuthActivity {
                 .newInstance(AlertModalDialog.AlertModalType.ERROR, message, clickListener);
         alertModalDialog.show(getSupportFragmentManager(), MODAL_TAG);
         chatBoxAdapter.add(message);
+    }
+
+    private void dismissDialogs() {
+        DialogHelper.dismiss(loadingSpinner);
+        if (betRaisePokerGameDialog != null) {
+            betRaisePokerGameDialog.dismissAllowingStateLoss();
+            betRaisePokerGameDialog = null;
+        }
     }
 }

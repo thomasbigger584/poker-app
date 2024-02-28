@@ -72,7 +72,6 @@
     *   EditTexts
     ************************************************
     -->
-
     <style name="AppLoginEditText">
         <item name="android:background">@android:color/transparent</item>
         <item name="android:maxLines">1</item>
@@ -131,10 +130,10 @@
     </style>
 
     <!--
- ************************************************
- *   LinearLayout
- ************************************************
- -->
+     ************************************************
+     *   LinearLayout
+     ************************************************
+     -->
     <style name="AlertTitleTextView">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
@@ -146,5 +145,15 @@
         <item name="android:textSize">18sp</item>
     </style>
 
+    <!--
+     ************************************************
+     *   SeekBar
+     ************************************************
+     -->
+    <style name="PokerSeekBar" parent="Widget.AppCompat.SeekBar">
+        <item name="android:progressBackgroundTint">#f4511e</item>
+        <item name="android:progressTint">#388e3c</item>
+        <item name="android:colorControlActivated">#c51162</item>
+    </style>
 
 </resources>
