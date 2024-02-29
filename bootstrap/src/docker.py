@@ -1,13 +1,7 @@
 #!/usr/bin/env python3
 import os
+
 from python_on_whales import DockerClient
-
-
-def main():
-    docker = get_docker_client()
-
-    docker.compose.build(cache=False)
-    docker.compose.up(remove_orphans=True)
 
 
 def get_docker_client():
@@ -19,7 +13,3 @@ def get_docker_client():
         compose_project_name="poker-app"
     )
     return docker
-
-
-if __name__ == "__main__":
-    main()

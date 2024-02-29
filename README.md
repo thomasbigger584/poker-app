@@ -7,7 +7,7 @@
 
 ## Server Usage
 
-- Use the python bootstrap scripts to [run the application locally](scripts/README.md)
+- Use the python bootstrap scripts to [run the application locally](bootstrap/README.md)
 
 ## Client Usage
 
