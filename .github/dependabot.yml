@@ -9,7 +9,7 @@ updates:
     directory: "/api"
     schedule:
       interval: "weekly"
-  - package-ecosystem: "gradle"
-    directory: "/client/android"
-    schedule:
-      interval: "weekly"
+  # - package-ecosystem: "gradle"
+  #   directory: "/client/android"
+  #   schedule:
+  #     interval: "weekly"
