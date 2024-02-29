@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-from bootstrap.src.utils import get_docker_client, API_FOLDER_NAME
-
-TAG = "com.twb.pokerapp/api:latest"
+from bootstrap.utils import get_docker_client, API_FOLDER_NAME
 
 
 def main():

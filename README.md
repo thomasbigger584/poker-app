@@ -7,7 +7,9 @@
 
 ## Server Usage
 
-- Use the python bootstrap scripts to [run the application locally](bootstrap/README.md)
+1) Create venv with versions xxxx
+2) pip install -r requirements.txt
+3) Run `run_local.py` script
 
 ## Client Usage
 

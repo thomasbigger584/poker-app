@@ -19,7 +19,7 @@ def get_docker_client():
 
 def get_api_path():
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(script_dir, "..", "..", API_FOLDER_NAME)
+    return os.path.join(script_dir, "..", API_FOLDER_NAME)
 
 
 def get_dockerfile_local():
