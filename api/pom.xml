@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.2</version>
+        <version>3.2.3</version>
         <relativePath/>
     </parent>
     <groupId>com.twb</groupId>
@@ -20,9 +20,9 @@
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
         <javax.servlet-api.version>4.0.1</javax.servlet-api.version>
         <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
-        <error-prone.version>2.24.1</error-prone.version>
+        <error-prone.version>2.25.0</error-prone.version>
         <spring-security-jwt.version>1.1.1.RELEASE</spring-security-jwt.version>
-        <keycloak.version>23.0.6</keycloak.version>
+        <keycloak.version>23.0.7</keycloak.version>
         <liquibase-core.version>4.26.0</liquibase-core.version>
         <commons-lang3.version>3.14.0</commons-lang3.version>
         <postgresql.version>42.7.2</postgresql.version>
@@ -31,10 +31,10 @@
 
         <!--  Test Properties  -->
         <awaitility.version>4.2.0</awaitility.version>
-        <docker-maven-plugin.version>0.43.4</docker-maven-plugin.version>
+        <docker-maven-plugin.version>0.44.0</docker-maven-plugin.version>
         <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>3.2.5</maven-failsafe-plugin.version>
-        <testcontainers.version>1.19.5</testcontainers.version>
+        <testcontainers.version>1.19.6</testcontainers.version>
         <testcontainers-keycloak.version>3.2.0</testcontainers-keycloak.version>
         <assertj-core.version>3.25.3</assertj-core.version>
 
