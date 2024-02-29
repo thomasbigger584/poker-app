@@ -26,7 +26,7 @@
         <liquibase-core.version>4.26.0</liquibase-core.version>
         <commons-lang3.version>3.14.0</commons-lang3.version>
         <postgresql.version>42.7.1</postgresql.version>
-        <keycloak-admin-client.version>23.0.3</keycloak-admin-client.version>
+        <keycloak-admin-client.version>23.0.7</keycloak-admin-client.version>
         <xsync.version>1.3</xsync.version>
 
         <!--  Test Properties  -->
