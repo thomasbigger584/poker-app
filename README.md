@@ -5,11 +5,21 @@
 
 ![logo.png](images/logo.png)
 
+## Setup bootstrap
+Create a python virtual environment, activate it and install requirements
+```shell
+$ cd bootstrap
+$ virtualenv -p python3 venv
+$ source venv/bin/activate
+$ pip install -r requirements.txt
+```
+
 ## Server Usage
 
-1) Create venv with versions xxxx
-2) pip install -r requirements.txt
-3) Run `run_local.py` script
+Run the `run_local.py` script
+```shell
+python3 run_local.py
+```
 
 ## Client Usage
 

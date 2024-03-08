@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from bootstrap.utils import get_docker_client, API_FOLDER_NAME
+from utils import get_docker_client, API_FOLDER_NAME
 
 
 def main():

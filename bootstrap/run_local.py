@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from bootstrap.utils import get_docker_client
+from utils import get_docker_client
 
 
 def main():

@@ -29,7 +29,7 @@ public class CardLayout extends FrameLayout {
         reset();
     }
 
-    public void update(final CardDTO card) {
+    public void update(CardDTO card) {
         post(() -> {
             int cardDrawResId = CardDrawableUtil.getDrawable(getContext(), card);
             cardImageView.setImageResource(cardDrawResId);
