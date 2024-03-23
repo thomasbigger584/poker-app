@@ -1,7 +1,9 @@
-FROM ubuntu:latest
+FROM alpine:latest
 
-RUN apt-get -qq update && apt-get -qq install -y openjdk-17-jdk g++
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+RUN apk --no-cache add openjdk17 g++ && \
+    rm -rf /var/cache/apk/*
+
+ENV JAVA_HOME=/usr/lib/jvm/default-jvm
 
 WORKDIR /app
 COPY . .
