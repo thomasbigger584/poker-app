@@ -6,7 +6,7 @@ from python_on_whales import DockerClient
 DOCKER_LOG_LEVEL = "error"
 PROJECT_NAME = "poker-app"
 API_FOLDER_NAME = "api"
-LOCAL_DOCKERFILE = "Dockerfile.local"
+LOCAL_DOCKERFILE = "Dockerfile"
 
 
 def get_docker_client():

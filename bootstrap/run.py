@@ -5,7 +5,7 @@ from utils import get_docker_client
 
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(description='Docker Compose Up Script')
+    parser = argparse.ArgumentParser(description='Bootstrap poker-app Server')
     parser.add_argument('--no-build', action='store_true', default=False, help='Skip building Docker images')
     parser.add_argument('--no-cache', action='store_true', default=False, help='Build without cache')
     parser.add_argument('--no-run', action='store_true', default=False, help='Skip running Docker containers')
