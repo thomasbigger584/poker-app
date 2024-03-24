@@ -30,9 +30,6 @@ spring:
     password: password
   jpa:
     open-in-view: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
   hibernate:
     dll-auto: none
   liquibase:
