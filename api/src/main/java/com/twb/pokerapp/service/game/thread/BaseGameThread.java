@@ -1,10 +1,7 @@
 package com.twb.pokerapp.service.game.thread;
 
 import com.twb.pokerapp.repository.*;
-import com.twb.pokerapp.service.CardService;
-import com.twb.pokerapp.service.DealerService;
-import com.twb.pokerapp.service.HandService;
-import com.twb.pokerapp.service.RoundService;
+import com.twb.pokerapp.service.*;
 import com.twb.pokerapp.service.eval.HandEvaluator;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
@@ -54,6 +51,9 @@ public abstract class BaseGameThread extends Thread {
 
     @Autowired
     protected HandEvaluator handEvaluator;
+
+    @Autowired
+    protected PlayerActionService playerActionService;
 
     @Autowired
     protected PlayerActionRepository playerActionRepository;

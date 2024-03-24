@@ -65,13 +65,13 @@ public class TexasHoldemGameThread extends GameThread {
 
     private void waitAllPlayerTurns() {
         PlayerSession previousPlayer = null;
-        for (PlayerSession curentPlayer : playerSessions) {
-            checkGameInterrupted();
-
-            sendPlayerAction(curentPlayer, previousPlayer);
-            previousPlayer = curentPlayer;
-
-            sleepInMs(3000L);
+        for (PlayerSession currentPlayer : playerSessions) {
+            if (!isPlayerFolded(currentPlayer)) {
+                checkGameInterrupted();
+                sendPlayerAction(currentPlayer, previousPlayer);
+                previousPlayer = currentPlayer;
+                waitPlayerTurn(currentPlayer);
+            }
         }
     }
 
