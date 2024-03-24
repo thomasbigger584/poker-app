@@ -1,8 +1,8 @@
 # First stage: Build stage with JDK
-FROM amazoncorretto:17-alpine-jdk as builder
+FROM eclipse-temurin:21-jdk-alpine as builder
 
 # Install necessary build tools
-RUN apk --no-cache add g++ && \
+RUN apk add g++ && \
     rm -rf /var/cache/apk/*
 
 # Set working directory
@@ -19,19 +19,16 @@ RUN g++ -shared -o $EVALUATOR_SO_PATH /app/src/main/cpp/* -I $JAVA_HOME/include 
 RUN --mount=type=cache,target=~/.m2  ./mvnw --no-transfer-progress package -DskipTests
 
 # Second stage: Runtime stage with JRE
-FROM amazoncorretto:17-alpine
+FROM eclipse-temurin:21-jre-alpine
 
 # Set working directory
 WORKDIR /app
-
-# Set JAVA_HOME to the JRE path
-ENV JAVA_HOME=/usr/local/openjdk-17/jre
 
 # Copy compiled Java code from the builder stage
 COPY --from=builder /app/target/api-0.0.1-SNAPSHOT.jar /app/
 
 # Copy compiled C++ files from the builder stage to the JRE stage
-ENV EVALUATOR_SO_PATH=/app/src/main/cpp/evaluator.so
+ENV EVALUATOR_SO_PATH=/app/evaluator.so
 COPY --from=builder /app/src/main/cpp/evaluator.so $EVALUATOR_SO_PATH
 
 # Define command to run the application
