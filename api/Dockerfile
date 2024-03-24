@@ -1,5 +1,5 @@
 # First stage: Build stage with JDK
-FROM openjdk:17 as builder
+FROM amazoncorretto:8-alpine3.17-jdk as builder
 
 # Install necessary build tools
 RUN apt-get update && apt-get install -y g++
@@ -19,7 +19,7 @@ RUN g++ -shared -o $EVALUATOR_SO_PATH /app/src/main/cpp/* -I $JAVA_HOME/include 
 RUN --mount=type=cache,target=~/.m2  ./mvnw --no-transfer-progress package -DskipTests
 
 # Second stage: Runtime stage with JRE
-FROM openjdk:17-jre-slim
+FROM amazoncorretto:8-alpine3.17-jre
 
 # Set working directory
 WORKDIR /app
