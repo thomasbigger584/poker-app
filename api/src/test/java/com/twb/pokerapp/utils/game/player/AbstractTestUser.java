@@ -3,6 +3,7 @@ package com.twb.pokerapp.utils.game.player;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.utils.keycloak.KeycloakHelper;
 import com.twb.pokerapp.utils.message.ServerMessageConverter;
+import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.ErrorMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.LogMessageDTO;
@@ -13,6 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.messaging.simp.stomp.*;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
@@ -28,6 +31,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -35,12 +39,15 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private static final Logger logger = LoggerFactory.getLogger(AbstractTestUser.class);
     private static final String CONNECTION_URL = "ws://localhost:8081/looping";
     private static final String SUBSCRIPTION_TOPIC_SUFFIX = "/topic/loops.%s";
+    private static final String SEND_PLAYER_ACTION = "/app/pokerTable/%s/sendPlayerAction";
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String HEADER_CONNECTION_TYPE = "X-Connection-Type";
+    private static final TaskScheduler TASK_SCHEDULER =
+            new ConcurrentTaskScheduler(Executors.newSingleThreadScheduledExecutor());
     protected final CountdownLatches latches;
     private final UUID tableId;
     @Getter
-    private final String username;
+    protected final String username;
     private final WebSocketStompClient client;
     private final Keycloak keycloak;
     private final CountDownLatch connectLatch = new CountDownLatch(1);
@@ -88,13 +95,15 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
     @Override
     public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
-        this.session = session;
+        session.setAutoReceipt(true);
         session.subscribe(String.format(SUBSCRIPTION_TOPIC_SUFFIX, tableId), this);
+        this.session = session;
     }
 
     @Override
     public void handleException(StompSession session, StompCommand command,
                                 StompHeaders headers, byte[] payload, Throwable exception) {
+        logger.error("Exception thrown during stomp session", exception);
         exceptionThrown.set(exception);
         connectLatch.countDown();
         latches.roundLatch().countDown();
@@ -103,6 +112,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
     @Override
     public void handleTransportError(StompSession session, Throwable exception) {
+        logger.error("Exception thrown after connect failure", exception);
         exceptionThrown.set(exception);
         connectLatch.countDown();
         latches.roundLatch().countDown();
@@ -115,6 +125,10 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
     @Override
     public void handleFrame(StompHeaders headers, Object payload) {
+        if (payload == null) {
+            logger.warn("Frame received but payload is null with headers {}", headers);
+            return;
+        }
         connectLatch.countDown();
         ServerMessageDTO message = (ServerMessageDTO) payload;
         receivedMessages.add(message);
@@ -127,6 +141,24 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
             return;
         }
         handleMessage(headers, message);
+    }
+
+    // ***************************************************************
+    // Send Methods
+    // ***************************************************************
+
+    protected void sendPlayerAction(CreatePlayerActionDTO createDto) {
+        send(String.format(SEND_PLAYER_ACTION, tableId), createDto);
+    }
+
+    private void send(String destination, Object dto) {
+        if (session == null || !session.isConnected()) {
+            logger.warn("Cannot send to destination {} as not connected", destination);
+            return;
+        }
+        StompSession.Receiptable receiptable = session.send(destination, dto);
+        receiptable.addReceiptTask(() -> logger.info("Receipt received for destination {} and payload {}", destination, dto));
+        receiptable.addReceiptLostTask(() -> logger.info("Failed to receive receipt for destination {} and payload {}", destination, dto));
     }
 
     // ***************************************************************
@@ -149,6 +181,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
         SockJsClient sockJsClient = new SockJsClient(transports);
         WebSocketStompClient stompClient = new WebSocketStompClient(sockJsClient);
+        stompClient.setTaskScheduler(TASK_SCHEDULER);
         stompClient.setMessageConverter(new ServerMessageConverter());
         return stompClient;
     }
