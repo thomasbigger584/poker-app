@@ -153,12 +153,13 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
     private void send(String destination, Object dto) {
         if (session == null || !session.isConnected()) {
-            logger.warn("Cannot send to destination {} as not connected", destination);
+            logger.warn("Cannot send to destination {} for user {} as not connected", destination, username);
             return;
         }
+        logger.info(">>>> [{}] sending {}", username, dto);
         StompSession.Receiptable receiptable = session.send(destination, dto);
-        receiptable.addReceiptTask(() -> logger.info("Receipt received for destination {} and payload {}", destination, dto));
-        receiptable.addReceiptLostTask(() -> logger.info("Failed to receive receipt for destination {} and payload {}", destination, dto));
+        receiptable.addReceiptTask(() -> logger.info("Receipt received for user {} destination {} and payload {}", username, destination, dto));
+        receiptable.addReceiptLostTask(() -> logger.info("Failed to receive receipt for user {} destination {} and payload {}", username, destination, dto));
     }
 
     // ***************************************************************
