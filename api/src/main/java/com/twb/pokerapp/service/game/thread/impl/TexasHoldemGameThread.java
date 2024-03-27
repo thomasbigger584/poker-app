@@ -56,7 +56,7 @@ public class TexasHoldemGameThread extends GameThread {
         for (CardType cardType : CardType.PLAYER_CARDS) {
             for (PlayerSession playerSession : playerSessions) {
                 if (!isPlayerFolded(playerSession)) {
-                    checkGameInterrupted();
+                    checkRoundInterrupted();
                     dealPlayerCard(cardType, playerSession);
                 }
             }
@@ -67,7 +67,7 @@ public class TexasHoldemGameThread extends GameThread {
         PlayerSession previousPlayer = null;
         for (PlayerSession currentPlayer : playerSessions) {
             if (!isPlayerFolded(currentPlayer)) {
-                checkGameInterrupted();
+                checkRoundInterrupted();
                 sendPlayerAction(currentPlayer, previousPlayer);
                 previousPlayer = currentPlayer;
                 waitPlayerTurn(currentPlayer);
@@ -103,7 +103,7 @@ public class TexasHoldemGameThread extends GameThread {
 
     private void dealFlop() {
         for (CardType cardType : CardType.FLOP_CARDS) {
-            checkGameInterrupted();
+            checkRoundInterrupted();
             dealCommunityCard(cardType);
         }
     }

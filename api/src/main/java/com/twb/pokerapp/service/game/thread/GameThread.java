@@ -5,7 +5,8 @@ import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.domain.enumeration.GameType;
 import com.twb.pokerapp.domain.enumeration.RoundState;
 import com.twb.pokerapp.dto.playeraction.PlayerActionDTO;
-import com.twb.pokerapp.exception.GameThreadException;
+import com.twb.pokerapp.exception.game.GameInterruptedException;
+import com.twb.pokerapp.exception.game.RoundInterruptedException;
 import com.twb.pokerapp.service.eval.dto.EvalPlayerHandDTO;
 import com.twb.pokerapp.service.game.DeckOfCardsFactory;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
@@ -45,6 +46,7 @@ public abstract class GameThread extends BaseGameThread {
     // Flags
     // *****************************************************************************************
     private final AtomicBoolean interruptGame = new AtomicBoolean(false);
+    private final AtomicBoolean interruptRound = new AtomicBoolean(false);
     private final AtomicBoolean roundInProgress = new AtomicBoolean(false);
     private final AtomicBoolean gameInProgress = new AtomicBoolean(false);
 
@@ -89,7 +91,7 @@ public abstract class GameThread extends BaseGameThread {
             finishRound();
             finishGame();
             logger.error(e.getMessage());
-            if (e instanceof GameThreadException) {
+            if (e instanceof GameInterruptedException) {
                 sendErrorMessage(e.getMessage());
             }
         }
@@ -108,7 +110,7 @@ public abstract class GameThread extends BaseGameThread {
         Optional<PokerTable> tableOpt =
                 tableRepository.findById(params.getTableId());
         if (tableOpt.isEmpty()) {
-            throw new GameThreadException("No table found cannot start game");
+            throw new GameInterruptedException("No table found cannot start game");
         }
         pokerTable = tableOpt.get();
     }
@@ -156,12 +158,12 @@ public abstract class GameThread extends BaseGameThread {
         if (roundOpt.isPresent()) {
             currentRound = roundOpt.get();
             if (currentRound.getRoundState() != RoundState.WAITING_FOR_PLAYERS) {
-                throw new GameThreadException("Cannot start an existing new round not in the WAITING_FOR_PLAYERS state");
+                throw new GameInterruptedException("Cannot start an existing new round not in the WAITING_FOR_PLAYERS state");
             }
         } else {
             Optional<PokerTable> tableOpt = tableRepository.findById(params.getTableId());
             if (tableOpt.isEmpty()) {
-                throw new GameThreadException("Cannot start as table doesn't exist");
+                throw new GameInterruptedException("Cannot start as table doesn't exist");
             }
             currentRound = roundService.create(pokerTable);
         }
@@ -183,13 +185,14 @@ public abstract class GameThread extends BaseGameThread {
         List<PlayerSession> playerSessions = playerSessionRepository
                 .findConnectedPlayersByTableId(params.getTableId());
         if (CollectionUtils.isEmpty(playerSessions)) {
-            throw new GameThreadException(NO_MORE_PLAYERS_CONNECTED);
+            throw new GameInterruptedException(NO_MORE_PLAYERS_CONNECTED);
         }
         return playerSessions;
     }
 
     private void initRound() {
         roundInProgress.set(true);
+        interruptRound.set(false);
         foldedPlayers.clear();
         shuffleCards();
         onInitRound();
@@ -199,9 +202,15 @@ public abstract class GameThread extends BaseGameThread {
         RoundState roundState = RoundState.INIT_DEAL;
         saveRoundState(roundState);
         while (roundState != RoundState.FINISH) {
-            checkGameInterrupted();
-            onRunRound(roundState);
-            roundState = getNextRoundState(roundState);
+            checkRoundInterrupted();
+            try {
+                onRunRound(roundState);
+                roundState = getNextRoundState(roundState);
+            } catch (RoundInterruptedException e) {
+                if (roundState != RoundState.EVAL) {
+                    roundState = RoundState.EVAL;
+                }
+            }
             saveRoundState(roundState);
         }
     }
@@ -278,6 +287,11 @@ public abstract class GameThread extends BaseGameThread {
             if (!foldedPlayers.contains(playerSession)) {
                 foldedPlayers.add(playerSession);
             }
+            if (playerSessions.stream()
+                    .filter(foldedPlayers::contains).count() == 1) {
+                // there is only 1 player left in a started game
+                interruptRound.set(true);
+            }
         }
     }
 
@@ -315,7 +329,14 @@ public abstract class GameThread extends BaseGameThread {
 
     protected void checkGameInterrupted() {
         if (interruptGame.get() || isInterrupted()) {
-            throw new GameThreadException("Game is interrupted");
+            throw new GameInterruptedException("Game is interrupted");
+        }
+    }
+
+    protected void checkRoundInterrupted() {
+        checkGameInterrupted();
+        if (interruptRound.get()) {
+            throw new RoundInterruptedException("Round is interrupted");
         }
     }
 
