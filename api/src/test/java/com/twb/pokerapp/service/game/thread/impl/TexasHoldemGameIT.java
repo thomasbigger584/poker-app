@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TexasHoldemGameIT extends BaseTestContainersIT {
+class TexasHoldemGameIT extends BaseTestContainersIT {
     private static final Logger logger = LoggerFactory.getLogger(TexasHoldemGameIT.class);
     private static final int LATCH_TIMEOUT_IN_SECS = 100;
     private static final String LISTENER_USERNAME = "viewer";
@@ -40,7 +40,7 @@ public class TexasHoldemGameIT extends BaseTestContainersIT {
     private static final int PLAYER_CARD_COUNT = 2;
 
     @Test
-    public void testAllPlayersFoldGameFinishesAndWinnerStillDeterminedCorrectly() throws Throwable {
+    void testAllPlayersFoldGameFinishesAndWinnerStillDetermined() throws Throwable {
         TableDTO table = getTexasHoldemTable();
 
         CountdownLatches latches = CountdownLatches.create();
@@ -50,6 +50,7 @@ public class TexasHoldemGameIT extends BaseTestContainersIT {
         Thread.sleep(PLAYER_WAIT_MS);
 
         List<AbstractTestUser> players = new ArrayList<>();
+
         players.add(new TestTexasHoldemPlayerUser(table.getId(), latches, PLAYER_1_USERNAME, PASSWORD) {
             @Override
             protected void handlePlayerTurnMessage(StompHeaders headers, PlayerTurnDTO playerTurn) {
@@ -58,7 +59,14 @@ public class TexasHoldemGameIT extends BaseTestContainersIT {
                 sendPlayerAction(createDto);
             }
         });
-        players.add(new TestTexasHoldemPlayerUser(table.getId(), latches, PLAYER_2_USERNAME, PASSWORD));
+        players.add(new TestTexasHoldemPlayerUser(table.getId(), latches, PLAYER_2_USERNAME, PASSWORD) {
+            @Override
+            protected void handlePlayerTurnMessage(StompHeaders headers, PlayerTurnDTO playerTurn) {
+                CreatePlayerActionDTO createDto = new CreatePlayerActionDTO();
+                createDto.setAction(ActionType.FOLD);
+                sendPlayerAction(createDto);
+            }
+        });
 
         for (AbstractTestUser player : players) {
             player.connect();
@@ -142,7 +150,7 @@ public class TexasHoldemGameIT extends BaseTestContainersIT {
 //    }
 
     @Test
-    public void testTexasHoldemGamePlayerAlreadyConnected() throws Throwable {
+    void testTexasHoldemGamePlayerAlreadyConnected() throws Throwable {
         TableDTO table = getTexasHoldemTable();
 
         CountdownLatches latches = CountdownLatches.create();

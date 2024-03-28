@@ -34,7 +34,7 @@ public class HandEvaluator {
     private void setWinners(List<EvalPlayerHandDTO> playerHandList) {
         playerHandList.sort(Comparator.reverseOrder());
 
-        EvalPlayerHandDTO winningPlayer = playerHandList.get(0);
+        EvalPlayerHandDTO winningPlayer = playerHandList.getFirst();
         int winningRankValue = winningPlayer.getRank();
         for (EvalPlayerHandDTO playerHand : playerHandList) {
             if (playerHand.getRank() == winningRankValue) {

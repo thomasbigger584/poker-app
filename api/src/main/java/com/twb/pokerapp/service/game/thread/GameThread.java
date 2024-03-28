@@ -207,6 +207,7 @@ public abstract class GameThread extends BaseGameThread {
                 onRunRound(roundState);
                 roundState = getNextRoundState(roundState);
             } catch (RoundInterruptedException e) {
+                interruptRound.set(false);
                 if (roundState != RoundState.EVAL) {
                     roundState = RoundState.EVAL;
                 }
@@ -351,7 +352,7 @@ public abstract class GameThread extends BaseGameThread {
 
     protected void handleWinners(List<EvalPlayerHandDTO> winners) {
         if (winners.size() == 1) {
-            handleSinglePlayerWin(winners.get(0));
+            handleSinglePlayerWin(winners.getFirst());
         } else {
             handleMultiplePlayerWin(winners);
         }
@@ -367,7 +368,7 @@ public abstract class GameThread extends BaseGameThread {
 
     private void handleMultiplePlayerWin(List<EvalPlayerHandDTO> winners) {
         String winnerNames = getReadableWinners(winners);
-        String handTypeStr = winners.get(0).getHandType().getValue();
+        String handTypeStr = winners.getFirst().getHandType().getValue();
 
         sendLogMessage(String.format("%s draws round with a %s", winnerNames, handTypeStr));
     }
@@ -391,9 +392,9 @@ public abstract class GameThread extends BaseGameThread {
     // Abstract Methods
     // ***************************************************************
 
-    abstract protected void onInitRound();
+    protected abstract void onInitRound();
 
-    abstract protected void onRunRound(RoundState roundState);
+    protected abstract void onRunRound(RoundState roundState);
 
-    abstract protected RoundState getNextRoundState(RoundState roundState);
+    protected abstract RoundState getNextRoundState(RoundState roundState);
 }

@@ -32,7 +32,7 @@ public class SessionEventListener {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
         List<String> connectionTypeHeader = headerAccessor.getNativeHeader(HEADER_CONNECTION_TYPE);
         if (CollectionUtils.isNotEmpty(connectionTypeHeader)) {
-            ConnectionType connectionType = ConnectionType.valueOf(connectionTypeHeader.get(0));
+            ConnectionType connectionType = ConnectionType.valueOf(connectionTypeHeader.getFirst());
             sessionService.putConnectionType(headerAccessor, connectionType);
         } else {
             sessionService.putConnectionType(headerAccessor, ConnectionType.LISTENER);

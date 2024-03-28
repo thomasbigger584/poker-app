@@ -134,6 +134,39 @@ public class TexasHoldemGameThread extends GameThread {
     }
 
     private void evaluate() {
+        List<PlayerSession> playersNotFolded = playerSessions.stream()
+                .filter(foldedPlayers::contains).toList();
+        if (playersNotFolded.size() == 1) {
+            evaluateLastPlayerStanding(playersNotFolded);
+        } else {
+            evaluateMultiPlayersStanding();
+        }
+        sleepInMs(EVALUATION_WAIT_MS);
+    }
+
+    private void evaluateLastPlayerStanding(List<PlayerSession> playersNotFolded) {
+        List<Hand> savingHands = new ArrayList<>();
+
+        PlayerSession winner = playersNotFolded.getFirst();
+        Optional<Hand> winnerHandOpt = handRepository
+                .findHandForRound(winner.getId(), currentRound.getId());
+        if (winnerHandOpt.isPresent()) {
+            Hand hand = winnerHandOpt.get();
+            hand.setWinner(true);
+        }
+        for (PlayerSession foldedPlayer : foldedPlayers) {
+            Optional<Hand> foldedHandOpt = handRepository
+                    .findHandForRound(foldedPlayer.getId(), currentRound.getId());
+            if (foldedHandOpt.isPresent()) {
+                Hand hand = foldedHandOpt.get();
+                hand.setWinner(false);
+            }
+        }
+        handRepository.saveAllAndFlush(savingHands);
+        sendLogMessage(String.format("%s wins round", winner.getUser().getUsername()));
+    }
+
+    private void evaluateMultiPlayersStanding() {
         List<Card> communityCards = cardRepository
                 .findCommunityCardsForRound(currentRound.getId());
 
@@ -166,8 +199,6 @@ public class TexasHoldemGameThread extends GameThread {
                 playerHandsList.stream().filter(EvalPlayerHandDTO::isWinner).toList();
 
         handleWinners(winners);
-
-        sleepInMs(EVALUATION_WAIT_MS);
     }
 
     private void savePlayerHandEvaluation(List<EvalPlayerHandDTO> playerHandsList) {
