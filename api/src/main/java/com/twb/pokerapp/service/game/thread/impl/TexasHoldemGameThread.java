@@ -55,7 +55,7 @@ public class TexasHoldemGameThread extends GameThread {
     private void initDeal() {
         for (CardType cardType : CardType.PLAYER_CARDS) {
             for (PlayerSession playerSession : playerSessions) {
-                if (!isPlayerFolded(playerSession)) {
+                if (!isPlayerFolded(playerSession)) { // cannot fold before all cards are dealt ?
                     checkRoundInterrupted();
                     dealPlayerCard(cardType, playerSession);
                 }
@@ -68,14 +68,15 @@ public class TexasHoldemGameThread extends GameThread {
         for (PlayerSession currentPlayer : playerSessions) {
             if (!isPlayerFolded(currentPlayer)) {
                 checkRoundInterrupted();
-                sendPlayerAction(currentPlayer, previousPlayer);
+                sendPlayerNextActions(currentPlayer, previousPlayer);
                 previousPlayer = currentPlayer;
                 waitPlayerTurn(currentPlayer);
             }
         }
+        
     }
 
-    private void sendPlayerAction(PlayerSession playerSession, PlayerSession previousPlayer) {
+    private void sendPlayerNextActions(PlayerSession playerSession, PlayerSession previousPlayer) {
         ActionType[] nextActions = getNextActions(previousPlayer);
         dispatcher.send(params.getTableId(), messageFactory.playerTurn(playerSession, nextActions));
     }
