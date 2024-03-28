@@ -96,7 +96,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     @Override
     public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
         session.setAutoReceipt(true);
-        session.subscribe(String.format(SUBSCRIPTION_TOPIC_SUFFIX, tableId), this);
+        session.subscribe(SUBSCRIPTION_TOPIC_SUFFIX.formatted(tableId), this);
         this.session = session;
     }
 
@@ -148,7 +148,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     // ***************************************************************
 
     protected void sendPlayerAction(CreatePlayerActionDTO createDto) {
-        send(String.format(SEND_PLAYER_ACTION, tableId), createDto);
+        send(SEND_PLAYER_ACTION.formatted(tableId), createDto);
     }
 
     private void send(String destination, Object dto) {
