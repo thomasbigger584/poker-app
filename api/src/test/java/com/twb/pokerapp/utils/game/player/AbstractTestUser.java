@@ -63,7 +63,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     }
 
     public void connect() throws InterruptedException {
-        logger.info("Connecting {} to {}", params.getUsername(), params.getTableId());
+        logger.info("Connecting {} to {}", params.getUsername(), params.getTable().getId());
         URI url = URI.create(CONNECTION_URL);
         WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
         String accessToken = KeycloakHelper.getAccessToken(keycloak);
@@ -78,7 +78,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
     public void disconnect() {
         if (session != null && session.isConnected()) {
-            logger.info("Disconnecting {} from {}", params.getUsername(), params.getTableId());
+            logger.info("Disconnecting {} from {}", params.getUsername(), params.getTable().getId());
             session.disconnect();
         }
         session = null;
@@ -91,7 +91,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     @Override
     public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
         session.setAutoReceipt(true);
-        session.subscribe(SUBSCRIPTION_TOPIC_SUFFIX.formatted(params.getTableId()), this);
+        session.subscribe(SUBSCRIPTION_TOPIC_SUFFIX.formatted(params.getTable().getId()), this);
         this.session = session;
     }
 
@@ -143,18 +143,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     // ***************************************************************
 
     protected void sendPlayerAction(CreatePlayerActionDTO createDto) {
-        send(SEND_PLAYER_ACTION.formatted(params.getTableId()), createDto);
-    }
-
-    private void send(String destination, Object dto) {
-        if (session == null || !session.isConnected()) {
-            logger.warn("Cannot send to destination {} for user {} as not connected", destination, params.getUsername());
-            return;
-        }
-        logger.info(">>>> [{}] sending {}", params.getUsername(), dto);
-        StompSession.Receiptable receiptable = session.send(destination, dto);
-        receiptable.addReceiptTask(() -> logger.info("Receipt received for user {} destination {} and payload {}", params.getUsername(), destination, dto));
-        receiptable.addReceiptLostTask(() -> logger.info("Failed to receive receipt for user {} destination {} and payload {}", params.getUsername(), destination, dto));
+        send(SEND_PLAYER_ACTION.formatted(params.getTable().getId()), createDto);
     }
 
     // ***************************************************************
@@ -164,15 +153,6 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     protected abstract void handleMessage(StompHeaders headers, ServerMessageDTO message);
 
     protected abstract ConnectionType getConnectionType();
-
-    // ***************************************************************
-    // Interfaces
-    // ***************************************************************
-
-    public interface PlayerTurnHandler {
-        void handle(StompHeaders headers, PlayerTurnDTO playerTurn);
-    }
-
 
     // ***************************************************************
     // Helper Methods
@@ -189,6 +169,25 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         stompClient.setTaskScheduler(TASK_SCHEDULER);
         stompClient.setMessageConverter(new ServerMessageConverter());
         return stompClient;
+    }
+
+    private void send(String destination, Object dto) {
+        if (session == null || !session.isConnected()) {
+            logger.warn("Cannot send to destination {} for user {} as not connected", destination, params.getUsername());
+            return;
+        }
+        logger.info(">>>> [{}] sending {}", params.getUsername(), dto);
+        StompSession.Receiptable receiptable = session.send(destination, dto);
+        receiptable.addReceiptTask(() -> logger.info("Receipt received for user {} destination {} and payload {}", params.getUsername(), destination, dto));
+        receiptable.addReceiptLostTask(() -> logger.info("Failed to receive receipt for user {} destination {} and payload {}", params.getUsername(), destination, dto));
+    }
+
+    // ***************************************************************
+    // Interfaces
+    // ***************************************************************
+
+    public interface PlayerTurnHandler {
+        void handle(StompHeaders headers, PlayerTurnDTO playerTurn);
     }
 
     public record CountdownLatches(

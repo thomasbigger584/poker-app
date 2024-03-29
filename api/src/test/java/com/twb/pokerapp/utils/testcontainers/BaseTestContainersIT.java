@@ -25,8 +25,8 @@ public abstract class BaseTestContainersIT {
     private static final String TEST_DOCKER_COMPOSE_YML = "test-docker-compose.yml";
     private static final String EXPOSED_SERVICE = "api";
     private static final int EXPOSED_PORT = 8081;
-    private static final String BEARER_PREFIX = "Bearer ";
     protected static final String API_BASE_URL = "http://localhost:%d".formatted(EXPOSED_PORT);
+    private static final String BEARER_PREFIX = "Bearer ";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String ADMIN_USERNAME = "admin";
     private static final String ADMIN_PASSWORD = "admin";

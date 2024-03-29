@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TestGameListenerUser extends AbstractTestUser {
