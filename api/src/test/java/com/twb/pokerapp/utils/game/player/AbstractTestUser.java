@@ -7,6 +7,7 @@ import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.ErrorMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.LogMessageDTO;
+import com.twb.pokerapp.web.websocket.message.server.payload.PlayerTurnDTO;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import org.keycloak.admin.client.Keycloak;
@@ -29,7 +30,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -44,10 +44,8 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private static final String HEADER_CONNECTION_TYPE = "X-Connection-Type";
     private static final TaskScheduler TASK_SCHEDULER =
             new ConcurrentTaskScheduler(Executors.newSingleThreadScheduledExecutor());
-    protected final CountdownLatches latches;
-    private final UUID tableId;
     @Getter
-    protected final String username;
+    protected final TestUserParams params;
     private final WebSocketStompClient client;
     private final Keycloak keycloak;
     private final CountDownLatch connectLatch = new CountDownLatch(1);
@@ -57,18 +55,15 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private final List<ServerMessageDTO> receivedMessages = Collections.synchronizedList(new ArrayList<>());
     private StompSession session;
 
-    public AbstractTestUser(UUID tableId, CountdownLatches latches,
-                            String username, String password) {
-        this.tableId = tableId;
-        this.latches = latches;
-        this.username = username;
+    public AbstractTestUser(TestUserParams params) {
+        this.params = params;
         this.client = createClient();
-        this.keycloak = KeycloakHelper.getKeycloak(username, password);
+        this.keycloak = KeycloakHelper.getKeycloak(params.getUsername(), params.getPassword());
         this.session = null;
     }
 
     public void connect() throws InterruptedException {
-        logger.info("Connecting {} to {}", username, tableId);
+        logger.info("Connecting {} to {}", params.getUsername(), params.getTableId());
         URI url = URI.create(CONNECTION_URL);
         WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
         String accessToken = KeycloakHelper.getAccessToken(keycloak);
@@ -83,7 +78,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
     public void disconnect() {
         if (session != null && session.isConnected()) {
-            logger.info("Disconnecting {} from {}", username, tableId);
+            logger.info("Disconnecting {} from {}", params.getUsername(), params.getTableId());
             session.disconnect();
         }
         session = null;
@@ -96,7 +91,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     @Override
     public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
         session.setAutoReceipt(true);
-        session.subscribe(SUBSCRIPTION_TOPIC_SUFFIX.formatted(tableId), this);
+        session.subscribe(SUBSCRIPTION_TOPIC_SUFFIX.formatted(params.getTableId()), this);
         this.session = session;
     }
 
@@ -106,8 +101,8 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         logger.error("Exception thrown during stomp session", exception);
         exceptionThrown.set(exception);
         connectLatch.countDown();
-        latches.roundLatch().countDown();
-        latches.gameLatch().countDown();
+        params.getLatches().roundLatch().countDown();
+        params.getLatches().gameLatch().countDown();
     }
 
     @Override
@@ -115,7 +110,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         logger.error("Exception thrown after connect failure", exception);
         exceptionThrown.set(exception);
         connectLatch.countDown();
-        latches.roundLatch().countDown();
+        params.getLatches().roundLatch().countDown();
     }
 
     @Override
@@ -134,10 +129,10 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         receivedMessages.add(message);
 
         if (message.getPayload() instanceof ErrorMessageDTO error) {
-            logger.error("{} received error message: {}", username, error.getMessage());
+            logger.error("{} received error message: {}", params.getUsername(), error.getMessage());
             return;
         } else if (message.getPayload() instanceof LogMessageDTO log) {
-            logger.info("{} received log message: {}", username, log.getMessage());
+            logger.info("{} received log message: {}", params.getUsername(), log.getMessage());
             return;
         }
         handleMessage(headers, message);
@@ -148,18 +143,18 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     // ***************************************************************
 
     protected void sendPlayerAction(CreatePlayerActionDTO createDto) {
-        send(SEND_PLAYER_ACTION.formatted(tableId), createDto);
+        send(SEND_PLAYER_ACTION.formatted(params.getTableId()), createDto);
     }
 
     private void send(String destination, Object dto) {
         if (session == null || !session.isConnected()) {
-            logger.warn("Cannot send to destination {} for user {} as not connected", destination, username);
+            logger.warn("Cannot send to destination {} for user {} as not connected", destination, params.getUsername());
             return;
         }
-        logger.info(">>>> [{}] sending {}", username, dto);
+        logger.info(">>>> [{}] sending {}", params.getUsername(), dto);
         StompSession.Receiptable receiptable = session.send(destination, dto);
-        receiptable.addReceiptTask(() -> logger.info("Receipt received for user {} destination {} and payload {}", username, destination, dto));
-        receiptable.addReceiptLostTask(() -> logger.info("Failed to receive receipt for user {} destination {} and payload {}", username, destination, dto));
+        receiptable.addReceiptTask(() -> logger.info("Receipt received for user {} destination {} and payload {}", params.getUsername(), destination, dto));
+        receiptable.addReceiptLostTask(() -> logger.info("Failed to receive receipt for user {} destination {} and payload {}", params.getUsername(), destination, dto));
     }
 
     // ***************************************************************
@@ -169,6 +164,15 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     protected abstract void handleMessage(StompHeaders headers, ServerMessageDTO message);
 
     protected abstract ConnectionType getConnectionType();
+
+    // ***************************************************************
+    // Interfaces
+    // ***************************************************************
+
+    public interface PlayerTurnHandler {
+        void handle(StompHeaders headers, PlayerTurnDTO playerTurn);
+    }
+
 
     // ***************************************************************
     // Helper Methods
