@@ -24,7 +24,7 @@ public class TestTexasHoldemPlayerUser extends AbstractTestUser {
             if (playerTurn.getPlayerSession()
                     .getUser().getUsername().equals(params.getUsername())) {
                 if (params.getTurnHandler() != null) {
-                    params.getTurnHandler().handle(headers, playerTurn);
+                    params.getTurnHandler().handle(this, headers, playerTurn);
                 }
             }
         }

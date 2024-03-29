@@ -1,5 +1,6 @@
 package com.twb.pokerapp.utils.game.player;
 
+import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.utils.keycloak.KeycloakHelper;
 import com.twb.pokerapp.utils.message.ServerMessageConverter;
@@ -27,9 +28,7 @@ import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
 import java.lang.reflect.Type;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -142,7 +141,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     // Send Methods
     // ***************************************************************
 
-    protected void sendPlayerAction(CreatePlayerActionDTO createDto) {
+    public void sendPlayerAction(CreatePlayerActionDTO createDto) {
         send(SEND_PLAYER_ACTION.formatted(params.getTable().getId()), createDto);
     }
 
@@ -171,7 +170,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         return stompClient;
     }
 
-    private void send(String destination, Object dto) {
+    protected void send(String destination, Object dto) {
         if (session == null || !session.isConnected()) {
             logger.warn("Cannot send to destination {} for user {} as not connected", destination, params.getUsername());
             return;
@@ -183,11 +182,20 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     }
 
     // ***************************************************************
-    // Interfaces
+    // Helper Classes
     // ***************************************************************
 
-    public interface PlayerTurnHandler {
-        void handle(StompHeaders headers, PlayerTurnDTO playerTurn);
+    public static class PlayerTurnHandler {
+        public void handle(AbstractTestUser user, StompHeaders headers, PlayerTurnDTO playerTurn) {
+            ActionType[] actions = playerTurn.getActions();
+            Optional<ActionType> actionOpt = Arrays.stream(actions).findFirst();
+            if (actionOpt.isPresent()) {
+                ActionType action = actionOpt.get();
+                CreatePlayerActionDTO createDto = new CreatePlayerActionDTO();
+                createDto.setAction(action);
+                user.sendPlayerAction(createDto);
+            }
+        }
     }
 
     public record CountdownLatches(

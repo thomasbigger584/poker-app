@@ -8,12 +8,10 @@ import com.twb.pokerapp.utils.game.TexasHoldemGameRunner;
 import com.twb.pokerapp.utils.game.player.AbstractTestUser.PlayerTurnHandler;
 import com.twb.pokerapp.utils.testcontainers.BaseTestContainersIT;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
-import com.twb.pokerapp.web.websocket.message.server.payload.PlayerTurnDTO;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.messaging.simp.stomp.StompHeaders;
 
 import java.util.List;
 import java.util.Map;
@@ -40,19 +38,8 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
                 .table(getTexasHoldemTable()).build();
         TexasHoldemGameRunner gameRunner = new TexasHoldemGameRunner(gameParams);
 
-        PlayerTurnHandler handler1 = new PlayerTurnHandler() {
-            @Override
-            public void handle(StompHeaders headers, PlayerTurnDTO playerTurn) {
-//                todo: do player turn handler
-            }
-        };
-
-        PlayerTurnHandler handler2 = new PlayerTurnHandler() {
-            @Override
-            public void handle(StompHeaders headers, PlayerTurnDTO playerTurn) {
-//                todo: do player turn handler
-            }
-        };
+        PlayerTurnHandler handler1 = new PlayerTurnHandler();
+        PlayerTurnHandler handler2 = new PlayerTurnHandler();
 
         Map<String, List<ServerMessageDTO>> receivedMessages = gameRunner.run(handler1, handler2);
     }
