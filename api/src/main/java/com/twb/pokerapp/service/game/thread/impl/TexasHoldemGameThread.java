@@ -136,7 +136,7 @@ public class TexasHoldemGameThread extends GameThread {
 
     private void evaluate() {
         List<PlayerSession> playersNotFolded = playerSessions.stream()
-                .filter(foldedPlayers::contains).toList();
+                .filter(playerSession -> !foldedPlayers.contains(playerSession)).toList();
         if (playersNotFolded.size() == 1) {
             evaluateLastPlayerStanding(playersNotFolded);
         } else {
