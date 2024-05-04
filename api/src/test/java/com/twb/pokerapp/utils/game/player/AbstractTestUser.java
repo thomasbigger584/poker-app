@@ -3,7 +3,7 @@ package com.twb.pokerapp.utils.game.player;
 import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.utils.keycloak.KeycloakHelper;
-import com.twb.pokerapp.utils.message.ServerMessageConverter;
+import com.twb.pokerapp.utils.http.message.ServerMessageConverter;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.ErrorMessageDTO;

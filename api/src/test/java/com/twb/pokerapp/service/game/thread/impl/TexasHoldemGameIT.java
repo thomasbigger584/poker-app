@@ -1,11 +1,14 @@
 package com.twb.pokerapp.service.game.thread.impl;
 
+import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.twb.pokerapp.domain.enumeration.GameType;
 import com.twb.pokerapp.dto.pokertable.TableDTO;
 import com.twb.pokerapp.exception.NotFoundException;
 import com.twb.pokerapp.utils.game.GameRunnerParams;
 import com.twb.pokerapp.utils.game.TexasHoldemGameRunner;
 import com.twb.pokerapp.utils.game.player.AbstractTestUser.PlayerTurnHandler;
+import com.twb.pokerapp.utils.http.RestClient;
+import com.twb.pokerapp.utils.http.RestClient.ApiHttpResponse;
 import com.twb.pokerapp.utils.testcontainers.BaseTestContainersIT;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import org.junit.jupiter.api.Test;
@@ -20,8 +23,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TexasHoldemGameIT extends BaseTestContainersIT {
     private static final Logger logger = LoggerFactory.getLogger(TexasHoldemGameIT.class);
-    private static final int COMMUNITY_CARD_COUNT = 5;
-    private static final int PLAYER_CARD_COUNT = 2;
+
+    @Override
+    protected void beforeEach() {
+        InspectContainerResponse info = KEYCLOAK_CONTAINER.getContainerInfo();
+        System.out.println("info = " + info);
+    }
+
+    @Test
+    void testKeycloak() {
+        System.out.println("TexasHoldemGameIT.testKeycloak");
+    }
 
     @Test
     void testGameWithoutPlayerActions() throws Throwable {
@@ -102,7 +114,8 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
     // *****************************************************************************************
 
     private TableDTO getTexasHoldemTable() throws Exception {
-        ApiHttpResponse<TableDTO[]> tablesResponse = get(TableDTO[].class, "/poker-table");
+        RestClient client = RestClient.getInstance(keycloak);
+        ApiHttpResponse<TableDTO[]> tablesResponse = client.get(TableDTO[].class, "/poker-table");
         assertEquals(HttpStatus.OK.value(), tablesResponse.httpResponse().statusCode());
         TableDTO[] tables = tablesResponse.resultBody();
 
@@ -113,6 +126,4 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
         }
         throw new NotFoundException("Failed to find a Texas Holdem Table");
     }
-
-
 }

@@ -1,10 +1,10 @@
 package com.twb.pokerapp.utils.testcontainers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.twb.pokerapp.utils.keycloak.KeycloakHelper;
-import jakarta.ws.rs.core.HttpHeaders;
-import jakarta.ws.rs.core.MediaType;
+import dasniko.testcontainers.keycloak.KeycloakContainer;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.keycloak.admin.client.Keycloak;
 import org.slf4j.Logger;
@@ -13,81 +13,66 @@ import org.testcontainers.containers.DockerComposeContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 
 import java.io.File;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 
 public abstract class BaseTestContainersIT {
-    protected static final HttpClient HTTP_CLIENT = HttpClient.newBuilder().build();
     private static final Logger logger = LoggerFactory.getLogger("TEST");
+
+    // Docker Compose Constants
     private static final String DOCKER_COMPOSE_LOCATION = "src/test/resources/";
     private static final String TEST_DOCKER_COMPOSE_YML = "test-docker-compose.yml";
-    private static final String EXPOSED_SERVICE = "api";
-    private static final int EXPOSED_PORT = 8081;
-    protected static final String API_BASE_URL = "http://localhost:%d".formatted(EXPOSED_PORT);
-    private static final String BEARER_PREFIX = "Bearer ";
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final String ADMIN_USERNAME = "admin";
-    private static final String ADMIN_PASSWORD = "admin";
-    private static DockerComposeContainer<?> dockerComposeContainer;
-    private static Keycloak keycloak;
+    private static final File DOCKER_COMPOSE_FILE = new File(DOCKER_COMPOSE_LOCATION + TEST_DOCKER_COMPOSE_YML);
 
-    protected static <ResultBody, RequestBody> ApiHttpResponse<ResultBody> post(Class<ResultBody> resultClass,
-                                                                                RequestBody requestBody, String endpoint) throws Exception {
-        String json = OBJECT_MAPPER.writeValueAsString(requestBody);
-        HttpRequest request = HttpRequest.newBuilder()
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + KeycloakHelper.getAccessToken(keycloak))
-                .uri(URI.create(API_BASE_URL + endpoint))
-                .POST(HttpRequest.BodyPublishers.ofString(json))
-                .build();
-        return executeRequest(resultClass, request);
-    }
+    // DB Constants
+    private static final String DB_SERVICE = "postgres";
 
-    protected static <ResultBody> ApiHttpResponse<ResultBody> get(Class<ResultBody> resultClass, String endpoint) throws Exception {
-        HttpRequest request = HttpRequest.newBuilder()
-                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + KeycloakHelper.getAccessToken(keycloak))
-                .uri(URI.create(API_BASE_URL + endpoint))
-                .GET().build();
-        return executeRequest(resultClass, request);
-    }
+    // API Constants
+    private static final String API_SERVICE = "api";
+    private static final int API_PORT = 8081;
 
-    protected static ApiHttpResponse<?> delete(String endpoint) throws Exception {
-        HttpRequest request = HttpRequest.newBuilder()
-                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + KeycloakHelper.getAccessToken(keycloak))
-                .uri(URI.create(API_BASE_URL + endpoint))
-                .DELETE().build();
-        return executeRequest(request);
-    }
+    // Auth Constants
+    private static final String AUTH_SERVICE = "auth";
+    private static final String AUTH_ADMIN_USERNAME = "admin";
+    private static final String AUTH_ADMIN_PASSWORD = "admin";
 
-    private static <ResultBody> ApiHttpResponse<ResultBody> executeRequest(Class<ResultBody> resultClass, HttpRequest request) throws Exception {
-        HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
-        ResultBody result = OBJECT_MAPPER.readValue(response.body(), resultClass);
-        return new ApiHttpResponse<>(response, result);
-    }
+    // Test Containers
+    private static final Slf4jLogConsumer LOG_CONSUMER = new Slf4jLogConsumer(logger);
+    protected static final KeycloakContainer KEYCLOAK_CONTAINER = new KeycloakContainer()
+            .withRealmImportFile("/keycloak-realm.json")
+            .withAdminUsername(AUTH_ADMIN_USERNAME)
+            .withAdminPassword(AUTH_ADMIN_PASSWORD)
+            .withLogConsumer(LOG_CONSUMER.withPrefix(AUTH_SERVICE));
 
-    private static ApiHttpResponse<?> executeRequest(HttpRequest request) throws Exception {
-        HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
-        return new ApiHttpResponse<>(response, Void.class);
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static final DockerComposeContainer<?> DOCKER_COMPOSE_CONTAINER = new DockerComposeContainer(DOCKER_COMPOSE_FILE)
+            .withLogConsumer(DB_SERVICE, LOG_CONSUMER.withPrefix(DB_SERVICE))
+            .withLogConsumer(API_SERVICE, LOG_CONSUMER.withPrefix(API_SERVICE))
+            .withExposedService(API_SERVICE, API_PORT);
+
+    protected static Keycloak keycloak;
+
+    @BeforeAll
+    public static void onBeforeAll() {
+        KEYCLOAK_CONTAINER.start();
+        keycloak = KeycloakHelper.getKeycloak(AUTH_ADMIN_USERNAME, AUTH_ADMIN_PASSWORD);
     }
 
     @BeforeEach
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public void beforeEach() {
-        File file = new File(DOCKER_COMPOSE_LOCATION + TEST_DOCKER_COMPOSE_YML);
-        dockerComposeContainer = new DockerComposeContainer(file)
-                .withExposedService(EXPOSED_SERVICE, EXPOSED_PORT)
-                .withLogConsumer(EXPOSED_SERVICE, new Slf4jLogConsumer(logger).withPrefix(EXPOSED_SERVICE));
-        dockerComposeContainer.start();
-        keycloak = KeycloakHelper.getKeycloak(ADMIN_USERNAME, ADMIN_PASSWORD);
+    public void onBeforeEach() {
+        DOCKER_COMPOSE_CONTAINER.start();
+        beforeEach();
     }
 
     @AfterEach
-    public void afterEach() {
-        dockerComposeContainer.stop();
+    public void onAfterEach() {
+        DOCKER_COMPOSE_CONTAINER.stop();
+        afterEach();
     }
 
-    protected record ApiHttpResponse<ResultBody>(HttpResponse<String> httpResponse, ResultBody resultBody) {
+    @AfterAll
+    public static void onAfterAll() {
+        KEYCLOAK_CONTAINER.stop();
     }
+
+    protected void beforeEach() {}
+    protected void afterEach() {}
 }
