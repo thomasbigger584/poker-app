@@ -4,9 +4,13 @@ import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.twb.pokerapp.domain.enumeration.GameType;
 import com.twb.pokerapp.dto.pokertable.TableDTO;
 import com.twb.pokerapp.exception.NotFoundException;
+import com.twb.pokerapp.utils.game.GameLatches;
+import com.twb.pokerapp.utils.game.GameRunner;
 import com.twb.pokerapp.utils.game.GameRunnerParams;
-import com.twb.pokerapp.utils.game.TexasHoldemGameRunner;
+import com.twb.pokerapp.utils.game.player.AbstractTestUser;
 import com.twb.pokerapp.utils.game.player.AbstractTestUser.PlayerTurnHandler;
+import com.twb.pokerapp.utils.game.player.TestUserParams;
+import com.twb.pokerapp.utils.game.player.impl.TestTexasHoldemPlayerUser;
 import com.twb.pokerapp.utils.http.RestClient;
 import com.twb.pokerapp.utils.http.RestClient.ApiHttpResponse;
 import com.twb.pokerapp.utils.testcontainers.BaseTestContainersIT;
@@ -16,6 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,9 +29,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TexasHoldemGameIT extends BaseTestContainersIT {
     private static final Logger logger = LoggerFactory.getLogger(TexasHoldemGameIT.class);
+    public static final String PLAYER_1 = "thomas";
+    public static final String PLAYER_2 = "rory";
+
+    private GameLatches latches;
+    private GameRunnerParams gameParams;
+    private GameRunner gameRunner;
 
     @Override
-    protected void beforeEach() {
+    protected void beforeEach() throws Throwable {
+        this.latches = GameLatches.create();
+        this.gameParams = GameRunnerParams.builder()
+                .table(getTexasHoldemTable())
+                .numberOfRounds(1)
+                .build();
+        this.gameRunner = new GameRunner(gameParams);
+
         InspectContainerResponse info = KEYCLOAK_CONTAINER.getContainerInfo();
         System.out.println("info = " + info);
     }
@@ -37,23 +56,24 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
 
     @Test
     void testGameWithoutPlayerActions() throws Throwable {
-        GameRunnerParams gameParams = GameRunnerParams.builder()
-                .table(getTexasHoldemTable()).build();
-        TexasHoldemGameRunner gameRunner = new TexasHoldemGameRunner(gameParams);
+        Map<String, PlayerTurnHandler> playerTurnHandlers = new HashMap<>();
+        playerTurnHandlers.put(PLAYER_1, null);
+        playerTurnHandlers.put(PLAYER_2, null);
 
-        Map<String, List<ServerMessageDTO>> receivedMessages = gameRunner.run();
+        List<AbstractTestUser> players = getPlayers(playerTurnHandlers, gameParams);
+
+        Map<String, List<ServerMessageDTO>> receivedMessages = gameRunner.run(latches, players);
     }
 
     @Test
     void testGameWithDefaultActions() throws Throwable {
-        GameRunnerParams gameParams = GameRunnerParams.builder()
-                .table(getTexasHoldemTable()).build();
-        TexasHoldemGameRunner gameRunner = new TexasHoldemGameRunner(gameParams);
+        Map<String, PlayerTurnHandler> playerTurnHandlers = new HashMap<>();
+        playerTurnHandlers.put(PLAYER_1, new PlayerTurnHandler());
+        playerTurnHandlers.put(PLAYER_2, new PlayerTurnHandler());
 
-        PlayerTurnHandler handler1 = new PlayerTurnHandler();
-        PlayerTurnHandler handler2 = new PlayerTurnHandler();
+        List<AbstractTestUser> players = getPlayers(playerTurnHandlers, gameParams);
 
-        Map<String, List<ServerMessageDTO>> receivedMessages = gameRunner.run(handler1, handler2);
+        Map<String, List<ServerMessageDTO>> receivedMessages = gameRunner.run(latches, players);
     }
 
 //    @Test
@@ -125,5 +145,15 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
             }
         }
         throw new NotFoundException("Failed to find a Texas Holdem Table");
+    }
+
+    private List<AbstractTestUser> getPlayers(Map<String, PlayerTurnHandler> playerToTurnHandler, GameRunnerParams gameParams) {
+        List<AbstractTestUser> players = new ArrayList<>();
+        for (Map.Entry<String, PlayerTurnHandler> playerTurn : playerToTurnHandler.entrySet()) {
+            players.add(new TestTexasHoldemPlayerUser(TestUserParams.builder()
+                    .table(gameParams.getTable()).username(playerTurn.getKey())
+                    .latches(latches).turnHandler(playerTurn.getValue()).build()));
+        }
+        return players;
     }
 }

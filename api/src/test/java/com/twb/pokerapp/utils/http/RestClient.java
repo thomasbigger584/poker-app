@@ -29,8 +29,7 @@ public class RestClient {
         return instance;
     }
 
-    public <ResultBody, RequestBody> ApiHttpResponse<ResultBody> post(Class<ResultBody> resultClass,
-                                                                                RequestBody requestBody, String endpoint) throws Exception {
+    public <ResultBody, RequestBody> ApiHttpResponse<ResultBody> post(Class<ResultBody> resultClass, RequestBody requestBody, String endpoint) throws Exception {
         String json = OBJECT_MAPPER.writeValueAsString(requestBody);
         HttpRequest request = HttpRequest.newBuilder()
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
@@ -57,19 +56,17 @@ public class RestClient {
         return executeRequest(request);
     }
 
-    private static <ResultBody> ApiHttpResponse<ResultBody> executeRequest(Class<ResultBody> resultClass, HttpRequest request) throws Exception {
+    private <ResultBody> ApiHttpResponse<ResultBody> executeRequest(Class<ResultBody> resultClass, HttpRequest request) throws Exception {
         HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
         ResultBody result = OBJECT_MAPPER.readValue(response.body(), resultClass);
         return new ApiHttpResponse<>(response, result);
     }
 
-    private static ApiHttpResponse<?> executeRequest(HttpRequest request) throws Exception {
+    private ApiHttpResponse<?> executeRequest(HttpRequest request) throws Exception {
         HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
         return new ApiHttpResponse<>(response, Void.class);
     }
 
-
     public record ApiHttpResponse<ResultBody>(HttpResponse<String> httpResponse, ResultBody resultBody) {
     }
-
 }

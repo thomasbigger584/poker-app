@@ -72,7 +72,9 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         stompHeaders.put(HEADER_CONNECTION_TYPE, Collections.singletonList(getConnectionType().toString()));
 
         client.connectAsync(url, headers, stompHeaders, this);
-        connectLatch.await(10, TimeUnit.SECONDS);
+        if (connectLatch.await(10, TimeUnit.SECONDS)) {
+            logger.error("Timed out user {} from connecting to table {} via websocket", params.getUsername(), params.getTable().getId());
+        }
     }
 
     public void disconnect() {
@@ -198,16 +200,5 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         }
     }
 
-    public record CountdownLatches(
-            CountDownLatch roundLatch,
-            CountDownLatch gameLatch
-    ) {
-        private static final int SINGLE = 1;
 
-        public static CountdownLatches create() {
-            CountDownLatch roundLatch = new CountDownLatch(SINGLE);
-            CountDownLatch gameLatch = new CountDownLatch(SINGLE);
-            return new CountdownLatches(roundLatch, gameLatch);
-        }
-    }
 }

@@ -2,7 +2,7 @@
 FROM eclipse-temurin:21-jdk-alpine as builder
 
 # Install necessary build tools
-RUN apk add g++ && \
+RUN apk add --update g++ && \
     rm -rf /var/cache/apk/*
 
 # Set working directory

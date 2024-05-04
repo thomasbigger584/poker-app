@@ -57,13 +57,13 @@ public abstract class BaseTestContainersIT {
     }
 
     @BeforeEach
-    public void onBeforeEach() {
+    public void onBeforeEach() throws Throwable {
         DOCKER_COMPOSE_CONTAINER.start();
         beforeEach();
     }
 
     @AfterEach
-    public void onAfterEach() {
+    public void onAfterEach() throws Throwable  {
         DOCKER_COMPOSE_CONTAINER.stop();
         afterEach();
     }
@@ -73,6 +73,6 @@ public abstract class BaseTestContainersIT {
         KEYCLOAK_CONTAINER.stop();
     }
 
-    protected void beforeEach() {}
-    protected void afterEach() {}
+    protected void beforeEach() throws Throwable {}
+    protected void afterEach() throws Throwable {}
 }

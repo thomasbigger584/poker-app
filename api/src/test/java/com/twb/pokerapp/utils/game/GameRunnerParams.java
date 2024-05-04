@@ -7,6 +7,9 @@ import lombok.Data;
 @Data
 @Builder
 public class GameRunnerParams {
-    private int numberOfRounds = 1;
+    private int numberOfRounds;
+    private GameLatches latches;
     private TableDTO table;
 }
+
+
