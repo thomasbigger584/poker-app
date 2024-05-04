@@ -18,7 +18,7 @@ import java.util.List;
 public abstract class BaseTestContainersIT {
     private static final Logger logger = LoggerFactory.getLogger("TEST");
 
-    // Auth Constants
+    // Keycloak Constants
     private static final String KEYCLOAK_SERVICE = "keycloak";
     private static final String KEYCLOAK_ADMIN_USERNAME = "admin";
     private static final String KEYCLOAK_ADMIN_PASSWORD = "admin";
@@ -63,6 +63,8 @@ public abstract class BaseTestContainersIT {
             .withNetworkMode("bridge")
             .dependsOn(KEYCLOAK_CONTAINER, POSTGRESQL_CONTAINER);
 
+    protected static Keycloak keycloak;
+
     static {
         POSTGRESQL_CONTAINER.setPortBindings(
                 List.of(getPortBindingString(DB_PORT)));
@@ -70,8 +72,6 @@ public abstract class BaseTestContainersIT {
                 List.of(getPortBindingString(API_PORT),
                         getPortBindingString(API_DEBUG_PORT)));
     }
-
-    protected static Keycloak keycloak;
 
     // *****************************************************************************************
     // Lifecycle Methods
@@ -81,6 +81,15 @@ public abstract class BaseTestContainersIT {
     public static void onBeforeAll() {
         KEYCLOAK_CONTAINER.start();
         keycloak = KEYCLOAK_CONTAINER.getKeycloakAdminClient();
+    }
+
+    @AfterAll
+    public static void onAfterAll() {
+        KEYCLOAK_CONTAINER.stop();
+    }
+
+    private static String getPortBindingString(int port) {
+        return String.format("%d:%d", port, port);
     }
 
     @BeforeEach
@@ -97,11 +106,6 @@ public abstract class BaseTestContainersIT {
         afterEach();
     }
 
-    @AfterAll
-    public static void onAfterAll() {
-        KEYCLOAK_CONTAINER.stop();
-    }
-
     // *****************************************************************************************
     // Overridable Methods
     // *****************************************************************************************
@@ -110,13 +114,5 @@ public abstract class BaseTestContainersIT {
     }
 
     protected void afterEach() throws Throwable {
-    }
-
-    // *****************************************************************************************
-    // Helper Methods
-    // *****************************************************************************************
-
-    private static String getPortBindingString(int port) {
-        return String.format("%d:%d", port, port);
     }
 }

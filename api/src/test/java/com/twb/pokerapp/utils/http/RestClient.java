@@ -20,8 +20,8 @@ public class RestClient {
     private static final String API_BASE_URL = "http://localhost:%d".formatted(EXPOSED_PORT);
     private static final String BEARER_PREFIX = "Bearer ";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private final Keycloak keycloak;
     private static RestClient instance;
+    private final Keycloak keycloak;
 
     public static synchronized RestClient getInstance(Keycloak keycloak) {
         if (instance == null) {

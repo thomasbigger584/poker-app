@@ -1,13 +1,11 @@
 package com.twb.pokerapp.utils.game.player;
 
-import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.utils.http.message.ServerMessageConverter;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.ErrorMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.LogMessageDTO;
-import com.twb.pokerapp.web.websocket.message.server.payload.PlayerTurnDTO;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import org.keycloak.admin.client.Keycloak;
@@ -29,7 +27,9 @@ import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
 import java.lang.reflect.Type;
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -44,9 +44,9 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private static final String HEADER_CONNECTION_TYPE = "X-Connection-Type";
     private static final TaskScheduler TASK_SCHEDULER =
             new ConcurrentTaskScheduler(Executors.newSingleThreadScheduledExecutor());
-    private final Keycloak keycloak;
     @Getter
     protected final TestUserParams params;
+    private final Keycloak keycloak;
     private final WebSocketStompClient client;
     private final CountDownLatch connectLatch = new CountDownLatch(1);
     @Getter
@@ -55,8 +55,8 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private final List<ServerMessageDTO> receivedMessages = Collections.synchronizedList(new ArrayList<>());
     private StompSession session;
 
-    public AbstractTestUser(Keycloak keycloak, TestUserParams params) {
-        this.keycloak = keycloak;
+    public AbstractTestUser(TestUserParams params) {
+        this.keycloak = params.getKeycloak();
         this.params = params;
         this.client = createClient();
         this.session = null;
@@ -184,21 +184,8 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     }
 
     // ***************************************************************
-    // Helper Classes
+    // Helper Methods
     // ***************************************************************
-
-    public static class PlayerTurnHandler {
-        public void handle(AbstractTestUser user, StompHeaders headers, PlayerTurnDTO playerTurn) {
-            ActionType[] actions = playerTurn.getActions();
-            Optional<ActionType> actionOpt = Arrays.stream(actions).findFirst();
-            if (actionOpt.isPresent()) {
-                ActionType action = actionOpt.get();
-                CreatePlayerActionDTO createDto = new CreatePlayerActionDTO();
-                createDto.setAction(action);
-                user.sendPlayerAction(createDto);
-            }
-        }
-    }
 
     private String getAccessToken() {
         TokenManager tokenManager = keycloak.tokenManager();

@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static java.lang.Thread.sleep;
 
 @RequiredArgsConstructor
 public class GameRunner {
@@ -21,36 +22,62 @@ public class GameRunner {
 
     private final GameRunnerParams params;
 
-    public Map<String, List<ServerMessageDTO>> run(GameLatches latches,
-                                                   List<AbstractTestUser> players) throws Exception {
-        AbstractTestUser listener = new TestGameListenerUser(TestUserParams.builder()
-                .table(params.getTable()).username(LISTENER)
-                .latches(latches).build(), params.getNumberOfRounds());
-        listener.connect();
-        Thread.sleep(PLAYER_WAIT_MS);
+    public Map<String, List<ServerMessageDTO>> run(List<AbstractTestUser> players) throws Exception {
+        AbstractTestUser listener = connectListener();
+        connectPlayers(players);
 
-        for (AbstractTestUser player : players) {
-            player.connect();
-            Thread.sleep(PLAYER_WAIT_MS);
-        }
+        params.getLatches().roundLatch()
+                .await(LATCH_TIMEOUT_IN_SECS, TimeUnit.SECONDS);
 
-        latches.roundLatch().await(LATCH_TIMEOUT_IN_SECS, TimeUnit.SECONDS);
+        disconnectPlayers(players);
 
-        for (AbstractTestUser player : players) {
-            player.disconnect();
-            Thread.sleep(PLAYER_WAIT_MS);
-        }
-
-        latches.gameLatch().await(LATCH_TIMEOUT_IN_SECS, TimeUnit.SECONDS);
+        params.getLatches().gameLatch()
+                .await(LATCH_TIMEOUT_IN_SECS, TimeUnit.SECONDS);
 
         listener.disconnect();
 
+        throwExceptionIfOccurred(players);
+
+        return getReceivedMessages(players, listener);
+    }
+
+    private AbstractTestUser connectListener() throws Exception {
+        TestUserParams listenerParams = TestUserParams.builder()
+                .table(params.getTable())
+                .latches(params.getLatches())
+                .username(LISTENER)
+                .build();
+        AbstractTestUser listener = new TestGameListenerUser(listenerParams, params.getNumberOfRounds());
+        listener.connect();
+        sleep(PLAYER_WAIT_MS);
+        return listener;
+    }
+
+    private void connectPlayers(List<AbstractTestUser> players) throws Exception {
+        for (AbstractTestUser player : players) {
+            player.connect();
+            sleep(PLAYER_WAIT_MS);
+        }
+    }
+
+    private void disconnectPlayers(List<AbstractTestUser> players) throws Exception {
+        for (AbstractTestUser player : players) {
+            player.disconnect();
+            sleep(PLAYER_WAIT_MS);
+        }
+    }
+
+    private void throwExceptionIfOccurred(List<AbstractTestUser> players) {
         for (AbstractTestUser player : players) {
             AtomicReference<Throwable> exceptionThrown = player.getExceptionThrown();
             if (exceptionThrown.get() != null) {
                 throw new RuntimeException("Test Failure for player: " + player, exceptionThrown.get());
             }
         }
+    }
+
+    private Map<String, List<ServerMessageDTO>> getReceivedMessages(List<AbstractTestUser> players,
+                                                                    AbstractTestUser listener) {
         Map<String, List<ServerMessageDTO>> receivedMessages = new HashMap<>();
         receivedMessages.put(LISTENER, listener.getReceivedMessages());
         for (AbstractTestUser player : players) {

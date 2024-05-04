@@ -1,6 +1,5 @@
 package com.twb.pokerapp.service.game.thread.impl;
 
-import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.twb.pokerapp.domain.enumeration.GameType;
 import com.twb.pokerapp.dto.pokertable.TableDTO;
 import com.twb.pokerapp.exception.NotFoundException;
@@ -8,8 +7,8 @@ import com.twb.pokerapp.utils.game.GameLatches;
 import com.twb.pokerapp.utils.game.GameRunner;
 import com.twb.pokerapp.utils.game.GameRunnerParams;
 import com.twb.pokerapp.utils.game.player.AbstractTestUser;
-import com.twb.pokerapp.utils.game.player.AbstractTestUser.PlayerTurnHandler;
 import com.twb.pokerapp.utils.game.player.TestUserParams;
+import com.twb.pokerapp.utils.game.player.TurnHandler;
 import com.twb.pokerapp.utils.game.player.impl.TestTexasHoldemPlayerUser;
 import com.twb.pokerapp.utils.http.RestClient;
 import com.twb.pokerapp.utils.http.RestClient.ApiHttpResponse;
@@ -40,6 +39,7 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
     protected void beforeEach() throws Throwable {
         this.latches = GameLatches.create();
         this.gameParams = GameRunnerParams.builder()
+                .keycloak(keycloak)
                 .table(getTexasHoldemTable())
                 .numberOfRounds(1)
                 .build();
@@ -53,24 +53,24 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
 
     @Test
     void testGameWithoutPlayerActions() throws Throwable {
-        Map<String, PlayerTurnHandler> playerTurnHandlers = new HashMap<>();
+        Map<String, TurnHandler> playerTurnHandlers = new HashMap<>();
         playerTurnHandlers.put(PLAYER_1, null);
         playerTurnHandlers.put(PLAYER_2, null);
 
         List<AbstractTestUser> players = getPlayers(playerTurnHandlers, gameParams);
 
-        Map<String, List<ServerMessageDTO>> receivedMessages = gameRunner.run(latches, players);
+        Map<String, List<ServerMessageDTO>> receivedMessages = gameRunner.run(players);
     }
 
     @Test
     void testGameWithDefaultActions() throws Throwable {
-        Map<String, PlayerTurnHandler> playerTurnHandlers = new HashMap<>();
-        playerTurnHandlers.put(PLAYER_1, new PlayerTurnHandler());
-        playerTurnHandlers.put(PLAYER_2, new PlayerTurnHandler());
+        Map<String, TurnHandler> playerTurnHandlers = new HashMap<>();
+        playerTurnHandlers.put(PLAYER_1, new TurnHandler());
+        playerTurnHandlers.put(PLAYER_2, new TurnHandler());
 
         List<AbstractTestUser> players = getPlayers(playerTurnHandlers, gameParams);
 
-        Map<String, List<ServerMessageDTO>> receivedMessages = gameRunner.run(latches, players);
+        Map<String, List<ServerMessageDTO>> receivedMessages = gameRunner.run(players);
     }
 
 //    @Test
@@ -144,12 +144,17 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
         throw new NotFoundException("Failed to find a Texas Holdem Table");
     }
 
-    private List<AbstractTestUser> getPlayers(Map<String, PlayerTurnHandler> playerToTurnHandler, GameRunnerParams gameParams) {
+    private List<AbstractTestUser> getPlayers(Map<String, TurnHandler> playerToTurnHandler, GameRunnerParams gameParams) {
         List<AbstractTestUser> players = new ArrayList<>();
-        for (Map.Entry<String, PlayerTurnHandler> playerTurn : playerToTurnHandler.entrySet()) {
-            players.add(new TestTexasHoldemPlayerUser(keycloak, TestUserParams.builder()
-                    .table(gameParams.getTable()).username(playerTurn.getKey())
-                    .latches(latches).turnHandler(playerTurn.getValue()).build()));
+        for (Map.Entry<String, TurnHandler> playerTurn : playerToTurnHandler.entrySet()) {
+            TestUserParams userParams = TestUserParams.builder()
+                    .table(gameParams.getTable())
+                    .username(playerTurn.getKey())
+                    .latches(latches)
+                    .keycloak(keycloak)
+                    .turnHandler(playerTurn.getValue())
+                    .build();
+            players.add(new TestTexasHoldemPlayerUser(userParams));
         }
         return players;
     }
