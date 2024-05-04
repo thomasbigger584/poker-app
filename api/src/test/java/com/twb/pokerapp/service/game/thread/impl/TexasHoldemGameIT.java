@@ -29,8 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TexasHoldemGameIT extends BaseTestContainersIT {
     private static final Logger logger = LoggerFactory.getLogger(TexasHoldemGameIT.class);
-    public static final String PLAYER_1 = "thomas";
-    public static final String PLAYER_2 = "rory";
+    private static final String PLAYER_1 = "thomas";
+    private static final String PLAYER_2 = "rory";
 
     private GameLatches latches;
     private GameRunnerParams gameParams;
@@ -44,9 +44,6 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
                 .numberOfRounds(1)
                 .build();
         this.gameRunner = new GameRunner(gameParams);
-
-        InspectContainerResponse info = KEYCLOAK_CONTAINER.getContainerInfo();
-        System.out.println("info = " + info);
     }
 
     @Test

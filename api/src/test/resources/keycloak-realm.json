@@ -1492,8 +1492,7 @@
   "emailTheme": "keycloak",
   "eventsEnabled": true,
   "eventsListeners": [
-    "jboss-logging",
-    "keycloak-to-rabbitmq"
+    "jboss-logging"
   ],
   "enabledEventTypes": [
     "SEND_RESET_PASSWORD",
