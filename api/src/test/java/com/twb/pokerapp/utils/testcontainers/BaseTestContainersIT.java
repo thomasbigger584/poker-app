@@ -13,17 +13,16 @@ import org.testcontainers.containers.Network;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public abstract class BaseTestContainersIT {
     private static final Logger logger = LoggerFactory.getLogger("TEST");
 
     // Auth Constants
-    private static final String AUTH_SERVICE = "keycloak";
-    private static final String AUTH_ADMIN_USERNAME = "admin";
-    private static final String AUTH_ADMIN_PASSWORD = "admin";
+    private static final String KEYCLOAK_SERVICE = "keycloak";
+    private static final String KEYCLOAK_ADMIN_USERNAME = "admin";
+    private static final String KEYCLOAK_ADMIN_PASSWORD = "admin";
+    private static final int KEYCLOAK_PORT = 8080;
 
     // DB Constants
     private static final String DB_SERVICE = "postgres";
@@ -39,11 +38,11 @@ public abstract class BaseTestContainersIT {
     private static final Network NETWORK = Network.newNetwork();
     private static final KeycloakContainer KEYCLOAK_CONTAINER = new KeycloakContainer()
             .withRealmImportFile("/keycloak-realm.json")
-            .withAdminUsername(AUTH_ADMIN_USERNAME)
-            .withAdminPassword(AUTH_ADMIN_PASSWORD)
-            .withLogConsumer(LOG_CONSUMER.withPrefix(AUTH_SERVICE))
+            .withAdminUsername(KEYCLOAK_ADMIN_USERNAME)
+            .withAdminPassword(KEYCLOAK_ADMIN_PASSWORD)
+            .withLogConsumer(LOG_CONSUMER.withPrefix(KEYCLOAK_SERVICE))
             .withNetwork(NETWORK)
-            .withNetworkAliases(AUTH_SERVICE)
+            .withNetworkAliases(KEYCLOAK_SERVICE)
             .withNetworkMode("bridge");
     private static final PostgreSQLContainer<?> POSTGRESQL_CONTAINER = new PostgreSQLContainer<>("postgres:13.1-alpine")
             .withUsername("root")
@@ -56,7 +55,7 @@ public abstract class BaseTestContainersIT {
             .withNetworkMode("bridge")
             .dependsOn(KEYCLOAK_CONTAINER);
     private static final GenericContainer<?> API_CONTAINER = new GenericContainer<>("com.twb.pokerapp/api:latest")
-            .withEnv("KEYCLOAK_SERVER_URL", "http://keycloak:8080")
+            .withEnv("KEYCLOAK_SERVER_URL", String.format("http://%s:%d", KEYCLOAK_SERVICE, KEYCLOAK_PORT))
             .withExposedPorts(API_PORT)
             .withLogConsumer(LOG_CONSUMER.withPrefix(API_SERVICE))
             .withNetwork(NETWORK)
@@ -66,10 +65,10 @@ public abstract class BaseTestContainersIT {
 
     static {
         POSTGRESQL_CONTAINER.setPortBindings(
-                List.of(String.format("%d:%d", DB_PORT, DB_PORT)));
+                List.of(getPortBindingString(DB_PORT)));
         API_CONTAINER.setPortBindings(
-                List.of(String.format("%d:%d", API_PORT, API_PORT),
-                        String.format("%d:%d", API_DEBUG_PORT, API_DEBUG_PORT)));
+                List.of(getPortBindingString(API_PORT),
+                        getPortBindingString(API_DEBUG_PORT)));
     }
 
     protected static Keycloak keycloak;
@@ -111,5 +110,13 @@ public abstract class BaseTestContainersIT {
     }
 
     protected void afterEach() throws Throwable {
+    }
+
+    // *****************************************************************************************
+    // Helper Methods
+    // *****************************************************************************************
+
+    private static String getPortBindingString(int port) {
+        return String.format("%d:%d", port, port);
     }
 }

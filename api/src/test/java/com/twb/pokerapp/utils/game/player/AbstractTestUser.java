@@ -2,7 +2,6 @@ package com.twb.pokerapp.utils.game.player;
 
 import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
-import com.twb.pokerapp.utils.keycloak.KeycloakHelper;
 import com.twb.pokerapp.utils.http.message.ServerMessageConverter;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
@@ -12,6 +11,8 @@ import com.twb.pokerapp.web.websocket.message.server.payload.PlayerTurnDTO;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.token.TokenManager;
+import org.keycloak.representations.AccessTokenResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -43,10 +44,10 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private static final String HEADER_CONNECTION_TYPE = "X-Connection-Type";
     private static final TaskScheduler TASK_SCHEDULER =
             new ConcurrentTaskScheduler(Executors.newSingleThreadScheduledExecutor());
+    private final Keycloak keycloak;
     @Getter
     protected final TestUserParams params;
     private final WebSocketStompClient client;
-    private final Keycloak keycloak;
     private final CountDownLatch connectLatch = new CountDownLatch(1);
     @Getter
     private final AtomicReference<Throwable> exceptionThrown = new AtomicReference<>();
@@ -54,10 +55,10 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private final List<ServerMessageDTO> receivedMessages = Collections.synchronizedList(new ArrayList<>());
     private StompSession session;
 
-    public AbstractTestUser(TestUserParams params) {
+    public AbstractTestUser(Keycloak keycloak, TestUserParams params) {
+        this.keycloak = keycloak;
         this.params = params;
         this.client = createClient();
-        this.keycloak = KeycloakHelper.getKeycloak(params.getUsername(), params.getPassword());
         this.session = null;
     }
 
@@ -65,8 +66,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         logger.info("Connecting {} to {}", params.getUsername(), params.getTable().getId());
         URI url = URI.create(CONNECTION_URL);
         WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
-        String accessToken = KeycloakHelper.getAccessToken(keycloak);
-        headers.add(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + accessToken);
+        headers.add(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken());
 
         StompHeaders stompHeaders = new StompHeaders();
         stompHeaders.put(HEADER_CONNECTION_TYPE, Collections.singletonList(getConnectionType().toString()));
@@ -200,5 +200,9 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         }
     }
 
-
+    private String getAccessToken() {
+        TokenManager tokenManager = keycloak.tokenManager();
+        AccessTokenResponse accessTokenResponse = tokenManager.getAccessToken();
+        return accessTokenResponse.getToken();
+    }
 }

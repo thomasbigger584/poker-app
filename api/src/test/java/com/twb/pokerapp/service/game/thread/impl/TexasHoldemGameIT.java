@@ -147,7 +147,7 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
     private List<AbstractTestUser> getPlayers(Map<String, PlayerTurnHandler> playerToTurnHandler, GameRunnerParams gameParams) {
         List<AbstractTestUser> players = new ArrayList<>();
         for (Map.Entry<String, PlayerTurnHandler> playerTurn : playerToTurnHandler.entrySet()) {
-            players.add(new TestTexasHoldemPlayerUser(TestUserParams.builder()
+            players.add(new TestTexasHoldemPlayerUser(keycloak, TestUserParams.builder()
                     .table(gameParams.getTable()).username(playerTurn.getKey())
                     .latches(latches).turnHandler(playerTurn.getValue()).build()));
         }

@@ -1,11 +1,12 @@
 package com.twb.pokerapp.utils.http;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.twb.pokerapp.utils.keycloak.KeycloakHelper;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.token.TokenManager;
+import org.keycloak.representations.AccessTokenResponse;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -33,7 +34,7 @@ public class RestClient {
         String json = OBJECT_MAPPER.writeValueAsString(requestBody);
         HttpRequest request = HttpRequest.newBuilder()
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + KeycloakHelper.getAccessToken(keycloak))
+                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken())
                 .uri(URI.create(API_BASE_URL + endpoint))
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
@@ -42,7 +43,7 @@ public class RestClient {
 
     public <ResultBody> ApiHttpResponse<ResultBody> get(Class<ResultBody> resultClass, String endpoint) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
-                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + KeycloakHelper.getAccessToken(keycloak))
+                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken())
                 .uri(URI.create(API_BASE_URL + endpoint))
                 .GET().build();
         return executeRequest(resultClass, request);
@@ -50,10 +51,16 @@ public class RestClient {
 
     public ApiHttpResponse<?> delete(String endpoint) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
-                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + KeycloakHelper.getAccessToken(keycloak))
+                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken())
                 .uri(URI.create(API_BASE_URL + endpoint))
                 .DELETE().build();
         return executeRequest(request);
+    }
+
+    private String getAccessToken() {
+        TokenManager tokenManager = keycloak.tokenManager();
+        AccessTokenResponse accessTokenResponse = tokenManager.getAccessToken();
+        return accessTokenResponse.getToken();
     }
 
     private <ResultBody> ApiHttpResponse<ResultBody> executeRequest(Class<ResultBody> resultClass, HttpRequest request) throws Exception {
