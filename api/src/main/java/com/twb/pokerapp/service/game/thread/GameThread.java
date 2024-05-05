@@ -88,9 +88,9 @@ public abstract class GameThread extends BaseGameThread {
             }
             finishGame();
         } catch (Exception e) {
+            logger.error(e.getMessage(), e);
             finishRound();
             finishGame();
-            logger.error(e.getMessage());
             if (e instanceof GameInterruptedException) {
                 sendErrorMessage(e.getMessage());
             }

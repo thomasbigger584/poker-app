@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -16,6 +16,6 @@ public interface PlayerActionRepository extends JpaRepository<PlayerAction, UUID
             "FROM PlayerAction a " +
             "WHERE a.round.id = :roundId " +
             "AND a.playerSession.id = :playerSessionId")
-    Optional<PlayerAction> findByRoundAndPlayerSession(@Param("roundId") UUID roundId,
-                                                       @Param("playerSessionId") UUID playerSessionId);
+    List<PlayerAction> findByRoundAndPlayerSession(@Param("roundId") UUID roundId,
+                                                   @Param("playerSessionId") UUID playerSessionId);
 }
