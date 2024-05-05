@@ -3,8 +3,10 @@ package com.twb.pokerapp.utils.game;
 import com.twb.pokerapp.utils.game.player.AbstractTestUser;
 import com.twb.pokerapp.utils.game.player.TestUserParams;
 import com.twb.pokerapp.utils.game.player.impl.TestGameListenerUser;
+import com.twb.pokerapp.utils.keycloak.KeycloakClients;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import lombok.RequiredArgsConstructor;
+import org.keycloak.admin.client.Keycloak;
 
 import java.util.HashMap;
 import java.util.List;
@@ -17,7 +19,6 @@ import static java.lang.Thread.sleep;
 @RequiredArgsConstructor
 public class GameRunner {
     private static final int LATCH_TIMEOUT_IN_SECS = 100;
-    private static final String LISTENER = "viewer";
     private static final int PLAYER_WAIT_MS = 1000;
 
     private final GameRunnerParams params;
@@ -42,10 +43,12 @@ public class GameRunner {
     }
 
     private AbstractTestUser connectListener() throws Exception {
+        Keycloak keycloak = params.getKeycloakClients().getViewerKeycloak();
         TestUserParams listenerParams = TestUserParams.builder()
                 .table(params.getTable())
+                .keycloak(keycloak)
                 .latches(params.getLatches())
-                .username(LISTENER)
+                .username(KeycloakClients.KEYCLOAK_VIEWER_USERNAME)
                 .build();
         AbstractTestUser listener = new TestGameListenerUser(listenerParams, params.getNumberOfRounds());
         listener.connect();
@@ -79,7 +82,7 @@ public class GameRunner {
     private Map<String, List<ServerMessageDTO>> getReceivedMessages(List<AbstractTestUser> players,
                                                                     AbstractTestUser listener) {
         Map<String, List<ServerMessageDTO>> receivedMessages = new HashMap<>();
-        receivedMessages.put(LISTENER, listener.getReceivedMessages());
+        receivedMessages.put(KeycloakClients.KEYCLOAK_VIEWER_USERNAME, listener.getReceivedMessages());
         for (AbstractTestUser player : players) {
             receivedMessages.put(player.getParams().getUsername(), player.getReceivedMessages());
         }

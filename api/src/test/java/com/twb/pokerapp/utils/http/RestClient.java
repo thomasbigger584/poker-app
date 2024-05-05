@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.token.TokenManager;
 import org.keycloak.representations.AccessTokenResponse;
+import org.springframework.http.HttpStatus;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -30,7 +31,8 @@ public class RestClient {
         return instance;
     }
 
-    public <ResultBody, RequestBody> ApiHttpResponse<ResultBody> post(Class<ResultBody> resultClass, RequestBody requestBody, String endpoint) throws Exception {
+    public <ResultBody, RequestBody> ApiHttpResponse<ResultBody> post(Class<ResultBody> resultClass,
+                                                                      RequestBody requestBody, String endpoint) throws Exception {
         String json = OBJECT_MAPPER.writeValueAsString(requestBody);
         HttpRequest request = HttpRequest.newBuilder()
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
@@ -65,6 +67,7 @@ public class RestClient {
 
     private <ResultBody> ApiHttpResponse<ResultBody> executeRequest(Class<ResultBody> resultClass, HttpRequest request) throws Exception {
         HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+        assert HttpStatus.valueOf(response.statusCode()).is2xxSuccessful() : "status code should be successful: " + response.statusCode();
         ResultBody result = OBJECT_MAPPER.readValue(response.body(), resultClass);
         return new ApiHttpResponse<>(response, result);
     }

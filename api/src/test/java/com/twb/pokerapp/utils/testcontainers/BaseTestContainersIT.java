@@ -1,11 +1,11 @@
 package com.twb.pokerapp.utils.testcontainers;
 
+import com.twb.pokerapp.utils.keycloak.KeycloakClients;
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.keycloak.admin.client.Keycloak;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -42,10 +42,11 @@ public abstract class BaseTestContainersIT {
             .withRealmImportFile(KEYCLOAK_REALM_JSON_FILE_PATH)
             .withAdminUsername(KEYCLOAK_ADMIN_USERNAME)
             .withAdminPassword(KEYCLOAK_ADMIN_PASSWORD)
-//            .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(KEYCLOAK_SERVICE))
             .withNetwork(NETWORK)
             .withNetworkAliases(KEYCLOAK_SERVICE)
             .withNetworkMode("bridge")
+            // remove this to get the port to print in logs for local console
+            .withEnv("KC_HOSTNAME_URL", String.format("http://%s:%d", KEYCLOAK_SERVICE, KEYCLOAK_PORT))
             .withVerboseOutput();
     private static final PostgreSQLContainer<?> POSTGRESQL_CONTAINER = new PostgreSQLContainer<>("postgres:13.1-alpine")
             .withUsername(DB_USERNAME)
@@ -66,8 +67,7 @@ public abstract class BaseTestContainersIT {
             .withNetworkMode("bridge")
             .dependsOn(KEYCLOAK_CONTAINER, POSTGRESQL_CONTAINER);
 
-    protected static Keycloak masterKeycloak;
-    protected static Keycloak pokerAppKeycloak;
+    protected static KeycloakClients keycloakClients;
 
     static {
         POSTGRESQL_CONTAINER.setPortBindings(
@@ -84,8 +84,7 @@ public abstract class BaseTestContainersIT {
     @BeforeAll
     public static void onBeforeAll() {
         KEYCLOAK_CONTAINER.start();
-        masterKeycloak = KEYCLOAK_CONTAINER.getKeycloakAdminClient();
-        System.out.println("masterKeycloak = " + masterKeycloak);
+        keycloakClients = new KeycloakClients(KEYCLOAK_CONTAINER.getAuthServerUrl());
     }
 
     @BeforeEach

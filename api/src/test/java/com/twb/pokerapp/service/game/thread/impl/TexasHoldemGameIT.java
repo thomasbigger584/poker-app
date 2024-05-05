@@ -15,6 +15,8 @@ import com.twb.pokerapp.utils.http.RestClient.ApiHttpResponse;
 import com.twb.pokerapp.utils.testcontainers.BaseTestContainersIT;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import org.junit.jupiter.api.Test;
+import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.KeycloakBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -39,16 +41,12 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
     protected void beforeEach() throws Throwable {
         this.latches = GameLatches.create();
         this.gameParams = GameRunnerParams.builder()
-                .keycloak(masterKeycloak)
-                .table(getTexasHoldemTable())
+                .keycloakClients(keycloakClients)
                 .numberOfRounds(1)
+                .latches(latches)
+                .table(getTexasHoldemTable())
                 .build();
         this.gameRunner = new GameRunner(gameParams);
-    }
-
-    @Test
-    void testKeycloak() {
-        System.out.println("TexasHoldemGameIT.testKeycloak");
     }
 
     @Test
@@ -131,7 +129,8 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
     // *****************************************************************************************
 
     private TableDTO getTexasHoldemTable() throws Exception {
-        RestClient client = RestClient.getInstance(masterKeycloak);
+        Keycloak keycloak = keycloakClients.getAdminKeycloak();
+        RestClient client = RestClient.getInstance(keycloak);
         ApiHttpResponse<TableDTO[]> tablesResponse = client.get(TableDTO[].class, "/poker-table");
         assertEquals(HttpStatus.OK.value(), tablesResponse.httpResponse().statusCode());
         TableDTO[] tables = tablesResponse.resultBody();
@@ -147,11 +146,12 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
     private List<AbstractTestUser> getPlayers(Map<String, TurnHandler> playerToTurnHandler, GameRunnerParams gameParams) {
         List<AbstractTestUser> players = new ArrayList<>();
         for (Map.Entry<String, TurnHandler> playerTurn : playerToTurnHandler.entrySet()) {
+            String username = playerTurn.getKey();
             TestUserParams userParams = TestUserParams.builder()
                     .table(gameParams.getTable())
-                    .username(playerTurn.getKey())
+                    .username(username)
                     .latches(latches)
-                    .keycloak(masterKeycloak)
+                    .keycloak(keycloakClients.get(username))
                     .turnHandler(playerTurn.getValue())
                     .build();
             players.add(new TestTexasHoldemPlayerUser(userParams));

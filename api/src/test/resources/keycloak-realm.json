@@ -670,6 +670,27 @@
       "groups": [
         "/user"
       ]
+    },
+    {
+      "id": "11ca9585-64b1-416b-85b0-e8d059d5568b",
+      "username": "viewer1",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "viewer1@pokerapp.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-poker-game-realm",
+        "app_user"
+      ],
+      "groups": [
+        "/user"
+      ]
     }
   ],
   "otpPolicyType": "totp",

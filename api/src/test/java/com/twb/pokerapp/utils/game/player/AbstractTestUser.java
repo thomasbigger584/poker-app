@@ -9,6 +9,7 @@ import com.twb.pokerapp.web.websocket.message.server.payload.LogMessageDTO;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.token.TokenManager;
 import org.keycloak.representations.AccessTokenResponse;
 import org.slf4j.Logger;
