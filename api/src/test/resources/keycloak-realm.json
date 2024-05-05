@@ -499,6 +499,179 @@
   "requiredCredentials": [
     "password"
   ],
+  "users": [
+    {
+      "id": "f8f91d79-5709-437d-8057-f69d572f716c",
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "admin@pokerapp.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-poker-game-realm",
+        "app_admin"
+      ],
+      "clientRoles": {
+        "realm-management": [
+          "view-identity-providers",
+          "view-realm",
+          "manage-identity-providers",
+          "impersonation",
+          "realm-admin",
+          "create-client",
+          "manage-users",
+          "query-realms",
+          "view-authorization",
+          "query-clients",
+          "query-users",
+          "manage-events",
+          "manage-realm",
+          "view-events",
+          "view-users",
+          "view-clients",
+          "manage-authorization",
+          "manage-clients",
+          "query-groups"
+        ]
+      },
+      "groups": [
+        "/admin",
+        "/user"
+      ]
+    },
+    {
+      "id": "d1c09a30-edc5-45f0-a54e-4ef554ae858a",
+      "username": "user1",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "user1@pokerapp.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-poker-game-realm",
+        "app_user"
+      ],
+      "groups": [
+        "/user"
+      ]
+    },
+    {
+      "id": "93073951-0020-4aec-9053-2669433e6e2e",
+      "username": "user2",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "user2@pokerapp.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-poker-game-realm",
+        "app_user"
+      ],
+      "groups": [
+        "/user"
+      ]
+    },
+    {
+      "id": "d861437b-d9d9-4f52-aea2-4aa5ffdf8665",
+      "username": "user3",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "user3@pokerapp.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-poker-game-realm",
+        "app_user"
+      ],
+      "groups": [
+        "/user"
+      ]
+    },
+    {
+      "id": "31864d34-17d1-4c6d-b36a-745bcf8aed3e",
+      "username": "user4",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "user4@pokerapp.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-poker-game-realm",
+        "app_user"
+      ],
+      "groups": [
+        "/user"
+      ]
+    },
+    {
+      "id": "5d1ab2b3-4c97-40e8-a948-ae7bb4030990",
+      "username": "user5",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "user5@pokerapp.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-poker-game-realm",
+        "app_user"
+      ],
+      "groups": [
+        "/user"
+      ]
+    },
+    {
+      "id": "0d3a1f72-e19a-4059-8097-da1f914c5a96",
+      "username": "user6",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "user6@pokerapp.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-poker-game-realm",
+        "app_user"
+      ],
+      "groups": [
+        "/user"
+      ]
+    }
+  ],
   "otpPolicyType": "totp",
   "otpPolicyAlgorithm": "HmacSHA1",
   "otpPolicyInitialCounter": 0,

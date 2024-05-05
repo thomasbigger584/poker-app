@@ -1,16 +1,11 @@
 package com.twb.pokerapp.utils.testcontainers;
 
-import com.twb.pokerapp.utils.keycloak.KeycloakService;
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.KeycloakBuilder;
-import org.keycloak.representations.AccessTokenResponse;
-import org.keycloak.representations.idm.UserRepresentation;
-import org.keycloak.representations.idm.CredentialRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -18,7 +13,6 @@ import org.testcontainers.containers.Network;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 
-import java.util.Arrays;
 import java.util.List;
 
 public abstract class BaseTestContainersIT {
@@ -43,22 +37,22 @@ public abstract class BaseTestContainersIT {
     private static final int API_DEBUG_PORT = 5005;
 
     // Test Containers
-    private static final Slf4jLogConsumer LOG_CONSUMER = new Slf4jLogConsumer(logger);
     private static final Network NETWORK = Network.newNetwork();
     private static final KeycloakContainer KEYCLOAK_CONTAINER = new KeycloakContainer()
             .withRealmImportFile(KEYCLOAK_REALM_JSON_FILE_PATH)
             .withAdminUsername(KEYCLOAK_ADMIN_USERNAME)
             .withAdminPassword(KEYCLOAK_ADMIN_PASSWORD)
-            .withLogConsumer(LOG_CONSUMER.withPrefix(KEYCLOAK_SERVICE))
+//            .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(KEYCLOAK_SERVICE))
             .withNetwork(NETWORK)
             .withNetworkAliases(KEYCLOAK_SERVICE)
-            .withNetworkMode("bridge");
+            .withNetworkMode("bridge")
+            .withVerboseOutput();
     private static final PostgreSQLContainer<?> POSTGRESQL_CONTAINER = new PostgreSQLContainer<>("postgres:13.1-alpine")
             .withUsername(DB_USERNAME)
             .withPassword(DB_PASSWORD)
             .withDatabaseName("db")
             .withExposedPorts(DB_PORT)
-            .withLogConsumer(LOG_CONSUMER.withPrefix(DB_SERVICE))
+            .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(DB_SERVICE))
             .withNetwork(NETWORK)
             .withNetworkAliases(DB_SERVICE)
             .withNetworkMode("bridge")
@@ -66,7 +60,7 @@ public abstract class BaseTestContainersIT {
     private static final GenericContainer<?> API_CONTAINER = new GenericContainer<>("com.twb.pokerapp/api:latest")
             .withEnv("KEYCLOAK_SERVER_URL", String.format("http://%s:%d", KEYCLOAK_SERVICE, KEYCLOAK_PORT))
             .withExposedPorts(API_PORT)
-            .withLogConsumer(LOG_CONSUMER.withPrefix(API_SERVICE))
+            .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(API_SERVICE))
             .withNetwork(NETWORK)
             .withNetworkAliases(API_SERVICE)
             .withNetworkMode("bridge")
@@ -91,9 +85,7 @@ public abstract class BaseTestContainersIT {
     public static void onBeforeAll() {
         KEYCLOAK_CONTAINER.start();
         masterKeycloak = KEYCLOAK_CONTAINER.getKeycloakAdminClient();
-        KeycloakService keycloakService = new KeycloakService(KEYCLOAK_CONTAINER.getAuthServerUrl(), masterKeycloak);
-        pokerAppKeycloak = keycloakService.initializeAppRealm();
-        System.out.println("keycloakService = " + keycloakService);
+        System.out.println("masterKeycloak = " + masterKeycloak);
     }
 
     @BeforeEach

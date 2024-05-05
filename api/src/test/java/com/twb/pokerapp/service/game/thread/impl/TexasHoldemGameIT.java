@@ -28,8 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TexasHoldemGameIT extends BaseTestContainersIT {
     private static final Logger logger = LoggerFactory.getLogger(TexasHoldemGameIT.class);
-    private static final String PLAYER_1 = "thomas";
-    private static final String PLAYER_2 = "rory";
+    private static final String PLAYER_1 = "user1";
+    private static final String PLAYER_2 = "user2";
 
     private GameLatches latches;
     private GameRunnerParams gameParams;
