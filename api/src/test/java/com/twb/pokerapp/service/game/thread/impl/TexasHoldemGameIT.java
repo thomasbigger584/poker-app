@@ -16,7 +16,6 @@ import com.twb.pokerapp.utils.testcontainers.BaseTestContainersIT;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import org.junit.jupiter.api.Test;
 import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.KeycloakBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -55,7 +54,7 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
         playerTurnHandlers.put(PLAYER_1, null);
         playerTurnHandlers.put(PLAYER_2, null);
 
-        List<AbstractTestUser> players = getPlayers(playerTurnHandlers, gameParams);
+        List<AbstractTestUser> players = getPlayers(playerTurnHandlers);
 
         Map<String, List<ServerMessageDTO>> receivedMessages = gameRunner.run(players);
     }
@@ -66,7 +65,7 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
         playerTurnHandlers.put(PLAYER_1, new TurnHandler());
         playerTurnHandlers.put(PLAYER_2, new TurnHandler());
 
-        List<AbstractTestUser> players = getPlayers(playerTurnHandlers, gameParams);
+        List<AbstractTestUser> players = getPlayers(playerTurnHandlers);
 
         Map<String, List<ServerMessageDTO>> receivedMessages = gameRunner.run(players);
     }
@@ -143,7 +142,7 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
         throw new NotFoundException("Failed to find a Texas Holdem Table");
     }
 
-    private List<AbstractTestUser> getPlayers(Map<String, TurnHandler> playerToTurnHandler, GameRunnerParams gameParams) {
+    private List<AbstractTestUser> getPlayers(Map<String, TurnHandler> playerToTurnHandler) {
         List<AbstractTestUser> players = new ArrayList<>();
         for (Map.Entry<String, TurnHandler> playerTurn : playerToTurnHandler.entrySet()) {
             String username = playerTurn.getKey();

@@ -16,9 +16,12 @@ public class KeycloakClients extends HashMap<String, Keycloak> {
     private static final int KEYCLOAK_USER_COUNT = 6;
 
     public KeycloakClients(String serverUrl) {
+
         put(KEYCLOAK_ADMIN_USERNAME, createKeycloakClient(serverUrl, KEYCLOAK_ADMIN_USERNAME, KEYCLOAK_ADMIN_PASSWORD));
         put(KEYCLOAK_VIEWER_USERNAME, createKeycloakClient(serverUrl, KEYCLOAK_VIEWER_USERNAME, KEYCLOAK_USER_PASSWORD));
+
         for (int index = 0; index < KEYCLOAK_USER_COUNT; index++) {
+
             String username = String.format(USER_USERNAME_FORMAT, index + 1);
             put(username, createKeycloakClient(serverUrl, username, KEYCLOAK_USER_PASSWORD));
         }
