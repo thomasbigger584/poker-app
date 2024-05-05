@@ -21,8 +21,6 @@ public abstract class BaseTestContainersIT {
     // Keycloak Constants
     private static final String KEYCLOAK_SERVICE = "keycloak";
     private static final String KEYCLOAK_REALM_JSON_FILE_PATH = "/keycloak-realm.json";
-    private static final String KEYCLOAK_ADMIN_USERNAME = "admin";
-    private static final String KEYCLOAK_ADMIN_PASSWORD = "admin";
     private static final int KEYCLOAK_PORT = 8080;
 
     // DB Constants
@@ -40,8 +38,8 @@ public abstract class BaseTestContainersIT {
     private static final Network NETWORK = Network.newNetwork();
     private static final KeycloakContainer KEYCLOAK_CONTAINER = new KeycloakContainer()
             .withRealmImportFile(KEYCLOAK_REALM_JSON_FILE_PATH)
-            .withAdminUsername(KEYCLOAK_ADMIN_USERNAME)
-            .withAdminPassword(KEYCLOAK_ADMIN_PASSWORD)
+            .withAdminUsername(KeycloakClients.KEYCLOAK_ADMIN_USERNAME)
+            .withAdminPassword(KeycloakClients.KEYCLOAK_ADMIN_PASSWORD)
             .withNetwork(NETWORK)
             .withNetworkAliases(KEYCLOAK_SERVICE)
             .withNetworkMode("bridge")
