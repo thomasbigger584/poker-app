@@ -67,13 +67,12 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         logger.info("Connecting {} to {}", params.getUsername(), params.getTable().getId());
         URI url = URI.create(CONNECTION_URL);
         WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
-        headers.add(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken());
-
         StompHeaders stompHeaders = new StompHeaders();
+        stompHeaders.add(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken());
         stompHeaders.put(HEADER_CONNECTION_TYPE, Collections.singletonList(getConnectionType().toString()));
 
         client.connectAsync(url, headers, stompHeaders, this);
-        if (connectLatch.await(10, TimeUnit.SECONDS)) {
+        if (!connectLatch.await(10, TimeUnit.SECONDS)) {
             logger.error("Timed out user {} from connecting to table {} via websocket", params.getUsername(), params.getTable().getId());
         }
     }

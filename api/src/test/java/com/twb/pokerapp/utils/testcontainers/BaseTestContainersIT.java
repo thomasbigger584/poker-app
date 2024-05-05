@@ -43,7 +43,6 @@ public abstract class BaseTestContainersIT {
             .withNetwork(NETWORK)
             .withNetworkAliases(KEYCLOAK_SERVICE)
             .withNetworkMode("bridge")
-            // remove this to get the port to print in logs for local console
             .withEnv("KC_HOSTNAME_URL", String.format("http://%s:%d", KEYCLOAK_SERVICE, KEYCLOAK_PORT))
             .withVerboseOutput();
     private static final PostgreSQLContainer<?> POSTGRESQL_CONTAINER = new PostgreSQLContainer<>("postgres:13.1-alpine")
