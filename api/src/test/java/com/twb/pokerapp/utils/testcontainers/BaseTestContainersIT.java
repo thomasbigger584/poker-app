@@ -1,11 +1,16 @@
 package com.twb.pokerapp.utils.testcontainers;
 
+import com.twb.pokerapp.utils.keycloak.KeycloakService;
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.KeycloakBuilder;
+import org.keycloak.representations.AccessTokenResponse;
+import org.keycloak.representations.idm.UserRepresentation;
+import org.keycloak.representations.idm.CredentialRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -13,6 +18,7 @@ import org.testcontainers.containers.Network;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 
+import java.util.Arrays;
 import java.util.List;
 
 public abstract class BaseTestContainersIT {
@@ -20,12 +26,15 @@ public abstract class BaseTestContainersIT {
 
     // Keycloak Constants
     private static final String KEYCLOAK_SERVICE = "keycloak";
+    private static final String KEYCLOAK_REALM_JSON_FILE_PATH = "/keycloak-realm.json";
     private static final String KEYCLOAK_ADMIN_USERNAME = "admin";
     private static final String KEYCLOAK_ADMIN_PASSWORD = "admin";
     private static final int KEYCLOAK_PORT = 8080;
 
     // DB Constants
     private static final String DB_SERVICE = "postgres";
+    private static final String DB_USERNAME = "root";
+    private static final String DB_PASSWORD = "password";
     private static final int DB_PORT = 5432;
 
     // API Constants
@@ -37,7 +46,7 @@ public abstract class BaseTestContainersIT {
     private static final Slf4jLogConsumer LOG_CONSUMER = new Slf4jLogConsumer(logger);
     private static final Network NETWORK = Network.newNetwork();
     private static final KeycloakContainer KEYCLOAK_CONTAINER = new KeycloakContainer()
-            .withRealmImportFile("/keycloak-realm.json")
+            .withRealmImportFile(KEYCLOAK_REALM_JSON_FILE_PATH)
             .withAdminUsername(KEYCLOAK_ADMIN_USERNAME)
             .withAdminPassword(KEYCLOAK_ADMIN_PASSWORD)
             .withLogConsumer(LOG_CONSUMER.withPrefix(KEYCLOAK_SERVICE))
@@ -45,8 +54,8 @@ public abstract class BaseTestContainersIT {
             .withNetworkAliases(KEYCLOAK_SERVICE)
             .withNetworkMode("bridge");
     private static final PostgreSQLContainer<?> POSTGRESQL_CONTAINER = new PostgreSQLContainer<>("postgres:13.1-alpine")
-            .withUsername("root")
-            .withPassword("password")
+            .withUsername(DB_USERNAME)
+            .withPassword(DB_PASSWORD)
             .withDatabaseName("db")
             .withExposedPorts(DB_PORT)
             .withLogConsumer(LOG_CONSUMER.withPrefix(DB_SERVICE))
@@ -63,7 +72,8 @@ public abstract class BaseTestContainersIT {
             .withNetworkMode("bridge")
             .dependsOn(KEYCLOAK_CONTAINER, POSTGRESQL_CONTAINER);
 
-    protected static Keycloak keycloak;
+    protected static Keycloak masterKeycloak;
+    protected static Keycloak pokerAppKeycloak;
 
     static {
         POSTGRESQL_CONTAINER.setPortBindings(
@@ -80,16 +90,10 @@ public abstract class BaseTestContainersIT {
     @BeforeAll
     public static void onBeforeAll() {
         KEYCLOAK_CONTAINER.start();
-        keycloak = KEYCLOAK_CONTAINER.getKeycloakAdminClient();
-    }
-
-    @AfterAll
-    public static void onAfterAll() {
-        KEYCLOAK_CONTAINER.stop();
-    }
-
-    private static String getPortBindingString(int port) {
-        return String.format("%d:%d", port, port);
+        masterKeycloak = KEYCLOAK_CONTAINER.getKeycloakAdminClient();
+        KeycloakService keycloakService = new KeycloakService(KEYCLOAK_CONTAINER.getAuthServerUrl(), masterKeycloak);
+        pokerAppKeycloak = keycloakService.initializeAppRealm();
+        System.out.println("keycloakService = " + keycloakService);
     }
 
     @BeforeEach
@@ -106,6 +110,11 @@ public abstract class BaseTestContainersIT {
         afterEach();
     }
 
+    @AfterAll
+    public static void onAfterAll() {
+        KEYCLOAK_CONTAINER.stop();
+    }
+
     // *****************************************************************************************
     // Overridable Methods
     // *****************************************************************************************
@@ -114,5 +123,13 @@ public abstract class BaseTestContainersIT {
     }
 
     protected void afterEach() throws Throwable {
+    }
+
+    // *****************************************************************************************
+    // Helper Methods
+    // *****************************************************************************************
+
+    private static String getPortBindingString(int port) {
+        return String.format("%d:%d", port, port);
     }
 }

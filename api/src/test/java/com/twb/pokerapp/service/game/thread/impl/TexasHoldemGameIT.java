@@ -39,7 +39,7 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
     protected void beforeEach() throws Throwable {
         this.latches = GameLatches.create();
         this.gameParams = GameRunnerParams.builder()
-                .keycloak(keycloak)
+                .keycloak(masterKeycloak)
                 .table(getTexasHoldemTable())
                 .numberOfRounds(1)
                 .build();
@@ -131,7 +131,7 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
     // *****************************************************************************************
 
     private TableDTO getTexasHoldemTable() throws Exception {
-        RestClient client = RestClient.getInstance(keycloak);
+        RestClient client = RestClient.getInstance(masterKeycloak);
         ApiHttpResponse<TableDTO[]> tablesResponse = client.get(TableDTO[].class, "/poker-table");
         assertEquals(HttpStatus.OK.value(), tablesResponse.httpResponse().statusCode());
         TableDTO[] tables = tablesResponse.resultBody();
@@ -151,7 +151,7 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
                     .table(gameParams.getTable())
                     .username(playerTurn.getKey())
                     .latches(latches)
-                    .keycloak(keycloak)
+                    .keycloak(masterKeycloak)
                     .turnHandler(playerTurn.getValue())
                     .build();
             players.add(new TestTexasHoldemPlayerUser(userParams));
