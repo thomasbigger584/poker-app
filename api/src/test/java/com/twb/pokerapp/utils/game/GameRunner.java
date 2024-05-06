@@ -3,6 +3,7 @@ package com.twb.pokerapp.utils.game;
 import com.twb.pokerapp.utils.game.player.AbstractTestUser;
 import com.twb.pokerapp.utils.game.player.TestUserParams;
 import com.twb.pokerapp.utils.game.player.impl.TestGameListenerUser;
+import com.twb.pokerapp.utils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.utils.keycloak.KeycloakClients;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ public class GameRunner {
 
     private final GameRunnerParams params;
 
-    public Map<String, List<ServerMessageDTO>> run(List<AbstractTestUser> players) throws Exception {
+    public PlayersServerMessages run(List<AbstractTestUser> players) throws Exception {
         AbstractTestUser listener = connectListener();
         connectPlayers(players);
 
@@ -38,7 +39,7 @@ public class GameRunner {
 
         throwExceptionIfOccurred(players);
 
-        return getReceivedMessages(players, listener);
+        return new PlayersServerMessages(listener, players);
     }
 
     private AbstractTestUser connectListener() throws Exception {
@@ -73,15 +74,5 @@ public class GameRunner {
                 throw new RuntimeException("Test Failure for player: " + player, exceptionThrown.get());
             }
         }
-    }
-
-    private Map<String, List<ServerMessageDTO>> getReceivedMessages(List<AbstractTestUser> players,
-                                                                    AbstractTestUser listener) {
-        Map<String, List<ServerMessageDTO>> receivedMessages = new HashMap<>();
-        receivedMessages.put(KeycloakClients.KEYCLOAK_VIEWER_USERNAME, listener.getReceivedMessages(params.getNumberOfRounds()));
-        for (AbstractTestUser player : players) {
-            receivedMessages.put(player.getParams().getUsername(), player.getReceivedMessages(params.getNumberOfRounds()));
-        }
-        return receivedMessages;
     }
 }

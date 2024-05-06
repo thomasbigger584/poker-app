@@ -12,8 +12,8 @@ import com.twb.pokerapp.utils.game.player.TurnHandler;
 import com.twb.pokerapp.utils.game.player.impl.TestTexasHoldemPlayerUser;
 import com.twb.pokerapp.utils.http.RestClient;
 import com.twb.pokerapp.utils.http.RestClient.ApiHttpResponse;
+import com.twb.pokerapp.utils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.utils.testcontainers.BaseTestContainersIT;
-import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import org.junit.jupiter.api.Test;
 import org.keycloak.admin.client.Keycloak;
 import org.slf4j.Logger;
@@ -50,26 +50,22 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
 
     @Test
     void testGameWithoutPlayerActions() throws Throwable {
-        Map<String, TurnHandler> playerTurnHandlers = new HashMap<>();
-        playerTurnHandlers.put(PLAYER_1, null);
-        playerTurnHandlers.put(PLAYER_2, null);
+        Map<String, TurnHandler> turnHandlers = new HashMap<>();
+        turnHandlers.put(PLAYER_1, null);
+        turnHandlers.put(PLAYER_2, null);
 
-        List<AbstractTestUser> players = getPlayers(playerTurnHandlers);
-
-        Map<String, List<ServerMessageDTO>> receivedMessages = gameRunner.run(players);
+        PlayersServerMessages messages = gameRunner.run(getPlayers(turnHandlers));
     }
 
     @Test
     void testGameWithDefaultActions() throws Throwable {
-        Map<String, TurnHandler> playerTurnHandlers = new HashMap<>();
-        playerTurnHandlers.put(PLAYER_1, new TurnHandler());
-        playerTurnHandlers.put(PLAYER_2, new TurnHandler());
+        Map<String, TurnHandler> turnHandlers = new HashMap<>();
+        turnHandlers.put(PLAYER_1, new TurnHandler());
+        turnHandlers.put(PLAYER_2, new TurnHandler());
 
-        List<AbstractTestUser> players = getPlayers(playerTurnHandlers);
-
-        Map<String, List<ServerMessageDTO>> receivedMessages = gameRunner.run(players);
-
-        System.out.println("receivedMessages = " + receivedMessages);
+        PlayersServerMessages messages = gameRunner.run(getPlayers(turnHandlers))
+                .getByNumberOfRounds(gameParams.getNumberOfRounds());
+        System.out.println("messages = " + messages);
     }
 
 //    @Test

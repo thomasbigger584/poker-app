@@ -4,7 +4,6 @@ import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.utils.http.message.ServerMessageConverter;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
-import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
 import com.twb.pokerapp.web.websocket.message.server.payload.ErrorMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.LogMessageDTO;
 import jakarta.validation.constraints.NotNull;
@@ -30,7 +29,6 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -86,26 +84,8 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         session = null;
     }
 
-    public List<ServerMessageDTO> getReceivedMessages(int numberOfRounds) {
-        synchronized (this.receivedMessages) {
-            this.receivedMessages.sort(Comparator.comparing(ServerMessageDTO::getTimestamp));
-            List<ServerMessageDTO> messages = new ArrayList<>();
-            int roundEncountered = 0;
-            for (ServerMessageDTO message : this.receivedMessages) {
-                messages.add(message);
-                if (message.getType().equals(ServerMessageType.ROUND_FINISHED)) {
-                    roundEncountered++;
-                }
-                if (roundEncountered == numberOfRounds) {
-                    return messages;
-                }
-            }
-            return this.receivedMessages;
-        }
-    }
-
     // ***************************************************************
-    // Interface Methods
+    // Lifecycle Methods
     // ***************************************************************
 
     @Override
