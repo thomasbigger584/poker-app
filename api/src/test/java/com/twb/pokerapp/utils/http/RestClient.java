@@ -13,6 +13,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.HashMap;
+import java.util.Map;
 
 @RequiredArgsConstructor
 public class RestClient {
@@ -21,13 +23,16 @@ public class RestClient {
     private static final String API_BASE_URL = "http://localhost:%d".formatted(EXPOSED_PORT);
     private static final String BEARER_PREFIX = "Bearer ";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static RestClient instance;
     private final Keycloak keycloak;
 
+    private final static Map<Keycloak, RestClient> INSTANCES = new HashMap<>();
+
     public static synchronized RestClient getInstance(Keycloak keycloak) {
-        if (instance == null) {
-            instance = new RestClient(keycloak);
+        if (INSTANCES.containsKey(keycloak)) {
+            return INSTANCES.get(keycloak);
         }
+        RestClient instance = new RestClient(keycloak);
+        INSTANCES.put(keycloak, instance);
         return instance;
     }
 

@@ -68,6 +68,8 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
         List<AbstractTestUser> players = getPlayers(playerTurnHandlers);
 
         Map<String, List<ServerMessageDTO>> receivedMessages = gameRunner.run(players);
+
+        System.out.println("receivedMessages = " + receivedMessages);
     }
 
 //    @Test

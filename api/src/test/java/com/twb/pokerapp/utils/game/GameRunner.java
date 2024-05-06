@@ -19,7 +19,6 @@ import static java.lang.Thread.sleep;
 @RequiredArgsConstructor
 public class GameRunner {
     private static final int LATCH_TIMEOUT_IN_SECS = 100;
-    private static final int PLAYER_WAIT_MS = 1000;
 
     private final GameRunnerParams params;
 
@@ -52,21 +51,18 @@ public class GameRunner {
                 .build();
         AbstractTestUser listener = new TestGameListenerUser(listenerParams, params.getNumberOfRounds());
         listener.connect();
-        sleep(PLAYER_WAIT_MS);
         return listener;
     }
 
     private void connectPlayers(List<AbstractTestUser> players) throws Exception {
         for (AbstractTestUser player : players) {
             player.connect();
-            sleep(PLAYER_WAIT_MS);
         }
     }
 
     private void disconnectPlayers(List<AbstractTestUser> players) throws Exception {
         for (AbstractTestUser player : players) {
             player.disconnect();
-            sleep(PLAYER_WAIT_MS);
         }
     }
 
@@ -82,9 +78,9 @@ public class GameRunner {
     private Map<String, List<ServerMessageDTO>> getReceivedMessages(List<AbstractTestUser> players,
                                                                     AbstractTestUser listener) {
         Map<String, List<ServerMessageDTO>> receivedMessages = new HashMap<>();
-        receivedMessages.put(KeycloakClients.KEYCLOAK_VIEWER_USERNAME, listener.getReceivedMessages());
+        receivedMessages.put(KeycloakClients.KEYCLOAK_VIEWER_USERNAME, listener.getReceivedMessages(params.getNumberOfRounds()));
         for (AbstractTestUser player : players) {
-            receivedMessages.put(player.getParams().getUsername(), player.getReceivedMessages());
+            receivedMessages.put(player.getParams().getUsername(), player.getReceivedMessages(params.getNumberOfRounds()));
         }
         return receivedMessages;
     }
