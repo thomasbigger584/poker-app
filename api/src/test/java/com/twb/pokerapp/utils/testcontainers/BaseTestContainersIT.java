@@ -38,7 +38,7 @@ public abstract class BaseTestContainersIT {
     private static final String API_IMAGE_NAME = "com.twb.pokerapp/api";
     private static final String API_IMAGE_VERSION = "latest";
     private static final String API_SERVICE = "api";
-    private static final String KEYCLOACK_SERVER_URL_KEY = "KEYCLOAK_SERVER_URL";
+    private static final String KEYCLOAK_SERVER_URL_KEY = "KEYCLOAK_SERVER_URL";
     private static final int API_PORT = 8081;
     private static final int API_DEBUG_PORT = 5005;
 
@@ -54,7 +54,7 @@ public abstract class BaseTestContainersIT {
                     .withNetworkMode("bridge")
                     .withEnv(KEYCLOAK_HOSTNAME_URL_KEY, KEYCLOAK_SERVER_URL)
                     .withVerboseOutput();
-    private static final PostgreSQLContainer<?> POSTGRESQL_CONTAINER =
+    private static final PostgreSQLContainer<?> DB_CONTAINER =
             new PostgreSQLContainer<>(DB_IMAGE_NAME + ":" + DB_IMAGE_VERSION)
                     .withUsername(DB_USERNAME)
                     .withPassword(DB_PASSWORD)
@@ -67,18 +67,18 @@ public abstract class BaseTestContainersIT {
                     .dependsOn(KEYCLOAK_CONTAINER);
     private static final GenericContainer<?> API_CONTAINER =
             new GenericContainer<>(API_IMAGE_NAME + ":" + API_IMAGE_VERSION)
-                    .withEnv(KEYCLOACK_SERVER_URL_KEY, KEYCLOAK_SERVER_URL)
+                    .withEnv(KEYCLOAK_SERVER_URL_KEY, KEYCLOAK_SERVER_URL)
                     .withExposedPorts(API_PORT)
                     .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(API_SERVICE))
                     .withNetwork(NETWORK)
                     .withNetworkAliases(API_SERVICE)
                     .withNetworkMode("bridge")
-                    .dependsOn(KEYCLOAK_CONTAINER, POSTGRESQL_CONTAINER);
+                    .dependsOn(KEYCLOAK_CONTAINER, DB_CONTAINER);
 
     protected static KeycloakClients keycloakClients;
 
     static {
-        POSTGRESQL_CONTAINER.setPortBindings(
+        DB_CONTAINER.setPortBindings(
                 List.of(getPortBindingString(DB_PORT)));
         API_CONTAINER.setPortBindings(
                 List.of(getPortBindingString(API_PORT),
@@ -97,7 +97,7 @@ public abstract class BaseTestContainersIT {
 
     @BeforeEach
     public void onBeforeEach() throws Throwable {
-        POSTGRESQL_CONTAINER.start();
+        DB_CONTAINER.start();
         API_CONTAINER.start();
         beforeEach();
     }
@@ -105,7 +105,7 @@ public abstract class BaseTestContainersIT {
     @AfterEach
     public void onAfterEach() throws Throwable {
         API_CONTAINER.stop();
-        POSTGRESQL_CONTAINER.stop();
+        DB_CONTAINER.stop();
         afterEach();
     }
 
