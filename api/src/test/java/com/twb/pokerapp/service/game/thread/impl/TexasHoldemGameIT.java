@@ -54,7 +54,9 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
         turnHandlers.put(PLAYER_1, null);
         turnHandlers.put(PLAYER_2, null);
 
-        PlayersServerMessages messages = gameRunner.run(getPlayers(turnHandlers));
+        PlayersServerMessages messages = gameRunner.run(getPlayers(turnHandlers))
+                .getByNumberOfRounds(gameParams.getNumberOfRounds());
+        System.out.println("messages = " + messages);
     }
 
     @Test

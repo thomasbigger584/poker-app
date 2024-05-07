@@ -6,24 +6,21 @@ import org.keycloak.admin.client.KeycloakBuilder;
 import java.util.HashMap;
 
 public class KeycloakClients extends HashMap<String, Keycloak> {
-    private static final String KEYCLOAK_APP_CLIENT_ID = "poker-game-api-client";
-    private static final String KEYCLOAK_ADMIN_REALM = "poker-app";
-    public static final String KEYCLOAK_ADMIN_USERNAME = "admin";
-    public static final String KEYCLOAK_ADMIN_PASSWORD = "admin";
-    public static final String KEYCLOAK_VIEWER_USERNAME = "viewer1";
+    private static final String APP_CLIENT_ID = "poker-game-api-client";
+    private static final String ADMIN_REALM = "poker-app";
+    public static final String ADMIN_USERNAME = "admin";
+    public static final String ADMIN_PASSWORD = "admin";
+    public static final String VIEWER_USERNAME = "viewer1";
     private static final String USER_USERNAME_FORMAT = "user%d";
-    private static final String KEYCLOAK_USER_PASSWORD = "password";
-    private static final int KEYCLOAK_USER_COUNT = 6;
+    private static final String USER_PASSWORD = "password";
+    private static final int USER_COUNT = 6;
 
     public KeycloakClients(String serverUrl) {
-
-        put(KEYCLOAK_ADMIN_USERNAME, createKeycloakClient(serverUrl, KEYCLOAK_ADMIN_USERNAME, KEYCLOAK_ADMIN_PASSWORD));
-        put(KEYCLOAK_VIEWER_USERNAME, createKeycloakClient(serverUrl, KEYCLOAK_VIEWER_USERNAME, KEYCLOAK_USER_PASSWORD));
-
-        for (int index = 0; index < KEYCLOAK_USER_COUNT; index++) {
-
+        put(ADMIN_USERNAME, createKeycloakClient(serverUrl, ADMIN_USERNAME, ADMIN_PASSWORD));
+        put(VIEWER_USERNAME, createKeycloakClient(serverUrl, VIEWER_USERNAME, USER_PASSWORD));
+        for (int index = 0; index < USER_COUNT; index++) {
             String username = String.format(USER_USERNAME_FORMAT, index + 1);
-            put(username, createKeycloakClient(serverUrl, username, KEYCLOAK_USER_PASSWORD));
+            put(username, createKeycloakClient(serverUrl, username, USER_PASSWORD));
         }
     }
 
@@ -31,18 +28,18 @@ public class KeycloakClients extends HashMap<String, Keycloak> {
                                           String username, String password) {
         return KeycloakBuilder.builder()
                 .serverUrl(serverUrl)
-                .clientId(KEYCLOAK_APP_CLIENT_ID)
-                .realm(KEYCLOAK_ADMIN_REALM)
+                .clientId(APP_CLIENT_ID)
+                .realm(ADMIN_REALM)
                 .username(username)
                 .password(password)
                 .build();
     }
 
     public Keycloak getAdminKeycloak() {
-        return get(KEYCLOAK_ADMIN_USERNAME);
+        return get(ADMIN_USERNAME);
     }
 
     public Keycloak getViewerKeycloak() {
-        return get(KEYCLOAK_VIEWER_USERNAME);
+        return get(VIEWER_USERNAME);
     }
 }

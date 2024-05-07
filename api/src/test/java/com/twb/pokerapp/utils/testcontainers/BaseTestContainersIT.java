@@ -47,8 +47,8 @@ public abstract class BaseTestContainersIT {
     private static final KeycloakContainer KEYCLOAK_CONTAINER =
             new KeycloakContainer()
                     .withRealmImportFile(KEYCLOAK_REALM_JSON_FILE_PATH)
-                    .withAdminUsername(KeycloakClients.KEYCLOAK_ADMIN_USERNAME)
-                    .withAdminPassword(KeycloakClients.KEYCLOAK_ADMIN_PASSWORD)
+                    .withAdminUsername(KeycloakClients.ADMIN_USERNAME)
+                    .withAdminPassword(KeycloakClients.ADMIN_PASSWORD)
                     .withNetwork(NETWORK)
                     .withNetworkAliases(KEYCLOAK_SERVICE)
                     .withNetworkMode("bridge")

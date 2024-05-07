@@ -5,17 +5,12 @@ import com.twb.pokerapp.utils.game.player.TestUserParams;
 import com.twb.pokerapp.utils.game.player.impl.TestGameListenerUser;
 import com.twb.pokerapp.utils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.utils.keycloak.KeycloakClients;
-import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.Keycloak;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-
-import static java.lang.Thread.sleep;
 
 @RequiredArgsConstructor
 public class GameRunner {
@@ -48,7 +43,7 @@ public class GameRunner {
                 .table(params.getTable())
                 .keycloak(keycloak)
                 .latches(params.getLatches())
-                .username(KeycloakClients.KEYCLOAK_VIEWER_USERNAME)
+                .username(KeycloakClients.VIEWER_USERNAME)
                 .build();
         AbstractTestUser listener = new TestGameListenerUser(listenerParams, params.getNumberOfRounds());
         listener.connect();
