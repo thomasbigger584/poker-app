@@ -32,20 +32,18 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
     private static final String PLAYER_1 = "user1";
     private static final String PLAYER_2 = "user2";
 
-    private GameLatches latches;
-    private GameRunnerParams gameParams;
-    private GameRunner gameRunner;
+    private GameRunnerParams params;
+    private GameRunner runner;
 
     @Override
     protected void beforeEach() throws Throwable {
-        this.latches = GameLatches.create();
-        this.gameParams = GameRunnerParams.builder()
+        this.params = GameRunnerParams.builder()
                 .keycloakClients(keycloakClients)
                 .numberOfRounds(1)
-                .latches(latches)
+                .latches(GameLatches.create())
                 .table(getTexasHoldemTable())
                 .build();
-        this.gameRunner = new GameRunner(gameParams);
+        this.runner = new GameRunner(params);
     }
 
     @Test
@@ -54,8 +52,8 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
         turnHandlers.put(PLAYER_1, null);
         turnHandlers.put(PLAYER_2, null);
 
-        PlayersServerMessages messages = gameRunner.run(getPlayers(turnHandlers))
-                .getByNumberOfRounds(gameParams.getNumberOfRounds());
+        PlayersServerMessages messages = runner.run(getPlayers(turnHandlers))
+                .getByNumberOfRounds(params.getNumberOfRounds());
         System.out.println("messages = " + messages);
     }
 
@@ -65,8 +63,8 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
         turnHandlers.put(PLAYER_1, new TurnHandler());
         turnHandlers.put(PLAYER_2, new TurnHandler());
 
-        PlayersServerMessages messages = gameRunner.run(getPlayers(turnHandlers))
-                .getByNumberOfRounds(gameParams.getNumberOfRounds());
+        PlayersServerMessages messages = runner.run(getPlayers(turnHandlers))
+                .getByNumberOfRounds(params.getNumberOfRounds());
         System.out.println("messages = " + messages);
     }
 
@@ -147,9 +145,9 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
         for (Map.Entry<String, TurnHandler> playerTurn : playerToTurnHandler.entrySet()) {
             String username = playerTurn.getKey();
             TestUserParams userParams = TestUserParams.builder()
-                    .table(gameParams.getTable())
+                    .table(params.getTable())
                     .username(username)
-                    .latches(latches)
+                    .latches(params.getLatches())
                     .keycloak(keycloakClients.get(username))
                     .turnHandler(playerTurn.getValue())
                     .build();

@@ -51,7 +51,6 @@ public abstract class BaseTestContainersIT {
                     .withAdminPassword(KeycloakClients.ADMIN_PASSWORD)
                     .withNetwork(NETWORK)
                     .withNetworkAliases(KEYCLOAK_SERVICE)
-                    .withNetworkMode("bridge")
                     .withEnv(KEYCLOAK_HOSTNAME_URL_KEY, KEYCLOAK_SERVER_URL)
                     .withVerboseOutput();
     private static final PostgreSQLContainer<?> DB_CONTAINER =
@@ -63,7 +62,6 @@ public abstract class BaseTestContainersIT {
                     .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(DB_SERVICE))
                     .withNetwork(NETWORK)
                     .withNetworkAliases(DB_SERVICE)
-                    .withNetworkMode("bridge")
                     .dependsOn(KEYCLOAK_CONTAINER);
     private static final GenericContainer<?> API_CONTAINER =
             new GenericContainer<>(API_IMAGE_NAME + ":" + API_IMAGE_VERSION)
@@ -72,7 +70,6 @@ public abstract class BaseTestContainersIT {
                     .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(API_SERVICE))
                     .withNetwork(NETWORK)
                     .withNetworkAliases(API_SERVICE)
-                    .withNetworkMode("bridge")
                     .dependsOn(KEYCLOAK_CONTAINER, DB_CONTAINER);
 
     protected static KeycloakClients keycloakClients;
