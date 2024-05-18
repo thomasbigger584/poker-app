@@ -341,11 +341,6 @@ public abstract class GameThread extends BaseGameThread {
         }
     }
 
-    public void stopThread() {
-        interruptGame.set(true);
-        interrupt();
-    }
-
     // *****************************************************************************************
     // Evaluation
     // *****************************************************************************************
@@ -386,6 +381,16 @@ public abstract class GameThread extends BaseGameThread {
             }
         }
         return sb.toString();
+    }
+
+    // ***************************************************************
+    // Lifecycle Methods
+    // ***************************************************************
+
+    @Override
+    public void interrupt() {
+        interruptGame.set(true);
+        super.interrupt();
     }
 
     // ***************************************************************

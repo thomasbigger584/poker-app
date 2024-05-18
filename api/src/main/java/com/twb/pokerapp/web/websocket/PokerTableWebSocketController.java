@@ -84,7 +84,7 @@ public class PokerTableWebSocketController {
     }
 
     private ConnectionType getConnectionType(StompHeaderAccessor headerAccessor) {
-        Optional<ConnectionType> connectionTypeOpt = sessionService.getConnectionType(headerAccessor);
-        return connectionTypeOpt.orElse(ConnectionType.LISTENER);
+        return sessionService.getConnectionType(headerAccessor)
+                .orElse(ConnectionType.LISTENER);
     }
 }

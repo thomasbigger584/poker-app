@@ -100,7 +100,7 @@ public class PokerTableGameService {
                 List<PlayerSession> playerSessions =
                         playerSessionRepository.findConnectedPlayersByTableIdNoLock(tableId);
                 if (CollectionUtils.isEmpty(playerSessions)) {
-                    thread.stopThread();
+                    thread.interrupt();
                 } else {
                     CreatePlayerActionDTO createPlayerActionDTO = new CreatePlayerActionDTO();
                     createPlayerActionDTO.setAction(ActionType.FOLD);
@@ -110,7 +110,7 @@ public class PokerTableGameService {
                         messageFactory.playerDisconnected(username);
                 dispatcher.send(tableId, message);
                 if (playerSessions.size() < 2) {
-                    thread.stopThread();
+                    thread.interrupt();
                 }
             }
         });

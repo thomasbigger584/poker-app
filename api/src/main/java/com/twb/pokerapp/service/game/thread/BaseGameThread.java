@@ -7,6 +7,10 @@ import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+/**
+ * Abstract base class for game threads.
+ * Provides common functionality and dependencies for game threads.
+ */
 public abstract class BaseGameThread extends Thread {
 
     // *****************************************************************************************
