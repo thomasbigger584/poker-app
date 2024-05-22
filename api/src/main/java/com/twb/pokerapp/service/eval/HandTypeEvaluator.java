@@ -60,6 +60,10 @@ public class HandTypeEvaluator {
         }
     }
 
+    // ***************************************************************
+    // Helper Methods
+    // ***************************************************************
+
     /**
      * Checks if the given cards form a Royal Flush.
      * <p>
@@ -142,10 +146,14 @@ public class HandTypeEvaluator {
             return false;
         }
 
-        Map<RankType, Long> rankCounts = getRankCounts(cards);
+        Map<RankType, Integer> rankCounts = getRankCounts(cards);
 
-        boolean hasThreeOfAKind = rankCounts.values().stream().anyMatch(count -> count == THREE_CARDS_NEEDED);
-        boolean hasPair = rankCounts.values().stream().anyMatch(count -> count == TWO_CARDS_NEEDED);
+        boolean hasThreeOfAKind = rankCounts
+                .values().stream()
+                .anyMatch(count -> count == THREE_CARDS_NEEDED);
+        boolean hasPair = rankCounts
+                .values().stream()
+                .anyMatch(count -> count == TWO_CARDS_NEEDED);
 
         return hasThreeOfAKind && hasPair;
     }
@@ -358,13 +366,13 @@ public class HandTypeEvaluator {
      * @param cards the list of cards to count
      * @return a map from rank type to count of cards of that rank
      */
-    private Map<RankType, Long> getRankCounts(List<Card> cards) {
-        Map<RankType, Long> rankCounts = new HashMap<>();
+    private Map<RankType, Integer> getRankCounts(List<Card> cards) {
+        Map<RankType, Integer> rankCounts = new HashMap<>();
         for (Card card : cards) {
             if (card == null) {
                 continue;
             }
-            rankCounts.merge(card.getRankType(), 1L, Long::sum);
+            rankCounts.merge(card.getRankType(), 1, Integer::sum);
         }
         return rankCounts;
     }
