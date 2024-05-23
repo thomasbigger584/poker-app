@@ -1,6 +1,5 @@
 package com.twb.pokerapp.service.eval;
 
-import com.twb.pokerapp.domain.enumeration.HandType;
 import com.twb.pokerapp.service.eval.dto.EvalPlayerHandDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -15,19 +14,14 @@ public class HandEvaluator {
     private final HandTypeEvaluator handTypeEvaluator;
 
     public void evaluate(List<EvalPlayerHandDTO> playerHandList) {
-        //todo: remove folded players ... (?)
-
         evaluateRankAndHandType(playerHandList);
         setWinners(playerHandList);
     }
 
     private void evaluateRankAndHandType(List<EvalPlayerHandDTO> playerHandList) {
         for (EvalPlayerHandDTO playerHand : playerHandList) {
-            int rank = rankEvaluator.getRank(playerHand.getCards());
-            playerHand.setRank(rank);
-
-            HandType handType = handTypeEvaluator.evaluate(playerHand.getCards());
-            playerHand.setHandType(handType);
+            playerHand.setRank(rankEvaluator.getRank(playerHand.getCards()));
+            playerHand.setHandType(handTypeEvaluator.evaluate(playerHand.getCards()));
         }
     }
 

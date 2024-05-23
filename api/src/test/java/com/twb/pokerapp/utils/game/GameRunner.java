@@ -14,21 +14,17 @@ import java.util.concurrent.atomic.AtomicReference;
 
 @RequiredArgsConstructor
 public class GameRunner {
-    private static final int LATCH_TIMEOUT_IN_SECS = 100;
-
     private final GameRunnerParams params;
 
     public PlayersServerMessages run(List<AbstractTestUser> players) throws Exception {
         AbstractTestUser listener = connectListener();
         connectPlayers(players);
 
-        params.getLatches().roundLatch()
-                .await(LATCH_TIMEOUT_IN_SECS, TimeUnit.SECONDS);
+        params.getLatches().roundLatch().await();
 
         disconnectPlayers(players);
 
-        params.getLatches().gameLatch()
-                .await(LATCH_TIMEOUT_IN_SECS, TimeUnit.SECONDS);
+        params.getLatches().gameLatch().await();
 
         listener.disconnect();
 
@@ -36,6 +32,10 @@ public class GameRunner {
 
         return new PlayersServerMessages(listener, players);
     }
+
+    // ***************************************************************
+    // Helper Methods
+    // ***************************************************************
 
     private AbstractTestUser connectListener() throws Exception {
         Keycloak keycloak = params.getKeycloakClients().getViewerKeycloak();
@@ -56,7 +56,7 @@ public class GameRunner {
         }
     }
 
-    private void disconnectPlayers(List<AbstractTestUser> players) throws Exception {
+    private void disconnectPlayers(List<AbstractTestUser> players) {
         for (AbstractTestUser player : players) {
             player.disconnect();
         }

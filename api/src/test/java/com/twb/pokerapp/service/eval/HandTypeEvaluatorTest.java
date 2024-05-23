@@ -7,9 +7,15 @@ import com.twb.pokerapp.domain.enumeration.SuitType;
 import com.twb.pokerapp.exception.NotFoundException;
 import com.twb.pokerapp.service.game.DeckOfCardsFactory;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class HandTypeEvaluatorTest {
@@ -21,91 +27,31 @@ class HandTypeEvaluatorTest {
         evaluator = new HandTypeEvaluator();
     }
 
-    @Test
-    public void testRoyalFlush() {
-        List<Card> cards = createRoyalFlush();
-        HandType handType = evaluator.evaluate(cards);
-        assertEquals(HandType.ROYAL_FLUSH, handType);
+    @ParameterizedTest(name = "{index} => {0}")
+    @MethodSource("cardHandTypeProvider")
+    public void testHand(String scenario, List<Card> cards, HandType handType) {
+        assertEquals(handType, evaluator.evaluate(cards));
     }
 
-    @Test
-    public void testStraightFlush() {
-        List<Card> cards = createStraightFlush();
-        HandType handType = evaluator.evaluate(cards);
-        assertEquals(HandType.STRAIGHT_FLUSH, handType);
+    static Stream<Arguments> cardHandTypeProvider() {
+        return Stream.of(
+                Arguments.of("Royal Flush", createRoyalFlush(), HandType.ROYAL_FLUSH),
+                Arguments.of("Straight Flush", createStraightFlush(), HandType.STRAIGHT_FLUSH),
+                Arguments.of("Four of a Kind", createFourOfAKind(), HandType.FOUR_OF_A_KIND),
+                Arguments.of("Full House", createFullHouse(), HandType.FULL_HOUSE),
+                Arguments.of("Flush", createFlush(), HandType.FLUSH),
+                Arguments.of("Lower Straight", createLowerStraight(), HandType.STRAIGHT),
+                Arguments.of("Middle Straight", createStraight(), HandType.STRAIGHT),
+                Arguments.of("Upper Straight", createUpperStraight(), HandType.STRAIGHT),
+                Arguments.of("Three of a Kind", createThreeOfAKind(), HandType.THREE_OF_A_KIND),
+                Arguments.of("Two Pair", createTwoPair(), HandType.TWO_PAIR),
+                Arguments.of("Pair", createOnePair(), HandType.PAIR),
+                Arguments.of("High Card", createHighCard(), HandType.HIGH_CARD),
+                Arguments.of("Empty Hand", Collections.emptyList(), HandType.EMPTY_HAND)
+        );
     }
 
-    @Test
-    public void testFourOfAKind() {
-        List<Card> cards = createFourOfAKind();
-        HandType handType = evaluator.evaluate(cards);
-        assertEquals(HandType.FOUR_OF_A_KIND, handType);
-    }
-
-    @Test
-    public void testFullHouse() {
-        List<Card> cards = createFullHouse();
-        HandType handType = evaluator.evaluate(cards);
-        assertEquals(HandType.FULL_HOUSE, handType);
-    }
-
-    @Test
-    public void testFlush() {
-        List<Card> cards = createFlush();
-        HandType handType = evaluator.evaluate(cards);
-        assertEquals(HandType.FLUSH, handType);
-    }
-
-    @Test
-    public void testLowerStraight() {
-        List<Card> cards = createLowerStraight();
-        HandType handType = evaluator.evaluate(cards);
-        assertEquals(HandType.STRAIGHT, handType);
-    }
-
-    @Test
-    public void testStraight() {
-        List<Card> cards = createStraight();
-        HandType handType = evaluator.evaluate(cards);
-        assertEquals(HandType.STRAIGHT, handType);
-    }
-
-    @Test
-    public void testUpperStraight() {
-        List<Card> cards = createUpperStraight();
-        HandType handType = evaluator.evaluate(cards);
-        assertEquals(HandType.STRAIGHT, handType);
-    }
-
-    @Test
-    public void testThreeOfAKind() {
-        List<Card> cards = createThreeOfAKind();
-        HandType handType = evaluator.evaluate(cards);
-        assertEquals(HandType.THREE_OF_A_KIND, handType);
-    }
-
-    @Test
-    public void testTwoPair() {
-        List<Card> cards = createTwoPair();
-        HandType handType = evaluator.evaluate(cards);
-        assertEquals(HandType.TWO_PAIR, handType);
-    }
-
-    @Test
-    public void testOnePair() {
-        List<Card> cards = createOnePair();
-        HandType handType = evaluator.evaluate(cards);
-        assertEquals(HandType.PAIR, handType);
-    }
-
-    @Test
-    public void testHighCard() {
-        List<Card> cards = createHighCard();
-        HandType handType = evaluator.evaluate(cards);
-        assertEquals(HandType.HIGH_CARD, handType);
-    }
-
-    private List<Card> createRoyalFlush() {
+    private static List<Card> createRoyalFlush() {
         List<Card> cardList = new ArrayList<>();
         SuitType suit = SuitType.HEARTS;
         cardList.add(findCard(RankType.TEN, suit));
@@ -118,7 +64,7 @@ class HandTypeEvaluatorTest {
         return cardList;
     }
 
-    private List<Card> createStraightFlush() {
+    private static List<Card> createStraightFlush() {
         List<Card> cardList = new ArrayList<>();
         SuitType suit = SuitType.CLUBS;
         cardList.add(findCard(RankType.FIVE, suit));
@@ -131,7 +77,7 @@ class HandTypeEvaluatorTest {
         return cardList;
     }
 
-    private List<Card> createFourOfAKind() {
+    private static List<Card> createFourOfAKind() {
         List<Card> cardList = new ArrayList<>();
         cardList.add(findCard(RankType.NINE, SuitType.HEARTS));
         cardList.add(findCard(RankType.NINE, SuitType.CLUBS));
@@ -143,7 +89,7 @@ class HandTypeEvaluatorTest {
         return cardList;
     }
 
-    private List<Card> createFullHouse() {
+    private static List<Card> createFullHouse() {
         List<Card> cardList = new ArrayList<>();
         cardList.add(findCard(RankType.TEN, SuitType.HEARTS));
         cardList.add(findCard(RankType.TEN, SuitType.CLUBS));
@@ -155,7 +101,7 @@ class HandTypeEvaluatorTest {
         return cardList;
     }
 
-    private List<Card> createFlush() {
+    private static List<Card> createFlush() {
         List<Card> cardList = new ArrayList<>();
         cardList.add(findCard(RankType.DEUCE, SuitType.HEARTS));
         cardList.add(findCard(RankType.FOUR, SuitType.HEARTS));
@@ -165,7 +111,7 @@ class HandTypeEvaluatorTest {
         return cardList;
     }
 
-    private List<Card> createLowerStraight() {
+    private static List<Card> createLowerStraight() {
         List<Card> cardList = new ArrayList<>();
         cardList.add(findCard(RankType.ACE, SuitType.HEARTS));
         cardList.add(findCard(RankType.DEUCE, SuitType.CLUBS));
@@ -177,7 +123,7 @@ class HandTypeEvaluatorTest {
         return cardList;
     }
 
-    private List<Card> createStraight() {
+    private static List<Card> createStraight() {
         List<Card> cardList = new ArrayList<>();
         cardList.add(findCard(RankType.FIVE, SuitType.HEARTS));
         cardList.add(findCard(RankType.SIX, SuitType.CLUBS));
@@ -189,7 +135,7 @@ class HandTypeEvaluatorTest {
         return cardList;
     }
 
-    private List<Card> createUpperStraight() {
+    private static List<Card> createUpperStraight() {
         List<Card> cardList = new ArrayList<>();
         cardList.add(findCard(RankType.TEN, SuitType.HEARTS));
         cardList.add(findCard(RankType.JACK, SuitType.CLUBS));
@@ -201,7 +147,7 @@ class HandTypeEvaluatorTest {
         return cardList;
     }
 
-    private List<Card> createThreeOfAKind() {
+    private static List<Card> createThreeOfAKind() {
         List<Card> cardList = new ArrayList<>();
         cardList.add(findCard(RankType.SEVEN, SuitType.HEARTS));
         cardList.add(findCard(RankType.SEVEN, SuitType.CLUBS));
@@ -213,7 +159,7 @@ class HandTypeEvaluatorTest {
         return cardList;
     }
 
-    private List<Card> createTwoPair() {
+    private static List<Card> createTwoPair() {
         List<Card> cardList = new ArrayList<>();
         cardList.add(findCard(RankType.FIVE, SuitType.HEARTS));
         cardList.add(findCard(RankType.FIVE, SuitType.CLUBS));
@@ -225,7 +171,7 @@ class HandTypeEvaluatorTest {
         return cardList;
     }
 
-    private List<Card> createOnePair() {
+    private static List<Card> createOnePair() {
         List<Card> cardList = new ArrayList<>();
         cardList.add(findCard(RankType.TEN, SuitType.HEARTS));
         cardList.add(findCard(RankType.TEN, SuitType.CLUBS));
@@ -237,7 +183,7 @@ class HandTypeEvaluatorTest {
         return cardList;
     }
 
-    private List<Card> createHighCard() {
+    private static List<Card> createHighCard() {
         List<Card> cardList = new ArrayList<>();
         cardList.add(findCard(RankType.DEUCE, SuitType.HEARTS));
         cardList.add(findCard(RankType.FOUR, SuitType.CLUBS));
@@ -249,7 +195,7 @@ class HandTypeEvaluatorTest {
         return cardList;
     }
 
-    private Card findCard(RankType rankType, SuitType suitType) {
+    private static Card findCard(RankType rankType, SuitType suitType) {
         List<Card> cards = DeckOfCardsFactory.getCards(false);
         for (Card card : cards) {
             if (card.getRankType() == rankType && card.getSuitType() == suitType) {

@@ -74,7 +74,6 @@ public class TexasHoldemGameThread extends GameThread {
                 waitPlayerTurn(currentPlayer);
             }
         }
-        
     }
 
     private void sendPlayerNextActions(PlayerSession playerSession, PlayerSession previousPlayer) {
@@ -204,6 +203,7 @@ public class TexasHoldemGameThread extends GameThread {
         handleWinners(winners);
     }
 
+    //todo: move this into handEvaluator (?)
     private void savePlayerHandEvaluation(List<EvalPlayerHandDTO> playerHandsList) {
         List<Hand> savingHands = new ArrayList<>();
         for (EvalPlayerHandDTO playerHand : playerHandsList) {
