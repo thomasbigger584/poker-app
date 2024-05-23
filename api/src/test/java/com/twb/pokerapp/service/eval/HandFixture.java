@@ -24,6 +24,19 @@ public class HandFixture {
         return cardList;
     }
 
+    public static List<Card> createUpperStraightFlush() {
+        List<Card> cardList = new ArrayList<>();
+        SuitType suit = SuitType.CLUBS;
+        cardList.add(findCard(RankType.NINE, suit));
+        cardList.add(findCard(RankType.TEN, suit));
+        cardList.add(findCard(RankType.JACK, suit));
+        cardList.add(findCard(RankType.QUEEN, suit));
+        cardList.add(findCard(RankType.KING, suit));
+        cardList.add(findCard(RankType.DEUCE, SuitType.DIAMONDS));
+        cardList.add(findCard(RankType.TREY, SuitType.SPADES));
+        return cardList;
+    }
+
     public static List<Card> createStraightFlush() {
         List<Card> cardList = new ArrayList<>();
         SuitType suit = SuitType.CLUBS;
@@ -34,6 +47,19 @@ public class HandFixture {
         cardList.add(findCard(RankType.NINE, suit));
         cardList.add(findCard(RankType.DEUCE, SuitType.DIAMONDS));
         cardList.add(findCard(RankType.TREY, SuitType.SPADES));
+        return cardList;
+    }
+
+    public static List<Card> createLowerStraightFlush() {
+        List<Card> cardList = new ArrayList<>();
+        SuitType suit = SuitType.CLUBS;
+        cardList.add(findCard(RankType.ACE, suit));
+        cardList.add(findCard(RankType.DEUCE, suit));
+        cardList.add(findCard(RankType.TREY, suit));
+        cardList.add(findCard(RankType.FOUR, suit));
+        cardList.add(findCard(RankType.FIVE, suit));
+        cardList.add(findCard(RankType.JACK, SuitType.DIAMONDS));
+        cardList.add(findCard(RankType.TEN, SuitType.SPADES));
         return cardList;
     }
 
@@ -71,15 +97,15 @@ public class HandFixture {
         return cardList;
     }
 
-    public static List<Card> createLowerStraight() {
+    public static List<Card> createUpperStraight() {
         List<Card> cardList = new ArrayList<>();
+        cardList.add(findCard(RankType.TEN, SuitType.HEARTS));
+        cardList.add(findCard(RankType.JACK, SuitType.CLUBS));
+        cardList.add(findCard(RankType.QUEEN, SuitType.DIAMONDS));
+        cardList.add(findCard(RankType.KING, SuitType.SPADES));
         cardList.add(findCard(RankType.ACE, SuitType.HEARTS));
-        cardList.add(findCard(RankType.DEUCE, SuitType.CLUBS));
-        cardList.add(findCard(RankType.TREY, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.FOUR, SuitType.SPADES));
-        cardList.add(findCard(RankType.FIVE, SuitType.HEARTS));
-        cardList.add(findCard(RankType.SEVEN, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.NINE, SuitType.SPADES));
+        cardList.add(findCard(RankType.DEUCE, SuitType.DIAMONDS));
+        cardList.add(findCard(RankType.TREY, SuitType.SPADES));
         return cardList;
     }
 
@@ -95,17 +121,18 @@ public class HandFixture {
         return cardList;
     }
 
-    public static List<Card> createUpperStraight() {
+    public static List<Card> createLowerStraight() {
         List<Card> cardList = new ArrayList<>();
-        cardList.add(findCard(RankType.TEN, SuitType.HEARTS));
-        cardList.add(findCard(RankType.JACK, SuitType.CLUBS));
-        cardList.add(findCard(RankType.QUEEN, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.KING, SuitType.SPADES));
         cardList.add(findCard(RankType.ACE, SuitType.HEARTS));
-        cardList.add(findCard(RankType.DEUCE, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.TREY, SuitType.SPADES));
+        cardList.add(findCard(RankType.DEUCE, SuitType.CLUBS));
+        cardList.add(findCard(RankType.TREY, SuitType.DIAMONDS));
+        cardList.add(findCard(RankType.FOUR, SuitType.SPADES));
+        cardList.add(findCard(RankType.FIVE, SuitType.HEARTS));
+        cardList.add(findCard(RankType.SEVEN, SuitType.DIAMONDS));
+        cardList.add(findCard(RankType.NINE, SuitType.SPADES));
         return cardList;
     }
+
 
     public static List<Card> createThreeOfAKind() {
         List<Card> cardList = new ArrayList<>();

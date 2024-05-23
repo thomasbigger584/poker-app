@@ -32,13 +32,15 @@ class HandTypeEvaluatorTest {
     static Stream<Arguments> cardHandTypeProvider() {
         return Stream.of(
                 Arguments.of("Royal Flush", createRoyalFlush(), HandType.ROYAL_FLUSH),
-                Arguments.of("Straight Flush", createStraightFlush(), HandType.STRAIGHT_FLUSH),
+                Arguments.of("Upper Straight Flush", createUpperStraightFlush(), HandType.STRAIGHT_FLUSH),
+                Arguments.of("Middle Straight Flush", createStraightFlush(), HandType.STRAIGHT_FLUSH),
+                Arguments.of("Lower Straight Flush", createLowerStraightFlush(), HandType.STRAIGHT_FLUSH),
                 Arguments.of("Four of a Kind", createFourOfAKind(), HandType.FOUR_OF_A_KIND),
                 Arguments.of("Full House", createFullHouse(), HandType.FULL_HOUSE),
                 Arguments.of("Flush", createFlush(), HandType.FLUSH),
-                Arguments.of("Lower Straight", createLowerStraight(), HandType.STRAIGHT),
-                Arguments.of("Middle Straight", createStraight(), HandType.STRAIGHT),
                 Arguments.of("Upper Straight", createUpperStraight(), HandType.STRAIGHT),
+                Arguments.of("Middle Straight", createStraight(), HandType.STRAIGHT),
+                Arguments.of("Lower Straight", createLowerStraight(), HandType.STRAIGHT),
                 Arguments.of("Three of a Kind", createThreeOfAKind(), HandType.THREE_OF_A_KIND),
                 Arguments.of("Two Pair", createTwoPair(), HandType.TWO_PAIR),
                 Arguments.of("Pair", createOnePair(), HandType.PAIR),
