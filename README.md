@@ -5,8 +5,12 @@
 
 ![logo.png](images/logo.png)
 
-## Setup bootstrap
+## Server Usage
+
+### Setup Bootstrap
+
 Create a python virtual environment, activate it and install requirements
+
 ```shell
 $ cd bootstrap
 $ virtualenv -p python3 venv
@@ -14,11 +18,22 @@ $ source venv/bin/activate
 $ pip install -r requirements.txt
 ```
 
-## Server Usage
+Run the `run.py` script
 
-Run the `run_local.py` script
 ```shell
-python3 run_local.py
+python3 run.py
+```
+
+```
+usage: run.py [-h] [--no-build] [--no-cache] [--no-run]
+
+Bootstrap poker-app Server
+
+options:
+  -h, --help  show this help message and exit
+  --no-build  Skip building Docker images
+  --no-cache  Build without cache
+  --no-run    Skip running Docker containers
 ```
 
 ## Client Usage
@@ -27,35 +42,8 @@ python3 run_local.py
 
 - To run the Android App, install Android Studio and open the folder `client/android` as a project.
 - Once everything syncs and builds you can run it on your device.
-
-### CLI (Mac)
-
-- Add the android tools to your PATH. Installed via Android Studio or separately
-
-```shell
-export ANDROID_HOME=/Users/<username>/Library/Android/sdk
-export PATH=$PATH:$ANDROID_HOME/platform-tools
-export PATH=$PATH:$ANDROID_HOME/tools
-export PATH=$PATH:$ANDROID_HOME/tools/bin
-```
-
-### CLI (Linux)
-
-```shell
-sudo apt install adb
-```
-
-- Run the following command from root directory to run app to all connected android devices.
-- Useful to test multiple users at once with latest changes
-
-```shell
-./android_run.sh
-```
-
-### Windows
-
-- Currently WSL2 doesnt support Android Studio, so id just recommend everything to run natively with windows.
-- Install Genymotion Android Emulator and setup 2 VMs to run multiple instances of the app.
+- For testing multiplayer, install Genymotion and setup 2 virtual devices. Can then build and run to multiple devices
+  from Android Studio.
 
 ## Architecture
 

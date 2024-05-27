@@ -39,6 +39,11 @@ public enum ServerMessageType {
      */
     PLAYER_TURN,
 
+    /*
+     * Used to notify all players of a players action
+     */
+    PLAYER_ACTION,
+
     // todo: add more
 
     /*
@@ -91,6 +96,8 @@ public enum ServerMessageType {
                 return DealCommunityCardDTO.class;
             case PLAYER_TURN:
                 return PlayerTurnDTO.class;
+            case PLAYER_ACTION:
+                return PlayerActionEventDTO.class;
 
             //todo: add more
 

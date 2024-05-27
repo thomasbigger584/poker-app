@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Factory class for creating a deck of cards.
+ */
 public class DeckOfCardsFactory {
     private static final List<Card> CARDS = new ArrayList<>();
 
@@ -20,7 +23,12 @@ public class DeckOfCardsFactory {
         }
     }
 
-    //this will return a new instance of cards
+    /**
+     * Returns a new instance of a deck of cards.
+     *
+     * @param shuffle if true, the deck will be shuffled
+     * @return a list of cards representing the deck
+     */
     public static List<Card> getCards(boolean shuffle) {
         List<Card> deckOfCardsCopy = new ArrayList<>(CARDS);
         if (shuffle) {

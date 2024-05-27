@@ -2,7 +2,6 @@ package com.twb.pokerapp.service.game.thread;
 
 import com.antkorwin.xsync.XSync;
 import com.twb.pokerapp.domain.PokerTable;
-import com.twb.pokerapp.domain.enumeration.GameType;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +15,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Manages game threads for poker tables.
+ */
 @Component
 @RequiredArgsConstructor
 public class GameThreadManager {
@@ -25,6 +27,12 @@ public class GameThreadManager {
     private final XSync<UUID> mutex;
     private final ApplicationContext context;
 
+    /**
+     * Creates a game thread for the given poker table if it does not already exist.
+     *
+     * @param pokerTable the poker table
+     * @return the created or existing game thread
+     */
     public GameThread createIfNotExist(PokerTable pokerTable) {
         return mutex.evaluate(pokerTable.getId(), () -> {
             Optional<GameThread> threadOpt = getIfExists(pokerTable);
@@ -33,7 +41,6 @@ public class GameThreadManager {
             }
             GameThreadParams params = getGameThreadParams(pokerTable);
             GameThread thread = create(params);
-            long startTime = System.currentTimeMillis();
             thread.start();
             try {
                 if (!params.getStartLatch().await(GAME_START_TIMEOUT_IN_SECS, TimeUnit.SECONDS)) {
@@ -47,6 +54,12 @@ public class GameThreadManager {
         });
     }
 
+    /**
+     * Deletes the game thread for the given table ID.
+     *
+     * @param tableId the table ID
+     * @return true if the game thread was deleted, false otherwise
+     */
     public boolean delete(UUID tableId) {
         return mutex.evaluate(tableId, () -> {
             Optional<GameThread> threadOpt = getIfExists(tableId);
@@ -60,6 +73,12 @@ public class GameThreadManager {
 
     // -------------------------------------------------------------------------------------
 
+    /**
+     * Retrieves game thread parameters for the given poker table.
+     *
+     * @param pokerTable the poker table
+     * @return the game thread parameters
+     */
     private GameThreadParams getGameThreadParams(PokerTable pokerTable) {
         return GameThreadParams.builder()
                 .tableId(pokerTable.getId())
@@ -68,15 +87,33 @@ public class GameThreadManager {
                 .build();
     }
 
+    /**
+     * Creates a new game thread with the given parameters.
+     *
+     * @param params the game thread parameters
+     * @return the created game thread
+     */
     private GameThread create(GameThreadParams params) {
-        GameType gameType = params.getGameType();
-        return gameType.getGameThread(context, params);
+        return params.getGameType()
+                .getGameThread(context, params);
     }
 
+    /**
+     * Retrieves the game thread for the given poker table if it exists.
+     *
+     * @param pokerTable the poker table
+     * @return an Optional containing the game thread if it exists, otherwise empty
+     */
     public Optional<GameThread> getIfExists(PokerTable pokerTable) {
         return getIfExists(pokerTable.getId());
     }
 
+    /**
+     * Retrieves the game thread for the given table ID if it exists.
+     *
+     * @param tableId the table ID
+     * @return an Optional containing the game thread if it exists, otherwise empty
+     */
     public Optional<GameThread> getIfExists(UUID tableId) {
         return mutex.evaluate(tableId, () -> {
             if (!POKER_GAME_RUNNABLE_MAP.containsKey(tableId)) {

@@ -16,7 +16,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile.local
+      dockerfile: Dockerfile
     image: com.twb.pokerapp/api:latest
     container_name: api
     environment:

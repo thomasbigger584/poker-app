@@ -1,93 +1,131 @@
 package com.twb.pokerapp.utils.testcontainers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.twb.pokerapp.utils.keycloak.KeycloakHelper;
-import jakarta.ws.rs.core.HttpHeaders;
-import jakarta.ws.rs.core.MediaType;
+import com.twb.pokerapp.utils.keycloak.KeycloakClients;
+import dasniko.testcontainers.keycloak.KeycloakContainer;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.keycloak.admin.client.Keycloak;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testcontainers.containers.DockerComposeContainer;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.Network;
+import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 
-import java.io.File;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.util.List;
 
 public abstract class BaseTestContainersIT {
-    protected static final HttpClient HTTP_CLIENT = HttpClient.newBuilder().build();
     private static final Logger logger = LoggerFactory.getLogger("TEST");
-    private static final String DOCKER_COMPOSE_LOCATION = "src/test/resources/";
-    private static final String TEST_DOCKER_COMPOSE_YML = "test-docker-compose.yml";
-    private static final String EXPOSED_SERVICE = "api";
-    private static final int EXPOSED_PORT = 8081;
-    private static final String BEARER_PREFIX = "Bearer ";
-    protected static final String API_BASE_URL = String.format("http://localhost:%d", EXPOSED_PORT);
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final String ADMIN_USERNAME = "admin";
-    private static final String ADMIN_PASSWORD = "admin";
-    private static DockerComposeContainer<?> dockerComposeContainer;
-    private static Keycloak keycloak;
 
-    protected static <ResultBody, RequestBody> ApiHttpResponse<ResultBody> post(Class<ResultBody> resultClass,
-                                                                                RequestBody requestBody, String endpoint) throws Exception {
-        String json = OBJECT_MAPPER.writeValueAsString(requestBody);
-        HttpRequest request = HttpRequest.newBuilder()
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + KeycloakHelper.getAccessToken(keycloak))
-                .uri(URI.create(API_BASE_URL + endpoint))
-                .POST(HttpRequest.BodyPublishers.ofString(json))
-                .build();
-        return executeRequest(resultClass, request);
+    // Keycloak Constants
+    private static final String KEYCLOAK_SERVICE = "keycloak";
+    private static final String KEYCLOAK_REALM_JSON_FILE_PATH = "/keycloak-realm.json";
+    private static final String KEYCLOAK_HOSTNAME_URL_KEY = "KC_HOSTNAME_URL";
+    private static final int KEYCLOAK_PORT = 8080;
+    private static final String KEYCLOAK_SERVER_URL = String.format("http://%s:%d", KEYCLOAK_SERVICE, KEYCLOAK_PORT);
+
+    // DB Constants
+    private static final String DB_IMAGE_NAME = "postgres";
+    private static final String DB_IMAGE_VERSION = "13.1-alpine";
+    private static final String DB_SERVICE = "postgres";
+    private static final String DB_USERNAME = "root";
+    private static final String DB_PASSWORD = "password";
+    private static final String DB_NAME = "db";
+    private static final int DB_PORT = 5432;
+
+    // API Constants
+    private static final String API_IMAGE_NAME = "com.twb.pokerapp/api";
+    private static final String API_IMAGE_VERSION = "latest";
+    private static final String API_SERVICE = "api";
+    private static final String KEYCLOAK_SERVER_URL_KEY = "KEYCLOAK_SERVER_URL";
+    private static final int API_PORT = 8081;
+    private static final int API_DEBUG_PORT = 5005;
+
+    // Test Containers
+    private static final Network NETWORK = Network.newNetwork();
+    private static final KeycloakContainer KEYCLOAK_CONTAINER =
+            new KeycloakContainer()
+                    .withRealmImportFile(KEYCLOAK_REALM_JSON_FILE_PATH)
+                    .withAdminUsername(KeycloakClients.ADMIN_USERNAME)
+                    .withAdminPassword(KeycloakClients.ADMIN_PASSWORD)
+                    .withNetwork(NETWORK)
+                    .withNetworkAliases(KEYCLOAK_SERVICE)
+                    .withEnv(KEYCLOAK_HOSTNAME_URL_KEY, KEYCLOAK_SERVER_URL)
+                    .withVerboseOutput();
+    private static final PostgreSQLContainer<?> DB_CONTAINER =
+            new PostgreSQLContainer<>(DB_IMAGE_NAME + ":" + DB_IMAGE_VERSION)
+                    .withUsername(DB_USERNAME)
+                    .withPassword(DB_PASSWORD)
+                    .withDatabaseName(DB_NAME)
+                    .withExposedPorts(DB_PORT)
+                    .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(DB_SERVICE))
+                    .withNetwork(NETWORK)
+                    .withNetworkAliases(DB_SERVICE)
+                    .dependsOn(KEYCLOAK_CONTAINER);
+    private static final GenericContainer<?> API_CONTAINER =
+            new GenericContainer<>(API_IMAGE_NAME + ":" + API_IMAGE_VERSION)
+                    .withEnv(KEYCLOAK_SERVER_URL_KEY, KEYCLOAK_SERVER_URL)
+                    .withExposedPorts(API_PORT)
+                    .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(API_SERVICE))
+                    .withNetwork(NETWORK)
+                    .withNetworkAliases(API_SERVICE)
+                    .dependsOn(KEYCLOAK_CONTAINER, DB_CONTAINER);
+
+    protected static KeycloakClients keycloakClients;
+
+    static {
+        DB_CONTAINER.setPortBindings(
+                List.of(getPortBindingString(DB_PORT)));
+        API_CONTAINER.setPortBindings(
+                List.of(getPortBindingString(API_PORT),
+                        getPortBindingString(API_DEBUG_PORT)));
     }
 
-    protected static <ResultBody> ApiHttpResponse<ResultBody> get(Class<ResultBody> resultClass, String endpoint) throws Exception {
-        HttpRequest request = HttpRequest.newBuilder()
-                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + KeycloakHelper.getAccessToken(keycloak))
-                .uri(URI.create(API_BASE_URL + endpoint))
-                .GET().build();
-        return executeRequest(resultClass, request);
-    }
+    // *****************************************************************************************
+    // Lifecycle Methods
+    // *****************************************************************************************
 
-    protected static ApiHttpResponse<?> delete(String endpoint) throws Exception {
-        HttpRequest request = HttpRequest.newBuilder()
-                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + KeycloakHelper.getAccessToken(keycloak))
-                .uri(URI.create(API_BASE_URL + endpoint))
-                .DELETE().build();
-        return executeRequest(request);
-    }
-
-    private static <ResultBody> ApiHttpResponse<ResultBody> executeRequest(Class<ResultBody> resultClass, HttpRequest request) throws Exception {
-        HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
-        ResultBody result = OBJECT_MAPPER.readValue(response.body(), resultClass);
-        return new ApiHttpResponse<>(response, result);
-    }
-
-    private static ApiHttpResponse<?> executeRequest(HttpRequest request) throws Exception {
-        HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
-        return new ApiHttpResponse<>(response, Void.class);
+    @BeforeAll
+    public static void onBeforeAll() {
+        KEYCLOAK_CONTAINER.start();
+        keycloakClients = new KeycloakClients(KEYCLOAK_CONTAINER.getAuthServerUrl());
     }
 
     @BeforeEach
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public void beforeEach() {
-        File file = new File(DOCKER_COMPOSE_LOCATION + TEST_DOCKER_COMPOSE_YML);
-        dockerComposeContainer = new DockerComposeContainer(file)
-                .withExposedService(EXPOSED_SERVICE, EXPOSED_PORT)
-                .withLogConsumer(EXPOSED_SERVICE, new Slf4jLogConsumer(logger).withPrefix(EXPOSED_SERVICE));
-        dockerComposeContainer.start();
-        keycloak = KeycloakHelper.getKeycloak(ADMIN_USERNAME, ADMIN_PASSWORD);
+    public void onBeforeEach() throws Throwable {
+        DB_CONTAINER.start();
+        API_CONTAINER.start();
+        beforeEach();
     }
 
     @AfterEach
-    public void afterEach() {
-        dockerComposeContainer.stop();
+    public void onAfterEach() throws Throwable {
+        API_CONTAINER.stop();
+        DB_CONTAINER.stop();
+        afterEach();
     }
 
-    protected record ApiHttpResponse<ResultBody>(HttpResponse<String> httpResponse, ResultBody resultBody) {
+    @AfterAll
+    public static void onAfterAll() {
+        KEYCLOAK_CONTAINER.stop();
+    }
+
+    // *****************************************************************************************
+    // Overridable Methods
+    // *****************************************************************************************
+
+    protected void beforeEach() throws Throwable {
+    }
+
+    protected void afterEach() throws Throwable {
+    }
+
+    // *****************************************************************************************
+    // Helper Methods
+    // *****************************************************************************************
+
+    private static String getPortBindingString(int port) {
+        return String.format("%d:%d", port, port);
     }
 }

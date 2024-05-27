@@ -26,14 +26,4 @@ public enum RankType {
 
     private final int position;
     private final char rankChar;
-
-    public static Optional<RankType> findRankByPosition(int position) {
-        for (RankType rankType : values()) {
-            if (rankType.getPosition() == position) {
-                return Optional.of(rankType);
-            }
-        }
-        return Optional.empty();
-    }
-
 }

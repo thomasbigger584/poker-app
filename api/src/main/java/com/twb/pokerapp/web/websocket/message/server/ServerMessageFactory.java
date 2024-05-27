@@ -3,6 +3,7 @@ package com.twb.pokerapp.web.websocket.message.server;
 import com.twb.pokerapp.domain.Card;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.enumeration.ActionType;
+import com.twb.pokerapp.dto.playeraction.PlayerActionDTO;
 import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.mapper.CardMapper;
 import com.twb.pokerapp.mapper.PlayerSessionMapper;
@@ -66,6 +67,12 @@ public class ServerMessageFactory {
     public ServerMessageDTO gameFinished() {
         GameFinishedDTO payload = new GameFinishedDTO();
         return ServerMessageDTO.create(ServerMessageType.GAME_FINISHED, payload);
+    }
+
+    public ServerMessageDTO playerAction(PlayerActionDTO action) {
+        PlayerActionEventDTO payload = new PlayerActionEventDTO();
+        payload.setAction(action);
+        return ServerMessageDTO.create(ServerMessageType.PLAYER_ACTION, payload);
     }
 
     // TODO: add more ...

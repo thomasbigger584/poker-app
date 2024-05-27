@@ -4,6 +4,7 @@ import com.antkorwin.xsync.XSync;
 import com.twb.pokerapp.domain.AppUser;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.PokerTable;
+import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
@@ -95,17 +96,23 @@ public class PokerTableGameService {
             Optional<GameThread> threadOpt = threadManager.getIfExists(tableId);
             if (threadOpt.isPresent()) {
                 GameThread thread = threadOpt.get();
+
                 List<PlayerSession> playerSessions =
                         playerSessionRepository.findConnectedPlayersByTableIdNoLock(tableId);
                 if (CollectionUtils.isEmpty(playerSessions)) {
-                    thread.stopThread();
+                    thread.interrupt();
                 } else {
-                    thread.onPlayerDisconnected(username);
+                    CreatePlayerActionDTO createPlayerActionDTO = new CreatePlayerActionDTO();
+                    createPlayerActionDTO.setAction(ActionType.FOLD);
+                    thread.playerAction(username, createPlayerActionDTO);
+                }
+                ServerMessageDTO message =
+                        messageFactory.playerDisconnected(username);
+                dispatcher.send(tableId, message);
+                if (playerSessions.size() < 2) {
+                    thread.interrupt();
                 }
             }
-            ServerMessageDTO message =
-                    messageFactory.playerDisconnected(username);
-            dispatcher.send(tableId, message);
         });
     }
 }

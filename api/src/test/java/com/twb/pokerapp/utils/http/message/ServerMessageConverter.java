@@ -1,8 +1,7 @@
-package com.twb.pokerapp.utils.message;
+package com.twb.pokerapp.utils.http.message;
 
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
-import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -11,9 +10,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
+import org.springframework.messaging.support.GenericMessage;
+import org.testcontainers.shaded.com.fasterxml.jackson.core.JsonProcessingException;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 public class ServerMessageConverter implements MessageConverter {
     private static final Logger logger = LoggerFactory.getLogger(ServerMessageConverter.class);
@@ -79,6 +81,12 @@ public class ServerMessageConverter implements MessageConverter {
 
     @Override
     public Message<?> toMessage(@NotNull Object payload, MessageHeaders headers) {
-        throw new NotImplementedException("Not implemented as not necessary. We do not create Message on the server manually");
+        try {
+            String json = objectMapper.writeValueAsString(payload);
+            byte[] payloadBytes = json.getBytes(StandardCharsets.UTF_8);
+            return new GenericMessage<>(payloadBytes, headers);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to parse bytes for payload", e);
+        }
     }
 }

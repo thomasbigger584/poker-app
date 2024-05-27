@@ -50,6 +50,7 @@ public class TableService {
             createTableDto2.setName("Poker Table 2");
             createTableDto2.setGameType(GameType.BLACKJACK);
             create(createTableDto2);
+
         }
     }
 

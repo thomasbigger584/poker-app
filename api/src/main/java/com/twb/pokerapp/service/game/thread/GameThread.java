@@ -1,9 +1,12 @@
 package com.twb.pokerapp.service.game.thread;
 
 import com.twb.pokerapp.domain.*;
+import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.domain.enumeration.GameType;
 import com.twb.pokerapp.domain.enumeration.RoundState;
-import com.twb.pokerapp.exception.GameThreadException;
+import com.twb.pokerapp.dto.playeraction.PlayerActionDTO;
+import com.twb.pokerapp.exception.game.GameInterruptedException;
+import com.twb.pokerapp.exception.game.RoundInterruptedException;
 import com.twb.pokerapp.service.eval.dto.EvalPlayerHandDTO;
 import com.twb.pokerapp.service.game.DeckOfCardsFactory;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
@@ -25,10 +28,10 @@ public abstract class GameThread extends BaseGameThread {
     // *****************************************************************************************
     // Constants
     // *****************************************************************************************
-    protected static final long DEAL_WAIT_MS = 1000;
-    protected static final long DB_POLL_WAIT_MS = 1000;
-    protected static final long EVALUATION_WAIT_MS = 4 * 1000;
-    protected static final long PLAYER_TURN_WAIT_MS = 40 * 1000;
+    protected static final long DEAL_WAIT_MS = 1000; // 1 second
+    protected static final long DB_POLL_WAIT_MS = 1000; // 1 second
+    protected static final long EVALUATION_WAIT_MS = 4 * 1000; // 4 seconds
+    protected static final long PLAYER_TURN_WAIT_MS = 30 * 1000; // 30 seconds
     private static final Logger logger = LoggerFactory.getLogger(GameThread.class);
     private static final int MESSAGE_POLL_DIVISOR = 5;
     private static final int MINIMUM_PLAYERS_CONNECTED = 1;
@@ -43,6 +46,7 @@ public abstract class GameThread extends BaseGameThread {
     // Flags
     // *****************************************************************************************
     private final AtomicBoolean interruptGame = new AtomicBoolean(false);
+    private final AtomicBoolean interruptRound = new AtomicBoolean(false);
     private final AtomicBoolean roundInProgress = new AtomicBoolean(false);
     private final AtomicBoolean gameInProgress = new AtomicBoolean(false);
 
@@ -52,7 +56,7 @@ public abstract class GameThread extends BaseGameThread {
     protected PokerTable pokerTable;
     protected Round currentRound;
     protected List<PlayerSession> playerSessions = new ArrayList<>();
-    protected final List<String> foldedPlayers
+    protected final List<PlayerSession> foldedPlayers
             = Collections.synchronizedList(new ArrayList<>());
     private CountDownLatch playerTurnLatch;
     private List<Card> deckOfCards;
@@ -84,10 +88,10 @@ public abstract class GameThread extends BaseGameThread {
             }
             finishGame();
         } catch (Exception e) {
+            logger.error(e.getMessage(), e);
             finishRound();
             finishGame();
-            logger.error(e.getMessage());
-            if (e instanceof GameThreadException) {
+            if (e instanceof GameInterruptedException) {
                 sendErrorMessage(e.getMessage());
             }
         }
@@ -106,7 +110,7 @@ public abstract class GameThread extends BaseGameThread {
         Optional<PokerTable> tableOpt =
                 tableRepository.findById(params.getTableId());
         if (tableOpt.isEmpty()) {
-            throw new GameThreadException("No table found cannot start game");
+            throw new GameInterruptedException("No table found cannot start game");
         }
         pokerTable = tableOpt.get();
     }
@@ -154,12 +158,12 @@ public abstract class GameThread extends BaseGameThread {
         if (roundOpt.isPresent()) {
             currentRound = roundOpt.get();
             if (currentRound.getRoundState() != RoundState.WAITING_FOR_PLAYERS) {
-                throw new GameThreadException("Cannot start an existing new round not in the WAITING_FOR_PLAYERS state");
+                throw new GameInterruptedException("Cannot start an existing new round not in the WAITING_FOR_PLAYERS state");
             }
         } else {
             Optional<PokerTable> tableOpt = tableRepository.findById(params.getTableId());
             if (tableOpt.isEmpty()) {
-                throw new GameThreadException("Cannot start as table doesn't exist");
+                throw new GameInterruptedException("Cannot start as table doesn't exist");
             }
             currentRound = roundService.create(pokerTable);
         }
@@ -181,13 +185,14 @@ public abstract class GameThread extends BaseGameThread {
         List<PlayerSession> playerSessions = playerSessionRepository
                 .findConnectedPlayersByTableId(params.getTableId());
         if (CollectionUtils.isEmpty(playerSessions)) {
-            throw new GameThreadException(NO_MORE_PLAYERS_CONNECTED);
+            throw new GameInterruptedException(NO_MORE_PLAYERS_CONNECTED);
         }
         return playerSessions;
     }
 
     private void initRound() {
         roundInProgress.set(true);
+        interruptRound.set(false);
         foldedPlayers.clear();
         shuffleCards();
         onInitRound();
@@ -197,9 +202,16 @@ public abstract class GameThread extends BaseGameThread {
         RoundState roundState = RoundState.INIT_DEAL;
         saveRoundState(roundState);
         while (roundState != RoundState.FINISH) {
-            checkGameInterrupted();
-            onRunRound(roundState);
-            roundState = getNextRoundState(roundState);
+            checkRoundInterrupted();
+            try {
+                onRunRound(roundState);
+                roundState = getNextRoundState(roundState);
+            } catch (RoundInterruptedException e) {
+                interruptRound.set(false);
+                if (roundState != RoundState.EVAL) {
+                    roundState = RoundState.EVAL;
+                }
+            }
             saveRoundState(roundState);
         }
     }
@@ -220,20 +232,41 @@ public abstract class GameThread extends BaseGameThread {
         roundRepository.saveAndFlush(currentRound);
     }
 
-    protected void waitPlayerTurn() {
+    protected void waitPlayerTurn(PlayerSession playerSession) {
         playerTurnLatch = new CountDownLatch(1);
         try {
             boolean await = playerTurnLatch.await(PLAYER_TURN_WAIT_MS, TimeUnit.MILLISECONDS);
             if (!await) {
-                // user has timed out, so fold user here
+                CreatePlayerActionDTO createPlayerActionDTO = new CreatePlayerActionDTO();
+                createPlayerActionDTO.setAction(ActionType.FOLD);
+                playerAction(playerSession, createPlayerActionDTO);
             }
         } catch (InterruptedException e) {
             throw new RuntimeException("Failed to wait for player turn latch", e);
         }
     }
 
-    public void playerAction(String username, CreatePlayerActionDTO actionDto) {
+    public void playerAction(String username, CreatePlayerActionDTO createDto) {
+        logger.info("***************************************************************");
+        logger.info("GameThread.playerAction");
+        logger.info("username = {}, action = {}", username, createDto);
+        logger.info("***************************************************************");
+        Optional<PlayerSession> playerSessionOpt = playerSessionRepository
+                .findByTableIdAndUsername(pokerTable.getId(), username);
+        if (playerSessionOpt.isEmpty()) {
+            logger.warn("No player {} found on table {}", username, pokerTable.getId());
+            return;
+        }
+        playerAction(playerSessionOpt.get(), createDto);
+    }
 
+    private void playerAction(PlayerSession playerSession, CreatePlayerActionDTO createDto) {
+        PlayerActionDTO actionDto = playerActionService.create(playerSession, currentRound, createDto);
+        switch (createDto.getAction()) {
+            case FOLD -> fold(playerSession);
+            //todo: add others
+        }
+        dispatcher.send(params.getTableId(), messageFactory.playerAction(actionDto));
         playerTurnLatch.countDown();
     }
 
@@ -245,20 +278,20 @@ public abstract class GameThread extends BaseGameThread {
         roundInProgress.set(false);
     }
 
-    // NOTE: called on a different thread (i.e. not game thread)
-    public void onPlayerDisconnected(String username) {
-        fold(username);
-    }
-
     protected boolean isPlayerFolded(PlayerSession playerSession) {
-        AppUser user = playerSession.getUser();
-        return foldedPlayers.contains(user.getUsername());
+        return foldedPlayers.contains(playerSession);
     }
 
-    protected void fold(String username) {
+    // NOTE: called from both game thread and main thread
+    private void fold(PlayerSession playerSession) {
         synchronized (foldedPlayers) {
-            if (!foldedPlayers.contains(username)) {
-                foldedPlayers.add(username);
+            if (!foldedPlayers.contains(playerSession)) {
+                foldedPlayers.add(playerSession);
+            }
+            if (playerSessions.stream()
+                    .filter(foldedPlayers::contains).count() == 1) {
+                // there is only 1 player left in a started game
+                interruptRound.set(true);
             }
         }
     }
@@ -297,13 +330,15 @@ public abstract class GameThread extends BaseGameThread {
 
     protected void checkGameInterrupted() {
         if (interruptGame.get() || isInterrupted()) {
-            throw new GameThreadException("Game is interrupted");
+            throw new GameInterruptedException("Game is interrupted");
         }
     }
 
-    public void stopThread() {
-        interruptGame.set(true);
-        interrupt();
+    protected void checkRoundInterrupted() {
+        checkGameInterrupted();
+        if (interruptRound.get()) {
+            throw new RoundInterruptedException("Round is interrupted");
+        }
     }
 
     // *****************************************************************************************
@@ -312,7 +347,7 @@ public abstract class GameThread extends BaseGameThread {
 
     protected void handleWinners(List<EvalPlayerHandDTO> winners) {
         if (winners.size() == 1) {
-            handleSinglePlayerWin(winners.get(0));
+            handleSinglePlayerWin(winners.getFirst());
         } else {
             handleMultiplePlayerWin(winners);
         }
@@ -328,7 +363,7 @@ public abstract class GameThread extends BaseGameThread {
 
     private void handleMultiplePlayerWin(List<EvalPlayerHandDTO> winners) {
         String winnerNames = getReadableWinners(winners);
-        String handTypeStr = winners.get(0).getHandType().getValue();
+        String handTypeStr = winners.getFirst().getHandType().getValue();
 
         sendLogMessage(String.format("%s draws round with a %s", winnerNames, handTypeStr));
     }
@@ -349,12 +384,22 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     // ***************************************************************
+    // Lifecycle Methods
+    // ***************************************************************
+
+    @Override
+    public void interrupt() {
+        interruptGame.set(true);
+        super.interrupt();
+    }
+
+    // ***************************************************************
     // Abstract Methods
     // ***************************************************************
 
-    abstract protected void onInitRound();
+    protected abstract void onInitRound();
 
-    abstract protected void onRunRound(RoundState roundState);
+    protected abstract void onRunRound(RoundState roundState);
 
-    abstract protected RoundState getNextRoundState(RoundState roundState);
+    protected abstract RoundState getNextRoundState(RoundState roundState);
 }

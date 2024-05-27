@@ -45,7 +45,7 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
                 return message;
             }
 
-            String accessToken = authorization.get(0).split(" ")[1];
+            String accessToken = authorization.getFirst().split(" ")[1];
             Jwt jwt = jwtDecoder.decode(accessToken);
 
             AbstractAuthenticationToken authentication = jwtAuthConverter.convert(jwt);
