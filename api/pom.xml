@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.3</version>
+        <version>3.2.5</version>
         <relativePath/>
     </parent>
     <groupId>com.twb</groupId>
@@ -17,13 +17,13 @@
         <java.version>21</java.version>
         <docker.image.name>com.twb.pokerapp/api</docker.image.name>
         <org.projectlombok.version>1.18.32</org.projectlombok.version>
-        <org.mapstruct.version>1.6.0.Beta1</org.mapstruct.version>
+        <org.mapstruct.version>1.6.0.Beta2</org.mapstruct.version>
         <javax.servlet-api.version>4.0.1</javax.servlet-api.version>
-        <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
-        <error-prone.version>2.25.0</error-prone.version>
+        <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+        <error-prone.version>2.27.1</error-prone.version>
         <spring-security-jwt.version>1.1.1.RELEASE</spring-security-jwt.version>
-        <keycloak.version>24.0.2</keycloak.version>
-        <liquibase-core.version>4.27.0</liquibase-core.version>
+        <keycloak.version>24.0.4</keycloak.version>
+        <liquibase-core.version>4.28.0</liquibase-core.version>
         <commons-lang3.version>3.14.0</commons-lang3.version>
         <postgresql.version>42.7.3</postgresql.version>
         <keycloak-admin-client.version>24.0.3</keycloak-admin-client.version>
@@ -34,9 +34,9 @@
         <docker-maven-plugin.version>0.44.0</docker-maven-plugin.version>
         <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>3.2.5</maven-failsafe-plugin.version>
-        <testcontainers.version>1.19.6</testcontainers.version>
+        <testcontainers.version>1.19.8</testcontainers.version>
         <testcontainers-keycloak.version>3.3.1</testcontainers-keycloak.version>
-        <assertj-core.version>3.25.3</assertj-core.version>
+        <assertj-core.version>3.26.0</assertj-core.version>
 
     </properties>
 
