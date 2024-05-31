@@ -38,6 +38,7 @@ class HandTypeEvaluatorTest {
                 Arguments.of("Four of a Kind", createFourOfAKind(), HandType.FOUR_OF_A_KIND),
                 Arguments.of("Full House", createFullHouse(), HandType.FULL_HOUSE),
                 Arguments.of("Flush", createFlush(), HandType.FLUSH),
+                Arguments.of("Straight & Flush", createBothStraightAndFlush(), HandType.FLUSH),
                 Arguments.of("Upper Straight", createUpperStraight(), HandType.STRAIGHT),
                 Arguments.of("Middle Straight", createStraight(), HandType.STRAIGHT),
                 Arguments.of("Lower Straight", createLowerStraight(), HandType.STRAIGHT),

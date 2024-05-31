@@ -63,6 +63,19 @@ public class HandFixture {
         return cardList;
     }
 
+    public static List<Card> createBothStraightAndFlush() {
+        List<Card> cardList = new ArrayList<>();
+        SuitType suit = SuitType.CLUBS;
+        cardList.add(findCard(RankType.ACE, suit));
+        cardList.add(findCard(RankType.DEUCE, suit));
+        cardList.add(findCard(RankType.TREY, suit));
+        cardList.add(findCard(RankType.TEN, suit));
+        cardList.add(findCard(RankType.QUEEN, suit));
+        cardList.add(findCard(RankType.FOUR, SuitType.DIAMONDS));
+        cardList.add(findCard(RankType.FIVE, SuitType.SPADES));
+        return cardList;
+    }
+
     public static List<Card> createFourOfAKind() {
         List<Card> cardList = new ArrayList<>();
         cardList.add(findCard(RankType.NINE, SuitType.HEARTS));
