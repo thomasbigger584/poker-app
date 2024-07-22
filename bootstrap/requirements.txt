@@ -1,2 +1,0 @@
-argparse==1.4.0
-python-on-whales==0.69.0

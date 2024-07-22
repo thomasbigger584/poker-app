@@ -7,33 +7,11 @@
 
 ## Server Usage
 
-### Setup Bootstrap
-
-Create a python virtual environment, activate it and install requirements
+### API Usage
 
 ```shell
-$ cd bootstrap
-$ virtualenv -p python3 venv
-$ source venv/bin/activate
-$ pip install -r requirements.txt
-```
-
-Run the `run.py` script
-
-```shell
-python3 run.py
-```
-
-```
-usage: run.py [-h] [--no-build] [--no-cache] [--no-run]
-
-Bootstrap poker-app Server
-
-options:
-  -h, --help  show this help message and exit
-  --no-build  Skip building Docker images
-  --no-cache  Build without cache
-  --no-run    Skip running Docker containers
+$ cd api
+$ docker-compose up -- build
 ```
 
 ## Client Usage
