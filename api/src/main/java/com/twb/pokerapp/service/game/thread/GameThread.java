@@ -72,7 +72,7 @@ public abstract class GameThread extends BaseGameThread {
 
             while (isPlayersJoined(MINIMUM_PLAYERS_CONNECTED)) {
                 checkGameInterrupted();
-                waitForPlayersToJoinNotZero();
+                waitForMinimumPlayersToJoin();
                 checkGameInterrupted();
                 while (isPlayersJoined()) {
                     checkGameInterrupted();
@@ -115,23 +115,9 @@ public abstract class GameThread extends BaseGameThread {
         pokerTable = tableOpt.get();
     }
 
-    private void waitForPlayersToJoinNotZero() {
+    private void waitForMinimumPlayersToJoin() {
         GameType gameType = pokerTable.getGameType();
-        int pollCount = 0;
-        List<PlayerSession> playerSessions;
-        do {
-            checkGameInterrupted();
-            playerSessions = playerSessionRepository
-                    .findConnectedPlayersByTableId(params.getTableId());
-            if (playerSessions.size() >= gameType.getMinPlayerCount()) {
-                return;
-            }
-            if (pollCount % MESSAGE_POLL_DIVISOR == 0) {
-                sendLogMessage("Waiting for players to join...");
-            }
-            sleepInMs(DB_POLL_WAIT_MS);
-            pollCount++;
-        } while (playerSessions.size() < gameType.getMinPlayerCount());
+        waitForPlayersToJoin(gameType.getMinPlayerCount());
     }
 
     private void waitForPlayersToJoin(int minPlayerCount) {
@@ -227,7 +213,7 @@ public abstract class GameThread extends BaseGameThread {
         return card;
     }
 
-    protected void saveRoundState(RoundState roundState) {
+    private void saveRoundState(RoundState roundState) {
         currentRound.setRoundState(roundState);
         roundRepository.saveAndFlush(currentRound);
     }
