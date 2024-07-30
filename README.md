@@ -11,7 +11,7 @@
 
 ```shell
 $ cd api
-$ docker-compose up -- build
+$ docker-compose up --build
 ```
 
 ## Client Usage
