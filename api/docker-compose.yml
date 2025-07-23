@@ -147,7 +147,7 @@ services:
     command: [ "start-dev", "--import-realm", "--verbose" ]
     volumes:
       - ./keycloak/keycloak-realm.json:/opt/keycloak/data/import/realm.json
-      - ./keycloak/keycloak-to-rabbit-3.0.2.jar:/opt/keycloak/providers/keycloak-to-rabbit-3.0.2.jar
+      - ./keycloak/keycloak-to-rabbit-3.0.5.jar:/opt/keycloak/providers/keycloak-to-rabbit-3.0.5.jar
     network_mode: service:tailscale
     healthcheck:
       test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000;echo -e \"GET /health/ready HTTP/1.1\\r\\nHost: localhost:9000\\r\\nConnection: close\\r\\n\\r\\n\" >&3;grep \"200 OK\" <&3"]
