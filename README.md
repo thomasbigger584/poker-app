@@ -9,9 +9,27 @@
 
 ### API Usage
 
+#### Secret Environment
+
+- Create file in `api/env/.secrets.env` with these keys, along with provided secret information.
+```
+TS_AUTHKEY=
+```
+- This file is git ignored for security reasons.
+
+#### Tailscale
+
+- Create a Tailscale Auth Key: https://login.tailscale.com/admin/settings/keys
+- Make it Reusable, and not ephemeral. Give it the highest expiration.
+- Place the Auth Key in secret environment file under the key `TS_AUTHKEY`
+- Remove any machine in the tailnet with name `poker-app`. Ensure once the application starts that no additional
+  machines are created.
+
+#### Starting Application
+
 ```shell
 $ cd api
-$ docker-compose up --build
+$ docker compose up --build
 ```
 
 ## Client Usage
@@ -46,10 +64,14 @@ $ docker-compose up --build
 - A CLI application used primarily for test purpose to listen to websocket messages.
 - The user will log in as a listener user, and will select a Table ID and receive all messages on that table.
 
+#### Tailscale
+
+- Tailscale is used to assign domain names to the services and have all the services on its own virtual private network.
+- Useful for testing without exposing the services over the internet.
+
 #### Nginx
 
 - A reverse proxy used to forward requests from the outside towards their respective internal services.
-- Will also be used to handle SSL, and later down the line, handle load balancing.
 
 #### Keycloak
 
