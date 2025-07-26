@@ -31,6 +31,7 @@ import net.openid.appauth.TokenResponse;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
@@ -86,7 +87,8 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
 
         if (savedInstanceState != null) {
             try {
-                userInfoJson.set(new JSONObject(savedInstanceState.getString(KEY_USER_INFO)));
+                String userInfo = Objects.requireNonNull(savedInstanceState.getString(KEY_USER_INFO));
+                userInfoJson.set(new JSONObject(userInfo));
             } catch (JSONException ex) {
                 Log.e(TAG, "Failed to parse saved user info JSON, discarding", ex);
             }
