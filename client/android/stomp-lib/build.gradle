@@ -4,11 +4,11 @@ plugins {
 
 android {
     namespace 'com.twb.stomplib'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         minSdk 19
-        targetSdk 34
+        targetSdk 35
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -23,7 +23,7 @@ android {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
     }
-    buildToolsVersion '34.0.0'
+    buildToolsVersion '35.0.0'
 }
 
 dependencies {
