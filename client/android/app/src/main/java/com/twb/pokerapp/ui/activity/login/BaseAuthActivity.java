@@ -87,8 +87,12 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
 
         if (savedInstanceState != null) {
             try {
-                String userInfo = Objects.requireNonNull(savedInstanceState.getString(KEY_USER_INFO));
-                userInfoJson.set(new JSONObject(userInfo));
+                if (savedInstanceState.containsKey(KEY_USER_INFO)) {
+                    String userInfo = savedInstanceState.getString(KEY_USER_INFO);
+                    if (userInfo != null) {
+                        userInfoJson.set(new JSONObject(userInfo));
+                    }
+                }
             } catch (JSONException ex) {
                 Log.e(TAG, "Failed to parse saved user info JSON, discarding", ex);
             }
