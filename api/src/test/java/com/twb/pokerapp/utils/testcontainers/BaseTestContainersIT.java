@@ -20,7 +20,6 @@ public abstract class BaseTestContainersIT {
 
     // Keycloak Constants
     private static final String KEYCLOAK_SERVICE = "keycloak";
-    private static final String KEYCLOAK_REALM_JSON_FILE_PATH = "C:\\Users\\Thoma\\Projects\\poker-app\\api\\keycloak\\keycloak-realm.json";
     private static final String KEYCLOAK_HOSTNAME_URL_KEY = "KC_HOSTNAME_URL";
     private static final int KEYCLOAK_PORT = 8080;
     private static final String KEYCLOAK_SERVER_URL = String.format("http://%s:%d", KEYCLOAK_SERVICE, KEYCLOAK_PORT);
@@ -33,6 +32,8 @@ public abstract class BaseTestContainersIT {
     private static final String DB_PASSWORD = "password";
     private static final String DB_NAME = "db";
     private static final int DB_PORT = 5432;
+    private static final String SPRING_DATASOURCE_URL_KEY = "SPRING_DATASOURCE_URL";
+    private static final String DB_DATASOURCE_URL = String.format("jdbc:postgresql://%s:%d/%s", DB_SERVICE, DB_PORT, DB_NAME);
 
     // API Constants
     private static final String API_IMAGE_NAME = "com.twb.pokerapp/api";
@@ -46,7 +47,7 @@ public abstract class BaseTestContainersIT {
     private static final Network NETWORK = Network.newNetwork();
     private static final KeycloakContainer KEYCLOAK_CONTAINER =
             new KeycloakContainer()
-                    .withRealmImportFile(KEYCLOAK_REALM_JSON_FILE_PATH)
+                    .withRealmImportFile("keycloak-realm.json")
                     .withAdminUsername(KeycloakClients.ADMIN_USERNAME)
                     .withAdminPassword(KeycloakClients.ADMIN_PASSWORD)
                     .withNetwork(NETWORK)
@@ -63,9 +64,11 @@ public abstract class BaseTestContainersIT {
                     .withNetwork(NETWORK)
                     .withNetworkAliases(DB_SERVICE)
                     .dependsOn(KEYCLOAK_CONTAINER);
+
     private static final GenericContainer<?> API_CONTAINER =
             new GenericContainer<>(API_IMAGE_NAME + ":" + API_IMAGE_VERSION)
                     .withEnv(KEYCLOAK_SERVER_URL_KEY, KEYCLOAK_SERVER_URL)
+                    .withEnv(SPRING_DATASOURCE_URL_KEY, DB_DATASOURCE_URL)
                     .withExposedPorts(API_PORT)
                     .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(API_SERVICE))
                     .withNetwork(NETWORK)
@@ -88,7 +91,6 @@ public abstract class BaseTestContainersIT {
 
     @BeforeAll
     public static void onBeforeAll() {
-        String path = System.getProperty("user.dir");
         KEYCLOAK_CONTAINER.start();
         keycloakClients = new KeycloakClients(KEYCLOAK_CONTAINER.getAuthServerUrl());
     }
