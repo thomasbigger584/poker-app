@@ -2,11 +2,12 @@ package com.twb.stomplib.connection.impl;
 
 import com.twb.stomplib.dto.LifecycleEvent;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
-import io.reactivex.annotations.NonNull;
 import io.reactivex.annotations.Nullable;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
@@ -20,7 +21,7 @@ public class OkHttpConnectionProvider extends AbstractConnectionProvider {
     public static final String TAG = "OkHttpConnProvider";
 
     private final String mUri;
-    @NonNull
+    @NotNull
     private final Map<String, String> mConnectHttpHeaders;
     private final OkHttpClient mOkHttpClient;
 
@@ -51,7 +52,7 @@ public class OkHttpConnectionProvider extends AbstractConnectionProvider {
         openSocket = mOkHttpClient.newWebSocket(requestBuilder.build(),
                 new WebSocketListener() {
                     @Override
-                    public void onOpen(WebSocket webSocket, @NonNull Response response) {
+                    public void onOpen(@NotNull WebSocket webSocket, @NotNull Response response) {
                         LifecycleEvent openEvent = new LifecycleEvent(LifecycleEvent.Type.OPENED);
 
                         TreeMap<String, String> headersAsMap = headersAsMap(response);
@@ -61,23 +62,23 @@ public class OkHttpConnectionProvider extends AbstractConnectionProvider {
                     }
 
                     @Override
-                    public void onMessage(WebSocket webSocket, String text) {
+                    public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
                         emitMessage(text);
                     }
 
                     @Override
-                    public void onMessage(WebSocket webSocket, @NonNull ByteString bytes) {
+                    public void onMessage(@NotNull WebSocket webSocket, @NotNull ByteString bytes) {
                         emitMessage(bytes.utf8());
                     }
 
                     @Override
-                    public void onClosed(WebSocket webSocket, int code, String reason) {
+                    public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
                         openSocket = null;
                         emitLifecycleEvent(new LifecycleEvent(LifecycleEvent.Type.CLOSED));
                     }
 
                     @Override
-                    public void onFailure(WebSocket webSocket, Throwable t, Response response) {
+                    public void onFailure(@NotNull WebSocket webSocket, Throwable t, Response response) {
                         // in OkHttp, a Failure is equivalent to a JWS-Error *and* a JWS-Close
                         emitLifecycleEvent(new LifecycleEvent(LifecycleEvent.Type.ERROR, new Exception(t)));
                         openSocket = null;
@@ -85,7 +86,7 @@ public class OkHttpConnectionProvider extends AbstractConnectionProvider {
                     }
 
                     @Override
-                    public void onClosing(final WebSocket webSocket, final int code, final String reason) {
+                    public void onClosing(@NotNull final WebSocket webSocket, final int code, @NotNull final String reason) {
                         webSocket.close(code, reason);
                     }
                 }
@@ -104,8 +105,8 @@ public class OkHttpConnectionProvider extends AbstractConnectionProvider {
         return openSocket;
     }
 
-    @NonNull
-    private TreeMap<String, String> headersAsMap(@NonNull Response response) {
+    @NotNull
+    private TreeMap<String, String> headersAsMap(@NotNull Response response) {
         TreeMap<String, String> headersAsMap = new TreeMap<>();
         Headers headers = response.headers();
         for (String key : headers.names()) {
@@ -114,7 +115,7 @@ public class OkHttpConnectionProvider extends AbstractConnectionProvider {
         return headersAsMap;
     }
 
-    private void addConnectionHeadersToBuilder(@NonNull Request.Builder requestBuilder, @NonNull Map<String, String> mConnectHttpHeaders) {
+    private void addConnectionHeadersToBuilder(@NotNull Request.Builder requestBuilder, @NotNull Map<String, String> mConnectHttpHeaders) {
         for (Map.Entry<String, String> headerEntry : mConnectHttpHeaders.entrySet()) {
             requestBuilder.addHeader(headerEntry.getKey(), headerEntry.getValue());
         }

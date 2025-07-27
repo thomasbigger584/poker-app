@@ -1,0 +1,75 @@
+{
+  "users": [
+    {
+      "name": "admin",
+      "password_hash": "6pu6t5LDIp61JKYlBqvrFSFh/hZaySg5pAcez91qe1gpYt0W",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": "administrator"
+    }
+  ],
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "admin",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "exchanges": [
+  ],
+  "queues": [
+    {
+      "name": "app.keycloak",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "app.keycloak.user.create",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "app.keycloak.user.register",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "amq.topic",
+      "vhost": "/",
+      "destination": "app.keycloak",
+      "destination_type": "queue",
+      "routing_key": "KK.EVENT.#",
+      "arguments": {}
+    },
+    {
+      "source": "amq.topic",
+      "vhost": "/",
+      "destination": "app.keycloak.user.create",
+      "destination_type": "queue",
+      "routing_key": "KK.EVENT.ADMIN.poker-app-realm.SUCCESS.USER.CREATE",
+      "arguments": {}
+    },
+    {
+      "source": "amq.topic",
+      "vhost": "/",
+      "destination": "app.keycloak.user.register",
+      "destination_type": "queue",
+      "routing_key": "KK.EVENT.CLIENT.poker-app-realm.SUCCESS.poker-game-android-client.REGISTER",
+      "arguments": {}
+    }
+  ]
+}

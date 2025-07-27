@@ -30,7 +30,7 @@ public class WebSocketClient {
     private static final String TAG = WebSocketClient.class.getSimpleName();
 
     private static final String PROTOCOL = "ws://";
-    private static final String WEBSOCKET_ENDPOINT = "/looping/websocket";
+    private static final String WEBSOCKET_ENDPOINT = "/api/looping/websocket";
     private static final int CLIENT_HEARTBEAT_MS = 1000;
     private static final int SERVER_HEARTBEAT_MS = 1000;
     private static final String TOPIC_PREFIX = "/topic/loops.";
