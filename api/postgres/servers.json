@@ -1,0 +1,24 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "App",
+      "Group": "poker-app",
+      "Host": "poker-app.taila8b6c7.ts.net",
+      "Port": 5432,
+      "MaintenanceDB": "db",
+      "Username": "root",
+      "SSLMode": "prefer",
+      "PassFile": "/tmp/pgpass"
+    },
+    "2": {
+      "Name": "Keycloak",
+      "Group": "poker-app",
+      "Host": "poker-app.taila8b6c7.ts.net",
+      "Port": 5432,
+      "MaintenanceDB": "keycloak",
+      "Username": "keycloak",
+      "SSLMode": "prefer",
+      "PassFile": "/tmp/pgpass"
+    }
+  }
+}

@@ -66,7 +66,7 @@ public class PokerTableAdapter extends RecyclerView.Adapter<PokerTableAdapter.Vi
         void onPokerTableClicked(TableDTO pokerTable);
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends RecyclerView.ViewHolder {
         private final TextView nameTextView;
         private final TextView gameTypeTextView;
 

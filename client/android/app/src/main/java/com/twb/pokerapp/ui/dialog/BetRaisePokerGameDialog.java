@@ -95,7 +95,7 @@ public class BetRaisePokerGameDialog extends BasePokerGameDialog {
 
     private double round(double amount) {
         String amountStr = String.format(Locale.getDefault(), "%.2f", amount);
-        return Double.valueOf(amountStr);
+        return Double.parseDouble(amountStr);
     }
 
     public interface BetRaiseClickListener {
