@@ -1,9 +1,8 @@
+env/.secrets.env
+
 # Created by https://www.toptal.com/developers/gitignore/api/java,maven,c++,intellij+all
 # Edit at https://www.toptal.com/developers/gitignore?templates=java,maven,c++,intellij+all
 
-### C++ ###
-# Prerequisites
-*.d
 
 # Compiled Object files
 *.slo
@@ -137,7 +136,6 @@ fabric.properties
 .mtj.tmp/
 
 # Package Files #
-*.jar
 *.war
 *.nar
 *.ear

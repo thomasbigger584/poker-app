@@ -55,6 +55,7 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
         PlayersServerMessages messages = runner.run(getPlayers(turnHandlers))
                 .getByNumberOfRounds(params.getNumberOfRounds());
         System.out.println("messages = " + messages);
+        //todo: do assertions on messages
     }
 
     @Test
@@ -66,6 +67,7 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
         PlayersServerMessages messages = runner.run(getPlayers(turnHandlers))
                 .getByNumberOfRounds(params.getNumberOfRounds());
         System.out.println("messages = " + messages);
+        //todo: do assertions on messages
     }
 
 //    @Test

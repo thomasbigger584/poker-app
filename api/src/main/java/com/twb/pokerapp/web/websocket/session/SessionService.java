@@ -21,15 +21,11 @@ public class SessionService {
     // *****************************************************************************************
 
     public void putConnectionType(StompHeaderAccessor headerAccessor, ConnectionType connectionType) {
-        Map<String, Object> sessionAttributes = getSessionAttributes(headerAccessor);
-        sessionAttributes.put(SESSION_CONNECTION_TYPE, connectionType);
-        headerAccessor.setSessionAttributes(sessionAttributes);
+        put(headerAccessor, SESSION_CONNECTION_TYPE, connectionType);
     }
 
     public void putPokerTableId(StompHeaderAccessor headerAccessor, UUID tableId) {
-        Map<String, Object> sessionAttributes = getSessionAttributes(headerAccessor);
-        sessionAttributes.put(SESSION_POKER_TABLE_ID, tableId);
-        headerAccessor.setSessionAttributes(sessionAttributes);
+        put(headerAccessor, SESSION_POKER_TABLE_ID, tableId);
     }
 
     // *****************************************************************************************
@@ -54,6 +50,12 @@ public class SessionService {
             sessionAttributes = new HashMap<>();
         }
         return sessionAttributes;
+    }
+
+    private void put(StompHeaderAccessor headerAccessor, String key, Object value) {
+        Map<String, Object> sessionAttributes = getSessionAttributes(headerAccessor);
+        sessionAttributes.put(key, value);
+        headerAccessor.setSessionAttributes(sessionAttributes);
     }
 
     @SuppressWarnings("unchecked")
