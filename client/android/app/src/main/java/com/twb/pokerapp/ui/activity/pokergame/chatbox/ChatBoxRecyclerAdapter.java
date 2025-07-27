@@ -48,7 +48,7 @@ public class ChatBoxRecyclerAdapter extends RecyclerView.Adapter<ChatBoxRecycler
         layoutManager.scrollToPosition(items.size() - 1);
     }
 
-    static class ChatBoxViewHolder extends RecyclerView.ViewHolder {
+    public static class ChatBoxViewHolder extends RecyclerView.ViewHolder {
         final TextView chatBoxItemTextView;
 
         ChatBoxViewHolder(View view) {

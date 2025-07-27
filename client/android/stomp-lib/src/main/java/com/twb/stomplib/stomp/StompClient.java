@@ -40,13 +40,13 @@ public class StompClient {
 
     private PublishSubject<StompMessage> messageStream;
     private BehaviorSubject<Boolean> connectionStream;
-    private ConcurrentHashMap<String, Flowable<StompMessage>> streamMap;
+    private final ConcurrentHashMap<String, Flowable<StompMessage>> streamMap;
     private PathMatcher pathMatcher;
     private Disposable lifecycleDisposable;
     private Disposable messagesDisposable;
-    private PublishSubject<LifecycleEvent> lifecyclePublishSubject;
+    private final PublishSubject<LifecycleEvent> lifecyclePublishSubject;
     private List<StompHeader> headers;
-    private HeartBeatTask heartBeatTask;
+    private final HeartBeatTask heartBeatTask;
 
     public StompClient(ConnectionProvider connectionProvider) {
         this.connectionProvider = connectionProvider;

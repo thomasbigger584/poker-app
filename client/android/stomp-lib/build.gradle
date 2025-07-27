@@ -4,11 +4,11 @@ plugins {
 
 android {
     namespace 'com.twb.stomplib'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         minSdk 19
-        targetSdk 34
+        targetSdk 35
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -23,7 +23,7 @@ android {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
     }
-    buildToolsVersion '34.0.0'
+    buildToolsVersion '35.0.0'
 }
 
 dependencies {
@@ -31,6 +31,6 @@ dependencies {
     compileOnly 'org.java-websocket:Java-WebSocket:1.5.4'
     compileOnly 'com.squareup.okhttp3:okhttp:4.11.0'
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
 }

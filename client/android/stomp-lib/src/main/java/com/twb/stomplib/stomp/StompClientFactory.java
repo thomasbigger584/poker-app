@@ -5,6 +5,8 @@ import android.util.Log;
 import com.twb.stomplib.connection.ConnectionProvider;
 import com.twb.stomplib.connection.impl.OkHttpConnectionProvider;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,8 +46,9 @@ public class StompClientFactory {
             this.accessToken = accessToken;
         }
 
+        @NotNull
         @Override
-        public Response intercept(Chain chain) throws IOException {
+        public Response intercept(@NotNull Chain chain) throws IOException {
             Request.Builder builder = chain.request().newBuilder();
 
             Log.i(TAG, "websocket intercept: token: " + accessToken);

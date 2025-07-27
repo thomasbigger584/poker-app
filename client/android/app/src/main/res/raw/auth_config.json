@@ -3,7 +3,7 @@
   "redirect_uri": "com.twb.pokerapp:/oauth2redirect",
   "end_session_redirect_uri": "com.twb.pokerapp:/oauth2redirect",
   "authorization_scope": "openid email profile",
-  "discovery_uri": "http://keycloak.twbdev.site/realms/poker-app/.well-known/openid-configuration",
+  "discovery_uri": "http://poker-app.taila8b6c7.ts.net/auth/realms/poker-app/.well-known/openid-configuration",
   "authorization_endpoint_uri": "",
   "token_endpoint_uri": "",
   "registration_endpoint_uri": "",
