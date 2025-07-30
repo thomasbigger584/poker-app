@@ -1,0 +1,11 @@
+name: 'rabbitmq'
+services:
+  rabbitmq-base:
+    build: .
+    container_name: rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "status" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s

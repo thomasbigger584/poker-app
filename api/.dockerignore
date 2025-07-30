@@ -4,3 +4,4 @@ mvnw.cmd
 .idea/
 .gitignore
 src/main/test/
+docker-compose.yml

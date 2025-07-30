@@ -20,8 +20,9 @@ public abstract class BaseTestContainersIT {
 
     // Keycloak Constants
     private static final String KEYCLOAK_SERVICE = "keycloak";
-    private static final String KEYCLOAK_HOSTNAME_URL_KEY = "KC_HOSTNAME_URL";
     private static final int KEYCLOAK_PORT = 8080;
+    private static final String KEYCLOAK_REALM_JSON = "keycloak-realm.json";
+    private static final String KEYCLOAK_HOSTNAME_URL_KEY = "KC_HOSTNAME_URL";
     private static final String KEYCLOAK_SERVER_URL = String.format("http://%s:%d", KEYCLOAK_SERVICE, KEYCLOAK_PORT);
 
     // DB Constants
@@ -47,7 +48,7 @@ public abstract class BaseTestContainersIT {
     private static final Network NETWORK = Network.newNetwork();
     private static final KeycloakContainer KEYCLOAK_CONTAINER =
             new KeycloakContainer()
-                    .withRealmImportFile("keycloak-realm.json")
+                    .withRealmImportFile(KEYCLOAK_REALM_JSON)
                     .withAdminUsername(KeycloakClients.ADMIN_USERNAME)
                     .withAdminPassword(KeycloakClients.ADMIN_PASSWORD)
                     .withNetwork(NETWORK)

@@ -1,0 +1,32 @@
+name: 'postgres'
+services:
+  postgres-base:
+    image: postgres:13.1-alpine
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/1-schema.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U root -d db -h localhost -p 5432" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+  pgadmin-base:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: thomas@pokerapp.com
+      PGADMIN_DEFAULT_PASSWORD: password
+      PGADMIN_LISTEN_PORT: 5050
+      PGADMIN_OPTIONS: "--script-name /pgadmin"
+      TZ: Europe/London
+      PGPASSFILE: /tmp/pgpass
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./servers.json:/pgadmin4/servers.json
+      - ./pgpass:/tmp/pgpass:ro

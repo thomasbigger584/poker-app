@@ -1,142 +1,73 @@
+name: 'poker-app'
+
+# --- Common ---
+x-logging: &logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "5k"
+      max-file: "5"
+      compress: "true"
+
+x-network: &network
+  network_mode: service:tailscale
+
+x-common-extra: &common-extra
+  restart: always
+
 services:
+
+  # --- Network ---
   tailscale:
-    image: tailscale/tailscale:latest
-    container_name: tailscale
-    hostname: poker-app
-    volumes:
-      - tailscale_data:/var/lib/tailscale
-      - /dev/net/tun:/dev/net/tun
-    env_file:
-      - ./env/.secrets.env
-    cap_add:
-      - NET_ADMIN
-      - NET_RAW
-    environment:
-      - TS_HOSTNAME=poker-app
-      - TS_STATE_DIR=/var/lib/tailscale
-      - TS_USERSPACE=true
-      - TS_ADVERTISE_ROUTES=
-      - TS_EPHEMERAL=false
-      - TS_EXTRA_ARGS=--accept-routes --shields-up=false
-      - TS_EPHEMERAL=false
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "/usr/local/bin/tailscale status | grep 'poker-app' > /dev/null || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
-
-
-
+    extends:
+      file: tailscale/docker-compose.yml
+      service: tailscale-base
+    <<: [ *logging, *common-extra ]
   nginx:
-    image: nginx:latest
-    container_name: nginx
-    network_mode: service:tailscale
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./nginx/html:/usr/share/nginx/html:ro
+    extends:
+      file: nginx/docker-compose.yml
+      service: nginx-base
     depends_on:
       tailscale:
         condition: service_healthy
-    restart: unless-stopped
+    <<: [ *logging, *network, *common-extra ]
 
 
-
+  # --- Database ---
   postgres:
-    image: postgres:13.1-alpine
-    container_name: postgres
-    environment:
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=db
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./postgres/init.sql:/docker-entrypoint-initdb.d/1-schema.sql
+    extends:
+      file: postgres/docker-compose.yml
+      service: postgres-base
     depends_on:
       tailscale:
         condition: service_healthy
-    network_mode: service:tailscale
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U root -d db -h localhost -p 5432" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-
-
+    <<: [ *logging, *network, *common-extra ]
   pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: pgadmin
-    restart: unless-stopped
-    environment:
-      PGADMIN_DEFAULT_EMAIL: thomas@pokerapp.com
-      PGADMIN_DEFAULT_PASSWORD: password
-      PGADMIN_LISTEN_PORT: 5050
-      PGADMIN_OPTIONS: "--script-name /pgadmin"
-      TZ: Europe/London
-      PGPASSFILE: /tmp/pgpass
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-      - ./postgres/servers.json:/pgadmin4/servers.json
-      - ./postgres/pgpass:/tmp/pgpass:ro
+    extends:
+      file: postgres/docker-compose.yml
+      service: pgadmin-base
     depends_on:
       postgres:
         condition: service_healthy
-    network_mode: service:tailscale
+    <<: [ *logging, *network, *common-extra ]
 
 
-
+  # --- MQ ---
   rabbitmq:
-    build: rabbitmq
-    container_name: rabbitmq
-    restart: unless-stopped
+    extends:
+      file: rabbitmq/docker-compose.yml
+      service: rabbitmq-base
     depends_on:
       tailscale:
         condition: service_healthy
-    network_mode: service:tailscale
-    healthcheck:
-      test: [ "CMD", "rabbitmq-diagnostics", "status" ]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
+    <<: [ *logging, *network, *common-extra ]
 
 
-
+  # --- Auth ---
   keycloak:
-    build: keycloak
-    container_name: keycloak
-    restart: unless-stopped
-    environment:
-      # Keycloak Database Configuration
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://poker-app.taila8b6c7.ts.net:5432/keycloak
-      KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: password
-
-      # Keycloak Admin User
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_BOOTSTRAP_ADMIN_USERNAME: admin
-      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
-
-      # Keycloak Hostname Configuration
-      KC_HOSTNAME: http://poker-app.taila8b6c7.ts.net/auth
-      KC_HTTP_ENABLED: true
-      KC_HEALTH_ENABLED: true
-      KC_PROXY_HEADERS: xforwarded
-      KC_LOG_LEVEL: info
-
-      # RabbitMQ Configuration
-      KK_TO_RMQ_URL: poker-app.taila8b6c7.ts.net
-      KK_TO_RMQ_PORT: 5672
-      KK_TO_RMQ_VHOST: /
-      KK_TO_RMQ_EXCHANGE: amq.topic
-      KK_TO_RMQ_USERNAME: admin
-      KK_TO_RMQ_PASSWORD: admin
-      KK_TO_RMQ_USE_TLS: false
+    extends:
+      file: keycloak/docker-compose.yml
+      service: keycloak-base
     depends_on:
       tailscale:
         condition: service_healthy
@@ -144,20 +75,10 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-    command: [ "start-dev", "--import-realm", "--verbose" ]
-    volumes:
-      - ./keycloak/keycloak-realm.json:/opt/keycloak/data/import/realm.json
-      - ./keycloak/keycloak-to-rabbit-3.0.5.jar:/opt/keycloak/providers/keycloak-to-rabbit-3.0.5.jar
-    network_mode: service:tailscale
-    healthcheck:
-      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000;echo -e \"GET /health/ready HTTP/1.1\\r\\nHost: localhost:9000\\r\\nConnection: close\\r\\n\\r\\n\" >&3;grep \"200 OK\" <&3"]
-      interval: 30s
-      timeout: 5s
-      retries: 20
-      start_period: 300s # First run keycloak takes a long time to load
+    <<: [ *logging, *network, *common-extra ]
 
 
-
+  # --- App ---
   api:
     container_name: api
     build:
@@ -173,13 +94,8 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_healthy
-    network_mode: service:tailscale
+    <<: [ *logging, *network, *common-extra ]
 
-
-
-networks:
-  backend:
-    driver: bridge
 volumes:
   postgres_data:
     driver: local

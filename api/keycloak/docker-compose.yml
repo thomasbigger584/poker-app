@@ -1,0 +1,43 @@
+name: 'keycloak'
+services:
+  keycloak-base:
+    build: .
+    container_name: keycloak
+    environment:
+      # Keycloak Database Configuration
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://poker-app.taila8b6c7.ts.net:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: password
+
+      # Keycloak Admin User
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+
+      # Keycloak Hostname Configuration
+      KC_HOSTNAME: http://poker-app.taila8b6c7.ts.net/auth
+      KC_HTTP_ENABLED: true
+      KC_HEALTH_ENABLED: true
+      KC_PROXY_HEADERS: xforwarded
+      KC_LOG_LEVEL: info
+
+      # RabbitMQ Configuration
+      KK_TO_RMQ_URL: poker-app.taila8b6c7.ts.net
+      KK_TO_RMQ_PORT: 5672
+      KK_TO_RMQ_VHOST: /
+      KK_TO_RMQ_EXCHANGE: amq.topic
+      KK_TO_RMQ_USERNAME: admin
+      KK_TO_RMQ_PASSWORD: admin
+      KK_TO_RMQ_USE_TLS: false
+    command: [ "start-dev", "--import-realm", "--verbose" ]
+    volumes:
+      - ./keycloak-realm.json:/opt/keycloak/data/import/realm.json
+      - ./keycloak-to-rabbit-3.0.5.jar:/opt/keycloak/providers/keycloak-to-rabbit-3.0.5.jar
+    healthcheck:
+      test: [ "CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000;echo -e \"GET /health/ready HTTP/1.1\\r\\nHost: localhost:9000\\r\\nConnection: close\\r\\n\\r\\n\" >&3;grep \"200 OK\" <&3" ]
+      interval: 30s
+      timeout: 5s
+      retries: 20
+      start_period: 300s # First run keycloak takes a long time to load

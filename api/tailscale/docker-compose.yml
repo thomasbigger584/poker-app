@@ -1,0 +1,29 @@
+name: 'tailscale'
+services:
+  tailscale-base:
+    image: tailscale/tailscale:latest
+    container_name: tailscale
+    hostname: poker-app
+    volumes:
+      - tailscale_data:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    env_file:
+      - ../env/.secrets.env
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      - TS_HOSTNAME=poker-app
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=true
+      - TS_ADVERTISE_ROUTES=
+      - TS_EPHEMERAL=false
+      - TS_EXTRA_ARGS=--accept-routes --shields-up=false
+      - TS_EPHEMERAL=false
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "/usr/local/bin/tailscale status | grep 'poker-app' > /dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
