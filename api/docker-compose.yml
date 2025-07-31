@@ -13,7 +13,7 @@ x-network: &network
   network_mode: service:tailscale
 
 x-common-extra: &common-extra
-  restart: always
+  restart: on-failure
 
 services:
 
