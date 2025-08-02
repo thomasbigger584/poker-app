@@ -8,7 +8,7 @@ updates:
   - package-ecosystem: "maven"
     directory: "/api"
     schedule:
-      interval: "weekly"
+      interval: "daily"
   # - package-ecosystem: "gradle"
   #   directory: "/client/android"
   #   schedule:
