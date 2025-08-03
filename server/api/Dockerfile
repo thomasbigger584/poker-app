@@ -1,5 +1,5 @@
 # First stage: Build stage with JDK
-FROM eclipse-temurin:21-jdk-alpine as builder
+FROM eclipse-temurin:21-jdk-alpine AS builder
 
 ARG APP_VERSION_ARG
 ENV APP_VERSION=$APP_VERSION_ARG

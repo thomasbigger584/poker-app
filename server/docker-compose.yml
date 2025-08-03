@@ -80,13 +80,9 @@ services:
 
   # --- App ---
   api:
-    container_name: api
-    build:
-      context: .
-      args:
-        APP_VERSION_ARG: 0.0.1-SNAPSHOT
-    environment:
-      SPRING_PROFILES_ACTIVE: local
+    extends:
+      file: api/docker-compose.yml
+      service: api-base
     depends_on:
       postgres:
         condition: service_healthy
@@ -96,6 +92,7 @@ services:
         condition: service_healthy
     <<: [ *logging, *network, *common-extra ]
 
+  # --- App ---
 volumes:
   postgres_data:
     driver: local
