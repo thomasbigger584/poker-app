@@ -12,11 +12,11 @@ on:
   push:
     branches: [ "master" ]
     paths:
-      - "api/**"
+      - "server/api/**"
   pull_request:
     branches: [ "master" ]
     paths:
-      - "api/**"
+      - "server/api/**"
 
 jobs:
   build:
@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./api
+        working-directory: ./server/api
 
     steps:
       - name: Checkout
