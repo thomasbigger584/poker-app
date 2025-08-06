@@ -181,6 +181,7 @@ public abstract class GameThread extends BaseGameThread {
         interruptRound.set(false);
         foldedPlayers.clear();
         shuffleCards();
+        checkRoundInterrupted();
         onInitRound();
     }
 

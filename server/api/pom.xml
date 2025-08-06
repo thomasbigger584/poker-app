@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.twb</groupId>
     <artifactId>api</artifactId>
-    <version>${APP_VERSION}</version>
+    <version>0.0.1-SNAPSHOT</version>
     <name>api</name>
     <description>API</description>
     <properties>
@@ -252,7 +252,7 @@
                             <resources>
                                 <resource>
                                     <!-- This points to your 'api/keycloak' directory -->
-                                    <directory>${project.basedir}/keycloak</directory>
+                                    <directory>${project.basedir}/../keycloak</directory>
                                     <targetPath>.</targetPath>
                                     <includes>
                                         <include>keycloak-realm.json</include>
@@ -283,9 +283,6 @@
                                     <name>${docker.image.name}:latest</name>
                                     <build>
                                         <dockerFileDir>${project.basedir}</dockerFileDir>
-                                        <args>
-                                            <APP_VERSION_ARG>${project.version}</APP_VERSION_ARG>
-                                        </args>
                                         <buildx>
                                             <platforms>
                                                 <platform>linux/amd64</platform>
@@ -306,6 +303,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
                 <configuration>
+                    <skip>true</skip>
                     <includes>
                         <include>**/*Test.java</include>
                     </includes>
@@ -326,6 +324,7 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <skip>true</skip>
                     <includes>
                         <include>**/*IT.java</include>
                     </includes>

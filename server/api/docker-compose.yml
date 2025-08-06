@@ -4,5 +4,3 @@ services:
     container_name: api
     build:
       context: .
-      args:
-        APP_VERSION_ARG: 0.0.1-SNAPSHOT

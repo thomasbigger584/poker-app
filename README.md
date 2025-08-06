@@ -9,21 +9,14 @@
 
 ### API Usage
 
-#### Secret Environment
-
-- Create file in `api/env/.secrets.env` with these keys, along with provided secret information.
-```
-TS_AUTHKEY=
-```
-- This file is git ignored for security reasons.
-
 #### Tailscale
 
 - Create a Tailscale Auth Key: https://login.tailscale.com/admin/settings/keys
 - Make it Reusable, and not ephemeral. Give it the highest expiration.
-- Place the Auth Key in secret environment file under the key `TS_AUTHKEY`
-- Remove any machine in the tailnet with name `poker-app`. Ensure once the application starts that no additional
-  machines are created.
+- Create file in `api/env/.secrets.env` with this auth key with contents such as:
+```
+TS_AUTHKEY=
+```
 
 #### Starting Application
 
@@ -31,6 +24,14 @@ TS_AUTHKEY=
 $ cd api
 $ docker compose up --build
 ```
+
+#### Running Blackbox Tests
+
+- For running the blackbox tests such as `TexasHoldemGameIT` ensure that the maven goal `process-test-resources` runs first. 
+- This will ensure the required configuration files are in the test classpath before running the containers. 
+- For example: the actual keycloak realm configuration will be used in the tests so as to keep as production-like as possible.
+- Opening the `server/api` in intellij, there will be a saved example run stored in the `runConfigurations`.
+- Another option is to delegate 
 
 ## Client Usage
 
