@@ -42,4 +42,4 @@ jobs:
           distribution: 'temurin'
           cache: maven
       - name: Build with Maven
-        run: DOCKER_BUILDKIT=1 ./mvnw --no-transfer-progress clean verify
+        run: DOCKER_BUILDKIT=1 ./mvnw --no-transfer-progress clean verify -P run-tests

@@ -16,7 +16,7 @@ ENV EVALUATOR_SO_PATH=/app/src/main/cpp/evaluator.so
 RUN g++ -shared -o $EVALUATOR_SO_PATH /app/src/main/cpp/* -I $JAVA_HOME/include -I $JAVA_HOME/include/linux
 
 # Build Java application
-RUN --mount=type=cache,target=~/.m2 ./mvnw --no-transfer-progress package -DskipTests
+RUN --mount=type=cache,target=~/.m2 ./mvnw --no-transfer-progress package
 
 # Second stage: Runtime stage with JRE
 FROM eclipse-temurin:21-jre-alpine

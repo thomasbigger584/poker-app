@@ -5,6 +5,8 @@
 
 ![logo.png](images/logo.png)
 
+---
+
 ## Server Usage
 
 ### API Usage
@@ -25,13 +27,26 @@ $ cd api
 $ docker compose up --build
 ```
 
-#### Running Blackbox Tests
+#### Running Tests
 
-- For running the blackbox tests such as `TexasHoldemGameIT` ensure that the maven goal `process-test-resources` runs first. 
+#### CLI
+
+- Using the `run-tests` maven profile it will run the tests
+```
+$ ./mvnw clean verify -P run-tests
+```
+
+#### Running Blackbox Tests in Intellij
+
+- For running the blackbox tests such as `TexasHoldemGameIT`
+- Docker must already be running on your machine.
+- Ensure that the maven goal `process-test-resources` runs before the test. 
 - This will ensure the required configuration files are in the test classpath before running the containers. 
 - For example: the actual keycloak realm configuration will be used in the tests so as to keep as production-like as possible.
 - Opening the `server/api` in intellij, there will be a saved example run stored in the `runConfigurations`.
-- Another option is to delegate 
+- Another option is to delegate the intellij runner to maven which will happen automatically.
+
+---
 
 ## Client Usage
 
@@ -42,9 +57,13 @@ $ docker compose up --build
 - For testing multiplayer, install Genymotion and setup 2 virtual devices. Can then build and run to multiple devices
   from Android Studio.
 
+---
+
 ## Architecture
 
 ![PokerApp-Architecture.png](images/PokerApp-Architecture.png)
+
+---
 
 #### Consumer Mobile App
 
@@ -97,3 +116,5 @@ $ docker compose up --build
 #### PostgresQL (PSQL)
 
 - The database of choice for storing both the keycloak persistence data and backend app persistence data.
+
+---
