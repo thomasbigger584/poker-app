@@ -17,11 +17,15 @@ services:
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
 
       # Keycloak Hostname Configuration
-      KC_HOSTNAME: http://poker-app.taila8b6c7.ts.net/auth
+      KC_HOSTNAME: http://poker-app.taila8b6c7.ts.net
+      KC_HTTP_RELATIVE_PATH: /auth
+#      KC_HOSTNAME_STRICT: false
+      KC_PROXY_HEADERS: xforwarded
+
+      KC_HOSTNAME_DEBUG: true
       KC_HTTP_ENABLED: true
       KC_HEALTH_ENABLED: true
-      KC_PROXY_HEADERS: xforwarded
-      KC_LOG_LEVEL: info
+      KC_LOG_LEVEL: INFO
 
       # RabbitMQ Configuration
       KK_TO_RMQ_URL: poker-app.taila8b6c7.ts.net
@@ -33,7 +37,7 @@ services:
       KK_TO_RMQ_USE_TLS: false
     command: [ "start-dev", "--import-realm", "--verbose" ]
     volumes:
-      - ./keycloak-realm.json:/opt/keycloak/data/import/realm.json
+      - ./poker-app-realm.json:/opt/keycloak/data/import/poker-app-realm.json
       - ./keycloak-to-rabbit-3.0.5.jar:/opt/keycloak/providers/keycloak-to-rabbit-3.0.5.jar
     healthcheck:
       test: [ "CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000;echo -e \"GET /health/ready HTTP/1.1\\r\\nHost: localhost:9000\\r\\nConnection: close\\r\\n\\r\\n\" >&3;grep \"200 OK\" <&3" ]

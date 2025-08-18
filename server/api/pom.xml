@@ -255,7 +255,7 @@
                                     <directory>${project.basedir}/../keycloak</directory>
                                     <targetPath>.</targetPath>
                                     <includes>
-                                        <include>keycloak-realm.json</include>
+                                        <include>poker-app-realm.json</include>
                                     </includes>
                                 </resource>
                             </resources>

@@ -46,7 +46,12 @@ class HandTypeEvaluatorTest {
                 Arguments.of("Two Pair", createTwoPair(), HandType.TWO_PAIR),
                 Arguments.of("Pair", createOnePair(), HandType.PAIR),
                 Arguments.of("High Card", createHighCard(), HandType.HIGH_CARD),
-                Arguments.of("Empty Hand", Collections.emptyList(), HandType.EMPTY_HAND)
+                Arguments.of("Empty Hand", Collections.emptyList(), HandType.EMPTY_HAND),
+                Arguments.of("Three Pairs", createHandWithThreePairs(), HandType.TWO_PAIR),
+                Arguments.of("Three of a Kind and Pair", createFullHouseFromThreeOfAKindAndPair(), HandType.FULL_HOUSE),
+                Arguments.of("Straight with Pair", createStraightWithAPair(), HandType.STRAIGHT),
+                Arguments.of("Flush with lower cards", createFlushWithLowerCards(), HandType.FLUSH),
+                Arguments.of("High card with Ace kicker", createHighCardAceKicker(), HandType.HIGH_CARD)
         );
     }
 }

@@ -1,19 +1,17 @@
 name: 'poker-app'
 
 # --- Common ---
-x-logging: &logging
+x-network: &network
+  network_mode: service:tailscale
+
+x-common-extra: &common-extra
+  restart: on-failure
   logging:
     driver: "json-file"
     options:
       max-size: "5k"
       max-file: "5"
       compress: "true"
-
-x-network: &network
-  network_mode: service:tailscale
-
-x-common-extra: &common-extra
-  restart: on-failure
 
 services:
 
@@ -22,7 +20,7 @@ services:
     extends:
       file: tailscale/docker-compose.yml
       service: tailscale-base
-    <<: [ *logging, *common-extra ]
+    <<: [ *common-extra ]
   nginx:
     extends:
       file: nginx/docker-compose.yml
@@ -30,7 +28,7 @@ services:
     depends_on:
       tailscale:
         condition: service_healthy
-    <<: [ *logging, *network, *common-extra ]
+    <<: [ *network, *common-extra ]
 
 
   # --- Database ---
@@ -41,7 +39,7 @@ services:
     depends_on:
       tailscale:
         condition: service_healthy
-    <<: [ *logging, *network, *common-extra ]
+    <<: [ *network, *common-extra ]
   pgadmin:
     extends:
       file: postgres/docker-compose.yml
@@ -49,7 +47,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    <<: [ *logging, *network, *common-extra ]
+    <<: [ *network, *common-extra ]
 
 
   # --- MQ ---
@@ -60,7 +58,7 @@ services:
     depends_on:
       tailscale:
         condition: service_healthy
-    <<: [ *logging, *network, *common-extra ]
+    <<: [ *network, *common-extra ]
 
 
   # --- Auth ---
@@ -75,7 +73,7 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-    <<: [ *logging, *network, *common-extra ]
+    <<: [ *network, *common-extra ]
 
 
   # --- App ---
@@ -90,9 +88,9 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_healthy
-    <<: [ *logging, *network, *common-extra ]
+    <<: [ *network, *common-extra ]
 
-  # --- App ---
+  # --- Volumes ---
 volumes:
   postgres_data:
     driver: local
