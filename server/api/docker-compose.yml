@@ -2,5 +2,6 @@ name: 'api'
 services:
   api-base:
     container_name: api
+    image: com.twb.pokerapp/api
     build:
       context: .
