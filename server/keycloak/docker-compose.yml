@@ -6,7 +6,7 @@ services:
     environment:
       # Keycloak Database Configuration
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://poker-app.taila8b6c7.ts.net:5432/keycloak
+      KC_DB_URL: jdbc:postgresql://localhost:5432/keycloak
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: password
 
@@ -18,13 +18,17 @@ services:
 
       # Keycloak Hostname Configuration
       KC_HOSTNAME: http://poker-app.taila8b6c7.ts.net/auth
+      KC_PROXY_HEADERS: xforwarded
+      KC_HTTP_RELATIVE_PATH: /auth
+#      KC_HOSTNAME_STRICT: false
+
+      KC_HOSTNAME_DEBUG: true
       KC_HTTP_ENABLED: true
       KC_HEALTH_ENABLED: true
-      KC_PROXY_HEADERS: xforwarded
-      KC_LOG_LEVEL: info
+      KC_LOG_LEVEL: INFO
 
       # RabbitMQ Configuration
-      KK_TO_RMQ_URL: poker-app.taila8b6c7.ts.net
+      KK_TO_RMQ_URL: localhost
       KK_TO_RMQ_PORT: 5672
       KK_TO_RMQ_VHOST: /
       KK_TO_RMQ_EXCHANGE: amq.topic
@@ -33,10 +37,10 @@ services:
       KK_TO_RMQ_USE_TLS: false
     command: [ "start-dev", "--import-realm", "--verbose" ]
     volumes:
-      - ./keycloak-realm.json:/opt/keycloak/data/import/realm.json
+      - ./poker-app-realm.json:/opt/keycloak/data/import/poker-app-realm.json
       - ./keycloak-to-rabbit-3.0.5.jar:/opt/keycloak/providers/keycloak-to-rabbit-3.0.5.jar
     healthcheck:
-      test: [ "CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000;echo -e \"GET /health/ready HTTP/1.1\\r\\nHost: localhost:9000\\r\\nConnection: close\\r\\n\\r\\n\" >&3;grep \"200 OK\" <&3" ]
+      test: [ "CMD-SHELL", "{ printf 'HEAD /auth/health/ready HTTP/1.0\r\n\r\n' >&0; grep 'HTTP/1.0 200'; } 0<>/dev/tcp/localhost/9000" ]
       interval: 30s
       timeout: 5s
       retries: 20

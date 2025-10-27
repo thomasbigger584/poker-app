@@ -1,5 +1,7 @@
 keycloak:
-  server-url: http://poker-app.taila8b6c7.ts.net/auth
+  server-url:
+    internal: http://localhost:8080/auth
+    external: http://poker-app.taila8b6c7.ts.net/auth
   realm: poker-app
   client-id: poker-game-api-client
   username: admin
@@ -16,15 +18,15 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${keycloak.server-url}/realms/${keycloak.realm}
-          jwk-set-uri: ${keycloak.server-url}/realms/${keycloak.realm}/protocol/openid-connect/certs
+          issuer-uri: ${keycloak.server-url.external}/realms/${keycloak.realm}
+          jwk-set-uri: ${keycloak.server-url.external}/realms/${keycloak.realm}/protocol/openid-connect/certs
   rabbitmq:
-    host: rabbitmq
+    host: localhost
     port: 5672
     username: admin
     password: admin
   datasource:
-    url: jdbc:postgresql://poker-app.taila8b6c7.ts.net:5432/db
+    url: jdbc:postgresql://localhost:5432/db
     driver-class-name: org.postgresql.Driver
     username: root
     password: password

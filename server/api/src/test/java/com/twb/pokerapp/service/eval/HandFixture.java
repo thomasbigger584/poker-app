@@ -6,202 +6,269 @@ import com.twb.pokerapp.domain.enumeration.SuitType;
 import com.twb.pokerapp.exception.NotFoundException;
 import com.twb.pokerapp.service.game.DeckOfCardsFactory;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class HandFixture {
 
+    private static final Map<String, Card> DECK_MAP = DeckOfCardsFactory.getCards(false).stream()
+            .collect(Collectors.toUnmodifiableMap(card -> card.getRankType().toString() + card.getSuitType().toString(), Function.identity()));
+
     public static List<Card> createRoyalFlush() {
-        List<Card> cardList = new ArrayList<>();
         SuitType suit = SuitType.HEARTS;
-        cardList.add(findCard(RankType.TEN, suit));
-        cardList.add(findCard(RankType.JACK, suit));
-        cardList.add(findCard(RankType.QUEEN, suit));
-        cardList.add(findCard(RankType.KING, suit));
-        cardList.add(findCard(RankType.ACE, suit));
-        cardList.add(findCard(RankType.EIGHT, SuitType.SPADES));
-        cardList.add(findCard(RankType.TEN, SuitType.DIAMONDS));
-        return cardList;
+        return List.of(
+                findCard(RankType.TEN, suit),
+                findCard(RankType.JACK, suit),
+                findCard(RankType.QUEEN, suit),
+                findCard(RankType.KING, suit),
+                findCard(RankType.ACE, suit),
+                findCard(RankType.EIGHT, SuitType.SPADES),
+                findCard(RankType.TEN, SuitType.DIAMONDS)
+        );
     }
 
     public static List<Card> createUpperStraightFlush() {
-        List<Card> cardList = new ArrayList<>();
         SuitType suit = SuitType.CLUBS;
-        cardList.add(findCard(RankType.NINE, suit));
-        cardList.add(findCard(RankType.TEN, suit));
-        cardList.add(findCard(RankType.JACK, suit));
-        cardList.add(findCard(RankType.QUEEN, suit));
-        cardList.add(findCard(RankType.KING, suit));
-        cardList.add(findCard(RankType.DEUCE, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.TREY, SuitType.SPADES));
-        return cardList;
+        return List.of(
+                findCard(RankType.NINE, suit),
+                findCard(RankType.TEN, suit),
+                findCard(RankType.JACK, suit),
+                findCard(RankType.QUEEN, suit),
+                findCard(RankType.KING, suit),
+                findCard(RankType.DEUCE, SuitType.DIAMONDS),
+                findCard(RankType.TREY, SuitType.SPADES)
+        );
     }
 
     public static List<Card> createStraightFlush() {
-        List<Card> cardList = new ArrayList<>();
         SuitType suit = SuitType.CLUBS;
-        cardList.add(findCard(RankType.FIVE, suit));
-        cardList.add(findCard(RankType.SIX, suit));
-        cardList.add(findCard(RankType.SEVEN, suit));
-        cardList.add(findCard(RankType.EIGHT, suit));
-        cardList.add(findCard(RankType.NINE, suit));
-        cardList.add(findCard(RankType.DEUCE, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.TREY, SuitType.SPADES));
-        return cardList;
+        return List.of(
+                findCard(RankType.FIVE, suit),
+                findCard(RankType.SIX, suit),
+                findCard(RankType.SEVEN, suit),
+                findCard(RankType.EIGHT, suit),
+                findCard(RankType.NINE, suit),
+                findCard(RankType.DEUCE, SuitType.DIAMONDS),
+                findCard(RankType.TREY, SuitType.SPADES)
+        );
     }
 
     public static List<Card> createLowerStraightFlush() {
-        List<Card> cardList = new ArrayList<>();
         SuitType suit = SuitType.CLUBS;
-        cardList.add(findCard(RankType.ACE, suit));
-        cardList.add(findCard(RankType.DEUCE, suit));
-        cardList.add(findCard(RankType.TREY, suit));
-        cardList.add(findCard(RankType.FOUR, suit));
-        cardList.add(findCard(RankType.FIVE, suit));
-        cardList.add(findCard(RankType.JACK, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.TEN, SuitType.SPADES));
-        return cardList;
+        return List.of(
+                findCard(RankType.ACE, suit),
+                findCard(RankType.DEUCE, suit),
+                findCard(RankType.TREY, suit),
+                findCard(RankType.FOUR, suit),
+                findCard(RankType.FIVE, suit),
+                findCard(RankType.JACK, SuitType.DIAMONDS),
+                findCard(RankType.TEN, SuitType.SPADES)
+        );
     }
 
     public static List<Card> createBothStraightAndFlush() {
-        List<Card> cardList = new ArrayList<>();
         SuitType suit = SuitType.CLUBS;
-        cardList.add(findCard(RankType.ACE, suit));
-        cardList.add(findCard(RankType.DEUCE, suit));
-        cardList.add(findCard(RankType.TREY, suit));
-        cardList.add(findCard(RankType.TEN, suit));
-        cardList.add(findCard(RankType.QUEEN, suit));
-        cardList.add(findCard(RankType.FOUR, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.FIVE, SuitType.SPADES));
-        return cardList;
+        return List.of(
+                findCard(RankType.ACE, suit),
+                findCard(RankType.DEUCE, suit),
+                findCard(RankType.TREY, suit),
+                findCard(RankType.TEN, suit),
+                findCard(RankType.QUEEN, suit),
+                findCard(RankType.FOUR, SuitType.DIAMONDS),
+                findCard(RankType.FIVE, SuitType.SPADES)
+        );
     }
 
     public static List<Card> createFourOfAKind() {
-        List<Card> cardList = new ArrayList<>();
-        cardList.add(findCard(RankType.NINE, SuitType.HEARTS));
-        cardList.add(findCard(RankType.NINE, SuitType.CLUBS));
-        cardList.add(findCard(RankType.NINE, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.NINE, SuitType.SPADES));
-        cardList.add(findCard(RankType.KING, SuitType.HEARTS));
-        cardList.add(findCard(RankType.DEUCE, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.TREY, SuitType.SPADES));
-        return cardList;
+        return List.of(
+                findCard(RankType.NINE, SuitType.HEARTS),
+                findCard(RankType.NINE, SuitType.CLUBS),
+                findCard(RankType.NINE, SuitType.DIAMONDS),
+                findCard(RankType.NINE, SuitType.SPADES),
+                findCard(RankType.KING, SuitType.HEARTS),
+                findCard(RankType.DEUCE, SuitType.DIAMONDS),
+                findCard(RankType.TREY, SuitType.SPADES)
+        );
     }
 
     public static List<Card> createFullHouse() {
-        List<Card> cardList = new ArrayList<>();
-        cardList.add(findCard(RankType.TEN, SuitType.HEARTS));
-        cardList.add(findCard(RankType.TEN, SuitType.CLUBS));
-        cardList.add(findCard(RankType.TEN, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.KING, SuitType.SPADES));
-        cardList.add(findCard(RankType.KING, SuitType.HEARTS));
-        cardList.add(findCard(RankType.DEUCE, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.TREY, SuitType.SPADES));
-        return cardList;
+        return List.of(
+                findCard(RankType.TEN, SuitType.HEARTS),
+                findCard(RankType.TEN, SuitType.CLUBS),
+                findCard(RankType.TEN, SuitType.DIAMONDS),
+                findCard(RankType.KING, SuitType.SPADES),
+                findCard(RankType.KING, SuitType.HEARTS),
+                findCard(RankType.DEUCE, SuitType.DIAMONDS),
+                findCard(RankType.TREY, SuitType.SPADES)
+        );
     }
 
     public static List<Card> createFlush() {
-        List<Card> cardList = new ArrayList<>();
-        cardList.add(findCard(RankType.DEUCE, SuitType.HEARTS));
-        cardList.add(findCard(RankType.FOUR, SuitType.HEARTS));
-        cardList.add(findCard(RankType.SIX, SuitType.HEARTS));
-        cardList.add(findCard(RankType.EIGHT, SuitType.HEARTS));
-        cardList.add(findCard(RankType.KING, SuitType.HEARTS));
-        return cardList;
+        return List.of(
+                findCard(RankType.DEUCE, SuitType.HEARTS),
+                findCard(RankType.FOUR, SuitType.HEARTS),
+                findCard(RankType.SIX, SuitType.HEARTS),
+                findCard(RankType.EIGHT, SuitType.HEARTS),
+                findCard(RankType.KING, SuitType.HEARTS),
+                findCard(RankType.ACE, SuitType.SPADES),
+                findCard(RankType.JACK, SuitType.CLUBS)
+        );
     }
 
     public static List<Card> createUpperStraight() {
-        List<Card> cardList = new ArrayList<>();
-        cardList.add(findCard(RankType.TEN, SuitType.HEARTS));
-        cardList.add(findCard(RankType.JACK, SuitType.CLUBS));
-        cardList.add(findCard(RankType.QUEEN, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.KING, SuitType.SPADES));
-        cardList.add(findCard(RankType.ACE, SuitType.HEARTS));
-        cardList.add(findCard(RankType.DEUCE, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.TREY, SuitType.SPADES));
-        return cardList;
+        return List.of(
+                findCard(RankType.TEN, SuitType.HEARTS),
+                findCard(RankType.JACK, SuitType.CLUBS),
+                findCard(RankType.QUEEN, SuitType.DIAMONDS),
+                findCard(RankType.KING, SuitType.SPADES),
+                findCard(RankType.ACE, SuitType.HEARTS),
+                findCard(RankType.DEUCE, SuitType.DIAMONDS),
+                findCard(RankType.TREY, SuitType.SPADES)
+        );
     }
 
     public static List<Card> createStraight() {
-        List<Card> cardList = new ArrayList<>();
-        cardList.add(findCard(RankType.FIVE, SuitType.HEARTS));
-        cardList.add(findCard(RankType.SIX, SuitType.CLUBS));
-        cardList.add(findCard(RankType.SEVEN, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.EIGHT, SuitType.SPADES));
-        cardList.add(findCard(RankType.NINE, SuitType.HEARTS));
-        cardList.add(findCard(RankType.DEUCE, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.TREY, SuitType.SPADES));
-        return cardList;
+        return List.of(
+                findCard(RankType.FIVE, SuitType.HEARTS),
+                findCard(RankType.SIX, SuitType.CLUBS),
+                findCard(RankType.SEVEN, SuitType.DIAMONDS),
+                findCard(RankType.EIGHT, SuitType.SPADES),
+                findCard(RankType.NINE, SuitType.HEARTS),
+                findCard(RankType.DEUCE, SuitType.DIAMONDS),
+                findCard(RankType.TREY, SuitType.SPADES)
+        );
     }
 
     public static List<Card> createLowerStraight() {
-        List<Card> cardList = new ArrayList<>();
-        cardList.add(findCard(RankType.ACE, SuitType.HEARTS));
-        cardList.add(findCard(RankType.DEUCE, SuitType.CLUBS));
-        cardList.add(findCard(RankType.TREY, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.FOUR, SuitType.SPADES));
-        cardList.add(findCard(RankType.FIVE, SuitType.HEARTS));
-        cardList.add(findCard(RankType.SEVEN, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.NINE, SuitType.SPADES));
-        return cardList;
+        return List.of(
+                findCard(RankType.ACE, SuitType.HEARTS),
+                findCard(RankType.DEUCE, SuitType.CLUBS),
+                findCard(RankType.TREY, SuitType.DIAMONDS),
+                findCard(RankType.FOUR, SuitType.SPADES),
+                findCard(RankType.FIVE, SuitType.HEARTS),
+                findCard(RankType.SEVEN, SuitType.DIAMONDS),
+                findCard(RankType.NINE, SuitType.SPADES)
+        );
     }
 
 
     public static List<Card> createThreeOfAKind() {
-        List<Card> cardList = new ArrayList<>();
-        cardList.add(findCard(RankType.SEVEN, SuitType.HEARTS));
-        cardList.add(findCard(RankType.SEVEN, SuitType.CLUBS));
-        cardList.add(findCard(RankType.SEVEN, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.KING, SuitType.SPADES));
-        cardList.add(findCard(RankType.DEUCE, SuitType.HEARTS));
-        cardList.add(findCard(RankType.TREY, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.FOUR, SuitType.SPADES));
-        return cardList;
+        return List.of(
+                findCard(RankType.SEVEN, SuitType.HEARTS),
+                findCard(RankType.SEVEN, SuitType.CLUBS),
+                findCard(RankType.SEVEN, SuitType.DIAMONDS),
+                findCard(RankType.KING, SuitType.SPADES),
+                findCard(RankType.DEUCE, SuitType.HEARTS),
+                findCard(RankType.TREY, SuitType.DIAMONDS),
+                findCard(RankType.FOUR, SuitType.SPADES)
+        );
     }
 
     public static List<Card> createTwoPair() {
-        List<Card> cardList = new ArrayList<>();
-        cardList.add(findCard(RankType.FIVE, SuitType.HEARTS));
-        cardList.add(findCard(RankType.FIVE, SuitType.CLUBS));
-        cardList.add(findCard(RankType.KING, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.KING, SuitType.SPADES));
-        cardList.add(findCard(RankType.DEUCE, SuitType.HEARTS));
-        cardList.add(findCard(RankType.TREY, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.FOUR, SuitType.SPADES));
-        return cardList;
+        return List.of(
+                findCard(RankType.FIVE, SuitType.HEARTS),
+                findCard(RankType.FIVE, SuitType.CLUBS),
+                findCard(RankType.KING, SuitType.DIAMONDS),
+                findCard(RankType.KING, SuitType.SPADES),
+                findCard(RankType.DEUCE, SuitType.HEARTS),
+                findCard(RankType.TREY, SuitType.DIAMONDS),
+                findCard(RankType.FOUR, SuitType.SPADES)
+        );
     }
 
     public static List<Card> createOnePair() {
-        List<Card> cardList = new ArrayList<>();
-        cardList.add(findCard(RankType.TEN, SuitType.HEARTS));
-        cardList.add(findCard(RankType.TEN, SuitType.CLUBS));
-        cardList.add(findCard(RankType.KING, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.DEUCE, SuitType.SPADES));
-        cardList.add(findCard(RankType.TREY, SuitType.HEARTS));
-        cardList.add(findCard(RankType.FOUR, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.FIVE, SuitType.SPADES));
-        return cardList;
+        return List.of(
+                findCard(RankType.TEN, SuitType.HEARTS),
+                findCard(RankType.TEN, SuitType.CLUBS),
+                findCard(RankType.KING, SuitType.DIAMONDS),
+                findCard(RankType.DEUCE, SuitType.SPADES),
+                findCard(RankType.TREY, SuitType.HEARTS),
+                findCard(RankType.FOUR, SuitType.DIAMONDS),
+                findCard(RankType.FIVE, SuitType.SPADES)
+        );
     }
 
     public static List<Card> createHighCard() {
-        List<Card> cardList = new ArrayList<>();
-        cardList.add(findCard(RankType.DEUCE, SuitType.HEARTS));
-        cardList.add(findCard(RankType.FOUR, SuitType.CLUBS));
-        cardList.add(findCard(RankType.SEVEN, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.NINE, SuitType.SPADES));
-        cardList.add(findCard(RankType.JACK, SuitType.HEARTS));
-        cardList.add(findCard(RankType.QUEEN, SuitType.DIAMONDS));
-        cardList.add(findCard(RankType.KING, SuitType.SPADES));
-        return cardList;
+        return List.of(
+                findCard(RankType.DEUCE, SuitType.HEARTS),
+                findCard(RankType.FOUR, SuitType.CLUBS),
+                findCard(RankType.SEVEN, SuitType.DIAMONDS),
+                findCard(RankType.NINE, SuitType.SPADES),
+                findCard(RankType.JACK, SuitType.HEARTS),
+                findCard(RankType.QUEEN, SuitType.DIAMONDS),
+                findCard(RankType.KING, SuitType.SPADES)
+        );
+    }
+
+    public static List<Card> createHandWithThreePairs() {
+        return List.of(
+                findCard(RankType.KING, SuitType.HEARTS),
+                findCard(RankType.KING, SuitType.CLUBS),
+                findCard(RankType.QUEEN, SuitType.DIAMONDS),
+                findCard(RankType.QUEEN, SuitType.SPADES),
+                findCard(RankType.JACK, SuitType.HEARTS),
+                findCard(RankType.JACK, SuitType.DIAMONDS),
+                findCard(RankType.DEUCE, SuitType.SPADES)
+        );
+    }
+
+    public static List<Card> createFullHouseFromThreeOfAKindAndPair() {
+        return List.of(
+                findCard(RankType.SEVEN, SuitType.HEARTS),
+                findCard(RankType.SEVEN, SuitType.CLUBS),
+                findCard(RankType.SEVEN, SuitType.DIAMONDS),
+                findCard(RankType.DEUCE, SuitType.SPADES),
+                findCard(RankType.DEUCE, SuitType.HEARTS),
+                findCard(RankType.KING, SuitType.DIAMONDS),
+                findCard(RankType.QUEEN, SuitType.SPADES)
+        );
+    }
+
+    public static List<Card> createStraightWithAPair() {
+        return List.of(
+                findCard(RankType.FIVE, SuitType.HEARTS),
+                findCard(RankType.SIX, SuitType.CLUBS),
+                findCard(RankType.SEVEN, SuitType.DIAMONDS),
+                findCard(RankType.EIGHT, SuitType.SPADES),
+                findCard(RankType.NINE, SuitType.HEARTS),
+                findCard(RankType.NINE, SuitType.DIAMONDS),
+                findCard(RankType.DEUCE, SuitType.SPADES)
+        );
+    }
+
+    public static List<Card> createFlushWithLowerCards() {
+        SuitType suit = SuitType.HEARTS;
+        return List.of(
+                findCard(RankType.DEUCE, suit),
+                findCard(RankType.FOUR, suit),
+                findCard(RankType.FIVE, suit),
+                findCard(RankType.SIX, suit),
+                findCard(RankType.SEVEN, suit),
+                findCard(RankType.KING, SuitType.SPADES),
+                findCard(RankType.QUEEN, SuitType.CLUBS)
+        );
+    }
+
+    public static List<Card> createHighCardAceKicker() {
+        return List.of(
+                findCard(RankType.ACE, SuitType.HEARTS),
+                findCard(RankType.KING, SuitType.CLUBS),
+                findCard(RankType.QUEEN, SuitType.DIAMONDS),
+                findCard(RankType.JACK, SuitType.SPADES),
+                findCard(RankType.NINE, SuitType.HEARTS),
+                findCard(RankType.DEUCE, SuitType.DIAMONDS),
+                findCard(RankType.TREY, SuitType.SPADES)
+        );
     }
 
     private static Card findCard(RankType rankType, SuitType suitType) {
-        List<Card> cards = DeckOfCardsFactory.getCards(false);
-        for (Card card : cards) {
-            if (card.getRankType() == rankType && card.getSuitType() == suitType) {
-                return new Card(card);
-            }
+        String key = rankType.toString() + suitType.toString();
+        Card card = DECK_MAP.get(key);
+        if (card == null) {
+            throw new NotFoundException("Failed to find card: " + key + " - shouldn't get here, in a test");
         }
-        throw new NotFoundException("Failed to find card - shouldn't get here, in a test");
+        return new Card(card);
     }
 }
