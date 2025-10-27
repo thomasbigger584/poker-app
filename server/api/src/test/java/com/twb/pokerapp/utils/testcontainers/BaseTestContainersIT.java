@@ -21,7 +21,7 @@ public abstract class BaseTestContainersIT {
     // Keycloak Constants
     private static final String KEYCLOAK_SERVICE = "keycloak";
     private static final int KEYCLOAK_PORT = 8080;
-    private static final String KEYCLOAK_REALM_JSON = "keycloak-realm.json";
+    private static final String KEYCLOAK_REALM_JSON = "poker-app-realm.json";
     private static final String KEYCLOAK_HOSTNAME_URL_KEY = "KC_HOSTNAME_URL";
     private static final String KEYCLOAK_SERVER_URL = String.format("http://%s:%d", KEYCLOAK_SERVICE, KEYCLOAK_PORT);
 

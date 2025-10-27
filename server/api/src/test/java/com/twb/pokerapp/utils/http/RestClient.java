@@ -49,8 +49,9 @@ public class RestClient {
     }
 
     public <ResultBody> ApiHttpResponse<ResultBody> get(Class<ResultBody> resultClass, String endpoint) throws Exception {
+        String accessToken = getAccessToken();
         HttpRequest request = HttpRequest.newBuilder()
-                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken())
+                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + accessToken)
                 .uri(URI.create(API_BASE_URL + endpoint))
                 .GET().build();
         return executeRequest(resultClass, request);
