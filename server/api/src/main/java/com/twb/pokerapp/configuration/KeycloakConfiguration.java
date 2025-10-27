@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Configuration;
 @Setter
 @Configuration
 public class KeycloakConfiguration {
-    @Value("${keycloak.server-url}")
+    @Value("${keycloak.server-url.internal}")
     private String serverUrl;
 
     @Value("${keycloak.realm}")

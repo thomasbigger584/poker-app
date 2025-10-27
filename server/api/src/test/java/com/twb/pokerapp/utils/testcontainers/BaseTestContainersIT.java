@@ -15,15 +15,17 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 
 import java.util.List;
 
+// NOTE: Requires building docker image before: `docker compose build api`
+
 public abstract class BaseTestContainersIT {
     private static final Logger logger = LoggerFactory.getLogger("TEST");
 
     // Keycloak Constants
     private static final String KEYCLOAK_SERVICE = "keycloak";
     private static final int KEYCLOAK_PORT = 8080;
-    private static final String KEYCLOAK_REALM_JSON = "keycloak-realm.json";
-    private static final String KEYCLOAK_HOSTNAME_URL_KEY = "KC_HOSTNAME_URL";
-    private static final String KEYCLOAK_SERVER_URL = String.format("http://%s:%d", KEYCLOAK_SERVICE, KEYCLOAK_PORT);
+    private static final String KEYCLOAK_REALM_JSON = "poker-app-realm.json";
+    private static final String KEYCLOAK_HOSTNAME_KEY = "KC_HOSTNAME";
+    private static final String KEYCLOAK_HOSTNAME = String.format("http://%s:%d", KEYCLOAK_SERVICE, KEYCLOAK_PORT);
 
     // DB Constants
     private static final String DB_IMAGE_NAME = "postgres";
@@ -40,7 +42,8 @@ public abstract class BaseTestContainersIT {
     private static final String API_IMAGE_NAME = "com.twb.pokerapp/api";
     private static final String API_IMAGE_VERSION = "latest";
     private static final String API_SERVICE = "api";
-    private static final String KEYCLOAK_SERVER_URL_KEY = "KEYCLOAK_SERVER_URL";
+    private static final String KEYCLOAK_SERVER_URL_INTERNAL_KEY = "KEYCLOAK_SERVER_URL_INTERNAL";
+    private static final String KEYCLOAK_SERVER_URL_EXTERNAL_KEY = "KEYCLOAK_SERVER_URL_EXTERNAL";
     private static final int API_PORT = 8081;
     private static final int API_DEBUG_PORT = 5005;
 
@@ -53,7 +56,7 @@ public abstract class BaseTestContainersIT {
                     .withAdminPassword(KeycloakClients.ADMIN_PASSWORD)
                     .withNetwork(NETWORK)
                     .withNetworkAliases(KEYCLOAK_SERVICE)
-                    .withEnv(KEYCLOAK_HOSTNAME_URL_KEY, KEYCLOAK_SERVER_URL)
+                    .withEnv(KEYCLOAK_HOSTNAME_KEY, KEYCLOAK_HOSTNAME)
                     .withVerboseOutput();
     private static final PostgreSQLContainer<?> DB_CONTAINER =
             new PostgreSQLContainer<>(DB_IMAGE_NAME + ":" + DB_IMAGE_VERSION)
@@ -68,7 +71,8 @@ public abstract class BaseTestContainersIT {
 
     private static final GenericContainer<?> API_CONTAINER =
             new GenericContainer<>(API_IMAGE_NAME + ":" + API_IMAGE_VERSION)
-                    .withEnv(KEYCLOAK_SERVER_URL_KEY, KEYCLOAK_SERVER_URL)
+                    .withEnv(KEYCLOAK_SERVER_URL_INTERNAL_KEY, KEYCLOAK_HOSTNAME)
+                    .withEnv(KEYCLOAK_SERVER_URL_EXTERNAL_KEY, KEYCLOAK_HOSTNAME)
                     .withEnv(SPRING_DATASOURCE_URL_KEY, DB_DATASOURCE_URL)
                     .withExposedPorts(API_PORT)
                     .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(API_SERVICE))
