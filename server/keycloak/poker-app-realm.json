@@ -2746,7 +2746,6 @@
     "saml.signature.algorithm": "",
     "parRequestUriLifespan": "60",
     "clientSessionMaxLifespan": "0",
-    "frontendUrl": "http://poker-app.taila8b6c7.ts.net/auth",
     "acr.loa.map": "{}",
     "adminEventsExpiration": "",
     "darkMode": "true"
