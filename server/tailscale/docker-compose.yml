@@ -19,11 +19,10 @@ services:
       - TS_ADVERTISE_ROUTES=
       - TS_EPHEMERAL=false
       - TS_EXTRA_ARGS=--accept-routes --shields-up=false
-      - TS_EPHEMERAL=false
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "/usr/local/bin/tailscale status | grep 'poker-app' > /dev/null || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 20s
+    healthcheck: # This check waits until tailscale can resolve its own hostname to an IP.
+      test: ["CMD-SHELL", "tailscale ip -4 poker-app | grep -E '^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$$' > /dev/null || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
