@@ -4,20 +4,17 @@ import com.twb.pokerapp.domain.Card;
 import com.twb.pokerapp.domain.enumeration.HandType;
 import com.twb.pokerapp.domain.enumeration.RankType;
 import com.twb.pokerapp.domain.enumeration.SuitType;
+import lombok.Getter;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Evaluates the type of poker hand from a list of cards.
  */
 @Component
 public class HandTypeEvaluator {
-    private static final List<RankType> PARTIAL_LOWER_STRAIGHT =
-            Arrays.asList(RankType.DEUCE, RankType.TREY, RankType.FOUR, RankType.FIVE);
-    private static final List<RankType> ROYAL_FLUSH_RANKS =
-            Arrays.asList(RankType.TEN, RankType.JACK, RankType.QUEEN, RankType.KING, RankType.ACE);
-
     private static final int FIVE_CARDS_NEEDED = 5;
     private static final int FOUR_CARDS_NEEDED = 4;
     private static final int THREE_CARDS_NEEDED = 3;
@@ -37,23 +34,25 @@ public class HandTypeEvaluator {
             return HandType.EMPTY_HAND;
         }
 
-        if (isRoyalFlush(cards)) {
+        HandAnalysis analysis = new HandAnalysis(cards);
+
+        if (isRoyalFlush(analysis)) {
             return HandType.ROYAL_FLUSH;
-        } else if (isStraightFlush(cards)) {
+        } else if (isStraightFlush(analysis)) {
             return HandType.STRAIGHT_FLUSH;
-        } else if (isFourOfAKind(cards)) {
+        } else if (isFourOfAKind(analysis)) {
             return HandType.FOUR_OF_A_KIND;
-        } else if (isFullHouse(cards)) {
+        } else if (isFullHouse(analysis)) {
             return HandType.FULL_HOUSE;
-        } else if (isFlush(cards)) {
+        } else if (isFlush(analysis)) {
             return HandType.FLUSH;
-        } else if (isStraight(cards)) {
+        } else if (isStraight(analysis)) {
             return HandType.STRAIGHT;
-        } else if (isThreeOfAKind(cards)) {
+        } else if (isThreeOfAKind(analysis)) {
             return HandType.THREE_OF_A_KIND;
-        } else if (isTwoPair(cards)) {
+        } else if (isTwoPair(analysis)) {
             return HandType.TWO_PAIR;
-        } else if (isPair(cards)) {
+        } else if (isPair(analysis)) {
             return HandType.PAIR;
         } else {
             return HandType.HIGH_CARD;
@@ -65,30 +64,77 @@ public class HandTypeEvaluator {
     // ***************************************************************
 
     /**
+     * A pre-computation analysis of a list of cards.
+     * <p>
+     * This class groups cards by suit and counts occurrences of each rank upon instantiation.
+     * This avoids re-calculating these groupings for each hand type evaluation, improving performance.
+     */
+    @Getter
+    private static class HandAnalysis {
+        private static final List<RankType> PARTIAL_LOWER_STRAIGHT =
+                List.of(RankType.DEUCE, RankType.TREY, RankType.FOUR, RankType.FIVE);
+        private static final List<RankType> ROYAL_FLUSH_RANKS =
+                List.of(RankType.TEN, RankType.JACK, RankType.QUEEN, RankType.KING, RankType.ACE);
+
+
+        private final List<Card> originalCards;
+        private final Map<SuitType, List<Card>> cardsBySuit;
+        private final Map<RankType, Integer> rankCounts;
+        private final List<Integer> counts;
+
+        /**
+         * Constructs a HandAnalysis object by processing a list of cards.
+         *
+         * @param cards The list of cards to be analyzed. Must not be null.
+         */
+        public HandAnalysis(List<Card> cards) {
+            this.originalCards = Objects.requireNonNull(cards);
+            this.cardsBySuit = new HashMap<>();
+            this.rankCounts = new HashMap<>();
+
+            for (Card card : cards) {
+                if (card != null) {
+                    cardsBySuit.computeIfAbsent(card.getSuitType(), k -> new ArrayList<>()).add(card);
+                    rankCounts.merge(card.getRankType(), 1, Integer::sum);
+                }
+            }
+            this.counts = new ArrayList<>(rankCounts.values());
+            this.counts.sort(Comparator.reverseOrder());
+        }
+
+        /**
+         * Checks if the hand contains at least a minimum number of cards.
+         *
+         * @param count the minimum number of cards required.
+         * @return true if the hand size is greater than or equal to the count, false otherwise.
+         */
+        public boolean hasMinimumCards(int count) {
+            return originalCards.size() >= count;
+        }
+    }
+
+    /**
      * Checks if the given cards form a Royal Flush.
      * <p>
      * A Royal Flush is a hand that contains the Ten, Jack, Queen, King, and Ace all of the same suit.
      * This method first verifies that the hand has at least five cards. Then it checks each suit
      * for a flush and verifies if it contains all the ranks required for a Royal Flush.
      *
-     * @param cards the list of cards to check
+     * @param analysis the analyzed hand
      * @return true if the cards form a Royal Flush, false otherwise
      */
-    private boolean isRoyalFlush(List<Card> cards) {
-        if (!isValidHand(cards, FIVE_CARDS_NEEDED)) {
+    private boolean isRoyalFlush(HandAnalysis analysis) {
+        if (!analysis.hasMinimumCards(FIVE_CARDS_NEEDED)) {
             return false;
         }
 
-        Map<SuitType, List<Card>> flushCardsBySuit = getFlushCardsBySuit(cards);
-        for (List<Card> flushCards : flushCardsBySuit.values()) {
+        for (List<Card> flushCards : analysis.getCardsBySuit().values()) {
             if (flushCards.size() >= FIVE_CARDS_NEEDED) {
-                List<RankType> ranks = new ArrayList<>();
-                for (Card card : flushCards) {
-                    ranks.add(card.getRankType());
-                }
-                if (ranks.containsAll(ROYAL_FLUSH_RANKS)) {
-                    return true;
-                }
+                Set<RankType> ranks = flushCards.stream()
+                        .map(Card::getRankType)
+                        .collect(Collectors.toSet());
+
+                if (ranks.containsAll(HandAnalysis.ROYAL_FLUSH_RANKS)) return true;
             }
         }
         return false;
@@ -101,17 +147,16 @@ public class HandTypeEvaluator {
      * This method first verifies that the hand has at least five cards. Then it checks each suit
      * for a flush and verifies if any of these flushes form a straight.
      *
-     * @param cards the list of cards to check
+     * @param analysis the analyzed hand
      * @return true if the cards form a Straight Flush, false otherwise
      */
-    private boolean isStraightFlush(List<Card> cards) {
-        if (!isValidHand(cards, FIVE_CARDS_NEEDED)) {
+    private boolean isStraightFlush(HandAnalysis analysis) {
+        if (!analysis.hasMinimumCards(FIVE_CARDS_NEEDED)) {
             return false;
         }
 
-        Map<SuitType, List<Card>> flushCardsBySuit = getFlushCardsBySuit(cards);
-        for (List<Card> flushCards : flushCardsBySuit.values()) {
-            if (flushCards.size() >= FIVE_CARDS_NEEDED && isStraight(flushCards)) {
+        for (List<Card> flushCards : analysis.getCardsBySuit().values()) {
+            if (flushCards.size() >= FIVE_CARDS_NEEDED && isStraight(new HandAnalysis(flushCards))) {
                 return true;
             }
         }
@@ -122,13 +167,14 @@ public class HandTypeEvaluator {
      * Checks if the given cards form Four of a Kind.
      * <p>
      * Four of a Kind is a hand that contains four cards of the same rank.
-     * This method checks if there are exactly four cards of any rank.
+     * This method checks if there are at least four cards of any rank.
      *
-     * @param cards the list of cards to check
+     * @param analysis the analyzed hand
      * @return true if the cards form Four of a Kind, false otherwise
      */
-    private boolean isFourOfAKind(List<Card> cards) {
-        return isOfAKind(cards, FOUR_CARDS_NEEDED);
+    private boolean isFourOfAKind(HandAnalysis analysis) {
+        return analysis.hasMinimumCards(FOUR_CARDS_NEEDED) &&
+                analysis.getCounts().get(0) >= FOUR_CARDS_NEEDED;
     }
 
     /**
@@ -138,24 +184,18 @@ public class HandTypeEvaluator {
      * This method first verifies that the hand has at least five cards. Then it checks for the presence
      * of a Three of a Kind and a Pair.
      *
-     * @param cards the list of cards to check
+     * @param analysis the analyzed hand
      * @return true if the cards form a Full House, false otherwise
      */
-    private boolean isFullHouse(List<Card> cards) {
-        if (!isValidHand(cards, FIVE_CARDS_NEEDED)) {
+    private boolean isFullHouse(HandAnalysis analysis) {
+        if (!analysis.hasMinimumCards(FIVE_CARDS_NEEDED)) {
             return false;
         }
-
-        Map<RankType, Integer> rankCounts = getRankCounts(cards);
-
-        boolean hasThreeOfAKind = rankCounts
-                .values().stream()
-                .anyMatch(count -> count == THREE_CARDS_NEEDED);
-        boolean hasPair = rankCounts
-                .values().stream()
-                .anyMatch(count -> count == TWO_CARDS_NEEDED);
-
-        return hasThreeOfAKind && hasPair;
+        // Check for a 3-of-a-kind and a pair, which can also be two 3-of-a-kinds.
+        // The counts list is sorted, so we just need to check the first two elements.
+        List<Integer> counts = analysis.getCounts();
+        return counts.size() >= 2 &&
+                counts.get(0) >= THREE_CARDS_NEEDED && counts.get(1) >= TWO_CARDS_NEEDED;
     }
 
     /**
@@ -165,17 +205,15 @@ public class HandTypeEvaluator {
      * This method first verifies that the hand has at least five cards. Then it checks each suit
      * for the presence of at least five cards.
      *
-     * @param cards the list of cards to check
+     * @param analysis the analyzed hand
      * @return true if the cards form a Flush, false otherwise
      */
-    private boolean isFlush(List<Card> cards) {
-        if (!isValidHand(cards, FIVE_CARDS_NEEDED)) {
+    private boolean isFlush(HandAnalysis analysis) {
+        if (!analysis.hasMinimumCards(FIVE_CARDS_NEEDED)) {
             return false;
         }
-
-        return getFlushCardsBySuit(cards)
-                .values().stream()
-                .anyMatch(flushCards -> flushCards.size() >= FIVE_CARDS_NEEDED);
+        return analysis.getCardsBySuit().values().stream()
+                .anyMatch(list -> list.size() >= FIVE_CARDS_NEEDED);
     }
 
     /**
@@ -185,11 +223,11 @@ public class HandTypeEvaluator {
      * This method verifies if there are any five consecutive cards in the hand, including
      * the special case of an Ace-to-Five straight.
      *
-     * @param cards the list of cards to check
+     * @param analysis the analyzed hand
      * @return true if the cards form a Straight, false otherwise
      */
-    private boolean isStraight(List<Card> cards) {
-        return getStraightCards(cards).isPresent();
+    private boolean isStraight(HandAnalysis analysis) {
+        return getStraightRanks(analysis).isPresent();
     }
 
     /**
@@ -198,18 +236,15 @@ public class HandTypeEvaluator {
      * This method first verifies that the hand has at least five cards. It then checks for any
      * sequence of five consecutive cards, including the special case of an Ace-to-Five straight.
      *
-     * @param cards the list of cards to check
-     * @return an Optional containing the list of cards forming a Straight if found, or an empty Optional otherwise
+     * @param analysis the analyzed hand
+     * @return an Optional containing the list of ranks forming a Straight if found, or an empty Optional otherwise
      */
-    private Optional<List<Card>> getStraightCards(List<Card> cards) {
-        if (!isValidHand(cards, FIVE_CARDS_NEEDED)) {
+    private Optional<List<RankType>> getStraightRanks(HandAnalysis analysis) {
+        if (!analysis.hasMinimumCards(FIVE_CARDS_NEEDED)) {
             return Optional.empty();
         }
 
-        Set<RankType> uniqueRanks = new HashSet<>();
-        for (Card card : cards) {
-            uniqueRanks.add(card.getRankType());
-        }
+        Set<RankType> uniqueRanks = analysis.getRankCounts().keySet();
 
         List<RankType> sortedRanks = new ArrayList<>(uniqueRanks);
         sortedRanks.sort(Comparator.comparingInt(RankType::getPosition));
@@ -217,14 +252,15 @@ public class HandTypeEvaluator {
         for (int index = 0; index <= sortedRanks.size() - FIVE_CARDS_NEEDED; index++) {
             List<RankType> potentialStraight = sortedRanks.subList(index, index + FIVE_CARDS_NEEDED);
             if (isConsecutive(potentialStraight)) {
-                return Optional.of(getCardsByRanks(cards, potentialStraight));
+                return Optional.of(potentialStraight);
             }
         }
 
-        if (uniqueRanks.containsAll(PARTIAL_LOWER_STRAIGHT) && uniqueRanks.contains(RankType.ACE)) {
-            List<RankType> lowAceStraight = new ArrayList<>(PARTIAL_LOWER_STRAIGHT);
+        // Check for Ace-low straight (A, 2, 3, 4, 5)
+        if (uniqueRanks.containsAll(HandAnalysis.PARTIAL_LOWER_STRAIGHT) && uniqueRanks.contains(RankType.ACE)) {
+            List<RankType> lowAceStraight = new ArrayList<>(HandAnalysis.PARTIAL_LOWER_STRAIGHT);
             lowAceStraight.add(RankType.ACE);
-            return Optional.of(getCardsByRanks(cards, lowAceStraight));
+            return Optional.of(lowAceStraight);
         }
 
         return Optional.empty();
@@ -250,38 +286,17 @@ public class HandTypeEvaluator {
     }
 
     /**
-     * Retrieves the list of cards matching the specified ranks.
-     * <p>
-     * This method finds and returns the cards that match the specified list of ranks.
-     *
-     * @param cards the list of cards to search
-     * @param ranks the list of ranks to match
-     * @return the list of matching cards
-     */
-    private List<Card> getCardsByRanks(List<Card> cards, List<RankType> ranks) {
-        List<Card> result = new ArrayList<>();
-        for (RankType rank : ranks) {
-            for (Card card : cards) {
-                if (card.getRankType() == rank) {
-                    result.add(card);
-                    break;
-                }
-            }
-        }
-        return result;
-    }
-
-    /**
      * Checks if the given cards form Three of a Kind.
      * <p>
      * Three of a Kind is a hand that contains three cards of the same rank.
-     * This method checks if there are exactly three cards of any rank.
+     * This method checks if there are at least three cards of any rank.
      *
-     * @param cards the list of cards to check
+     * @param analysis the analyzed hand
      * @return true if the cards form Three of a Kind, false otherwise
      */
-    private boolean isThreeOfAKind(List<Card> cards) {
-        return isOfAKind(cards, THREE_CARDS_NEEDED);
+    private boolean isThreeOfAKind(HandAnalysis analysis) {
+        return analysis.hasMinimumCards(THREE_CARDS_NEEDED) &&
+                analysis.getCounts().get(0) >= THREE_CARDS_NEEDED;
     }
 
     /**
@@ -291,111 +306,30 @@ public class HandTypeEvaluator {
      * This method first verifies that the hand has at least four cards. Then it checks for the presence
      * of two pairs.
      *
-     * @param cards the list of cards to check
+     * @param analysis the analyzed hand
      * @return true if the cards form Two Pair, false otherwise
      */
-    private boolean isTwoPair(List<Card> cards) {
-        if (!isValidHand(cards, FOUR_CARDS_NEEDED)) {
+    private boolean isTwoPair(HandAnalysis analysis) {
+        if (!analysis.hasMinimumCards(FOUR_CARDS_NEEDED)) {
             return false;
         }
-
-        long pairCount = getRankCounts(cards)
-                .values().stream()
-                .filter(count -> count == TWO_CARDS_NEEDED)
-                .count();
-        return pairCount >= 2;
+        // The counts list is sorted, so we just need to check the first two elements.
+        List<Integer> counts = analysis.getCounts();
+        return counts.size() >= 2 &&
+                counts.get(0) >= TWO_CARDS_NEEDED && counts.get(1) >= TWO_CARDS_NEEDED;
     }
 
     /**
      * Checks if the given cards form a Pair.
      * <p>
      * A Pair is a hand that contains two cards of the same rank.
-     * This method checks if there are exactly two cards of any rank.
+     * This method checks if there are at least two cards of any rank.
      *
-     * @param cards the list of cards to check
+     * @param analysis the analyzed hand
      * @return true if the cards form a Pair, false otherwise
      */
-    private boolean isPair(List<Card> cards) {
-        return isOfAKind(cards, TWO_CARDS_NEEDED);
-    }
-
-    /**
-     * Checks if the given cards form a specified number of a kind.
-     * <p>
-     * This method verifies if there are exactly the specified number of cards of any rank.
-     *
-     * @param cards the list of cards to check
-     * @param kind  the number of a kind to check for
-     * @return true if the cards form the specified number of a kind, false otherwise
-     */
-    private boolean isOfAKind(List<Card> cards, int kind) {
-        if (!isValidHand(cards, kind)) {
-            return false;
-        }
-        return getRankCounts(cards)
-                .values().stream()
-                .anyMatch(count -> count == kind);
-    }
-
-    /**
-     * Groups cards by their suit and returns a map from suit to list of cards.
-     * <p>
-     * This method categorizes the cards by their suit, which is useful for checking flushes.
-     *
-     * @param cards the list of cards to group
-     * @return a map from suit type to list of cards of that suit
-     */
-    private Map<SuitType, List<Card>> getFlushCardsBySuit(List<Card> cards) {
-        Map<SuitType, List<Card>> flushCardsBySuit = new HashMap<>();
-        for (Card card : cards) {
-            if (card == null) {
-                continue;
-            }
-            flushCardsBySuit
-                    .computeIfAbsent(card.getSuitType(), k -> new ArrayList<>())
-                    .add(card);
-        }
-        return flushCardsBySuit;
-    }
-
-    /**
-     * Counts the occurrences of each rank in the given list of cards.
-     * <p>
-     * This method creates a map from each rank to the number of times it appears in the hand.
-     *
-     * @param cards the list of cards to count
-     * @return a map from rank type to count of cards of that rank
-     */
-    private Map<RankType, Integer> getRankCounts(List<Card> cards) {
-        Map<RankType, Integer> rankCounts = new HashMap<>();
-        for (Card card : cards) {
-            if (card == null) {
-                continue;
-            }
-            rankCounts.merge(card.getRankType(), 1, Integer::sum);
-        }
-        return rankCounts;
-    }
-
-    /**
-     * Validates that the hand has the expected number of cards and no null values.
-     * <p>
-     * This method checks that the list of cards is not null, has at least the expected number of cards,
-     * and does not contain any null values.
-     *
-     * @param cards        the list of cards to validate
-     * @param expectedSize the expected minimum number of cards
-     * @return true if the hand is valid, false otherwise
-     */
-    private boolean isValidHand(List<Card> cards, int expectedSize) {
-        if (cards == null || cards.size() < expectedSize) {
-            return false;
-        }
-        for (Card card : cards) {
-            if (card == null) {
-                return false;
-            }
-        }
-        return true;
+    private boolean isPair(HandAnalysis analysis) {
+        return analysis.hasMinimumCards(TWO_CARDS_NEEDED) &&
+                analysis.getCounts().get(0) >= TWO_CARDS_NEEDED;
     }
 }

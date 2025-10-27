@@ -263,6 +263,18 @@ public class HandFixture {
         );
     }
 
+    public static List<Card> create2ThreeOfAKing() {
+        return List.of(
+                findCard(RankType.ACE, SuitType.HEARTS),
+                findCard(RankType.ACE, SuitType.CLUBS),
+                findCard(RankType.ACE, SuitType.DIAMONDS),
+                findCard(RankType.DEUCE, SuitType.SPADES),
+                findCard(RankType.DEUCE, SuitType.HEARTS),
+                findCard(RankType.DEUCE, SuitType.DIAMONDS),
+                findCard(RankType.SEVEN, SuitType.SPADES)
+        );
+    }
+
     private static Card findCard(RankType rankType, SuitType suitType) {
         String key = rankType.toString() + suitType.toString();
         Card card = DECK_MAP.get(key);
