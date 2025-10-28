@@ -35,7 +35,7 @@
         <build-helper-maven-plugin.version>3.6.1</build-helper-maven-plugin.version>
         <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>3.5.4</maven-failsafe-plugin.version>
-        <testcontainers.version>1.21.3</testcontainers.version>
+        <testcontainers.version>2.0.1</testcontainers.version>
         <testcontainers-keycloak.version>3.9.0</testcontainers-keycloak.version>
         <assertj-core.version>3.27.6</assertj-core.version>
     </properties>
