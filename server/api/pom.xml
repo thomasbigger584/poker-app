@@ -16,7 +16,7 @@
     <properties>
         <java.version>21</java.version>
         <docker.image.name>com.twb.pokerapp/api</docker.image.name>
-        <org.projectlombok.version>1.18.40</org.projectlombok.version>
+        <org.projectlombok.version>1.18.42</org.projectlombok.version>
         <org.mapstruct.version>1.6.3</org.mapstruct.version>
         <javax.servlet-api.version>4.0.1</javax.servlet-api.version>
         <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
