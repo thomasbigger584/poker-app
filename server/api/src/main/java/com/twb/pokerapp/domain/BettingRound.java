@@ -1,6 +1,6 @@
 package com.twb.pokerapp.domain;
 
-import com.twb.pokerapp.domain.enumeration.RoundState;
+import com.twb.pokerapp.domain.enumeration.BettingRoundState;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -12,11 +12,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+
 @Entity
 @Getter
 @Setter
-@Table(name = "round")
-public class Round {
+@Table(name = "betting_round")
+public class BettingRound {
 
     @Id
     @NotNull
@@ -26,39 +27,40 @@ public class Round {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "round_state")
-    private RoundState roundState;
+    @Column(name = "state")
+    private BettingRoundState state;
+
+    @Column(name = "pot")
+    private Double pot;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "poker_table_id")
-    private PokerTable pokerTable;
+    @JoinColumn(name = "round_id")
+    private Round round;
 
-    @OneToMany(mappedBy = "round")
-    private List<Card> communityCards = new ArrayList<>();
+    @OneToMany(mappedBy = "bettingRound")
+    private List<PlayerAction> playerActions = new ArrayList<>();
 
-    @OneToMany(mappedBy = "round")
-    private List<BettingRound> bettingRounds = new ArrayList<>();
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Round round = (Round) o;
-        return new EqualsBuilder().append(id, round.id)
-                .append(roundState, round.roundState).isEquals();
+        BettingRound bettingRound = (BettingRound) o;
+        return new EqualsBuilder().append(id, bettingRound.id)
+                .append(state, bettingRound.state)
+                .append(pot, bettingRound.pot).isEquals();
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
-                .append(id).append(roundState).toHashCode();
+                .append(id).append(state).append(pot).toHashCode();
     }
 
     @Override
     public String toString() {
-        return "Round{" +
+        return "BettingRound{" +
                 "id=" + id +
-                ", roundState=" + roundState +
+                ", bettingRoundState=" + state +
+                ", pot=" + pot +
                 '}';
     }
 }

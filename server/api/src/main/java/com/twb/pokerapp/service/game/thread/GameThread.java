@@ -15,10 +15,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -55,9 +52,9 @@ public abstract class GameThread extends BaseGameThread {
     // *****************************************************************************************
     protected PokerTable pokerTable;
     protected Round currentRound;
+    protected BettingRound currentBettingRound;
     protected List<PlayerSession> playerSessions = new ArrayList<>();
-    protected final List<PlayerSession> foldedPlayers
-            = Collections.synchronizedList(new ArrayList<>());
+    protected final Set<PlayerSession> foldedPlayers = Collections.synchronizedSet(new HashSet<>());
     private CountDownLatch playerTurnLatch;
     private List<Card> deckOfCards;
     private int deckCardPointer;
@@ -191,9 +188,11 @@ public abstract class GameThread extends BaseGameThread {
         while (roundState != RoundState.FINISH) {
             checkRoundInterrupted();
             try {
+                initBettingRound(roundState);
                 onRunRound(roundState);
                 roundState = getNextRoundState(roundState);
             } catch (RoundInterruptedException e) {
+                logger.info(e.getMessage());
                 interruptRound.set(false);
                 if (roundState != RoundState.EVAL) {
                     roundState = RoundState.EVAL;
@@ -202,6 +201,114 @@ public abstract class GameThread extends BaseGameThread {
             saveRoundState(roundState);
         }
     }
+
+    private void initBettingRound(RoundState roundState) {
+        if (roundState.getBettingRoundState() != null) {
+            currentBettingRound = bettingRoundService.create(currentRound);
+        }
+    }
+
+    private void finishRound() {
+        if (roundInProgress.get()) {
+            saveRoundState(RoundState.FINISH);
+            dispatcher.send(params.getTableId(), messageFactory.roundFinished());
+        }
+        roundInProgress.set(false);
+    }
+
+    private void finishGame() {
+        if (gameInProgress.get()) {
+            dispatcher.send(params.getTableId(), messageFactory.gameFinished());
+            threadManager.delete(params.getTableId());
+        }
+        gameInProgress.set(false);
+    }
+
+    // *****************************************************************************************
+    // Player Action Methods
+    // *****************************************************************************************
+
+    public void playerAction(String username, CreatePlayerActionDTO createDto) {
+        logger.info("***************************************************************");
+        logger.info("GameThread.playerAction");
+        logger.info("username = {}, action = {}", username, createDto);
+        logger.info("***************************************************************");
+        Optional<PlayerSession> playerSessionOpt = playerSessionRepository
+                .findByTableIdAndUsername(pokerTable.getId(), username);
+        if (playerSessionOpt.isEmpty()) {
+            logger.warn("No player {} found on table {}", username, pokerTable.getId());
+            return;
+        }
+        playerAction(playerSessionOpt.get(), createDto);
+    }
+
+    private void playerAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
+        switch (createActionDto.getAction()) {
+            case FOLD -> fold(playerSession, createActionDto);
+            case CHECK -> check(playerSession, createActionDto);
+            case BET -> bet(playerSession, createActionDto);
+            case CALL -> call(playerSession, createActionDto);
+            case RAISE -> raise(playerSession, createActionDto);
+        }
+        playerTurnLatch.countDown();
+    }
+
+    // NOTE: called from both game thread and main thread
+    private void fold(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
+        synchronized (foldedPlayers) {
+            foldedPlayers.add(playerSession);
+
+            PlayerActionDTO actionDto = playerActionService.create(playerSession, currentBettingRound, createActionDto);
+            dispatcher.send(params.getTableId(), messageFactory.playerAction(actionDto));
+
+            if (playerSessions.stream().filter(foldedPlayers::contains).count() == 1) {
+                // there is only 1 player left in a started game
+                interruptRound.set(true);
+            }
+        }
+
+    }
+
+    private void check(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
+        boolean canPerformCheck = playerActionRepository.findPlayerActionsNotFolded(currentBettingRound.getId())
+                .stream().findFirst()
+                .map(lastAction -> lastAction.getActionType() == ActionType.CHECK)
+                .orElse(true);
+        if (canPerformCheck) {
+            PlayerActionDTO actionDto = playerActionService.create(playerSession, currentBettingRound, createActionDto);
+            dispatcher.send(params.getTableId(), messageFactory.playerAction(actionDto));
+        } else {
+            logger.warn("Cannot check as previous actions was not a check");
+        }
+    }
+
+    private void bet(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
+
+    }
+
+    private void call(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
+
+    }
+
+    private void raise(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
+
+    }
+
+    // *****************************************************************************************
+    // Logging Dispatch Methods
+    // *****************************************************************************************
+
+    protected void sendLogMessage(String message) {
+        dispatcher.send(params.getTableId(), messageFactory.logMessage(message));
+    }
+
+    protected void sendErrorMessage(String message) {
+        dispatcher.send(params.getTableId(), messageFactory.errorMessage(message));
+    }
+
+    // *****************************************************************************************
+    // Game Utility Methods
+    // *****************************************************************************************
 
     protected void shuffleCards() {
         deckOfCards = DeckOfCardsFactory.getCards(true);
@@ -233,74 +340,8 @@ public abstract class GameThread extends BaseGameThread {
         }
     }
 
-    public void playerAction(String username, CreatePlayerActionDTO createDto) {
-        logger.info("***************************************************************");
-        logger.info("GameThread.playerAction");
-        logger.info("username = {}, action = {}", username, createDto);
-        logger.info("***************************************************************");
-        Optional<PlayerSession> playerSessionOpt = playerSessionRepository
-                .findByTableIdAndUsername(pokerTable.getId(), username);
-        if (playerSessionOpt.isEmpty()) {
-            logger.warn("No player {} found on table {}", username, pokerTable.getId());
-            return;
-        }
-        playerAction(playerSessionOpt.get(), createDto);
-    }
-
-    private void playerAction(PlayerSession playerSession, CreatePlayerActionDTO createDto) {
-        PlayerActionDTO actionDto = playerActionService.create(playerSession, currentRound, createDto);
-        switch (createDto.getAction()) {
-            case FOLD -> fold(playerSession);
-            //todo: add others
-        }
-        dispatcher.send(params.getTableId(), messageFactory.playerAction(actionDto));
-        playerTurnLatch.countDown();
-    }
-
-    private void finishRound() {
-        if (roundInProgress.get()) {
-            saveRoundState(RoundState.FINISH);
-            dispatcher.send(params.getTableId(), messageFactory.roundFinished());
-        }
-        roundInProgress.set(false);
-    }
-
     protected boolean isPlayerFolded(PlayerSession playerSession) {
         return foldedPlayers.contains(playerSession);
-    }
-
-    // NOTE: called from both game thread and main thread
-    private void fold(PlayerSession playerSession) {
-        synchronized (foldedPlayers) {
-            if (!foldedPlayers.contains(playerSession)) {
-                foldedPlayers.add(playerSession);
-            }
-            if (playerSessions.stream()
-                    .filter(foldedPlayers::contains).count() == 1) {
-                // there is only 1 player left in a started game
-                interruptRound.set(true);
-            }
-        }
-    }
-
-    private void finishGame() {
-        if (gameInProgress.get()) {
-            dispatcher.send(params.getTableId(), messageFactory.gameFinished());
-            threadManager.delete(params.getTableId());
-        }
-        gameInProgress.set(false);
-    }
-
-    // *****************************************************************************************
-    // Logging Dispatch Methods
-    // *****************************************************************************************
-
-    protected void sendLogMessage(String message) {
-        dispatcher.send(params.getTableId(), messageFactory.logMessage(message));
-    }
-
-    protected void sendErrorMessage(String message) {
-        dispatcher.send(params.getTableId(), messageFactory.errorMessage(message));
     }
 
     // *****************************************************************************************

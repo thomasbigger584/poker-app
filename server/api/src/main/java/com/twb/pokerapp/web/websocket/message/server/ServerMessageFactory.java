@@ -52,10 +52,11 @@ public class ServerMessageFactory {
         return ServerMessageDTO.create(ServerMessageType.DEAL_COMMUNITY, payload);
     }
 
-    public ServerMessageDTO playerTurn(PlayerSession playerSession, ActionType[] actions) {
+    public ServerMessageDTO playerTurn(PlayerSession playerSession, ActionType[] actions, Double amountToCall) {
         PlayerTurnDTO payload = new PlayerTurnDTO();
         payload.setPlayerSession(playerSessionMapper.modelToDto(playerSession));
         payload.setActions(actions);
+        payload.setAmountToCall(amountToCall);
         return ServerMessageDTO.create(ServerMessageType.PLAYER_TURN, payload);
     }
 

@@ -1,5 +1,9 @@
 package com.twb.pokerapp.domain.enumeration;
 
+import jakarta.annotation.Nullable;
+
+import static com.twb.pokerapp.domain.enumeration.BettingRoundState.*;
+
 public enum RoundState {
     WAITING_FOR_PLAYERS {
         @Override
@@ -17,15 +21,26 @@ public enum RoundState {
         public RoundState nextTexasHoldemState() {
             return FLOP_DEAL;
         }
+
+        @Override
+        public BettingRoundState getBettingRoundState() {
+            return DEAL;
+        }
     }, FLOP_DEAL {
         @Override
         public RoundState nextTexasHoldemState() {
             return FLOP_DEAL_BET;
         }
+
     }, FLOP_DEAL_BET {
         @Override
         public RoundState nextTexasHoldemState() {
             return TURN_DEAL;
+        }
+
+        @Override
+        public BettingRoundState getBettingRoundState() {
+            return FLOP;
         }
     }, TURN_DEAL {
         @Override
@@ -37,6 +52,11 @@ public enum RoundState {
         public RoundState nextTexasHoldemState() {
             return RIVER_DEAL;
         }
+
+        @Override
+        public BettingRoundState getBettingRoundState() {
+            return TURN;
+        }
     }, RIVER_DEAL {
         @Override
         public RoundState nextTexasHoldemState() {
@@ -46,6 +66,11 @@ public enum RoundState {
         @Override
         public RoundState nextTexasHoldemState() {
             return EVAL;
+        }
+
+        @Override
+        public BettingRoundState getBettingRoundState() {
+            return RIVER;
         }
     }, EVAL {
         @Override
@@ -58,6 +83,10 @@ public enum RoundState {
             return null;
         }
     };
+
+    public @Nullable BettingRoundState getBettingRoundState() {
+        return null;
+    }
 
     public abstract RoundState nextTexasHoldemState();
 }

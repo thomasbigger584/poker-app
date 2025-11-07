@@ -1,15 +1,13 @@
 package com.twb.pokerapp.service.game.thread.impl;
 
-import com.twb.pokerapp.domain.Card;
-import com.twb.pokerapp.domain.Hand;
-import com.twb.pokerapp.domain.PlayerAction;
-import com.twb.pokerapp.domain.PlayerSession;
+import com.twb.pokerapp.domain.*;
 import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.domain.enumeration.CardType;
 import com.twb.pokerapp.domain.enumeration.RoundState;
 import com.twb.pokerapp.service.eval.dto.EvalPlayerHandDTO;
 import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
+import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -20,6 +18,7 @@ import org.springframework.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 @Component
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -40,7 +39,7 @@ public class TexasHoldemGameThread extends GameThread {
     protected void onRunRound(RoundState roundState) {
         switch (roundState) {
             case INIT_DEAL -> initDeal();
-            case INIT_DEAL_BET, FLOP_DEAL_BET, TURN_DEAL_BET, RIVER_DEAL_BET -> waitAllPlayerTurns();
+            case INIT_DEAL_BET, FLOP_DEAL_BET, TURN_DEAL_BET, RIVER_DEAL_BET -> runBettingRound();
             case FLOP_DEAL -> dealFlop();
             case TURN_DEAL -> dealTurn();
             case RIVER_DEAL -> dealRiver();
@@ -64,33 +63,46 @@ public class TexasHoldemGameThread extends GameThread {
         }
     }
 
-    private void waitAllPlayerTurns() {
+    private void runBettingRound() {
         PlayerSession previousPlayer = null;
         for (PlayerSession currentPlayer : playerSessions) {
             if (!isPlayerFolded(currentPlayer)) {
                 checkRoundInterrupted();
-                sendPlayerNextActions(currentPlayer, previousPlayer);
+
+                double amountToCall = 0d;
+                ActionType[] nextActions = ActionType.getDefaultActions();
+
+                if (previousPlayer != null) {
+                    Optional<BettingRound> bettingRoundOpt = bettingRoundRepository.findById(currentBettingRound.getId());
+                    if (bettingRoundOpt.isPresent()) {
+                        currentBettingRound = bettingRoundOpt.get();
+
+                        List<PlayerAction> previousActions = playerActionRepository
+                                .findByBettingRoundAndPlayerSession(currentBettingRound.getId(), previousPlayer.getId());
+
+                        PlayerAction previousPlayerAction = previousActions.getLast();
+                        nextActions = ActionType.getNextActions(previousPlayerAction.getActionType());
+
+                        switch (previousPlayerAction.getActionType()) {
+                            case BET:
+                            case CALL: {
+                                amountToCall = previousPlayerAction.getAmount();
+                                break;
+                            }
+                            case RAISE: {
+                                // todo: need to handle raise
+                                throw new NotImplementedException("Raise not implemented");
+                            }
+                        }
+                    } else {
+                        throw new IllegalStateException("Betting round is not present");
+                    }
+                }
+                dispatcher.send(params.getTableId(), messageFactory.playerTurn(currentPlayer, nextActions, amountToCall));
                 previousPlayer = currentPlayer;
                 waitPlayerTurn(currentPlayer);
             }
         }
-    }
-
-    private void sendPlayerNextActions(PlayerSession playerSession, PlayerSession previousPlayer) {
-        ActionType[] nextActions = getNextActions(previousPlayer);
-        dispatcher.send(params.getTableId(), messageFactory.playerTurn(playerSession, nextActions));
-    }
-
-    private ActionType[] getNextActions(PlayerSession previousPlayer) {
-        if (previousPlayer != null) {
-            List<PlayerAction> previousActions = playerActionRepository
-                    .findByRoundAndPlayerSession(currentRound.getId(), previousPlayer.getId());
-            if (!CollectionUtils.isEmpty(previousActions)) {
-                PlayerAction playerAction = previousActions.getLast();
-                return ActionType.getNextActions(playerAction.getActionType());
-            }
-        }
-        return ActionType.getActionTypes();
     }
 
     private void dealPlayerCard(CardType cardType, PlayerSession playerSession) {

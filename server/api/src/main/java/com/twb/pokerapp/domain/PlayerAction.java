@@ -27,13 +27,8 @@ public class PlayerAction {
     private PlayerSession playerSession;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "round_id")
-    private Round round;
-
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    @Column(name = "round_state")
-    private RoundState roundState;
+    @JoinColumn(name = "betting_round_id")
+    private BettingRound bettingRound;
 
     @NotNull
     @Enumerated(EnumType.STRING)

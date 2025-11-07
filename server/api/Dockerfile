@@ -11,6 +11,12 @@ WORKDIR /app
 # Copy source code
 COPY . .
 
+# Ensure the Maven Wrapper is executable
+RUN chmod +x ./mvnw
+
+# Normalize Line Endings (CRLF to LF) for Windows users
+RUN sed -i 's/\r//g' ./mvnw
+
 # Compile C++ code with JDK
 ENV EVALUATOR_SO_PATH=/app/src/main/cpp/evaluator.so
 RUN g++ -shared -o $EVALUATOR_SO_PATH /app/src/main/cpp/* -I $JAVA_HOME/include -I $JAVA_HOME/include/linux
