@@ -57,6 +57,11 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
                 .getByNumberOfRounds(params.getNumberOfRounds());
         System.out.println("messages = " + messages);
         //todo: do assertions on messages
+
+        Long playerCount = em.createQuery("SELECT COUNT(p) FROM PokerTable p WHERE p.id = :tableId", Long.class)
+                .setParameter("tableId", params.getTable().getId())
+                .getSingleResult();
+        assertEquals(1, playerCount);
     }
 
     @Test

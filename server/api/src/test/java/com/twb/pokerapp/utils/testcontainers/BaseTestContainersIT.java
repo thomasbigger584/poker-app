@@ -2,6 +2,9 @@ package com.twb.pokerapp.utils.testcontainers;
 
 import com.twb.pokerapp.utils.keycloak.KeycloakClients;
 import dasniko.testcontainers.keycloak.KeycloakContainer;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -13,7 +16,9 @@ import org.testcontainers.containers.Network;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 // NOTE: Requires building docker image before: `docker compose build api`
 
@@ -82,6 +87,9 @@ public abstract class BaseTestContainersIT {
 
     protected static KeycloakClients keycloakClients;
 
+    private EntityManagerFactory emf;
+    protected EntityManager em;
+
     static {
         DB_CONTAINER.setPortBindings(
                 List.of(getPortBindingString(DB_PORT)));
@@ -104,11 +112,18 @@ public abstract class BaseTestContainersIT {
     public void onBeforeEach() throws Throwable {
         DB_CONTAINER.start();
         API_CONTAINER.start();
+        initSqlClient();
         beforeEach();
     }
 
     @AfterEach
     public void onAfterEach() throws Throwable {
+        if (em != null && em.isOpen()) {
+            em.close();
+        }
+        if (emf != null && emf.isOpen()) {
+            emf.close();
+        }
         API_CONTAINER.stop();
         DB_CONTAINER.stop();
         afterEach();
@@ -132,6 +147,20 @@ public abstract class BaseTestContainersIT {
     // *****************************************************************************************
     // Helper Methods
     // *****************************************************************************************
+
+
+    private void initSqlClient() {
+        Map<String, String> properties = new HashMap<>();
+        properties.put("jakarta.persistence.jdbc.driver", "org.postgresql.Driver");
+        properties.put("jakarta.persistence.jdbc.url", DB_CONTAINER.getJdbcUrl());
+        properties.put("jakarta.persistence.jdbc.user", DB_CONTAINER.getUsername());
+        properties.put("jakarta.persistence.jdbc.password", DB_CONTAINER.getPassword());
+        properties.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
+        properties.put("hibernate.hbm2ddl.auto", "validate");
+
+        emf = Persistence.createEntityManagerFactory("poker-app-test", properties);
+        em = emf.createEntityManager();
+    }
 
     private static String getPortBindingString(int port) {
         return String.format("%d:%d", port, port);

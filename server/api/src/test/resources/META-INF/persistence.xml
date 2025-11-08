@@ -1,0 +1,23 @@
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
+             version="3.0">
+    <persistence-unit name="poker-app-test" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+
+        <class>com.twb.pokerapp.domain.AppUser</class>
+        <class>com.twb.pokerapp.domain.BettingRound</class>
+        <class>com.twb.pokerapp.domain.Card</class>
+        <class>com.twb.pokerapp.domain.Hand</class>
+        <class>com.twb.pokerapp.domain.PlayerAction</class>
+        <class>com.twb.pokerapp.domain.PlayerSession</class>
+        <class>com.twb.pokerapp.domain.PokerTable</class>
+        <class>com.twb.pokerapp.domain.Round</class>
+
+        <properties>
+            <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+            <property name="hibernate.hbm2ddl.auto" value="validate"/>
+        </properties>
+    </persistence-unit>
+</persistence>
