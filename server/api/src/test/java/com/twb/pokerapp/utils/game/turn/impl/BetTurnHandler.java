@@ -12,10 +12,8 @@ import java.util.Arrays;
 public class BetTurnHandler implements TurnHandler {
     @Override
     public void handle(AbstractTestUser user, StompHeaders headers, PlayerTurnDTO playerTurn) {
-
         if (Arrays.stream(playerTurn.getActions())
                 .anyMatch(actionType -> actionType == ActionType.BET)) {
-
             CreatePlayerActionDTO createActionDto = new CreatePlayerActionDTO();
             createActionDto.setAction(ActionType.BET);
             createActionDto.setAmount(10d);
@@ -23,6 +21,5 @@ public class BetTurnHandler implements TurnHandler {
         } else {
             throw new IllegalStateException("Failed to find bet action in player turn response");
         }
-
     }
 }

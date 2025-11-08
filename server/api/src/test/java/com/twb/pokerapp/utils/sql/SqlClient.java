@@ -1,7 +1,7 @@
 package com.twb.pokerapp.utils.sql;
 
+import com.twb.pokerapp.domain.AppUser;
 import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.NoResultException;
@@ -32,18 +32,24 @@ public class SqlClient implements AutoCloseable {
         em = emf.createEntityManager();
     }
 
-    public Optional<PlayerSession> getPlayerSession(UUID playerSessionId) {
+    public Optional<PlayerSession> getPlayerSession(UUID id) {
+        return getById(id, PlayerSession.class);
+    }
+
+    public Optional<AppUser> getAppUser(UUID id) {
+        return getById(id, AppUser.class);
+    }
+
+    private <T> Optional<T> getById(UUID id, Class<T> clazz) {
         try {
-            return Optional.of(em.createQuery("SELECT ps FROM PlayerSession ps WHERE ps.id = :id", PlayerSession.class)
-                    .setParameter("id", playerSessionId)
+            var className = clazz.getSimpleName();
+            return Optional.of(em.createQuery("SELECT o FROM " + className + " o WHERE o.id = :id", clazz)
+                    .setParameter("id", id)
                     .getSingleResult());
         } catch (NoResultException e) {
             return Optional.empty();
         }
     }
-
-
-
 
     @Override
     public void close() {
@@ -54,5 +60,4 @@ public class SqlClient implements AutoCloseable {
             emf.close();
         }
     }
-
 }

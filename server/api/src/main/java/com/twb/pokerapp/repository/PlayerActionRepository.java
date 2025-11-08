@@ -20,7 +20,6 @@ public interface PlayerActionRepository extends JpaRepository<PlayerAction, UUID
     List<PlayerAction> findByBettingRoundAndPlayerSession(@Param("bettingRoundId") UUID bettingRoundId,
                                                           @Param("playerSessionId") UUID playerSessionId);
 
-
     @Query("SELECT a " +
             "FROM PlayerAction a " +
             "WHERE a.bettingRound.id = :bettingRoundId " +

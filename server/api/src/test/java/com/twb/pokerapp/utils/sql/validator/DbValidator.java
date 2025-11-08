@@ -1,6 +1,8 @@
 package com.twb.pokerapp.utils.sql.validator;
 
+import com.twb.pokerapp.domain.AppUser;
 import com.twb.pokerapp.domain.PlayerSession;
+import com.twb.pokerapp.dto.appuser.AppUserDTO;
 import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.utils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.utils.sql.SqlClient;
@@ -27,15 +29,29 @@ public abstract class DbValidator {
 
                     UUID playerSessionId = playerSessionDto.getId();
                     Optional<PlayerSession> playerSessionOpt = sqlClient.getPlayerSession(playerSessionId);
-                    assertTrue(playerSessionOpt.isPresent(), "Player Session not found for id: " + playerSessionId);
+                    assertTrue(playerSessionOpt.isPresent(), "PlayerSession not found for ID");
                     PlayerSession playerSession = playerSessionOpt.get();
+                    assertEquals(playerSessionId, playerSession.getId(), "PlayerSession IDs do not match");
 
-                    assertEquals(playerSessionDto.getId(), playerSession.getId());
+                    AppUserDTO appUserDto = playerSessionDto.getUser();
 
+                    UUID appUserId = appUserDto.getId();
+                    Optional<AppUser> appUserOpt = sqlClient.getAppUser(appUserId);
+                    assertTrue(appUserOpt.isPresent(), "AppUser not found for ID");
 
+                    AppUser appUser = appUserOpt.get();
+                    assertEquals(appUserId, appUser.getId(), "AppUser ids do not match");
+                    assertEquals(appUserDto.getUsername(), appUser.getUsername(), "AppUser usernames do not match");
+                    assertEquals(appUserDto.getFirstName(), appUser.getFirstName(), "AppUser first names do not match");
+                    assertEquals(appUserDto.getLastName(), appUser.getLastName(), "AppUser last names do not match");
+                    assertEquals(appUserDto.getEmail(), appUser.getEmail(), "AppUser emails do not match");
+                    assertEquals(appUserDto.isEmailVerified(), appUser.isEmailVerified(), "AppUser emailVerified do not match");
+                    assertEquals(appUserDto.isEnabled(), appUser.isEnabled(), "AppUser enabled do not match");
+                    assertTrue(appUser.isEnabled(), "AppUser enabled is not true");
 
 
                 });
+
         onValidateEndOfRun(messages);
     }
 

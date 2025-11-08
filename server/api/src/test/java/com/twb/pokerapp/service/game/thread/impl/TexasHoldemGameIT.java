@@ -59,7 +59,7 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
                 .getByNumberOfRounds(params.getNumberOfRounds());
         System.out.println("messages = " + messages);
 
-//        dbValidator.validate(messages);
+        dbValidator.validateEndOfRun(messages);
     }
 
     @Test
