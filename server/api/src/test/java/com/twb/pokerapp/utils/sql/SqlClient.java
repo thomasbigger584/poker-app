@@ -2,6 +2,7 @@ package com.twb.pokerapp.utils.sql;
 
 import com.twb.pokerapp.domain.AppUser;
 import com.twb.pokerapp.domain.PlayerSession;
+import com.twb.pokerapp.domain.PokerTable;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.NoResultException;
@@ -38,6 +39,10 @@ public class SqlClient implements AutoCloseable {
 
     public Optional<AppUser> getAppUser(UUID id) {
         return getById(id, AppUser.class);
+    }
+
+    public Optional<PokerTable> getPokerTable(UUID id) {
+        return getById(id, PokerTable.class);
     }
 
     private <T> Optional<T> getById(UUID id, Class<T> clazz) {

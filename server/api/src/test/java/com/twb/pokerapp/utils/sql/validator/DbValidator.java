@@ -2,8 +2,10 @@ package com.twb.pokerapp.utils.sql.validator;
 
 import com.twb.pokerapp.domain.AppUser;
 import com.twb.pokerapp.domain.PlayerSession;
+import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.dto.appuser.AppUserDTO;
 import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
+import com.twb.pokerapp.dto.pokertable.TableDTO;
 import com.twb.pokerapp.utils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.utils.sql.SqlClient;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
@@ -27,18 +29,18 @@ public abstract class DbValidator {
                     PlayerConnectedDTO payload = (PlayerConnectedDTO) message.getPayload();
                     PlayerSessionDTO playerSessionDto = payload.getPlayerSession();
 
+                    // PlayerSession Assertions
                     UUID playerSessionId = playerSessionDto.getId();
                     Optional<PlayerSession> playerSessionOpt = sqlClient.getPlayerSession(playerSessionId);
                     assertTrue(playerSessionOpt.isPresent(), "PlayerSession not found for ID");
                     PlayerSession playerSession = playerSessionOpt.get();
                     assertEquals(playerSessionId, playerSession.getId(), "PlayerSession IDs do not match");
 
+                    // AppUser Assertions
                     AppUserDTO appUserDto = playerSessionDto.getUser();
-
                     UUID appUserId = appUserDto.getId();
                     Optional<AppUser> appUserOpt = sqlClient.getAppUser(appUserId);
                     assertTrue(appUserOpt.isPresent(), "AppUser not found for ID");
-
                     AppUser appUser = appUserOpt.get();
                     assertEquals(appUserId, appUser.getId(), "AppUser ids do not match");
                     assertEquals(appUserDto.getUsername(), appUser.getUsername(), "AppUser usernames do not match");
@@ -49,7 +51,15 @@ public abstract class DbValidator {
                     assertEquals(appUserDto.isEnabled(), appUser.isEnabled(), "AppUser enabled do not match");
                     assertTrue(appUser.isEnabled(), "AppUser enabled is not true");
 
-
+                    // PokerTable Assertions
+                    TableDTO pokerTableDto = playerSessionDto.getPokerTable();
+                    UUID pokerTableId = pokerTableDto.getId();
+                    Optional<PokerTable> pokerTableOpt = sqlClient.getPokerTable(pokerTableId);
+                    assertTrue(pokerTableOpt.isPresent(), "PokerTable not found for ID");
+                    PokerTable pokerTable = pokerTableOpt.get();
+                    assertEquals(pokerTableId, pokerTable.getId(), "PokerTable ids do not match");
+                    assertEquals(pokerTableDto.getName(), pokerTable.getName(), "PokerTable names do not match");
+                    assertEquals(pokerTableDto.getGameType(), pokerTable.getGameType(), "PokerTable gameTypes do not match");
                 });
 
         onValidateEndOfRun(messages);

@@ -4,21 +4,21 @@ import com.twb.pokerapp.domain.*;
 import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.domain.enumeration.CardType;
 import com.twb.pokerapp.domain.enumeration.RoundState;
+import com.twb.pokerapp.dto.playeraction.PlayerActionDTO;
 import com.twb.pokerapp.service.eval.dto.EvalPlayerHandDTO;
 import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
+import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 @Component
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -44,6 +44,17 @@ public class TexasHoldemGameThread extends GameThread {
             case TURN_DEAL -> dealTurn();
             case RIVER_DEAL -> dealRiver();
             case EVAL -> evaluate();
+        }
+    }
+
+
+    @Override
+    protected void onPlayerAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
+        switch (createActionDto.getAction()) {
+            case CHECK -> checkAction(playerSession, createActionDto);
+            case BET -> betAction(playerSession, createActionDto);
+            case CALL -> callAction(playerSession, createActionDto);
+            case RAISE -> raiseAction(playerSession, createActionDto);
         }
     }
 
@@ -103,6 +114,31 @@ public class TexasHoldemGameThread extends GameThread {
                 waitPlayerTurn(currentPlayer);
             }
         }
+    }
+
+    private void checkAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
+        boolean canPerformCheck = playerActionRepository.findPlayerActionsNotFolded(currentBettingRound.getId())
+                .stream().findFirst()
+                .map(lastAction -> lastAction.getActionType() == ActionType.CHECK)
+                .orElse(true);
+        if (canPerformCheck) {
+            PlayerActionDTO actionDto = playerActionService.create(playerSession, currentBettingRound, createActionDto);
+            dispatcher.send(params.getTableId(), messageFactory.playerAction(actionDto));
+        } else {
+            logger.warn("Cannot check as previous actions was not a check");
+        }
+    }
+
+    private void betAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
+
+    }
+
+    private void callAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
+
+    }
+
+    private void raiseAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
+
     }
 
     private void dealPlayerCard(CardType cardType, PlayerSession playerSession) {

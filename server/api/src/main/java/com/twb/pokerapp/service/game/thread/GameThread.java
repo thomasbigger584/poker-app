@@ -244,17 +244,15 @@ public abstract class GameThread extends BaseGameThread {
 
     private void playerAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
         switch (createActionDto.getAction()) {
-            case FOLD -> fold(playerSession, createActionDto);
-            case CHECK -> check(playerSession, createActionDto);
-            case BET -> bet(playerSession, createActionDto);
-            case CALL -> call(playerSession, createActionDto);
-            case RAISE -> raise(playerSession, createActionDto);
+            case FOLD -> foldAction(playerSession, createActionDto);
+            // todo: add more generic actions
         }
+        onPlayerAction(playerSession, createActionDto);
         playerTurnLatch.countDown();
     }
 
     // NOTE: called from both game thread and main thread
-    private void fold(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
+    private void foldAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
         synchronized (foldedPlayers) {
             foldedPlayers.add(playerSession);
 
@@ -266,32 +264,6 @@ public abstract class GameThread extends BaseGameThread {
                 interruptRound.set(true);
             }
         }
-
-    }
-
-    private void check(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
-        boolean canPerformCheck = playerActionRepository.findPlayerActionsNotFolded(currentBettingRound.getId())
-                .stream().findFirst()
-                .map(lastAction -> lastAction.getActionType() == ActionType.CHECK)
-                .orElse(true);
-        if (canPerformCheck) {
-            PlayerActionDTO actionDto = playerActionService.create(playerSession, currentBettingRound, createActionDto);
-            dispatcher.send(params.getTableId(), messageFactory.playerAction(actionDto));
-        } else {
-            logger.warn("Cannot check as previous actions was not a check");
-        }
-    }
-
-    private void bet(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
-
-    }
-
-    private void call(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
-
-    }
-
-    private void raise(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
-
     }
 
     // *****************************************************************************************
@@ -428,6 +400,8 @@ public abstract class GameThread extends BaseGameThread {
     protected abstract void onInitRound();
 
     protected abstract void onRunRound(RoundState roundState);
+
+    protected abstract void onPlayerAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto);
 
     protected abstract RoundState getNextRoundState(RoundState roundState);
 }
