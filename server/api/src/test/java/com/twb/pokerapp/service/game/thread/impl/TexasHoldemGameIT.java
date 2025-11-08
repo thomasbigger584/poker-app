@@ -8,8 +8,9 @@ import com.twb.pokerapp.utils.game.GameRunner;
 import com.twb.pokerapp.utils.game.GameRunnerParams;
 import com.twb.pokerapp.utils.game.player.AbstractTestUser;
 import com.twb.pokerapp.utils.game.player.TestUserParams;
-import com.twb.pokerapp.utils.game.player.TurnHandler;
 import com.twb.pokerapp.utils.game.player.impl.TestTexasHoldemPlayerUser;
+import com.twb.pokerapp.utils.game.turn.TurnHandler;
+import com.twb.pokerapp.utils.game.turn.impl.DefaultTurnHandler;
 import com.twb.pokerapp.utils.http.RestClient;
 import com.twb.pokerapp.utils.http.RestClient.ApiHttpResponse;
 import com.twb.pokerapp.utils.http.message.PlayersServerMessages;
@@ -61,8 +62,8 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
     @Test
     void testGameWithDefaultActions() throws Throwable {
         Map<String, TurnHandler> turnHandlers = new HashMap<>();
-        turnHandlers.put(PLAYER_1, new TurnHandler());
-        turnHandlers.put(PLAYER_2, new TurnHandler());
+        turnHandlers.put(PLAYER_1, new DefaultTurnHandler());
+        turnHandlers.put(PLAYER_2, new DefaultTurnHandler());
 
         PlayersServerMessages messages = runner.run(getPlayers(turnHandlers))
                 .getByNumberOfRounds(params.getNumberOfRounds());
@@ -70,58 +71,6 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
         //todo: do assertions on messages
     }
 
-//    @Test
-//    public void testTexasHoldemGame() throws Throwable {
-//        TableDTO table = getTexasHoldemTable();
-//
-//        CountdownLatches latches = CountdownLatches.create();
-//
-//        AbstractTestUser listener = new TestGameListenerUser(table.getId(), latches, LISTENER_USERNAME, PASSWORD, NUM_OF_ROUNDS);
-//        listener.connect();
-//        Thread.sleep(PLAYER_WAIT_MS);
-//
-//        List<AbstractTestUser> players = new ArrayList<>();
-//        players.add(new TestTexasHoldemPlayerUser(table.getId(), latches, PLAYER_1_USERNAME, PASSWORD));
-//        players.add(new TestTexasHoldemPlayerUser(table.getId(), latches, PLAYER_2_USERNAME, PASSWORD));
-//
-//        for (AbstractTestUser player : players) {
-//            player.connect();
-//            Thread.sleep(PLAYER_WAIT_MS);
-//        }
-//
-//        latches.roundLatch().await(LATCH_TIMEOUT_IN_SECS, TimeUnit.SECONDS);
-//
-//        for (AbstractTestUser player : players) {
-//            player.disconnect();
-//            Thread.sleep(PLAYER_WAIT_MS);
-//        }
-//
-//        assertFalse(latches.gameLatch().await(LATCH_TIMEOUT_IN_SECS, TimeUnit.SECONDS));
-//
-//        listener.disconnect();
-//
-//        for (AbstractTestUser player : players) {
-//            AtomicReference<Throwable> exceptionThrown = player.getExceptionThrown();
-//            if (exceptionThrown.get() != null) {
-//                throw new RuntimeException("Test Failure for player: " + player, exceptionThrown.get());
-//            }
-//        }
-//
-//        List<ServerMessageDTO> allMessages = listener.getReceivedMessages();
-//
-//        // Note: assertions aren't tight as we cut off a round when players disconnect, so treating as good enough
-//        assertThat(allMessages).filteredOn(message -> message.getType().equals(ServerMessageType.DEAL_INIT))
-//                .hasSizeBetween((players.size() * NUM_OF_ROUNDS) * PLAYER_CARD_COUNT, (players.size() * NUM_OF_ROUNDS + 1) * PLAYER_CARD_COUNT);
-//
-//        assertThat(allMessages).filteredOn(message -> message.getType().equals(ServerMessageType.DEAL_COMMUNITY))
-//                .hasSizeBetween(NUM_OF_ROUNDS * COMMUNITY_CARD_COUNT, (NUM_OF_ROUNDS + 1) * COMMUNITY_CARD_COUNT);
-//
-//        assertThat(allMessages).filteredOn(message -> message.getType().equals(ServerMessageType.ROUND_FINISHED))
-//                .hasSizeBetween(NUM_OF_ROUNDS, NUM_OF_ROUNDS + 1);
-//
-//        assertThat(allMessages).filteredOn(message -> message.getType().equals(ServerMessageType.GAME_FINISHED))
-//                .hasSize(1);
-//    }
 
     // *****************************************************************************************
     // Helper Methods

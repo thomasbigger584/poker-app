@@ -3,6 +3,7 @@ package com.twb.pokerapp.utils.game.player.impl;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.utils.game.player.AbstractTestUser;
 import com.twb.pokerapp.utils.game.player.TestUserParams;
+import com.twb.pokerapp.utils.game.turn.TurnHandler;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
 import com.twb.pokerapp.web.websocket.message.server.payload.PlayerTurnDTO;
@@ -23,8 +24,9 @@ public class TestTexasHoldemPlayerUser extends AbstractTestUser {
             PlayerTurnDTO playerTurn = (PlayerTurnDTO) message.getPayload();
             if (playerTurn.getPlayerSession()
                     .getUser().getUsername().equals(params.getUsername())) {
-                if (params.getTurnHandler() != null) {
-                    params.getTurnHandler().handle(this, headers, playerTurn);
+                TurnHandler turnHandler = params.getTurnHandler();
+                if (turnHandler != null) {
+                    turnHandler.handle(this, headers, playerTurn);
                 }
             }
         }
