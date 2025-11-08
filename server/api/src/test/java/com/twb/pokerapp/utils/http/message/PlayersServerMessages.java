@@ -3,15 +3,14 @@ package com.twb.pokerapp.utils.http.message;
 import com.twb.pokerapp.utils.game.player.AbstractTestUser;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
+import org.apache.commons.compress.utils.Lists;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class PlayersServerMessages extends HashMap<String, List<ServerMessageDTO>> {
 
-    public PlayersServerMessages() { }
+    public PlayersServerMessages() {
+    }
 
     public PlayersServerMessages(AbstractTestUser listener,
                                  List<AbstractTestUser> players) {
@@ -27,6 +26,15 @@ public class PlayersServerMessages extends HashMap<String, List<ServerMessageDTO
             messages.put(entry.getKey(), filterByNumberOfRounds(entry.getValue(), numberOfRounds));
         }
         return messages;
+    }
+
+    public List<ServerMessageDTO> getListenerMessages() {
+        Optional<Entry<String, List<ServerMessageDTO>>> listenerEntry =
+                entrySet().stream().findFirst();
+        if (listenerEntry.isPresent()) {
+            return listenerEntry.get().getValue();
+        }
+        return Lists.newArrayList();
     }
 
     // ***************************************************************

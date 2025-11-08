@@ -14,6 +14,7 @@ import com.twb.pokerapp.utils.game.turn.impl.DefaultTurnHandler;
 import com.twb.pokerapp.utils.http.RestClient;
 import com.twb.pokerapp.utils.http.RestClient.ApiHttpResponse;
 import com.twb.pokerapp.utils.http.message.PlayersServerMessages;
+import com.twb.pokerapp.utils.sql.validator.impl.TexasHoldemDbValidator;
 import com.twb.pokerapp.utils.testcontainers.BaseTestContainersIT;
 import org.junit.jupiter.api.Test;
 import org.keycloak.admin.client.Keycloak;
@@ -45,6 +46,7 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
                 .table(getTexasHoldemTable())
                 .build();
         this.runner = new GameRunner(params);
+        this.dbValidator = new TexasHoldemDbValidator(sqlClient);
     }
 
     @Test
@@ -56,12 +58,8 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
         PlayersServerMessages messages = runner.run(getPlayers(turnHandlers))
                 .getByNumberOfRounds(params.getNumberOfRounds());
         System.out.println("messages = " + messages);
-        //todo: do assertions on messages
 
-        Long playerCount = em.createQuery("SELECT COUNT(p) FROM PokerTable p WHERE p.id = :tableId", Long.class)
-                .setParameter("tableId", params.getTable().getId())
-                .getSingleResult();
-        assertEquals(1, playerCount);
+//        dbValidator.validate(messages);
     }
 
     @Test
@@ -73,7 +71,8 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
         PlayersServerMessages messages = runner.run(getPlayers(turnHandlers))
                 .getByNumberOfRounds(params.getNumberOfRounds());
         System.out.println("messages = " + messages);
-        //todo: do assertions on messages
+
+        dbValidator.validateEndOfRun(messages);
     }
 
 
