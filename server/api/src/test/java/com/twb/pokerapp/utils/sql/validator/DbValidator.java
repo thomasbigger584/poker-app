@@ -20,7 +20,7 @@ public abstract class DbValidator {
 
     public void validateEndOfRun(PlayersServerMessages messages) {
         messages.getListenerMessages().stream()
-                .filter(serverMessageDTO -> serverMessageDTO.getType() == ServerMessageType.PLAYER_CONNECTED)
+                .filter(message -> message.getType() == ServerMessageType.PLAYER_CONNECTED)
                 .forEach(message -> {
                     PlayerConnectedDTO payload = (PlayerConnectedDTO) message.getPayload();
                     PlayerSessionDTO playerSessionDto = payload.getPlayerSession();
