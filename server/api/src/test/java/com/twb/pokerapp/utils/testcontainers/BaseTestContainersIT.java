@@ -2,7 +2,7 @@ package com.twb.pokerapp.utils.testcontainers;
 
 import com.twb.pokerapp.utils.keycloak.KeycloakClients;
 import com.twb.pokerapp.utils.sql.SqlClient;
-import com.twb.pokerapp.utils.sql.validator.DbValidator;
+import com.twb.pokerapp.utils.validator.Validator;
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -85,7 +85,7 @@ public abstract class BaseTestContainersIT {
     protected static KeycloakClients keycloakClients;
 
     protected SqlClient sqlClient;
-    protected DbValidator dbValidator;
+    protected Validator validator;
 
     static {
         DB_CONTAINER.setPortBindings(

@@ -1,8 +1,9 @@
-package com.twb.pokerapp.utils.sql.validator;
+package com.twb.pokerapp.utils.validator;
 
 import com.twb.pokerapp.domain.AppUser;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.PokerTable;
+import com.twb.pokerapp.domain.enumeration.SessionState;
 import com.twb.pokerapp.dto.appuser.AppUserDTO;
 import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.dto.pokertable.TableDTO;
@@ -19,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @RequiredArgsConstructor
-public abstract class DbValidator {
+public abstract class Validator {
     protected final SqlClient sqlClient;
 
     public void validateEndOfRun(PlayersServerMessages messages) {
@@ -27,14 +28,18 @@ public abstract class DbValidator {
                 .filter(message -> message.getType() == ServerMessageType.PLAYER_CONNECTED)
                 .forEach(message -> {
                     PlayerConnectedDTO payload = (PlayerConnectedDTO) message.getPayload();
-                    PlayerSessionDTO playerSessionDto = payload.getPlayerSession();
 
                     // PlayerSession Assertions
+                    PlayerSessionDTO playerSessionDto = payload.getPlayerSession();
+                    assertEquals(SessionState.CONNECTED, playerSessionDto.getSessionState(), "PlayerSession state should be CONNECTED");
+
                     UUID playerSessionId = playerSessionDto.getId();
                     Optional<PlayerSession> playerSessionOpt = sqlClient.getPlayerSession(playerSessionId);
                     assertTrue(playerSessionOpt.isPresent(), "PlayerSession not found for ID");
                     PlayerSession playerSession = playerSessionOpt.get();
                     assertEquals(playerSessionId, playerSession.getId(), "PlayerSession IDs do not match");
+                    assertTrue(playerSessionDto.getPosition() > 0, "PlayerSession positions are not greater than 0");
+                    assertEquals(playerSessionDto.getPosition(), playerSession.getPosition(), "PlayerSession positions do not match");
 
                     // AppUser Assertions
                     AppUserDTO appUserDto = playerSessionDto.getUser();
@@ -61,6 +66,8 @@ public abstract class DbValidator {
                     assertEquals(pokerTableDto.getName(), pokerTable.getName(), "PokerTable names do not match");
                     assertEquals(pokerTableDto.getGameType(), pokerTable.getGameType(), "PokerTable gameTypes do not match");
                 });
+
+        // todo: add PLAYER_SUBSCRIBED validation
 
         onValidateEndOfRun(messages);
     }
