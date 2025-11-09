@@ -23,32 +23,30 @@ public class UserRabbitMqConsumer {
 
     @RabbitListener(queues = {"app.keycloak.user.create"})
     public void onUserCreate(Message message) throws Exception {
-        AdminEvent event = objectMapper.readValue(message.getBody(), AdminEvent.class);
-        UserRepresentation representation = toRepresentation(event);
+        var event = objectMapper.readValue(message.getBody(), AdminEvent.class);
+        var representation = toRepresentation(event);
 
         userService.create(representation);
     }
 
     @RabbitListener(queues = {"app.keycloak.user.register"})
     public void onUserRegister(Message message) throws Exception {
-        Event event = objectMapper.readValue(message.getBody(), Event.class);
-        UserRepresentation representation = toRepresentation(event);
+        var event = objectMapper.readValue(message.getBody(), Event.class);
+        var representation = toRepresentation(event);
 
         userService.create(representation);
     }
 
     private UserRepresentation toRepresentation(AdminEvent adminEvent) throws Exception {
-        UserRepresentation representation = objectMapper
-                .readValue(adminEvent.getRepresentation(), UserRepresentation.class);
-        representation.setId(adminEvent.getResourcePath()
-                .replace("users/", ""));
+        var representation = objectMapper.readValue(adminEvent.getRepresentation(), UserRepresentation.class);
+        representation.setId(adminEvent.getResourcePath().replace("users/", ""));
         return representation;
     }
 
     private UserRepresentation toRepresentation(Event event) {
-        UserRepresentation representation = new UserRepresentation();
+        var representation = new UserRepresentation();
         representation.setId(event.getUserId());
-        Map<String, String> details = event.getDetails();
+        var details = event.getDetails();
         representation.setEmail(details.get("email"));
         representation.setUsername(details.get("username"));
         representation.setFirstName(details.get("first_name"));

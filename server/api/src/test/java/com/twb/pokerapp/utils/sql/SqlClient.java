@@ -24,7 +24,7 @@ public class SqlClient implements AutoCloseable {
     }
 
     private SqlClient(String url, String username, String password) {
-        Map<String, String> properties = new HashMap<>();
+        var properties = new HashMap<String, String>();
         properties.put("jakarta.persistence.jdbc.url", url);
         properties.put("jakarta.persistence.jdbc.user", username);
         properties.put("jakarta.persistence.jdbc.password", password);

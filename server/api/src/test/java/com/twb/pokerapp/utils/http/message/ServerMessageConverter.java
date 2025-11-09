@@ -26,12 +26,12 @@ public class ServerMessageConverter implements MessageConverter {
 
     @Override
     public Object fromMessage(Message<?> message, @NotNull Class<?> targetClass) {
-        byte[] payload = (byte[]) message.getPayload();
-        JSONObject jsonObject = getJsonObject(payload);
-        ServerMessageType messageType = getServerMessageType(jsonObject);
-        Class<?> payloadClass = messageType.getPayloadClass();
-        long timestamp = getTimestamp(jsonObject);
-        Object payloadObject = getPayloadObject(jsonObject, payloadClass);
+        var payload = (byte[]) message.getPayload();
+        var jsonObject = getJsonObject(payload);
+        var messageType = getServerMessageType(jsonObject);
+        var payloadClass = messageType.getPayloadClass();
+        var timestamp = getTimestamp(jsonObject);
+        var payloadObject = getPayloadObject(jsonObject, payloadClass);
 
         return ServerMessageDTO.create(messageType, timestamp, payloadObject);
     }
@@ -50,7 +50,7 @@ public class ServerMessageConverter implements MessageConverter {
                     + SERVER_MESSAGE_TYPE_KEY + " in response");
         }
         try {
-            String messageTypeString = jsonObject.getString(SERVER_MESSAGE_TYPE_KEY);
+            var messageTypeString = jsonObject.getString(SERVER_MESSAGE_TYPE_KEY);
             return ServerMessageType.valueOf(messageTypeString);
         } catch (JSONException e) {
             throw new RuntimeException("Failed to get message type string", e);
@@ -72,7 +72,7 @@ public class ServerMessageConverter implements MessageConverter {
 
     private Object getPayloadObject(JSONObject jsonObject, Class<?> payloadClass) {
         try {
-            JSONObject payloadString = jsonObject.getJSONObject(PAYLOAD_KEY);
+            var payloadString = jsonObject.getJSONObject(PAYLOAD_KEY);
             return objectMapper.readValue(payloadString.toString(), payloadClass);
         } catch (IOException | JSONException e) {
             throw new RuntimeException("Failed to parse server message payload", e);
@@ -82,8 +82,8 @@ public class ServerMessageConverter implements MessageConverter {
     @Override
     public Message<?> toMessage(@NotNull Object payload, MessageHeaders headers) {
         try {
-            String json = objectMapper.writeValueAsString(payload);
-            byte[] payloadBytes = json.getBytes(StandardCharsets.UTF_8);
+            var json = objectMapper.writeValueAsString(payload);
+            var payloadBytes = json.getBytes(StandardCharsets.UTF_8);
             return new GenericMessage<>(payloadBytes, headers);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to parse bytes for payload", e);

@@ -133,8 +133,7 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     private void createNewRound() {
-        var roundOpt = roundRepository
-                .findCurrentByTableId(params.getTableId());
+        var roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
         if (roundOpt.isPresent()) {
             currentRound = roundOpt.get();
             if (currentRound.getRoundState() != RoundState.WAITING_FOR_PLAYERS) {

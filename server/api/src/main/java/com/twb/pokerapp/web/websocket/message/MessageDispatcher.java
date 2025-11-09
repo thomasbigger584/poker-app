@@ -33,8 +33,8 @@ public class MessageDispatcher {
 
     public void send(UUID tableId, ServerMessageDTO message) {
         try {
-            String destination = String.format(TOPIC, tableId);
-            String payload = objectMapper.writeValueAsString(message);
+            var destination = String.format(TOPIC, tableId);
+            var payload = objectMapper.writeValueAsString(message);
             template.convertAndSend(destination, payload);
             logger.info("<<<< {}", payload);
         } catch (JsonProcessingException e) {
@@ -44,8 +44,8 @@ public class MessageDispatcher {
 
     public void send(UUID tableId, String username, ServerMessageDTO message) {
         try {
-            String destination = String.format(TOPIC, tableId);
-            String payload = objectMapper.writeValueAsString(message);
+            var destination = String.format(TOPIC, tableId);
+            var payload = objectMapper.writeValueAsString(message);
             template.convertAndSendToUser(username, destination, payload);
             logger.info("<<<< [{}] {}", username, payload);
         } catch (JsonProcessingException e) {

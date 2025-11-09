@@ -60,7 +60,7 @@ public class AppUser {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        AppUser appUser = (AppUser) o;
+        var appUser = (AppUser) o;
         return new EqualsBuilder().append(id, appUser.id).append(username, appUser.username).isEquals();
     }
 

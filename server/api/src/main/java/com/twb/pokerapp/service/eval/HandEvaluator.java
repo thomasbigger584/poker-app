@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -19,7 +20,7 @@ public class HandEvaluator {
     }
 
     private void evaluateRankAndHandType(List<EvalPlayerHandDTO> playerHandList) {
-        for (EvalPlayerHandDTO playerHand : playerHandList) {
+        for (var playerHand : playerHandList) {
             playerHand.setRank(rankEvaluator.getRank(playerHand.getCards()));
             playerHand.setHandType(handTypeEvaluator.evaluate(playerHand.getCards()));
         }
@@ -28,10 +29,10 @@ public class HandEvaluator {
     private void setWinners(List<EvalPlayerHandDTO> playerHandList) {
         playerHandList.sort(Comparator.reverseOrder());
 
-        EvalPlayerHandDTO winningPlayer = playerHandList.getFirst();
-        int winningRankValue = winningPlayer.getRank();
-        for (EvalPlayerHandDTO playerHand : playerHandList) {
-            if (playerHand.getRank() == winningRankValue) {
+        var winningPlayer = playerHandList.getFirst();
+        var winningRankValue = winningPlayer.getRank();
+        for (var playerHand : playerHandList) {
+            if (Objects.equals(playerHand.getRank(), winningRankValue)) {
                 playerHand.setWinner(true);
             }
         }

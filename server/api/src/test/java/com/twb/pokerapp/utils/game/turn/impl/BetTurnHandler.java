@@ -14,7 +14,7 @@ public class BetTurnHandler implements TurnHandler {
     public void handle(AbstractTestUser user, StompHeaders headers, PlayerTurnDTO playerTurn) {
         if (Arrays.stream(playerTurn.getActions())
                 .anyMatch(actionType -> actionType == ActionType.BET)) {
-            CreatePlayerActionDTO createActionDto = new CreatePlayerActionDTO();
+            var createActionDto = new CreatePlayerActionDTO();
             createActionDto.setAction(ActionType.BET);
             createActionDto.setAmount(10d);
             user.sendPlayerAction(createActionDto);

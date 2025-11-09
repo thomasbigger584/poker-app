@@ -24,10 +24,10 @@ public class PlayerSessionService {
     private final PlayerSessionMapper mapper;
 
     public PlayerSessionDTO connectUserToRound(AppUser user, ConnectionType connectionType, PokerTable pokerTable) {
-        UUID tableId = pokerTable.getId();
-        String username = user.getUsername();
+        var tableId = pokerTable.getId();
+        var username = user.getUsername();
 
-        Optional<PlayerSession> sessionOpt = repository
+        var sessionOpt = repository
                 .findByTableIdAndUsername(tableId, username);
 
         PlayerSession session;
@@ -55,11 +55,10 @@ public class PlayerSessionService {
     //todo: think about what to do with funds, it should be persisted elsewhere,
     // probably on AppUser or separate Bank table
     public void disconnectUser(UUID tableId, String username) {
-        Optional<PlayerSession> sessionOpt =
+        var sessionOpt =
                 repository.findByTableIdAndUsername(tableId, username);
         if (sessionOpt.isPresent()) {
-
-            PlayerSession playerSession = sessionOpt.get();
+            var playerSession = sessionOpt.get();
 
             playerSession.setDealer(null);
             playerSession.setFunds(null);
@@ -72,7 +71,7 @@ public class PlayerSessionService {
     }
 
     private int getSessionTablePosition(PokerTable pokerTable) {
-        List<PlayerSession> sessions = repository.findConnectedPlayersByTableId(pokerTable.getId());
+        var sessions = repository.findConnectedPlayersByTableId(pokerTable.getId());
         int otherPlayersMaxCount = pokerTable.getGameType().getMaxPlayerCount() - 1;
         for (int position = 1; position <= otherPlayersMaxCount; position++) {
             if (!isPositionAlreadyTaken(sessions, position)) {
@@ -90,7 +89,7 @@ public class PlayerSessionService {
     }
 
     private boolean isPositionAlreadyTaken(List<PlayerSession> sessions, int position) {
-        for (PlayerSession session : sessions) {
+        for (var session : sessions) {
             Integer thisPosition = session.getPosition();
             if (thisPosition != null && thisPosition == position) {
                 return true;

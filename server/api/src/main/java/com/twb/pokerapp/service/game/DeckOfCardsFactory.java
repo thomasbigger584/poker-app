@@ -16,8 +16,8 @@ public class DeckOfCardsFactory {
 
     static {
         int valueIndex = 0;
-        for (RankType rank : RankType.values()) {
-            for (SuitType suit : SuitType.values()) {
+        for (var rank : RankType.values()) {
+            for (var suit : SuitType.values()) {
                 CARDS.add(new Card(rank, suit, valueIndex++));
             }
         }
@@ -30,7 +30,7 @@ public class DeckOfCardsFactory {
      * @return a list of cards representing the deck
      */
     public static List<Card> getCards(boolean shuffle) {
-        List<Card> deckOfCardsCopy = new ArrayList<>(CARDS);
+        var deckOfCardsCopy = new ArrayList<>(CARDS);
         if (shuffle) {
             Collections.shuffle(deckOfCardsCopy);
         }

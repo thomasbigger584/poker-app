@@ -35,17 +35,17 @@ public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationTo
 
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
-        List<GrantedAuthority> authorities = Stream.concat(
+        var authorities = Stream.concat(
                 jwtGrantedAuthoritiesConverter.convert(jwt).stream(),
                 extractResourceRoles(jwt).stream()).collect(Collectors.toList());
 
-        JwtAuthenticationToken authToken = new JwtAuthenticationToken(jwt, authorities, getPrincipalClaimName(jwt));
+        var authToken = new JwtAuthenticationToken(jwt, authorities, getPrincipalClaimName(jwt));
         setUserDetails(authToken);
         return authToken;
     }
 
     private String getPrincipalClaimName(Jwt jwt) {
-        String claimName = JwtClaimNames.SUB;
+        var claimName = JwtClaimNames.SUB;
         if (properties.getPrincipalAttribute() != null) {
             claimName = properties.getPrincipalAttribute();
         }
@@ -64,11 +64,11 @@ public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationTo
         if (!resourceAccess.containsKey(properties.getResourceId())) {
             return Collections.emptyList();
         }
-        Map<String, Object> resource = (Map<String, Object>) resourceAccess.get(properties.getResourceId());
+        var resource = (Map<String, Object>) resourceAccess.get(properties.getResourceId());
         if (!resource.containsKey("roles")) {
             return Collections.emptyList();
         }
-        Collection<String> resourceRoles = (Collection<String>) resource.get(ROLES);
+        var resourceRoles = (Collection<String>) resource.get(ROLES);
         if (resourceRoles == null) {
             return Collections.emptyList();
         }
@@ -79,7 +79,7 @@ public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationTo
 
     private void setUserDetails(JwtAuthenticationToken authToken) {
         try {
-            Optional<AppUser> userOpt = userRepository.findByUsername(authToken.getName());
+            var userOpt = userRepository.findByUsername(authToken.getName());
             if (userOpt.isPresent()) {
                 authToken.setDetails(objectMapper.writeValueAsString(userOpt.get()));
                 authToken.setAuthenticated(true);

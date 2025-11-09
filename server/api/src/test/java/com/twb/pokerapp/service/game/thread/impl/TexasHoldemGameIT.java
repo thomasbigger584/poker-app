@@ -51,11 +51,11 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
 
     @Test
     void testGameWithoutPlayerActions() throws Throwable {
-        Map<String, TurnHandler> turnHandlers = new HashMap<>();
+        var turnHandlers = new HashMap<String, TurnHandler>();
         turnHandlers.put(PLAYER_1, null);
         turnHandlers.put(PLAYER_2, null);
 
-        PlayersServerMessages messages = runner.run(getPlayers(turnHandlers))
+        var messages = runner.run(getPlayers(turnHandlers))
                 .getByNumberOfRounds(params.getNumberOfRounds());
         System.out.println("messages = " + messages);
 
@@ -64,11 +64,11 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
 
     @Test
     void testGameWithDefaultActions() throws Throwable {
-        Map<String, TurnHandler> turnHandlers = new HashMap<>();
+        var turnHandlers = new HashMap<String, TurnHandler>();
         turnHandlers.put(PLAYER_1, new DefaultTurnHandler());
         turnHandlers.put(PLAYER_2, new DefaultTurnHandler());
 
-        PlayersServerMessages messages = runner.run(getPlayers(turnHandlers))
+        var messages = runner.run(getPlayers(turnHandlers))
                 .getByNumberOfRounds(params.getNumberOfRounds());
         System.out.println("messages = " + messages);
 
@@ -81,13 +81,13 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
     // *****************************************************************************************
 
     private TableDTO getTexasHoldemTable() throws Exception {
-        Keycloak keycloak = keycloakClients.getAdminKeycloak();
-        RestClient client = RestClient.getInstance(keycloak);
-        ApiHttpResponse<TableDTO[]> tablesResponse = client.get(TableDTO[].class, "/poker-table");
+        var keycloak = keycloakClients.getAdminKeycloak();
+        var client = RestClient.getInstance(keycloak);
+        var tablesResponse = client.get(TableDTO[].class, "/poker-table");
         assertEquals(HttpStatus.OK.value(), tablesResponse.httpResponse().statusCode());
-        TableDTO[] tables = tablesResponse.resultBody();
+        var tables = tablesResponse.resultBody();
 
-        for (TableDTO tableDTO : tables) {
+        for (var tableDTO : tables) {
             if (tableDTO.getGameType() == GameType.TEXAS_HOLDEM) {
                 return tableDTO;
             }
@@ -96,10 +96,10 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
     }
 
     private List<AbstractTestUser> getPlayers(Map<String, TurnHandler> playerToTurnHandler) {
-        List<AbstractTestUser> players = new ArrayList<>();
-        for (Map.Entry<String, TurnHandler> playerTurn : playerToTurnHandler.entrySet()) {
-            String username = playerTurn.getKey();
-            TestUserParams userParams = TestUserParams.builder()
+        var players = new ArrayList<AbstractTestUser>();
+        for (var playerTurn : playerToTurnHandler.entrySet()) {
+            var username = playerTurn.getKey();
+            var userParams = TestUserParams.builder()
                     .table(params.getTable())
                     .username(username)
                     .latches(params.getLatches())

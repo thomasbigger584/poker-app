@@ -13,7 +13,7 @@ public class PaginationService {
     private static final String HEADER_SIZE = "X-Size";
 
     public HttpHeaders createHeaders(Page<?> page) {
-        HttpHeaders headers = new HttpHeaders();
+        var headers = new HttpHeaders();
         headers.add(HEADER_TOTAL_COUNT, Long.toString(page.getTotalElements()));
         headers.add(HEADER_TOTAL_PAGES, Integer.toString(page.getTotalPages()));
         headers.add(HEADER_CURRENT_PAGE, Integer.toString(page.getNumber()));

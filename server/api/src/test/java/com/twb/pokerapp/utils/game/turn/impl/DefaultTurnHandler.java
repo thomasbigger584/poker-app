@@ -14,7 +14,7 @@ public class DefaultTurnHandler implements TurnHandler {
         Arrays.stream(playerTurn.getActions())
                 .findFirst()
                 .ifPresent(action -> {
-                    CreatePlayerActionDTO createActionDto = new CreatePlayerActionDTO();
+                    var createActionDto = new CreatePlayerActionDTO();
                     createActionDto.setAction(action);
                     createActionDto.setAmount(playerTurn.getAmountToCall());
 

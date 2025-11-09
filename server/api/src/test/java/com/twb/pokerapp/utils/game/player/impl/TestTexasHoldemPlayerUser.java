@@ -21,10 +21,10 @@ public class TestTexasHoldemPlayerUser extends AbstractTestUser {
     @Override
     protected void handleMessage(StompHeaders headers, ServerMessageDTO message) {
         if (message.getType() == ServerMessageType.PLAYER_TURN) {
-            PlayerTurnDTO playerTurn = (PlayerTurnDTO) message.getPayload();
+            var playerTurn = (PlayerTurnDTO) message.getPayload();
             if (playerTurn.getPlayerSession()
                     .getUser().getUsername().equals(params.getUsername())) {
-                TurnHandler turnHandler = params.getTurnHandler();
+                var turnHandler = params.getTurnHandler();
                 if (turnHandler != null) {
                     turnHandler.handle(this, headers, playerTurn);
                 }

@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -23,7 +22,7 @@ public class RoundService {
     private final RoundMapper mapper;
 
     public Round create(PokerTable pokerTable) {
-        Round round = new Round();
+        var round = new Round();
         round.setRoundState(RoundState.WAITING_FOR_PLAYERS);
         round.setPokerTable(pokerTable);
 
@@ -34,7 +33,7 @@ public class RoundService {
 
     @Transactional(readOnly = true)
     public RoundDTO getCurrent(UUID tableId) {
-        Optional<Round> roundOpt = repository.findCurrentByTableId(tableId);
+        var roundOpt = repository.findCurrentByTableId(tableId);
         if (roundOpt.isEmpty()) {
             throw new NotFoundException("Round not found for table: " + tableId);
         }
@@ -44,6 +43,8 @@ public class RoundService {
     @Transactional(readOnly = true)
     public List<RoundDTO> getByTableId(UUID tableId) {
         return repository.findByTableId(tableId)
-                .stream().map(mapper::modelToDto).toList();
+                .stream()
+                .map(mapper::modelToDto)
+                .toList();
     }
 }

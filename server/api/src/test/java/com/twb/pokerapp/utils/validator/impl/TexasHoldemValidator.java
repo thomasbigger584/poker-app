@@ -27,17 +27,17 @@ public class TexasHoldemValidator extends Validator {
         messages.getListenerMessages().stream()
                 .filter(message -> message.getType() == ServerMessageType.DEALER_DETERMINED)
                 .forEach(message -> {
-                    DealerDeterminedDTO payload = (DealerDeterminedDTO) message.getPayload();
+                    var payload = (DealerDeterminedDTO) message.getPayload();
 
                     // PlayerSession Assertions
-                    PlayerSessionDTO playerSessionDto = payload.getPlayerSession();
+                    var playerSessionDto = payload.getPlayerSession();
                     assertEquals(SessionState.CONNECTED, playerSessionDto.getSessionState(), "PlayerSession state should be CONNECTED");
                     assertTrue(playerSessionDto.getDealer(), "PlayerSession should be marked as dealer");
 
-                    UUID playerSessionId = playerSessionDto.getId();
-                    Optional<PlayerSession> playerSessionOpt = sqlClient.getPlayerSession(playerSessionId);
+                    var playerSessionId = playerSessionDto.getId();
+                    var playerSessionOpt = sqlClient.getPlayerSession(playerSessionId);
                     assertTrue(playerSessionOpt.isPresent(), "PlayerSession not found for ID");
-                    PlayerSession playerSession = playerSessionOpt.get();
+                    var playerSession = playerSessionOpt.get();
                     assertEquals(playerSessionId, playerSession.getId(), "PlayerSession IDs do not match");
                     assertTrue(playerSessionDto.getPosition() > 0, "PlayerSession positions are not greater than 0");
                     assertEquals(playerSessionDto.getPosition(), playerSession.getPosition(), "PlayerSession positions do not match");

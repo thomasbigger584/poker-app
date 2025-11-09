@@ -64,9 +64,9 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
     public void connect() throws InterruptedException {
         logger.info("Connecting {} to {}", params.getUsername(), params.getTable().getId());
-        URI url = URI.create(CONNECTION_URL);
-        WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
-        StompHeaders stompHeaders = new StompHeaders();
+        var url = URI.create(CONNECTION_URL);
+        var headers = new WebSocketHttpHeaders();
+        var stompHeaders = new StompHeaders();
         stompHeaders.add(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken());
         stompHeaders.put(HEADER_CONNECTION_TYPE, Collections.singletonList(getConnectionType().toString()));
 
@@ -125,7 +125,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
             return;
         }
         connectLatch.countDown();
-        ServerMessageDTO message = (ServerMessageDTO) payload;
+        var message = (ServerMessageDTO) payload;
         receivedMessages.add(message);
 
         if (message.getPayload() instanceof ErrorMessageDTO error) {
@@ -160,12 +160,12 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
     @NotNull
     private WebSocketStompClient createClient() {
-        List<Transport> transports = new ArrayList<>(2);
+        var transports = new ArrayList<Transport>(2);
         transports.add(new WebSocketTransport(new StandardWebSocketClient()));
         transports.add(new RestTemplateXhrTransport());
 
-        SockJsClient sockJsClient = new SockJsClient(transports);
-        WebSocketStompClient stompClient = new WebSocketStompClient(sockJsClient);
+        var sockJsClient = new SockJsClient(transports);
+        var stompClient = new WebSocketStompClient(sockJsClient);
         stompClient.setTaskScheduler(TASK_SCHEDULER);
         stompClient.setMessageConverter(new ServerMessageConverter());
         return stompClient;
@@ -177,7 +177,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
             return;
         }
         logger.info(">>>> [{}] sending {}", params.getUsername(), dto);
-        StompSession.Receiptable receiptable = session.send(destination, dto);
+        var receiptable = session.send(destination, dto);
         receiptable.addReceiptTask(() -> logger.info("Receipt received for user {} destination {} and payload {}", params.getUsername(), destination, dto));
         receiptable.addReceiptLostTask(() -> logger.info("Failed to receive receipt for user {} destination {} and payload {}", params.getUsername(), destination, dto));
     }
@@ -187,8 +187,8 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     // ***************************************************************
 
     private String getAccessToken() {
-        TokenManager tokenManager = keycloak.tokenManager();
-        AccessTokenResponse accessTokenResponse = tokenManager.getAccessToken();
+        var tokenManager = keycloak.tokenManager();
+        var accessTokenResponse = tokenManager.getAccessToken();
         return accessTokenResponse.getToken();
     }
 }

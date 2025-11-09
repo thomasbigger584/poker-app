@@ -9,8 +9,8 @@ public record GameLatches(
     private static final int SINGLE = 1;
 
     public static GameLatches create() {
-        CountDownLatch roundLatch = new CountDownLatch(SINGLE);
-        CountDownLatch gameLatch = new CountDownLatch(SINGLE);
+        var roundLatch = new CountDownLatch(SINGLE);
+        var gameLatch = new CountDownLatch(SINGLE);
         return new GameLatches(roundLatch, gameLatch);
     }
 }

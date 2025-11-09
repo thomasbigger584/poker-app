@@ -22,7 +22,7 @@ public class PlayerActionService {
                                   BettingRound bettingRound,
                                   CreatePlayerActionDTO createDto) {
 
-        PlayerAction playerAction = new PlayerAction();
+        var playerAction = new PlayerAction();
         playerAction.setPlayerSession(playerSession);
         playerAction.setBettingRound(bettingRound);
         playerAction.setActionType(createDto.getAction());

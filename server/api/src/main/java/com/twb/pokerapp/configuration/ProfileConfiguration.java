@@ -23,12 +23,12 @@ public class ProfileConfiguration {
     }
 
     public boolean hasLocalProfile() {
-        String[] activeProfiles = environment.getActiveProfiles();
+        var activeProfiles = environment.getActiveProfiles();
         return Arrays.asList(activeProfiles).contains(LOCAL_PROFILE);
     }
 
     public boolean hasDigitalOceanProfile() {
-        String[] activeProfiles = environment.getActiveProfiles();
+        var activeProfiles = environment.getActiveProfiles();
         return Arrays.asList(activeProfiles).contains(DIGITALOCEAN_PROFILE);
     }
 }

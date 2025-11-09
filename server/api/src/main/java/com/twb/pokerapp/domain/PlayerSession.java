@@ -67,7 +67,7 @@ public class PlayerSession {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        PlayerSession that = (PlayerSession) o;
+        var that = (PlayerSession) o;
         return new EqualsBuilder()
                 .append(id, that.id).isEquals();
     }

@@ -47,33 +47,33 @@ public class PokerTableGameService {
 
     public ServerMessageDTO onUserConnected(UUID tableId, ConnectionType connectionType, String username) {
         return mutex.evaluate(tableId, () -> {
-            Optional<PokerTable> pokerTableOpt = tableRepository.findById(tableId);
+            var pokerTableOpt = tableRepository.findById(tableId);
             if (pokerTableOpt.isEmpty()) {
-                String message = String.format("Failed to connect user %s to table %s as table not found", username, tableId);
+                var message = String.format("Failed to connect user %s to table %s as table not found", username, tableId);
                 throw new RuntimeException(message);
             }
 
-            Optional<AppUser> userOpt = userRepository.findByUsername(username);
+            var userOpt = userRepository.findByUsername(username);
             if (userOpt.isEmpty()) {
-                String message = String.format("Failed to connect user %s to table %s as user not found", username, tableId);
+                var message = String.format("Failed to connect user %s to table %s as user not found", username, tableId);
                 throw new RuntimeException(message);
             }
 
-            Optional<PlayerSession> playerSessionOpt = playerSessionRepository.findByTableIdAndUsername(tableId, username);
+            var playerSessionOpt = playerSessionRepository.findByTableIdAndUsername(tableId, username);
             if (playerSessionOpt.isPresent()) {
-                String message = String.format("User %s already connected to table %s", username, tableId);
+                var message = String.format("User %s already connected to table %s", username, tableId);
                 throw new RuntimeException(message);
             }
 
-            PokerTable pokerTable = pokerTableOpt.get();
-            AppUser appUser = userOpt.get();
+            var pokerTable = pokerTableOpt.get();
+            var appUser = userOpt.get();
 
             if (connectionType == ConnectionType.PLAYER) {
                 threadManager.createIfNotExist(pokerTable);
             }
 
-            PlayerSessionDTO connectedPlayerSession = playerSessionService.connectUserToRound(appUser, connectionType, pokerTable);
-            List<PlayerSessionDTO> allPlayerSessions = playerSessionService.getByTableId(tableId);
+            var connectedPlayerSession = playerSessionService.connectUserToRound(appUser, connectionType, pokerTable);
+            var allPlayerSessions = playerSessionService.getByTableId(tableId);
 
             dispatcher.send(tableId, messageFactory.playerConnected(connectedPlayerSession));
             return messageFactory.playerSubscribed(allPlayerSessions);
@@ -82,7 +82,7 @@ public class PokerTableGameService {
 
     public void onPlayerAction(UUID tableId, String username, CreatePlayerActionDTO action) {
         mutex.execute(tableId, () -> {
-            Optional<GameThread> threadOpt = threadManager.getIfExists(tableId);
+            var threadOpt = threadManager.getIfExists(tableId);
             if (threadOpt.isPresent()) {
                 GameThread thread = threadOpt.get();
                 thread.playerAction(username, action);
@@ -93,21 +93,20 @@ public class PokerTableGameService {
     public void onUserDisconnected(UUID tableId, String username) {
         mutex.execute(tableId, () -> {
             playerSessionService.disconnectUser(tableId, username);
-            Optional<GameThread> threadOpt = threadManager.getIfExists(tableId);
+            var threadOpt = threadManager.getIfExists(tableId);
             if (threadOpt.isPresent()) {
                 GameThread thread = threadOpt.get();
 
-                List<PlayerSession> playerSessions =
+                var playerSessions =
                         playerSessionRepository.findConnectedPlayersByTableIdNoLock(tableId);
                 if (CollectionUtils.isEmpty(playerSessions)) {
                     thread.interrupt();
                 } else {
-                    CreatePlayerActionDTO createPlayerActionDTO = new CreatePlayerActionDTO();
+                    var createPlayerActionDTO = new CreatePlayerActionDTO();
                     createPlayerActionDTO.setAction(ActionType.FOLD);
                     thread.playerAction(username, createPlayerActionDTO);
                 }
-                ServerMessageDTO message =
-                        messageFactory.playerDisconnected(username);
+                var message = messageFactory.playerDisconnected(username);
                 dispatcher.send(tableId, message);
                 if (playerSessions.size() < 2) {
                     thread.interrupt();

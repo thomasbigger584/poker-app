@@ -276,7 +276,7 @@ public class HandFixture {
     }
 
     private static Card findCard(RankType rankType, SuitType suitType) {
-        String key = rankType.toString() + suitType.toString();
+        var key = rankType.toString() + suitType.toString();
         Card card = DECK_MAP.get(key);
         if (card == null) {
             throw new NotFoundException("Failed to find card: " + key + " - shouldn't get here, in a test");

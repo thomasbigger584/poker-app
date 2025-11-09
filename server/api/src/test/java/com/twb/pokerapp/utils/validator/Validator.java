@@ -31,23 +31,23 @@ public abstract class Validator {
                     PlayerConnectedDTO payload = (PlayerConnectedDTO) message.getPayload();
 
                     // PlayerSession Assertions
-                    PlayerSessionDTO playerSessionDto = payload.getPlayerSession();
+                    var playerSessionDto = payload.getPlayerSession();
                     assertEquals(SessionState.CONNECTED, playerSessionDto.getSessionState(), "PlayerSession state should be CONNECTED");
 
-                    UUID playerSessionId = playerSessionDto.getId();
-                    Optional<PlayerSession> playerSessionOpt = sqlClient.getPlayerSession(playerSessionId);
+                    var playerSessionId = playerSessionDto.getId();
+                    var playerSessionOpt = sqlClient.getPlayerSession(playerSessionId);
                     assertTrue(playerSessionOpt.isPresent(), "PlayerSession not found for ID");
-                    PlayerSession playerSession = playerSessionOpt.get();
+                    var playerSession = playerSessionOpt.get();
                     assertEquals(playerSessionId, playerSession.getId(), "PlayerSession IDs do not match");
                     assertTrue(playerSessionDto.getPosition() > 0, "PlayerSession positions are not greater than 0");
                     assertEquals(playerSessionDto.getPosition(), playerSession.getPosition(), "PlayerSession positions do not match");
 
                     // AppUser Assertions
-                    AppUserDTO appUserDto = playerSessionDto.getUser();
-                    UUID appUserId = appUserDto.getId();
-                    Optional<AppUser> appUserOpt = sqlClient.getAppUser(appUserId);
+                    var appUserDto = playerSessionDto.getUser();
+                    var appUserId = appUserDto.getId();
+                    var appUserOpt = sqlClient.getAppUser(appUserId);
                     assertTrue(appUserOpt.isPresent(), "AppUser not found for ID");
-                    AppUser appUser = appUserOpt.get();
+                    var appUser = appUserOpt.get();
                     assertEquals(appUserId, appUser.getId(), "AppUser ids do not match");
                     assertEquals(appUserDto.getUsername(), appUser.getUsername(), "AppUser usernames do not match");
                     assertEquals(appUserDto.getFirstName(), appUser.getFirstName(), "AppUser first names do not match");
@@ -58,11 +58,11 @@ public abstract class Validator {
                     assertTrue(appUser.isEnabled(), "AppUser enabled is not true");
 
                     // PokerTable Assertions
-                    TableDTO pokerTableDto = playerSessionDto.getPokerTable();
-                    UUID pokerTableId = pokerTableDto.getId();
-                    Optional<PokerTable> pokerTableOpt = sqlClient.getPokerTable(pokerTableId);
+                    var pokerTableDto = playerSessionDto.getPokerTable();
+                    var pokerTableId = pokerTableDto.getId();
+                    var pokerTableOpt = sqlClient.getPokerTable(pokerTableId);
                     assertTrue(pokerTableOpt.isPresent(), "PokerTable not found for ID");
-                    PokerTable pokerTable = pokerTableOpt.get();
+                    var pokerTable = pokerTableOpt.get();
                     assertEquals(pokerTableId, pokerTable.getId(), "PokerTable ids do not match");
                     assertEquals(pokerTableDto.getName(), pokerTable.getName(), "PokerTable names do not match");
                     assertEquals(pokerTableDto.getGameType(), pokerTable.getGameType(), "PokerTable gameTypes do not match");
