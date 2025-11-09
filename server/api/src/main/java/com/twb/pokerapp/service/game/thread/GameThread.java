@@ -2,9 +2,7 @@ package com.twb.pokerapp.service.game.thread;
 
 import com.twb.pokerapp.domain.*;
 import com.twb.pokerapp.domain.enumeration.ActionType;
-import com.twb.pokerapp.domain.enumeration.GameType;
 import com.twb.pokerapp.domain.enumeration.RoundState;
-import com.twb.pokerapp.dto.playeraction.PlayerActionDTO;
 import com.twb.pokerapp.exception.game.GameInterruptedException;
 import com.twb.pokerapp.exception.game.RoundInterruptedException;
 import com.twb.pokerapp.service.eval.dto.EvalPlayerHandDTO;
@@ -104,8 +102,7 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     private void initializeTable() {
-        Optional<PokerTable> tableOpt =
-                tableRepository.findById(params.getTableId());
+        var tableOpt = tableRepository.findById(params.getTableId());
         if (tableOpt.isEmpty()) {
             throw new GameInterruptedException("No table found cannot start game");
         }
@@ -113,12 +110,12 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     private void waitForMinimumPlayersToJoin() {
-        GameType gameType = pokerTable.getGameType();
+        var gameType = pokerTable.getGameType();
         waitForPlayersToJoin(gameType.getMinPlayerCount());
     }
 
     private void waitForPlayersToJoin(int minPlayerCount) {
-        int pollCount = 0;
+        var pollCount = 0;
         List<PlayerSession> playerSessions;
         do {
             checkGameInterrupted();
@@ -136,7 +133,7 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     private void createNewRound() {
-        Optional<Round> roundOpt = roundRepository
+        var roundOpt = roundRepository
                 .findCurrentByTableId(params.getTableId());
         if (roundOpt.isPresent()) {
             currentRound = roundOpt.get();
@@ -144,7 +141,7 @@ public abstract class GameThread extends BaseGameThread {
                 throw new GameInterruptedException("Cannot start an existing new round not in the WAITING_FOR_PLAYERS state");
             }
         } else {
-            Optional<PokerTable> tableOpt = tableRepository.findById(params.getTableId());
+            var tableOpt = tableRepository.findById(params.getTableId());
             if (tableOpt.isEmpty()) {
                 throw new GameInterruptedException("Cannot start as table doesn't exist");
             }
@@ -154,18 +151,18 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     private boolean isPlayersJoined() {
-        GameType gameType = pokerTable.getGameType();
-        int minPlayerCount = gameType.getMinPlayerCount();
+        var gameType = pokerTable.getGameType();
+        var minPlayerCount = gameType.getMinPlayerCount();
         return isPlayersJoined(minPlayerCount);
     }
 
     private boolean isPlayersJoined(int count) {
-        List<PlayerSession> playerSessions = getPlayerSessionsNotZero();
+        var playerSessions = getPlayerSessionsNotZero();
         return playerSessions.size() >= count;
     }
 
     protected List<PlayerSession> getPlayerSessionsNotZero() {
-        List<PlayerSession> playerSessions = playerSessionRepository
+        var playerSessions = playerSessionRepository
                 .findConnectedPlayersByTableId(params.getTableId());
         if (CollectionUtils.isEmpty(playerSessions)) {
             throw new GameInterruptedException(NO_MORE_PLAYERS_CONNECTED);
@@ -183,7 +180,7 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     private void runRound() {
-        RoundState roundState = RoundState.INIT_DEAL;
+        var roundState = RoundState.INIT_DEAL;
         saveRoundState(roundState);
         while (roundState != RoundState.FINISH) {
             checkRoundInterrupted();
@@ -203,8 +200,9 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     private void initBettingRound(RoundState roundState) {
-        if (roundState.getBettingRoundState() != null) {
-            currentBettingRound = bettingRoundService.create(currentRound);
+        var bettingRoundState = roundState.getBettingRoundState();
+        if (bettingRoundState != null) {
+            currentBettingRound = bettingRoundService.create(currentRound, bettingRoundState);
         }
     }
 
@@ -233,7 +231,7 @@ public abstract class GameThread extends BaseGameThread {
         logger.info("GameThread.playerAction");
         logger.info("username = {}, action = {}", username, createDto);
         logger.info("***************************************************************");
-        Optional<PlayerSession> playerSessionOpt = playerSessionRepository
+        var playerSessionOpt = playerSessionRepository
                 .findByTableIdAndUsername(pokerTable.getId(), username);
         if (playerSessionOpt.isEmpty()) {
             logger.warn("No player {} found on table {}", username, pokerTable.getId());
@@ -257,7 +255,7 @@ public abstract class GameThread extends BaseGameThread {
             foldedPlayers.add(playerSession);
 
             createActionDto.setAmount(0d);
-            PlayerActionDTO actionDto = playerActionService.create(playerSession, currentBettingRound, createActionDto);
+            var actionDto = playerActionService.create(playerSession, currentBettingRound, createActionDto);
             dispatcher.send(pokerTable, messageFactory.playerAction(actionDto));
 
             if (playerSessions.stream().filter(foldedPlayers::contains).count() == 1) {
@@ -289,7 +287,7 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     protected Card getCard() {
-        Card card = new Card(deckOfCards.get(deckCardPointer));
+        var card = new Card(deckOfCards.get(deckCardPointer));
         deckCardPointer++;
         return card;
     }
@@ -302,9 +300,9 @@ public abstract class GameThread extends BaseGameThread {
     protected void waitPlayerTurn(PlayerSession playerSession) {
         playerTurnLatch = new CountDownLatch(1);
         try {
-            boolean await = playerTurnLatch.await(PLAYER_TURN_WAIT_MS, TimeUnit.MILLISECONDS);
+            var await = playerTurnLatch.await(PLAYER_TURN_WAIT_MS, TimeUnit.MILLISECONDS);
             if (!await) {
-                CreatePlayerActionDTO createPlayerActionDTO = new CreatePlayerActionDTO();
+                var createPlayerActionDTO = new CreatePlayerActionDTO();
                 createPlayerActionDTO.setAction(ActionType.FOLD);
                 playerAction(playerSession, createPlayerActionDTO);
             }
@@ -355,25 +353,25 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     private void handleSinglePlayerWin(EvalPlayerHandDTO winningPlayerHandDTO) {
-        PlayerSession playerSession = winningPlayerHandDTO.getPlayerSession();
-        String username = playerSession.getUser().getUsername();
-        String handTypeStr = winningPlayerHandDTO.getHandType().getValue();
+        var playerSession = winningPlayerHandDTO.getPlayerSession();
+        var username = playerSession.getUser().getUsername();
+        var handTypeStr = winningPlayerHandDTO.getHandType().getValue();
 
         sendLogMessage(String.format("%s wins round with a %s", username, handTypeStr));
     }
 
     private void handleMultiplePlayerWin(List<EvalPlayerHandDTO> winners) {
-        String winnerNames = getReadableWinners(winners);
-        String handTypeStr = winners.getFirst().getHandType().getValue();
+        var winnerNames = getReadableWinners(winners);
+        var handTypeStr = winners.getFirst().getHandType().getValue();
 
         sendLogMessage(String.format("%s draws round with a %s", winnerNames, handTypeStr));
     }
 
     private String getReadableWinners(List<EvalPlayerHandDTO> winners) {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         for (int index = 0; index < winners.size(); index++) {
-            EvalPlayerHandDTO eval = winners.get(index);
-            AppUser user = eval.getPlayerSession().getUser();
+            var eval = winners.get(index);
+            var user = eval.getPlayerSession().getUser();
             sb.append(user.getUsername());
             if (index < winners.size() - 3) {
                 sb.append(", ");

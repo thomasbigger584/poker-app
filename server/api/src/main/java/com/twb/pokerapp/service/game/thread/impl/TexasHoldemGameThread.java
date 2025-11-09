@@ -66,8 +66,8 @@ public class TexasHoldemGameThread extends GameThread {
     }
 
     private void initDeal() {
-        for (CardType cardType : CardType.PLAYER_CARDS) {
-            for (PlayerSession playerSession : playerSessions) {
+        for (var cardType : CardType.PLAYER_CARDS) {
+            for (var playerSession : playerSessions) {
                 if (!isPlayerFolded(playerSession)) { // cannot fold before all cards are dealt ?
                     checkRoundInterrupted();
                     dealPlayerCard(cardType, playerSession);
@@ -133,7 +133,7 @@ public class TexasHoldemGameThread extends GameThread {
             return;
         }
         createActionDto.setAmount(0d);
-        PlayerActionDTO actionDto = playerActionService.create(playerSession, currentBettingRound, createActionDto);
+        var actionDto = playerActionService.create(playerSession, currentBettingRound, createActionDto);
         dispatcher.send(pokerTable, messageFactory.playerAction(actionDto));
     }
 
@@ -150,7 +150,7 @@ public class TexasHoldemGameThread extends GameThread {
     }
 
     private void dealPlayerCard(CardType cardType, PlayerSession playerSession) {
-        Card card = getCard();
+        var card = getCard();
         card.setCardType(cardType);
 
         handService.addPlayerCard(playerSession, currentRound, card);
@@ -160,7 +160,7 @@ public class TexasHoldemGameThread extends GameThread {
     }
 
     private void dealFlop() {
-        for (CardType cardType : CardType.FLOP_CARDS) {
+        for (var cardType : CardType.FLOP_CARDS) {
             checkRoundInterrupted();
             dealCommunityCard(cardType);
         }
@@ -175,7 +175,7 @@ public class TexasHoldemGameThread extends GameThread {
     }
 
     private void dealCommunityCard(CardType cardType) {
-        Card card = getCard();
+        var card = getCard();
         card.setCardType(cardType);
 
         cardService.createCommunityCard(currentRound, card);
@@ -185,14 +185,14 @@ public class TexasHoldemGameThread extends GameThread {
     }
 
     private void determineNextDealer() {
-        List<PlayerSession> playerSessions = getPlayerSessionsNotZero();
+        var playerSessions = getPlayerSessionsNotZero();
         this.playerSessions = dealerService.nextDealerReorder(params.getTableId(), playerSessions);
-        PlayerSession currentDealer = dealerService.getCurrentDealer(this.playerSessions);
+        var currentDealer = dealerService.getCurrentDealer(this.playerSessions);
         dispatcher.send(pokerTable, messageFactory.dealerDetermined(currentDealer));
     }
 
     private void evaluate() {
-        List<PlayerSession> playersNotFolded = playerSessions.stream()
+        var playersNotFolded = playerSessions.stream()
                 .filter(playerSession -> !foldedPlayers.contains(playerSession)).toList();
         if (playersNotFolded.size() == 1) {
             evaluateLastPlayerStanding(playersNotFolded);
@@ -203,47 +203,38 @@ public class TexasHoldemGameThread extends GameThread {
     }
 
     private void evaluateLastPlayerStanding(List<PlayerSession> playersNotFolded) {
-        List<Hand> savingHands = new ArrayList<>();
+        var savingHands = new ArrayList<Hand>();
 
-        PlayerSession winner = playersNotFolded.getFirst();
-        Optional<Hand> winnerHandOpt = handRepository
-                .findHandForRound(winner.getId(), currentRound.getId());
-        if (winnerHandOpt.isPresent()) {
-            Hand hand = winnerHandOpt.get();
-            hand.setWinner(true);
-        }
-        for (PlayerSession foldedPlayer : foldedPlayers) {
-            Optional<Hand> foldedHandOpt = handRepository
-                    .findHandForRound(foldedPlayer.getId(), currentRound.getId());
-            if (foldedHandOpt.isPresent()) {
-                Hand hand = foldedHandOpt.get();
-                hand.setWinner(false);
-            }
+        var winner = playersNotFolded.getFirst();
+        var winnerHandOpt = handRepository.findHandForRound(winner.getId(), currentRound.getId());
+        winnerHandOpt.ifPresent(hand -> hand.setWinner(true));
+
+        for (var foldedPlayer : foldedPlayers) {
+            var foldedHandOpt = handRepository.findHandForRound(foldedPlayer.getId(), currentRound.getId());
+            foldedHandOpt.ifPresent(hand -> hand.setWinner(false));
         }
         handRepository.saveAllAndFlush(savingHands);
         sendLogMessage(String.format("%s wins round", winner.getUser().getUsername()));
     }
 
     private void evaluateMultiPlayersStanding() {
-        List<Card> communityCards = cardRepository
-                .findCommunityCardsForRound(currentRound.getId());
+        var communityCards = cardRepository.findCommunityCardsForRound(currentRound.getId());
 
-        List<EvalPlayerHandDTO> playerHandsList = new ArrayList<>();
+        var playerHandsList = new ArrayList<EvalPlayerHandDTO>();
         for (PlayerSession playerSession : playerSessions) {
 
-            List<Card> playableCards = new ArrayList<>(communityCards);
+            var playableCards = new ArrayList<>(communityCards);
 
-            Optional<Hand> playerHandOpt = handRepository
+            var playerHandOpt = handRepository
                     .findHandForRound(playerSession.getId(), currentRound.getId());
 
             if (playerHandOpt.isPresent()) {
-                Hand hand = playerHandOpt.get();
+                var hand = playerHandOpt.get();
 
-                List<Card> playerCards = cardRepository
-                        .findCardsForHand(hand.getId());
+                var playerCards = cardRepository.findCardsForHand(hand.getId());
                 playableCards.addAll(playerCards);
 
-                EvalPlayerHandDTO playerHand = new EvalPlayerHandDTO();
+                var playerHand = new EvalPlayerHandDTO();
                 playerHand.setPlayerSession(playerSession);
                 playerHand.setCards(playableCards);
                 playerHandsList.add(playerHand);
@@ -253,21 +244,21 @@ public class TexasHoldemGameThread extends GameThread {
 
         savePlayerHandEvaluation(playerHandsList);
 
-        List<EvalPlayerHandDTO> winners =
-                playerHandsList.stream().filter(EvalPlayerHandDTO::isWinner).toList();
+       var winners = playerHandsList.stream()
+               .filter(EvalPlayerHandDTO::isWinner).toList();
 
         handleWinners(winners);
     }
 
     //todo: move this into handEvaluator (?)
     private void savePlayerHandEvaluation(List<EvalPlayerHandDTO> playerHandsList) {
-        List<Hand> savingHands = new ArrayList<>();
-        for (EvalPlayerHandDTO playerHand : playerHandsList) {
-            PlayerSession playerSession = playerHand.getPlayerSession();
-            Optional<Hand> handOpt = handRepository
+        var savingHands = new ArrayList<Hand>();
+        for (var playerHand : playerHandsList) {
+            var playerSession = playerHand.getPlayerSession();
+            var handOpt = handRepository
                     .findHandForRound(playerSession.getId(), currentRound.getId());
             if (handOpt.isPresent()) {
-                Hand hand = handOpt.get();
+                var hand = handOpt.get();
                 hand.setHandType(playerHand.getHandType());
                 hand.setWinner(playerHand.isWinner());
                 savingHands.add(hand);

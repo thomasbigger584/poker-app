@@ -18,13 +18,11 @@ public class BettingRoundService {
     private final BettingRoundRepository repository;
     private final BettingRoundMapper mapper;
 
-    public BettingRound create(Round round) {
-        BettingRoundState state = round.getRoundState().getBettingRoundState();
+    public BettingRound create(Round round, BettingRoundState state) {
         if (state == null) {
             throw new IllegalStateException("Could not create betting round as betting round state is null");
         }
-
-        BettingRound bettingRound = new BettingRound();
+        var bettingRound = new BettingRound();
         bettingRound.setRound(round);
         bettingRound.setState(state);
         bettingRound.setPot(0d);
