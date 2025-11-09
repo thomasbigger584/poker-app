@@ -93,7 +93,7 @@ public class TexasHoldemGameThread extends GameThread {
             for (var currentPlayer : activePlayers) {
 
                 double amountToCall = 0d;
-                ActionType[] nextActions = null;
+                var nextActions = ActionType.getDefaultActions();
 
                 var prevPlayerActions = playerActionRepository
                         .findPlayerActionsNotFolded(currentBettingRound.getId());
@@ -127,13 +127,14 @@ public class TexasHoldemGameThread extends GameThread {
     private void checkAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
         var canPerformCheck = playerActionRepository.findPlayerActionsNotFolded(currentBettingRound.getId())
                 .stream().allMatch(action -> action.getActionType() == ActionType.CHECK);
-        if (canPerformCheck) {
-            PlayerActionDTO actionDto = playerActionService.create(playerSession, currentBettingRound, createActionDto);
-            dispatcher.send(pokerTable, messageFactory.playerAction(actionDto));
-        } else {
+        if (!canPerformCheck) {
             logger.warn("Cannot check as previous actions was not a check");
             dispatcher.send(pokerTable, playerSession, messageFactory.logMessage("Cannot check as previous actions was not a check"));
+            return;
         }
+        createActionDto.setAmount(0d);
+        PlayerActionDTO actionDto = playerActionService.create(playerSession, currentBettingRound, createActionDto);
+        dispatcher.send(pokerTable, messageFactory.playerAction(actionDto));
     }
 
     private void betAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {

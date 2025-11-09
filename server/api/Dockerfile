@@ -38,4 +38,7 @@ ENV EVALUATOR_SO_PATH=/app/evaluator.so
 COPY --from=builder /app/src/main/cpp/evaluator.so $EVALUATOR_SO_PATH
 
 # Define command to run the application
-CMD ["java","-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005","-Djava.security.egd=file:/dev/./urandom","-jar","api.jar"]
+CMD ["java","-Djava.security.egd=file:/dev/./urandom","-jar","api.jar"]
+
+# For Debug:
+#CMD ["java","-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005","-Djava.security.egd=file:/dev/./urandom","-jar","api.jar"]

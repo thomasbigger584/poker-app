@@ -256,6 +256,7 @@ public abstract class GameThread extends BaseGameThread {
         synchronized (foldedPlayers) {
             foldedPlayers.add(playerSession);
 
+            createActionDto.setAmount(0d);
             PlayerActionDTO actionDto = playerActionService.create(playerSession, currentBettingRound, createActionDto);
             dispatcher.send(pokerTable, messageFactory.playerAction(actionDto));
 
