@@ -53,6 +53,25 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     List<PlayerSession> findConnectedPlayersByTableId(@Param("tableId") UUID tableId);
 
+    @Query("""
+        SELECT s
+        FROM PlayerSession s
+        WHERE s.pokerTable.id = :tableId
+        AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
+        AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
+        AND NOT EXISTS (
+            SELECT 1
+            FROM PlayerAction a
+            WHERE a.playerSession = s
+            AND a.bettingRound.round.id = :roundId
+            AND a.actionType <> com.twb.pokerapp.domain.enumeration.ActionType.FOLD
+        )
+        ORDER BY s.position ASC
+    """)
+    @Transactional
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    List<PlayerSession> findActivePlayersByTableId(@Param("tableId") UUID tableId, @Param("roundId") UUID roundId);
+
     @Query("SELECT s " +
             "FROM PlayerSession s " +
             "WHERE s.pokerTable.id = :tableId " +
@@ -71,25 +90,17 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
 
     @Modifying(flushAutomatically = true)
     @Query("UPDATE PlayerSession s " +
-            "SET s.dealer = true " +
+            "SET s.dealer = :dealer " +
             "WHERE s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED " +
             "AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER " +
             "AND s.id = :id ")
-    void setDealer(@Param("id") UUID id);
+    void setDealer(@Param("id") UUID id, @Param("dealer") boolean dealer);
 
     @Modifying(flushAutomatically = true)
     @Query("UPDATE PlayerSession s " +
-            "SET s.current = false " +
-            "WHERE s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED " +
-            "AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER " +
-            "AND s.pokerTable.id = :tableId ")
-    void resetCurrentForTableId(@Param("tableId") UUID tableId);
-
-    @Modifying(flushAutomatically = true)
-    @Query("UPDATE PlayerSession s " +
-            "SET s.current = true " +
+            "SET s.current = :current " +
             "WHERE s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED " +
             "AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER " +
             "AND s.id = :id ")
-    void setCurrent(@Param("id") UUID id);
+    void setCurrent(@Param("id") UUID id, @Param("current") boolean current);
 }

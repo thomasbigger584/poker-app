@@ -64,7 +64,7 @@ public class DealerService {
 
     private void setNextDealer(UUID tableId, PlayerSession nextDealer) {
         playerSessionRepository.resetDealerForTableId(tableId);
-        playerSessionRepository.setDealer(nextDealer.getId());
+        playerSessionRepository.setDealer(nextDealer.getId(), true);
     }
 
     private List<PlayerSession> dealerReorder(List<PlayerSession> playerSessions) {

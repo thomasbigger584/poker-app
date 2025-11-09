@@ -211,14 +211,14 @@ public abstract class GameThread extends BaseGameThread {
     private void finishRound() {
         if (roundInProgress.get()) {
             saveRoundState(RoundState.FINISH);
-            dispatcher.send(params.getTableId(), messageFactory.roundFinished());
+            dispatcher.send(pokerTable, messageFactory.roundFinished());
         }
         roundInProgress.set(false);
     }
 
     private void finishGame() {
         if (gameInProgress.get()) {
-            dispatcher.send(params.getTableId(), messageFactory.gameFinished());
+            dispatcher.send(pokerTable, messageFactory.gameFinished());
             threadManager.delete(params.getTableId());
         }
         gameInProgress.set(false);
@@ -257,7 +257,7 @@ public abstract class GameThread extends BaseGameThread {
             foldedPlayers.add(playerSession);
 
             PlayerActionDTO actionDto = playerActionService.create(playerSession, currentBettingRound, createActionDto);
-            dispatcher.send(params.getTableId(), messageFactory.playerAction(actionDto));
+            dispatcher.send(pokerTable, messageFactory.playerAction(actionDto));
 
             if (playerSessions.stream().filter(foldedPlayers::contains).count() == 1) {
                 // there is only 1 player left in a started game
@@ -271,11 +271,11 @@ public abstract class GameThread extends BaseGameThread {
     // *****************************************************************************************
 
     protected void sendLogMessage(String message) {
-        dispatcher.send(params.getTableId(), messageFactory.logMessage(message));
+        dispatcher.send(pokerTable, messageFactory.logMessage(message));
     }
 
     protected void sendErrorMessage(String message) {
-        dispatcher.send(params.getTableId(), messageFactory.errorMessage(message));
+        dispatcher.send(pokerTable, messageFactory.errorMessage(message));
     }
 
     // *****************************************************************************************

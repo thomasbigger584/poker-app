@@ -11,6 +11,7 @@ import com.twb.pokerapp.utils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.utils.sql.SqlClient;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
 import com.twb.pokerapp.web.websocket.message.server.payload.PlayerConnectedDTO;
+import com.twb.pokerapp.web.websocket.message.server.payload.PlayerSubscribedDTO;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
@@ -67,7 +68,13 @@ public abstract class Validator {
                     assertEquals(pokerTableDto.getGameType(), pokerTable.getGameType(), "PokerTable gameTypes do not match");
                 });
 
-        // todo: add PLAYER_SUBSCRIBED validation
+
+        messages.getListenerMessages().stream()
+                .filter(message -> message.getType() == ServerMessageType.PLAYER_SUBSCRIBED)
+                .forEach(message -> {
+                    PlayerSubscribedDTO payload = (PlayerSubscribedDTO) message.getPayload();
+
+                });
 
         onValidateEndOfRun(messages);
     }

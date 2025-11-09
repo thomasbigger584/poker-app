@@ -1,15 +1,17 @@
 package com.twb.pokerapp.service.game.thread.impl;
 
-import com.twb.pokerapp.domain.*;
+import com.twb.pokerapp.domain.Card;
+import com.twb.pokerapp.domain.Hand;
+import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.domain.enumeration.CardType;
 import com.twb.pokerapp.domain.enumeration.RoundState;
 import com.twb.pokerapp.dto.playeraction.PlayerActionDTO;
+import com.twb.pokerapp.exception.game.RoundInterruptedException;
 import com.twb.pokerapp.service.eval.dto.EvalPlayerHandDTO;
 import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
-import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -75,57 +77,62 @@ public class TexasHoldemGameThread extends GameThread {
     }
 
     private void runBettingRound() {
-        PlayerSession previousPlayer = null;
-        for (PlayerSession currentPlayer : playerSessions) {
-            if (!isPlayerFolded(currentPlayer)) {
-                checkRoundInterrupted();
+        var playersPaidUp = false;
+        do {
+            var activePlayers = playerSessionRepository
+                    .findActivePlayersByTableId(pokerTable.getId(), currentRound.getId());
+
+            if (activePlayers.isEmpty()) {
+                throw new RoundInterruptedException("No Active Players found");
+            }
+            if (activePlayers.size() == 1) {
+                dispatcher.send(pokerTable, messageFactory.logMessage("Only one active player in betting round, so skipping"));
+                return;
+            }
+
+            for (var currentPlayer : activePlayers) {
 
                 double amountToCall = 0d;
-                ActionType[] nextActions = ActionType.getDefaultActions();
+                ActionType[] nextActions = null;
 
-                if (previousPlayer != null) {
-                    Optional<BettingRound> bettingRoundOpt = bettingRoundRepository.findById(currentBettingRound.getId());
-                    if (bettingRoundOpt.isPresent()) {
-                        currentBettingRound = bettingRoundOpt.get();
+                var prevPlayerActions = playerActionRepository
+                        .findPlayerActionsNotFolded(currentBettingRound.getId());
 
-                        List<PlayerAction> previousActions = playerActionRepository
-                                .findByBettingRoundAndPlayerSession(currentBettingRound.getId(), previousPlayer.getId());
+                if (!prevPlayerActions.isEmpty()) {
+                    var previousPlayerAction = prevPlayerActions.getLast();
+                    nextActions = ActionType.getNextActions(previousPlayerAction.getActionType());
 
-                        PlayerAction previousPlayerAction = previousActions.getLast();
-                        nextActions = ActionType.getNextActions(previousPlayerAction.getActionType());
-
-                        switch (previousPlayerAction.getActionType()) {
-                            case BET:
-                            case CALL: {
-                                amountToCall = previousPlayerAction.getAmount();
-                                break;
-                            }
-                            case RAISE: {
-                                // todo: need to handle raise
-                                throw new NotImplementedException("Raise not implemented");
-                            }
+                    switch (previousPlayerAction.getActionType()) {
+                        case BET:
+                        case CALL:
+                        case RAISE: {
+                            amountToCall = previousPlayerAction.getAmount();
+                            break;
                         }
-                    } else {
-                        throw new IllegalStateException("Betting round is not present");
                     }
                 }
-                dispatcher.send(params.getTableId(), messageFactory.playerTurn(currentPlayer, nextActions, amountToCall));
-                previousPlayer = currentPlayer;
+
+                checkRoundInterrupted();
+                dispatcher.send(pokerTable, messageFactory.playerTurn(currentPlayer, nextActions, amountToCall));
                 waitPlayerTurn(currentPlayer);
+                checkRoundInterrupted();
             }
-        }
+
+            var playerActionSumAmounts = playerActionRepository.sumAmounts(currentBettingRound.getId());
+            playersPaidUp = playerActionSumAmounts != currentBettingRound.getPot();
+
+        } while (playersPaidUp);
     }
 
     private void checkAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
-        boolean canPerformCheck = playerActionRepository.findPlayerActionsNotFolded(currentBettingRound.getId())
-                .stream().findFirst()
-                .map(lastAction -> lastAction.getActionType() == ActionType.CHECK)
-                .orElse(true);
+        var canPerformCheck = playerActionRepository.findPlayerActionsNotFolded(currentBettingRound.getId())
+                .stream().allMatch(action -> action.getActionType() == ActionType.CHECK);
         if (canPerformCheck) {
             PlayerActionDTO actionDto = playerActionService.create(playerSession, currentBettingRound, createActionDto);
-            dispatcher.send(params.getTableId(), messageFactory.playerAction(actionDto));
+            dispatcher.send(pokerTable, messageFactory.playerAction(actionDto));
         } else {
             logger.warn("Cannot check as previous actions was not a check");
+            dispatcher.send(pokerTable, playerSession, messageFactory.logMessage("Cannot check as previous actions was not a check"));
         }
     }
 
@@ -146,7 +153,7 @@ public class TexasHoldemGameThread extends GameThread {
         card.setCardType(cardType);
 
         handService.addPlayerCard(playerSession, currentRound, card);
-        dispatcher.send(params.getTableId(), messageFactory.initDeal(playerSession, card));
+        dispatcher.send(pokerTable, messageFactory.initDeal(playerSession, card));
 
         sleepInMs(DEAL_WAIT_MS);
     }
@@ -171,7 +178,7 @@ public class TexasHoldemGameThread extends GameThread {
         card.setCardType(cardType);
 
         cardService.createCommunityCard(currentRound, card);
-        dispatcher.send(params.getTableId(), messageFactory.communityCardDeal(card));
+        dispatcher.send(pokerTable, messageFactory.communityCardDeal(card));
 
         sleepInMs(DEAL_WAIT_MS);
     }
@@ -180,7 +187,7 @@ public class TexasHoldemGameThread extends GameThread {
         List<PlayerSession> playerSessions = getPlayerSessionsNotZero();
         this.playerSessions = dealerService.nextDealerReorder(params.getTableId(), playerSessions);
         PlayerSession currentDealer = dealerService.getCurrentDealer(this.playerSessions);
-        dispatcher.send(params.getTableId(), messageFactory.dealerDetermined(currentDealer));
+        dispatcher.send(pokerTable, messageFactory.dealerDetermined(currentDealer));
     }
 
     private void evaluate() {

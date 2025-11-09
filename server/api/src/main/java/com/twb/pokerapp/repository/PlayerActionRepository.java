@@ -7,18 +7,15 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface PlayerActionRepository extends JpaRepository<PlayerAction, UUID> {
 
-    @Query("SELECT a " +
+    @Query("SELECT SUM(a.amount) " +
             "FROM PlayerAction a " +
-            "WHERE a.bettingRound.id = :bettingRoundId " +
-            "AND a.playerSession.id = :playerSessionId ")
-    List<PlayerAction> findByBettingRoundAndPlayerSession(@Param("bettingRoundId") UUID bettingRoundId,
-                                                          @Param("playerSessionId") UUID playerSessionId);
+            "WHERE a.bettingRound.id = :bettingRoundId ")
+    double sumAmounts(@Param("bettingRoundId") UUID bettingRoundId);
 
     @Query("SELECT a " +
             "FROM PlayerAction a " +
