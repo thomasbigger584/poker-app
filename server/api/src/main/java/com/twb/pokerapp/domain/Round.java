@@ -37,13 +37,13 @@ public class Round {
     private List<Card> communityCards = new ArrayList<>();
 
     @OneToMany(mappedBy = "round")
-    private List<PlayerAction> playerActions = new ArrayList<>();
+    private List<BettingRound> bettingRounds = new ArrayList<>();
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Round round = (Round) o;
+        var round = (Round) o;
         return new EqualsBuilder().append(id, round.id)
                 .append(roundState, round.roundState).isEquals();
     }

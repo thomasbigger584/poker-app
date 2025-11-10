@@ -45,4 +45,145 @@
         <addPrimaryKey columnNames="id" constraintName="pk_poker_table" tableName="poker_table"/>
     </changeSet>
 
+    <changeSet author="tbigg" id="3">
+        <createTable tableName="round">
+            <column name="id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="round_state" type="text" defaultValue="WAITING_FOR_PLAYERS">
+                <constraints nullable="false"/>
+            </column>
+            <column name="poker_table_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="pk_round" tableName="round"/>
+        <addForeignKeyConstraint constraintName="fk_round_poker_table_id" onDelete="CASCADE"
+                                 baseTableName="round" baseColumnNames="poker_table_id"
+                                 referencedTableName="poker_table" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet author="tbigg" id="4">
+        <createTable tableName="player_session">
+            <column name="id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="poker_table_id" type="uuid"/>
+            <column name="position" type="int"/>
+            <column name="dealer" type="boolean" defaultValue="0"/>
+            <column name="current" type="boolean" defaultValue="0"/>
+            <column name="funds" type="double" defaultValueNumeric="0"/>
+            <column name="session_state" type="text"/>
+            <column name="connection_type" type="text"/>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="pk_player_session" tableName="player_session"/>
+        <addForeignKeyConstraint constraintName="fk_player_session_user_id" onDelete="CASCADE"
+                                 baseTableName="player_session" baseColumnNames="user_id"
+                                 referencedTableName="app_user" referencedColumnNames="id"/>
+        <addForeignKeyConstraint constraintName="fk_player_session_poker_table_id" onDelete="CASCADE"
+                                 baseTableName="player_session" baseColumnNames="poker_table_id"
+                                 referencedTableName="poker_table" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet author="tbigg" id="5">
+        <createTable tableName="hand">
+            <column name="id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hand_type" type="text"/>
+            <column name="winner" type="boolean"/>
+            <column name="player_session_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="round_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="pk_hand" tableName="hand"/>
+        <addForeignKeyConstraint constraintName="fk_hand_player_session_id" onDelete="CASCADE"
+                                 baseTableName="hand" baseColumnNames="player_session_id"
+                                 referencedTableName="player_session" referencedColumnNames="id"/>
+        <addForeignKeyConstraint constraintName="fk_hand_round_id" onDelete="CASCADE"
+                                 baseTableName="hand" baseColumnNames="round_id"
+                                 referencedTableName="round" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet author="tbigg" id="6">
+        <createTable tableName="card">
+            <column name="id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rank_type" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rank_value" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="suit_type" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="card_type" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hand_id" type="uuid"/>
+            <column name="round_id" type="uuid"/>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="pk_card" tableName="card"/>
+        <addForeignKeyConstraint constraintName="fk_card_hand_id" onDelete="CASCADE"
+                                 baseTableName="card" baseColumnNames="hand_id"
+                                 referencedTableName="hand" referencedColumnNames="id"/>
+        <addForeignKeyConstraint constraintName="fk_card_round_id" onDelete="CASCADE"
+                                 baseTableName="card" baseColumnNames="round_id"
+                                 referencedTableName="round" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet author="tbigg" id="7">
+        <createTable tableName="betting_round">
+            <column name="id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="state" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pot" type="double">
+                <constraints nullable="false"/>
+            </column>
+            <column name="round_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="pk_betting_round" tableName="betting_round"/>
+        <addForeignKeyConstraint constraintName="fk_betting_round_round_id" onDelete="CASCADE"
+                                 baseTableName="betting_round" baseColumnNames="round_id"
+                                 referencedTableName="round" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet author="tbigg" id="8">
+        <createTable tableName="player_action">
+            <column name="id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="player_session_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="betting_round_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="action_type" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="double"/>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="pk_player_action" tableName="player_action"/>
+        <addForeignKeyConstraint constraintName="fk_player_action_player_session_id" onDelete="CASCADE"
+                                 baseTableName="player_action" baseColumnNames="player_session_id"
+                                 referencedTableName="player_session" referencedColumnNames="id"/>
+        <addForeignKeyConstraint constraintName="fk_player_action_betting_round_id" onDelete="CASCADE"
+                                 baseTableName="player_action" baseColumnNames="betting_round_id"
+                                 referencedTableName="betting_round" referencedColumnNames="id"/>
+    </changeSet>
+
 </databaseChangeLog>

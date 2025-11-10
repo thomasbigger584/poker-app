@@ -36,6 +36,12 @@ public abstract class BaseGameThread extends Thread {
     protected RoundService roundService;
 
     @Autowired
+    protected BettingRoundRepository bettingRoundRepository;
+
+    @Autowired
+    protected BettingRoundService bettingRoundService;
+
+    @Autowired
     protected DealerService dealerService;
 
     @Autowired

@@ -11,6 +11,12 @@ WORKDIR /app
 # Copy source code
 COPY . .
 
+# Ensure the Maven Wrapper is executable
+RUN chmod +x ./mvnw
+
+# Normalize Line Endings (CRLF to LF) for Windows users
+RUN sed -i 's/\r//g' ./mvnw
+
 # Compile C++ code with JDK
 ENV EVALUATOR_SO_PATH=/app/src/main/cpp/evaluator.so
 RUN g++ -shared -o $EVALUATOR_SO_PATH /app/src/main/cpp/* -I $JAVA_HOME/include -I $JAVA_HOME/include/linux
@@ -32,4 +38,7 @@ ENV EVALUATOR_SO_PATH=/app/evaluator.so
 COPY --from=builder /app/src/main/cpp/evaluator.so $EVALUATOR_SO_PATH
 
 # Define command to run the application
-CMD ["java","-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005","-Djava.security.egd=file:/dev/./urandom","-jar","api.jar"]
+CMD ["java","-Djava.security.egd=file:/dev/./urandom","-jar","api.jar"]
+
+# For Debug:
+#CMD ["java","-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005","-Djava.security.egd=file:/dev/./urandom","-jar","api.jar"]

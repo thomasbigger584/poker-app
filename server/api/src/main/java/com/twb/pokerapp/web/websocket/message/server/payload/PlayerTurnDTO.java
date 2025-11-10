@@ -8,4 +8,5 @@ import lombok.Data;
 public class PlayerTurnDTO {
     private PlayerSessionDTO playerSession;
     private ActionType[] actions;
+    private Double amountToCall;
 }

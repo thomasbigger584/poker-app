@@ -17,7 +17,7 @@ public class GameRunner {
     private final GameRunnerParams params;
 
     public PlayersServerMessages run(List<AbstractTestUser> players) throws Exception {
-        AbstractTestUser listener = connectListener();
+        var listener = connectListener();
         connectPlayers(players);
 
         params.getLatches().roundLatch().await();
@@ -38,33 +38,33 @@ public class GameRunner {
     // ***************************************************************
 
     private AbstractTestUser connectListener() throws Exception {
-        Keycloak keycloak = params.getKeycloakClients().getViewerKeycloak();
-        TestUserParams listenerParams = TestUserParams.builder()
+        var keycloak = params.getKeycloakClients().getViewerKeycloak();
+        var listenerParams = TestUserParams.builder()
                 .table(params.getTable())
                 .keycloak(keycloak)
                 .latches(params.getLatches())
                 .username(KeycloakClients.VIEWER_USERNAME)
                 .build();
-        AbstractTestUser listener = new TestGameListenerUser(listenerParams, params.getNumberOfRounds());
+        var listener = new TestGameListenerUser(listenerParams, params.getNumberOfRounds());
         listener.connect();
         return listener;
     }
 
     private void connectPlayers(List<AbstractTestUser> players) throws Exception {
-        for (AbstractTestUser player : players) {
+        for (var player : players) {
             player.connect();
         }
     }
 
     private void disconnectPlayers(List<AbstractTestUser> players) {
-        for (AbstractTestUser player : players) {
+        for (var player : players) {
             player.disconnect();
         }
     }
 
     private void throwExceptionIfOccurred(List<AbstractTestUser> players) {
-        for (AbstractTestUser player : players) {
-            AtomicReference<Throwable> exceptionThrown = player.getExceptionThrown();
+        for (var player : players) {
+            var exceptionThrown = player.getExceptionThrown();
             if (exceptionThrown.get() != null) {
                 throw new RuntimeException("Test Failure for player: " + player, exceptionThrown.get());
             }

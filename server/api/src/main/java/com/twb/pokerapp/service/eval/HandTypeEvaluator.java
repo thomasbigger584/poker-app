@@ -34,7 +34,7 @@ public class HandTypeEvaluator {
             return HandType.EMPTY_HAND;
         }
 
-        HandAnalysis analysis = new HandAnalysis(cards);
+        var analysis = new HandAnalysis(cards);
 
         if (isRoyalFlush(analysis)) {
             return HandType.ROYAL_FLUSH;
@@ -92,7 +92,7 @@ public class HandTypeEvaluator {
             this.cardsBySuit = new HashMap<>();
             this.rankCounts = new HashMap<>();
 
-            for (Card card : cards) {
+            for (var card : cards) {
                 if (card != null) {
                     cardsBySuit.computeIfAbsent(card.getSuitType(), k -> new ArrayList<>()).add(card);
                     rankCounts.merge(card.getRankType(), 1, Integer::sum);
@@ -128,9 +128,9 @@ public class HandTypeEvaluator {
             return false;
         }
 
-        for (List<Card> flushCards : analysis.getCardsBySuit().values()) {
+        for (var flushCards : analysis.getCardsBySuit().values()) {
             if (flushCards.size() >= FIVE_CARDS_NEEDED) {
-                Set<RankType> ranks = flushCards.stream()
+                var ranks = flushCards.stream()
                         .map(Card::getRankType)
                         .collect(Collectors.toSet());
 
@@ -155,7 +155,7 @@ public class HandTypeEvaluator {
             return false;
         }
 
-        for (List<Card> flushCards : analysis.getCardsBySuit().values()) {
+        for (var flushCards : analysis.getCardsBySuit().values()) {
             if (flushCards.size() >= FIVE_CARDS_NEEDED && isStraight(new HandAnalysis(flushCards))) {
                 return true;
             }
@@ -193,7 +193,7 @@ public class HandTypeEvaluator {
         }
         // Check for a 3-of-a-kind and a pair, which can also be two 3-of-a-kinds.
         // The counts list is sorted, so we just need to check the first two elements.
-        List<Integer> counts = analysis.getCounts();
+        var counts = analysis.getCounts();
         return counts.size() >= 2 &&
                 counts.get(0) >= THREE_CARDS_NEEDED && counts.get(1) >= TWO_CARDS_NEEDED;
     }
@@ -244,13 +244,13 @@ public class HandTypeEvaluator {
             return Optional.empty();
         }
 
-        Set<RankType> uniqueRanks = analysis.getRankCounts().keySet();
+        var uniqueRanks = analysis.getRankCounts().keySet();
 
-        List<RankType> sortedRanks = new ArrayList<>(uniqueRanks);
+        var sortedRanks = new ArrayList<>(uniqueRanks);
         sortedRanks.sort(Comparator.comparingInt(RankType::getPosition));
 
-        for (int index = 0; index <= sortedRanks.size() - FIVE_CARDS_NEEDED; index++) {
-            List<RankType> potentialStraight = sortedRanks.subList(index, index + FIVE_CARDS_NEEDED);
+        for (var index = 0; index <= sortedRanks.size() - FIVE_CARDS_NEEDED; index++) {
+            var potentialStraight = sortedRanks.subList(index, index + FIVE_CARDS_NEEDED);
             if (isConsecutive(potentialStraight)) {
                 return Optional.of(potentialStraight);
             }
@@ -258,7 +258,7 @@ public class HandTypeEvaluator {
 
         // Check for Ace-low straight (A, 2, 3, 4, 5)
         if (uniqueRanks.containsAll(HandAnalysis.PARTIAL_LOWER_STRAIGHT) && uniqueRanks.contains(RankType.ACE)) {
-            List<RankType> lowAceStraight = new ArrayList<>(HandAnalysis.PARTIAL_LOWER_STRAIGHT);
+            var lowAceStraight = new ArrayList<>(HandAnalysis.PARTIAL_LOWER_STRAIGHT);
             lowAceStraight.add(RankType.ACE);
             return Optional.of(lowAceStraight);
         }
@@ -275,9 +275,9 @@ public class HandTypeEvaluator {
      * @return true if the ranks are consecutive, false otherwise
      */
     private boolean isConsecutive(List<RankType> ranks) {
-        for (int index = 1; index < ranks.size(); index++) {
-            int position = ranks.get(index).getPosition();
-            int prevPosition = ranks.get(index - 1).getPosition();
+        for (var index = 1; index < ranks.size(); index++) {
+            var position = ranks.get(index).getPosition();
+            var prevPosition = ranks.get(index - 1).getPosition();
             if (position != prevPosition + 1) {
                 return false;
             }
@@ -314,7 +314,7 @@ public class HandTypeEvaluator {
             return false;
         }
         // The counts list is sorted, so we just need to check the first two elements.
-        List<Integer> counts = analysis.getCounts();
+        var counts = analysis.getCounts();
         return counts.size() >= 2 &&
                 counts.get(0) >= TWO_CARDS_NEEDED && counts.get(1) >= TWO_CARDS_NEEDED;
     }

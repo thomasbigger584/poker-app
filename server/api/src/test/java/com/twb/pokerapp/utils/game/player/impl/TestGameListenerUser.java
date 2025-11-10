@@ -24,11 +24,11 @@ public class TestGameListenerUser extends AbstractTestUser {
 
     @Override
     protected void handleMessage(StompHeaders headers, ServerMessageDTO message) {
-        Object payload = message.getPayload();
+        var payload = message.getPayload();
 
         // stopping game after a certain number of rounds
         if (payload instanceof RoundFinishedDTO dto) {
-            int thisRoundCount = roundCountAtomicInteger.incrementAndGet();
+            var thisRoundCount = roundCountAtomicInteger.incrementAndGet();
             if (thisRoundCount == numOfRounds) {
                 params.getLatches().roundLatch().countDown();
             }

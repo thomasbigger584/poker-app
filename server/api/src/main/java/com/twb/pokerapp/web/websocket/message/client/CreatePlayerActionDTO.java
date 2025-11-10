@@ -6,4 +6,5 @@ import lombok.Data;
 @Data
 public class CreatePlayerActionDTO {
     private ActionType action;
+    private double amount;
 }

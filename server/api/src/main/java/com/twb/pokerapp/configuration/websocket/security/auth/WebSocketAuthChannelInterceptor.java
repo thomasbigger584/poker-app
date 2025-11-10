@@ -29,7 +29,7 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
 
     @Override
     public Message<?> preSend(@NotNull Message<?> message, @NotNull MessageChannel channel) {
-        StompHeaderAccessor accessor = MessageHeaderAccessor
+        var accessor = MessageHeaderAccessor
                 .getAccessor(message, StompHeaderAccessor.class);
 
         if (accessor == null) {
@@ -38,17 +38,17 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
         }
 
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-            List<String> authorization = accessor.getNativeHeader(HttpHeaders.AUTHORIZATION);
+            var authorization = accessor.getNativeHeader(HttpHeaders.AUTHORIZATION);
 
             if (authorization == null) {
                 logger.warn("Header {} is null", HttpHeaders.AUTHORIZATION);
                 return message;
             }
 
-            String accessToken = authorization.getFirst().split(" ")[1];
-            Jwt jwt = jwtDecoder.decode(accessToken);
+            var accessToken = authorization.getFirst().split(" ")[1];
+            var jwt = jwtDecoder.decode(accessToken);
 
-            AbstractAuthenticationToken authentication = jwtAuthConverter.convert(jwt);
+            var authentication = jwtAuthConverter.convert(jwt);
             accessor.setUser(authentication);
         }
         return message;

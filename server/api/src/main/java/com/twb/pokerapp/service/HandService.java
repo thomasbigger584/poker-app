@@ -22,8 +22,7 @@ public class HandService {
     private final CardService cardService;
 
     public void addPlayerCard(PlayerSession playerSession, Round round, Card card) {
-        Optional<Hand> handOpt =
-                repository.findHandForRound(playerSession.getId(), round.getId());
+        var handOpt = repository.findHandForRound(playerSession.getId(), round.getId());
         Hand hand;
         if (handOpt.isPresent()) {
             hand = handOpt.get();

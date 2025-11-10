@@ -31,15 +31,15 @@ public class RestClient {
         if (INSTANCES.containsKey(keycloak)) {
             return INSTANCES.get(keycloak);
         }
-        RestClient instance = new RestClient(keycloak);
+        var instance = new RestClient(keycloak);
         INSTANCES.put(keycloak, instance);
         return instance;
     }
 
     public <ResultBody, RequestBody> ApiHttpResponse<ResultBody> post(Class<ResultBody> resultClass,
                                                                       RequestBody requestBody, String endpoint) throws Exception {
-        String json = OBJECT_MAPPER.writeValueAsString(requestBody);
-        HttpRequest request = HttpRequest.newBuilder()
+        var json = OBJECT_MAPPER.writeValueAsString(requestBody);
+        var request = HttpRequest.newBuilder()
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken())
                 .uri(URI.create(API_BASE_URL + endpoint))
@@ -49,8 +49,8 @@ public class RestClient {
     }
 
     public <ResultBody> ApiHttpResponse<ResultBody> get(Class<ResultBody> resultClass, String endpoint) throws Exception {
-        String accessToken = getAccessToken();
-        HttpRequest request = HttpRequest.newBuilder()
+        var accessToken = getAccessToken();
+        var request = HttpRequest.newBuilder()
                 .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + accessToken)
                 .uri(URI.create(API_BASE_URL + endpoint))
                 .GET().build();
@@ -58,7 +58,7 @@ public class RestClient {
     }
 
     public ApiHttpResponse<?> delete(String endpoint) throws Exception {
-        HttpRequest request = HttpRequest.newBuilder()
+        var request = HttpRequest.newBuilder()
                 .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken())
                 .uri(URI.create(API_BASE_URL + endpoint))
                 .DELETE().build();
@@ -66,20 +66,20 @@ public class RestClient {
     }
 
     private String getAccessToken() {
-        TokenManager tokenManager = keycloak.tokenManager();
-        AccessTokenResponse accessTokenResponse = tokenManager.getAccessToken();
+        var tokenManager = keycloak.tokenManager();
+        var accessTokenResponse = tokenManager.getAccessToken();
         return accessTokenResponse.getToken();
     }
 
     private <ResultBody> ApiHttpResponse<ResultBody> executeRequest(Class<ResultBody> resultClass, HttpRequest request) throws Exception {
-        HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+        var response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
         assert HttpStatus.valueOf(response.statusCode()).is2xxSuccessful() : "status code should be successful: " + response.statusCode();
-        ResultBody result = OBJECT_MAPPER.readValue(response.body(), resultClass);
+        var result = OBJECT_MAPPER.readValue(response.body(), resultClass);
         return new ApiHttpResponse<>(response, result);
     }
 
     private ApiHttpResponse<?> executeRequest(HttpRequest request) throws Exception {
-        HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+        var response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
         return new ApiHttpResponse<>(response, Void.class);
     }
 

@@ -35,12 +35,12 @@ public class GameThreadManager {
      */
     public GameThread createIfNotExist(PokerTable pokerTable) {
         return mutex.evaluate(pokerTable.getId(), () -> {
-            Optional<GameThread> threadOpt = getIfExists(pokerTable);
+            var threadOpt = getIfExists(pokerTable);
             if (threadOpt.isPresent()) {
                 return threadOpt.get();
             }
-            GameThreadParams params = getGameThreadParams(pokerTable);
-            GameThread thread = create(params);
+            var params = getGameThreadParams(pokerTable);
+            var thread = create(params);
             thread.start();
             try {
                 if (!params.getStartLatch().await(GAME_START_TIMEOUT_IN_SECS, TimeUnit.SECONDS)) {
@@ -62,7 +62,7 @@ public class GameThreadManager {
      */
     public boolean delete(UUID tableId) {
         return mutex.evaluate(tableId, () -> {
-            Optional<GameThread> threadOpt = getIfExists(tableId);
+            var threadOpt = getIfExists(tableId);
             if (threadOpt.isPresent()) {
                 POKER_GAME_RUNNABLE_MAP.remove(tableId);
                 return true;

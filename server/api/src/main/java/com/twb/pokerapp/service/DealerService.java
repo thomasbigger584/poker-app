@@ -23,7 +23,7 @@ public class DealerService {
     public List<PlayerSession> nextDealerReorder(UUID tableId, List<PlayerSession> playerSessions) {
         List<PlayerSession> copyPlayerSessions = new ArrayList<>(playerSessions);
 
-        PlayerSession nextDealer = getNextDealer(copyPlayerSessions);
+        var nextDealer = getNextDealer(copyPlayerSessions);
         setNextDealer(tableId, nextDealer);
 
         copyPlayerSessions = playerSessionRepository
@@ -33,23 +33,23 @@ public class DealerService {
     }
 
     private PlayerSession getNextDealer(List<PlayerSession> playerSessions) {
-        Optional<Pair<Integer, PlayerSession>> currentDealerOpt = getCurrentDealerWithIndex(playerSessions);
+        var currentDealerOpt = getCurrentDealerWithIndex(playerSessions);
 
         if (currentDealerOpt.isPresent()) {
-            Pair<Integer, PlayerSession> currentDealerWithIndex = currentDealerOpt.get();
+            var currentDealerWithIndex = currentDealerOpt.get();
 
-            int dealerIndex = currentDealerWithIndex.getFirst();
-            PlayerSession currentDealer = currentDealerWithIndex.getSecond();
+            var dealerIndex = currentDealerWithIndex.getFirst();
+            var currentDealer = currentDealerWithIndex.getSecond();
 
             playerSessions = sortDealerLast(playerSessions, dealerIndex);
 
-            int numPlayers = playerSessions.size();
-            for (int index = 0; index < numPlayers; index++) {
-                PlayerSession thisPlayerSession = playerSessions.get(index);
+            var numPlayers = playerSessions.size();
+            for (var index = 0; index < numPlayers; index++) {
+                var thisPlayerSession = playerSessions.get(index);
 
                 if (thisPlayerSession.getPosition()
                         .equals(currentDealer.getPosition())) {
-                    int nextIndex = index + 1;
+                    var nextIndex = index + 1;
                     if (nextIndex >= numPlayers) {
                         nextIndex = 0;
                     }
@@ -64,18 +64,18 @@ public class DealerService {
 
     private void setNextDealer(UUID tableId, PlayerSession nextDealer) {
         playerSessionRepository.resetDealerForTableId(tableId);
-        playerSessionRepository.setDealer(nextDealer.getId());
+        playerSessionRepository.setDealer(nextDealer.getId(), true);
     }
 
     private List<PlayerSession> dealerReorder(List<PlayerSession> playerSessions) {
-        int dealerIndex = getDealerIndex(playerSessions);
+        var dealerIndex = getDealerIndex(playerSessions);
         return sortDealerLast(playerSessions, dealerIndex);
     }
 
     //todo: maybe tidy with dto
     public Optional<Pair<Integer, PlayerSession>> getCurrentDealerWithIndex(List<PlayerSession> playerSessions) {
-        for (int index = 0; index < playerSessions.size(); index++) {
-            PlayerSession playerSession = playerSessions.get(index);
+        for (var index = 0; index < playerSessions.size(); index++) {
+            var playerSession = playerSessions.get(index);
             if (Boolean.TRUE.equals(playerSession.getDealer())) {
                 return Optional.of(Pair.of(index, playerSession));
             }
@@ -84,7 +84,7 @@ public class DealerService {
     }
 
     public PlayerSession getCurrentDealer(List<PlayerSession> playerSessions) {
-        for (PlayerSession playerSession : playerSessions) {
+        for (var playerSession : playerSessions) {
             if (Boolean.TRUE.equals(playerSession.getDealer())) {
                 return playerSession;
             }
@@ -94,7 +94,7 @@ public class DealerService {
 
     private int getDealerIndex(List<PlayerSession> playerSessions) {
         for (int index = 0; index < playerSessions.size(); index++) {
-            PlayerSession playerSession = playerSessions.get(index);
+            var playerSession = playerSessions.get(index);
             if (Boolean.TRUE.equals(playerSession.getDealer())) {
                 return index;
             }
@@ -107,7 +107,7 @@ public class DealerService {
         if (start > playerSessions.size()) {
             start = 0;
         }
-        List<PlayerSession> dealerSortedList = new ArrayList<>();
+        var dealerSortedList = new ArrayList<PlayerSession>();
         for (int index = start; index < playerSessions.size(); index++) {
             dealerSortedList.add(playerSessions.get(index));
         }

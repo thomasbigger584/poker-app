@@ -32,8 +32,8 @@ spring:
     password: password
   jpa:
     open-in-view: false
-  hibernate:
-    dll-auto: none
+    hibernate:
+      ddl-auto: validate
   liquibase:
     change-log: classpath:liquibase/master.xml
   jackson:

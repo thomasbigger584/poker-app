@@ -16,7 +16,7 @@ public class UserService {
     private final UserMapper mapper;
 
     public AppUser create(UserRepresentation representation) {
-        AppUser appUser = mapper.representationToModel(representation);
+        var appUser = mapper.representationToModel(representation);
         return repository.save(appUser);
     }
 }

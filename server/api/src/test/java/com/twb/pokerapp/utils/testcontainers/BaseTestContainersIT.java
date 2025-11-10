@@ -1,6 +1,8 @@
 package com.twb.pokerapp.utils.testcontainers;
 
 import com.twb.pokerapp.utils.keycloak.KeycloakClients;
+import com.twb.pokerapp.utils.sql.SqlClient;
+import com.twb.pokerapp.utils.validator.Validator;
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -82,6 +84,9 @@ public abstract class BaseTestContainersIT {
 
     protected static KeycloakClients keycloakClients;
 
+    protected SqlClient sqlClient;
+    protected Validator validator;
+
     static {
         DB_CONTAINER.setPortBindings(
                 List.of(getPortBindingString(DB_PORT)));
@@ -104,11 +109,13 @@ public abstract class BaseTestContainersIT {
     public void onBeforeEach() throws Throwable {
         DB_CONTAINER.start();
         API_CONTAINER.start();
+        sqlClient = new SqlClient(DB_CONTAINER);
         beforeEach();
     }
 
     @AfterEach
     public void onAfterEach() throws Throwable {
+        sqlClient.close();
         API_CONTAINER.stop();
         DB_CONTAINER.stop();
         afterEach();

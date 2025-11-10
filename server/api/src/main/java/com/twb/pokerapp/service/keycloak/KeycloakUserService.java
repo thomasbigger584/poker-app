@@ -48,15 +48,15 @@ public class KeycloakUserService {
         for (UserRepresentation representation : userMembers) {
             logger.info(ReflectionToStringBuilder.toString(representation, ToStringStyle.JSON_STYLE));
 
-            UUID id = UUID.fromString(representation.getId());
-            Optional<AppUser> userOpt = userRepository.findById(id);
+            var id = UUID.fromString(representation.getId());
+            var userOpt = userRepository.findById(id);
             if (userOpt.isPresent()) {
-                AppUser appUser = userOpt.get();
+                var appUser = userOpt.get();
                 logger.info("User {} already exists in database - todo: consider updating user here", appUser.getId());
                 databaseUsersFetched.remove(appUser);
                 updatedUsers++;
             } else {
-                AppUser appUser = userMapper.representationToModel(representation);
+                var appUser = userMapper.representationToModel(representation);
                 userRepository.save(appUser);
                 createdUsers++;
             }
