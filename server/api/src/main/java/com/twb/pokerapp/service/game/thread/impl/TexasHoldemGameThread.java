@@ -1,6 +1,7 @@
 package com.twb.pokerapp.service.game.thread.impl;
 
 import com.twb.pokerapp.domain.Hand;
+import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.domain.enumeration.CardType;
@@ -46,22 +47,6 @@ public class TexasHoldemGameThread extends GameThread {
         }
     }
 
-
-    @Override
-    protected void onPlayerAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
-        switch (createActionDto.getAction()) {
-            case CHECK -> checkAction(playerSession, createActionDto);
-            case BET -> betAction(playerSession, createActionDto);
-            case CALL -> callAction(playerSession, createActionDto);
-            case RAISE -> raiseAction(playerSession, createActionDto);
-        }
-    }
-
-    @Override
-    protected RoundState getNextRoundState(RoundState roundState) {
-        return roundState.nextTexasHoldemState();
-    }
-
     private void initDeal() {
         for (var cardType : CardType.PLAYER_CARDS) {
             for (var playerSession : playerSessions) {
@@ -78,7 +63,6 @@ public class TexasHoldemGameThread extends GameThread {
         do {
             var activePlayers = playerSessionRepository
                     .findActivePlayersByTableId(pokerTable.getId(), currentRound.getId());
-
             if (activePlayers.isEmpty()) {
                 throw new RoundInterruptedException("No Active Players found");
             }
@@ -86,9 +70,7 @@ public class TexasHoldemGameThread extends GameThread {
                 dispatcher.send(pokerTable, messageFactory.logMessage("Only one active player in betting round, so skipping"));
                 return;
             }
-
             for (var currentPlayer : activePlayers) {
-
                 double amountToCall = 0d;
                 var nextActions = ActionType.getDefaultActions();
 
@@ -98,27 +80,39 @@ public class TexasHoldemGameThread extends GameThread {
                 if (!prevPlayerActions.isEmpty()) {
                     var previousPlayerAction = prevPlayerActions.getLast();
                     nextActions = ActionType.getNextActions(previousPlayerAction.getActionType());
-
-                    switch (previousPlayerAction.getActionType()) {
-                        case BET:
-                        case CALL:
-                        case RAISE: {
-                            amountToCall = previousPlayerAction.getAmount();
-                            break;
-                        }
-                    }
+                    amountToCall = getAmountToCall(previousPlayerAction);
                 }
-
                 checkRoundInterrupted();
                 dispatcher.send(pokerTable, messageFactory.playerTurn(currentPlayer, nextActions, amountToCall));
                 waitPlayerTurn(currentPlayer);
                 checkRoundInterrupted();
             }
-
             var playerActionSumAmounts = playerActionRepository.sumAmounts(currentBettingRound.getId());
             playersPaidUp = playerActionSumAmounts != currentBettingRound.getPot();
-
         } while (playersPaidUp);
+    }
+
+    private double getAmountToCall(PlayerAction previousPlayerAction) {
+        return switch (previousPlayerAction.getActionType()) {
+            case FOLD:
+            case CHECK:
+                yield 0d;
+            case BET:
+            case CALL:
+            case RAISE: {
+                yield previousPlayerAction.getAmount();
+            }
+        };
+    }
+
+    @Override
+    protected void onPlayerAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
+        switch (createActionDto.getAction()) {
+            case CHECK -> checkAction(playerSession, createActionDto);
+            case BET -> betAction(playerSession, createActionDto);
+            case CALL -> callAction(playerSession, createActionDto);
+            case RAISE -> raiseAction(playerSession, createActionDto);
+        }
     }
 
     private void checkAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
@@ -181,12 +175,21 @@ public class TexasHoldemGameThread extends GameThread {
         sleepInMs(DEAL_WAIT_MS);
     }
 
+    @Override
+    protected RoundState getNextRoundState(RoundState roundState) {
+        return roundState.nextTexasHoldemState();
+    }
+
     private void determineNextDealer() {
         var playerSessions = getPlayerSessionsNotZero();
         this.playerSessions = dealerService.nextDealerReorder(params.getTableId(), playerSessions);
         var currentDealer = dealerService.getCurrentDealer(this.playerSessions);
         dispatcher.send(pokerTable, messageFactory.dealerDetermined(currentDealer));
     }
+
+    // *****************************************************************************************
+    // Evaluation
+    // *****************************************************************************************
 
     private void evaluate() {
         var playersNotFolded = playerSessions.stream()

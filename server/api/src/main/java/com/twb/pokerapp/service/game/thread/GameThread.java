@@ -36,7 +36,7 @@ public abstract class GameThread extends BaseGameThread {
     // Constructor Fields
     // *****************************************************************************************
     protected final GameThreadParams params;
-
+    protected final Set<PlayerSession> foldedPlayers = Collections.synchronizedSet(new HashSet<>());
     // *****************************************************************************************
     // Flags
     // *****************************************************************************************
@@ -44,7 +44,6 @@ public abstract class GameThread extends BaseGameThread {
     private final AtomicBoolean interruptRound = new AtomicBoolean(false);
     private final AtomicBoolean roundInProgress = new AtomicBoolean(false);
     private final AtomicBoolean gameInProgress = new AtomicBoolean(false);
-
     // *****************************************************************************************
     // Fields
     // *****************************************************************************************
@@ -52,7 +51,6 @@ public abstract class GameThread extends BaseGameThread {
     protected Round currentRound;
     protected BettingRound currentBettingRound;
     protected List<PlayerSession> playerSessions = new ArrayList<>();
-    protected final Set<PlayerSession> foldedPlayers = Collections.synchronizedSet(new HashSet<>());
     private CountDownLatch playerTurnLatch;
     private List<Card> deckOfCards;
     private int deckCardPointer;
@@ -199,10 +197,12 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     private void initBettingRound(RoundState roundState) {
-        var bettingRoundState = roundState.getBettingRoundState();
-        if (bettingRoundState != null) {
-            currentBettingRound = bettingRoundService.create(currentRound, bettingRoundState);
+        var bettingRoundStateOpt = Optional.ofNullable(roundState.getBettingRoundState());
+        if (bettingRoundStateOpt.isEmpty()) {
+            currentBettingRound = null;
+            return;
         }
+        currentBettingRound = bettingRoundService.create(currentRound, bettingRoundStateOpt.get());
     }
 
     private void finishRound() {
