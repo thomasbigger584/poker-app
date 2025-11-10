@@ -1,21 +1,12 @@
 package com.twb.pokerapp.utils.validator;
 
-import com.twb.pokerapp.domain.AppUser;
-import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.domain.enumeration.SessionState;
-import com.twb.pokerapp.dto.appuser.AppUserDTO;
-import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
-import com.twb.pokerapp.dto.pokertable.TableDTO;
 import com.twb.pokerapp.utils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.utils.sql.SqlClient;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
 import com.twb.pokerapp.web.websocket.message.server.payload.PlayerConnectedDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.PlayerSubscribedDTO;
 import lombok.RequiredArgsConstructor;
-
-import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;

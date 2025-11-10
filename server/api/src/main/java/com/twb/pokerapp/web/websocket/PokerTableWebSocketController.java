@@ -19,7 +19,6 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
-import java.util.Optional;
 import java.util.UUID;
 
 @Controller

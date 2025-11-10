@@ -64,56 +64,6 @@ public class HandTypeEvaluator {
     // ***************************************************************
 
     /**
-     * A pre-computation analysis of a list of cards.
-     * <p>
-     * This class groups cards by suit and counts occurrences of each rank upon instantiation.
-     * This avoids re-calculating these groupings for each hand type evaluation, improving performance.
-     */
-    @Getter
-    private static class HandAnalysis {
-        private static final List<RankType> PARTIAL_LOWER_STRAIGHT =
-                List.of(RankType.DEUCE, RankType.TREY, RankType.FOUR, RankType.FIVE);
-        private static final List<RankType> ROYAL_FLUSH_RANKS =
-                List.of(RankType.TEN, RankType.JACK, RankType.QUEEN, RankType.KING, RankType.ACE);
-
-
-        private final List<Card> originalCards;
-        private final Map<SuitType, List<Card>> cardsBySuit;
-        private final Map<RankType, Integer> rankCounts;
-        private final List<Integer> counts;
-
-        /**
-         * Constructs a HandAnalysis object by processing a list of cards.
-         *
-         * @param cards The list of cards to be analyzed. Must not be null.
-         */
-        public HandAnalysis(List<Card> cards) {
-            this.originalCards = Objects.requireNonNull(cards);
-            this.cardsBySuit = new HashMap<>();
-            this.rankCounts = new HashMap<>();
-
-            for (var card : cards) {
-                if (card != null) {
-                    cardsBySuit.computeIfAbsent(card.getSuitType(), k -> new ArrayList<>()).add(card);
-                    rankCounts.merge(card.getRankType(), 1, Integer::sum);
-                }
-            }
-            this.counts = new ArrayList<>(rankCounts.values());
-            this.counts.sort(Comparator.reverseOrder());
-        }
-
-        /**
-         * Checks if the hand contains at least a minimum number of cards.
-         *
-         * @param count the minimum number of cards required.
-         * @return true if the hand size is greater than or equal to the count, false otherwise.
-         */
-        public boolean hasMinimumCards(int count) {
-            return originalCards.size() >= count;
-        }
-    }
-
-    /**
      * Checks if the given cards form a Royal Flush.
      * <p>
      * A Royal Flush is a hand that contains the Ten, Jack, Queen, King, and Ace all of the same suit.
@@ -331,5 +281,55 @@ public class HandTypeEvaluator {
     private boolean isPair(HandAnalysis analysis) {
         return analysis.hasMinimumCards(TWO_CARDS_NEEDED) &&
                 analysis.getCounts().get(0) >= TWO_CARDS_NEEDED;
+    }
+
+    /**
+     * A pre-computation analysis of a list of cards.
+     * <p>
+     * This class groups cards by suit and counts occurrences of each rank upon instantiation.
+     * This avoids re-calculating these groupings for each hand type evaluation, improving performance.
+     */
+    @Getter
+    private static class HandAnalysis {
+        private static final List<RankType> PARTIAL_LOWER_STRAIGHT =
+                List.of(RankType.DEUCE, RankType.TREY, RankType.FOUR, RankType.FIVE);
+        private static final List<RankType> ROYAL_FLUSH_RANKS =
+                List.of(RankType.TEN, RankType.JACK, RankType.QUEEN, RankType.KING, RankType.ACE);
+
+
+        private final List<Card> originalCards;
+        private final Map<SuitType, List<Card>> cardsBySuit;
+        private final Map<RankType, Integer> rankCounts;
+        private final List<Integer> counts;
+
+        /**
+         * Constructs a HandAnalysis object by processing a list of cards.
+         *
+         * @param cards The list of cards to be analyzed. Must not be null.
+         */
+        public HandAnalysis(List<Card> cards) {
+            this.originalCards = Objects.requireNonNull(cards);
+            this.cardsBySuit = new HashMap<>();
+            this.rankCounts = new HashMap<>();
+
+            for (var card : cards) {
+                if (card != null) {
+                    cardsBySuit.computeIfAbsent(card.getSuitType(), k -> new ArrayList<>()).add(card);
+                    rankCounts.merge(card.getRankType(), 1, Integer::sum);
+                }
+            }
+            this.counts = new ArrayList<>(rankCounts.values());
+            this.counts.sort(Comparator.reverseOrder());
+        }
+
+        /**
+         * Checks if the hand contains at least a minimum number of cards.
+         *
+         * @param count the minimum number of cards required.
+         * @return true if the hand size is greater than or equal to the count, false otherwise.
+         */
+        public boolean hasMinimumCards(int count) {
+            return originalCards.size() >= count;
+        }
     }
 }

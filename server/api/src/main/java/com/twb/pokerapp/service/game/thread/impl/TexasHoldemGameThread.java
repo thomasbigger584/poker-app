@@ -1,12 +1,10 @@
 package com.twb.pokerapp.service.game.thread.impl;
 
-import com.twb.pokerapp.domain.Card;
 import com.twb.pokerapp.domain.Hand;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.domain.enumeration.CardType;
 import com.twb.pokerapp.domain.enumeration.RoundState;
-import com.twb.pokerapp.dto.playeraction.PlayerActionDTO;
 import com.twb.pokerapp.exception.game.RoundInterruptedException;
 import com.twb.pokerapp.service.eval.dto.EvalPlayerHandDTO;
 import com.twb.pokerapp.service.game.thread.GameThread;
@@ -243,8 +241,8 @@ public class TexasHoldemGameThread extends GameThread {
 
         savePlayerHandEvaluation(playerHandsList);
 
-       var winners = playerHandsList.stream()
-               .filter(EvalPlayerHandDTO::isWinner).toList();
+        var winners = playerHandsList.stream()
+                .filter(EvalPlayerHandDTO::isWinner).toList();
 
         handleWinners(winners);
     }

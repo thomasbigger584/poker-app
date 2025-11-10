@@ -6,11 +6,8 @@ import com.twb.pokerapp.utils.game.player.impl.TestGameListenerUser;
 import com.twb.pokerapp.utils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.utils.keycloak.KeycloakClients;
 import lombok.RequiredArgsConstructor;
-import org.keycloak.admin.client.Keycloak;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 @RequiredArgsConstructor
 public class GameRunner {

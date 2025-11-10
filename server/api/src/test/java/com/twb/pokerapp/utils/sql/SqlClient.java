@@ -10,7 +10,6 @@ import jakarta.persistence.Persistence;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 

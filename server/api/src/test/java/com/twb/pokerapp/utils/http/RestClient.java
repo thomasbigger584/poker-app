@@ -5,8 +5,6 @@ import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.token.TokenManager;
-import org.keycloak.representations.AccessTokenResponse;
 import org.springframework.http.HttpStatus;
 
 import java.net.URI;
@@ -23,9 +21,8 @@ public class RestClient {
     private static final String API_BASE_URL = "http://localhost:%d".formatted(EXPOSED_PORT);
     private static final String BEARER_PREFIX = "Bearer ";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final Map<Keycloak, RestClient> INSTANCES = new HashMap<>();
     private final Keycloak keycloak;
-
-    private final static Map<Keycloak, RestClient> INSTANCES = new HashMap<>();
 
     public static synchronized RestClient getInstance(Keycloak keycloak) {
         if (INSTANCES.containsKey(keycloak)) {

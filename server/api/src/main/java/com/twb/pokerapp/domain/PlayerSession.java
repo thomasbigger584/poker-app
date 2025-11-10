@@ -67,15 +67,15 @@ public class PlayerSession {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        var that = (PlayerSession) o;
+        var playerSession = (PlayerSession) o;
         return new EqualsBuilder()
-                .append(id, that.id)
-                .append(position, that.position)
-                .append(dealer, that.dealer)
-                .append(current, that.current)
-                .append(funds, that.funds)
-                .append(sessionState, that.sessionState)
-                .append(connectionType, that.connectionType)
+                .append(id, playerSession.id)
+                .append(position, playerSession.position)
+                .append(dealer, playerSession.dealer)
+                .append(current, playerSession.current)
+                .append(funds, playerSession.funds)
+                .append(sessionState, playerSession.sessionState)
+                .append(connectionType, playerSession.connectionType)
                 .isEquals();
     }
 

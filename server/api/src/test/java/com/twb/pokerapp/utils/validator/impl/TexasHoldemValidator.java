@@ -1,16 +1,11 @@
 package com.twb.pokerapp.utils.validator.impl;
 
-import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.enumeration.SessionState;
-import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.utils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.utils.sql.SqlClient;
 import com.twb.pokerapp.utils.validator.Validator;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
 import com.twb.pokerapp.web.websocket.message.server.payload.DealerDeterminedDTO;
-
-import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -42,8 +37,6 @@ public class TexasHoldemValidator extends Validator {
                     assertTrue(playerSessionDto.getPosition() > 0, "PlayerSession positions are not greater than 0");
                     assertEquals(playerSessionDto.getPosition(), playerSession.getPosition(), "PlayerSession positions do not match");
                 });
-
-
 
 
     }

@@ -18,17 +18,6 @@ class HandTypeEvaluatorTest {
 
     private HandTypeEvaluator evaluator;
 
-    @BeforeEach
-    public void beforeEach() {
-        evaluator = new HandTypeEvaluator();
-    }
-
-    @ParameterizedTest(name = "{index} => {0}")
-    @MethodSource("cardHandTypeProvider")
-    public void testHand(String scenario, List<Card> cards, HandType handType) {
-        assertEquals(handType, evaluator.evaluate(cards));
-    }
-
     static Stream<Arguments> cardHandTypeProvider() {
         return Stream.of(
                 Arguments.of("Royal Flush", createRoyalFlush(), HandType.ROYAL_FLUSH),
@@ -54,5 +43,16 @@ class HandTypeEvaluatorTest {
                 Arguments.of("High card with Ace kicker", createHighCardAceKicker(), HandType.HIGH_CARD),
                 Arguments.of("2 Three of a Kind", create2ThreeOfAKing(), HandType.FULL_HOUSE)
         );
+    }
+
+    @BeforeEach
+    public void beforeEach() {
+        evaluator = new HandTypeEvaluator();
+    }
+
+    @ParameterizedTest(name = "{index} => {0}")
+    @MethodSource("cardHandTypeProvider")
+    public void testHand(String scenario, List<Card> cards, HandType handType) {
+        assertEquals(handType, evaluator.evaluate(cards));
     }
 }

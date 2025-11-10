@@ -83,38 +83,23 @@ public enum ServerMessageType {
     PLAYER_DISCONNECTED;
 
     public Class<?> getPayloadClass() {
-        switch (this) {
-            case PLAYER_SUBSCRIBED:
-                return PlayerSubscribedDTO.class;
-            case PLAYER_CONNECTED:
-                return PlayerConnectedDTO.class;
-            case DEALER_DETERMINED:
-                return DealerDeterminedDTO.class;
-            case DEAL_INIT:
-                return DealPlayerCardDTO.class;
-            case DEAL_COMMUNITY:
-                return DealCommunityCardDTO.class;
-            case PLAYER_TURN:
-                return PlayerTurnDTO.class;
-            case PLAYER_ACTION:
-                return PlayerActionEventDTO.class;
+        return switch (this) {
+            case PLAYER_SUBSCRIBED -> PlayerSubscribedDTO.class;
+            case PLAYER_CONNECTED -> PlayerConnectedDTO.class;
+            case DEALER_DETERMINED -> DealerDeterminedDTO.class;
+            case DEAL_INIT -> DealPlayerCardDTO.class;
+            case DEAL_COMMUNITY -> DealCommunityCardDTO.class;
+            case PLAYER_TURN -> PlayerTurnDTO.class;
+            case PLAYER_ACTION -> PlayerActionEventDTO.class;
 
             //todo: add more
 
-            case ROUND_FINISHED:
-                return RoundFinishedDTO.class;
-            case GAME_FINISHED:
-                return GameFinishedDTO.class;
-            case CHAT:
-                return ChatMessageDTO.class;
-            case LOG:
-                return LogMessageDTO.class;
-            case ERROR:
-                return ErrorMessageDTO.class;
-            case PLAYER_DISCONNECTED:
-                return PlayerDisconnectedDTO.class;
-            default:
-                throw new IllegalStateException("Unknown Server Message Type: " + this);
-        }
+            case ROUND_FINISHED -> RoundFinishedDTO.class;
+            case GAME_FINISHED -> GameFinishedDTO.class;
+            case CHAT -> ChatMessageDTO.class;
+            case LOG -> LogMessageDTO.class;
+            case ERROR -> ErrorMessageDTO.class;
+            case PLAYER_DISCONNECTED -> PlayerDisconnectedDTO.class;
+        };
     }
 }

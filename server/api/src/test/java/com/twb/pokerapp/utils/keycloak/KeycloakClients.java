@@ -6,11 +6,11 @@ import org.keycloak.admin.client.KeycloakBuilder;
 import java.util.HashMap;
 
 public class KeycloakClients extends HashMap<String, Keycloak> {
-    private static final String APP_CLIENT_ID = "poker-game-api-client";
-    private static final String ADMIN_REALM = "poker-app";
     public static final String ADMIN_USERNAME = "admin";
     public static final String ADMIN_PASSWORD = "admin";
     public static final String VIEWER_USERNAME = "viewer1";
+    private static final String APP_CLIENT_ID = "poker-game-api-client";
+    private static final String ADMIN_REALM = "poker-app";
     private static final String USER_USERNAME_FORMAT = "user%d";
     private static final String USER_PASSWORD = "password";
     private static final int USER_COUNT = 6;
