@@ -11,11 +11,6 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.*;
 
-import java.security.Principal;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
 @Component
 @RequiredArgsConstructor
 public class SessionEventListener {
@@ -29,10 +24,10 @@ public class SessionEventListener {
     public void handleEvent(SessionConnectEvent event) {
         logger.info("Attempting to connect: {}", event);
 
-        StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-        List<String> connectionTypeHeader = headerAccessor.getNativeHeader(HEADER_CONNECTION_TYPE);
+        var headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
+        var connectionTypeHeader = headerAccessor.getNativeHeader(HEADER_CONNECTION_TYPE);
         if (CollectionUtils.isNotEmpty(connectionTypeHeader)) {
-            ConnectionType connectionType = ConnectionType.valueOf(connectionTypeHeader.getFirst());
+            var connectionType = ConnectionType.valueOf(connectionTypeHeader.getFirst());
             sessionService.putConnectionType(headerAccessor, connectionType);
         } else {
             sessionService.putConnectionType(headerAccessor, ConnectionType.LISTENER);
@@ -57,13 +52,13 @@ public class SessionEventListener {
     @EventListener
     public void handleEvent(SessionDisconnectEvent event) {
         logger.info("Disconnecting: {}", event);
-        Principal principal = event.getUser();
+        var principal = event.getUser();
         if (principal == null) {
             logger.warn("Session disconnect cannot disconnect player as principal is null");
             return;
         }
-        StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-        Optional<UUID> tableIdOpt = sessionService.getPokerTableId(headerAccessor);
+        var headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
+        var tableIdOpt = sessionService.getPokerTableId(headerAccessor);
         if (tableIdOpt.isEmpty()) {
             logger.warn("Session disconnect cannot disconnect player as no poker table id found on session");
             return;

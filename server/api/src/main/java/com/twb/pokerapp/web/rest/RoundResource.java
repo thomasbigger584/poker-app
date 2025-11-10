@@ -23,13 +23,13 @@ public class RoundResource {
 
     @GetMapping("/current/{tableId}")
     public ResponseEntity<RoundDTO> getCurrentByTableId(@PathVariable("tableId") UUID tableId) {
-        RoundDTO result = service.getCurrent(tableId);
+        var result = service.getCurrent(tableId);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     @GetMapping("/{tableId}")
     public ResponseEntity<List<RoundDTO>> getByTableId(@PathVariable("tableId") UUID tableId) {
-        List<RoundDTO> result = service.getByTableId(tableId);
+        var result = service.getByTableId(tableId);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 }

@@ -23,7 +23,7 @@ public class PlayerSessionResource {
 
     @GetMapping("/{tableId}")
     public ResponseEntity<List<PlayerSessionDTO>> getByTableId(@PathVariable("tableId") UUID tableId) {
-        List<PlayerSessionDTO> result = service.getByTableId(tableId);
+        var result = service.getByTableId(tableId);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 }

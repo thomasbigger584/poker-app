@@ -58,7 +58,7 @@ public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationTo
         if (!jwt.hasClaim(RESOURCE_ACCESS)) {
             return Collections.emptyList();
         }
-        Map<String, Object> resourceAccess = jwt.getClaim(RESOURCE_ACCESS);
+        var resourceAccess = (Map<String, Object>) jwt.getClaim(RESOURCE_ACCESS);
         if (resourceAccess == null) {
             return Collections.emptyList();
         }

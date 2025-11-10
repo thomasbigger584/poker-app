@@ -38,12 +38,12 @@ public class TableService {
 
         var allPokerTables = repository.findAll();
         if (allPokerTables.isEmpty()) {
-            CreateTableDTO createTableDto1 = new CreateTableDTO();
+            var createTableDto1 = new CreateTableDTO();
             createTableDto1.setName("Poker Table 1");
             createTableDto1.setGameType(GameType.TEXAS_HOLDEM);
             create(createTableDto1);
 
-            CreateTableDTO createTableDto2 = new CreateTableDTO();
+            var createTableDto2 = new CreateTableDTO();
             createTableDto2.setName("Poker Table 2");
             createTableDto2.setGameType(GameType.BLACKJACK);
             create(createTableDto2);
@@ -59,7 +59,7 @@ public class TableService {
 
     @Transactional(readOnly = true)
     public Page<TableDTO> getAll(Pageable pageable) {
-        Page<PokerTable> page = repository.findAll(pageable);
+        var page = repository.findAll(pageable);
         return page.map(mapper::modelToDto);
     }
 }
