@@ -12,15 +12,19 @@ import java.util.UUID;
 @Repository
 public interface PlayerActionRepository extends JpaRepository<PlayerAction, UUID> {
 
-    @Query("SELECT SUM(a.amount) " +
-            "FROM PlayerAction a " +
-            "WHERE a.bettingRound.id = :bettingRoundId ")
+    @Query("""
+            SELECT SUM(a.amount)
+            FROM PlayerAction a
+            WHERE a.bettingRound.id = :bettingRoundId 
+            """)
     double sumAmounts(@Param("bettingRoundId") UUID bettingRoundId);
 
-    @Query("SELECT a " +
-            "FROM PlayerAction a " +
-            "WHERE a.bettingRound.id = :bettingRoundId " +
-            "AND a.actionType <> com.twb.pokerapp.domain.enumeration.ActionType.FOLD " +
-            "ORDER BY a.id DESC")
+    @Query("""
+            SELECT a
+            FROM PlayerAction a
+            WHERE a.bettingRound.id = :bettingRoundId
+            AND a.actionType <> com.twb.pokerapp.domain.enumeration.ActionType.FOLD
+            ORDER BY a.id DESC
+            """)
     List<PlayerAction> findPlayerActionsNotFolded(@Param("bettingRoundId") UUID bettingRoundId);
 }

@@ -12,10 +12,11 @@ import java.util.UUID;
 @Repository
 public interface HandRepository extends JpaRepository<Hand, UUID> {
 
-    @Query("SELECT h " +
-            "FROM Hand h " +
-            "WHERE h.playerSession.id = :playerSessionId " +
-            "AND h.round.id = :roundId ")
-    Optional<Hand> findHandForRound(@Param("playerSessionId") UUID playerSessionId,
-                                    @Param("roundId") UUID roundId);
+    @Query("""
+            SELECT h
+            FROM Hand h
+            WHERE h.playerSession.id = :playerSessionId
+            AND h.round.id = :roundId
+            """)
+    Optional<Hand> findHandForRound(@Param("playerSessionId") UUID playerSessionId, @Param("roundId") UUID roundId);
 }
