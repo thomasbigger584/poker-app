@@ -5,6 +5,7 @@ import com.twb.pokerapp.domain.Round;
 import com.twb.pokerapp.domain.enumeration.BettingRoundState;
 import com.twb.pokerapp.mapper.BettingRoundMapper;
 import com.twb.pokerapp.repository.BettingRoundRepository;
+import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -26,6 +27,15 @@ public class BettingRoundService {
         bettingRound.setRound(round);
         bettingRound.setState(state);
         bettingRound.setPot(0d);
+
+        bettingRound = repository.save(bettingRound);
+
+        return bettingRound;
+    }
+
+    public BettingRound updatePot(BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
+        double newRoundPot = bettingRound.getPot() + createActionDto.getAmount();
+        bettingRound.setPot(newRoundPot);
 
         bettingRound = repository.save(bettingRound);
 

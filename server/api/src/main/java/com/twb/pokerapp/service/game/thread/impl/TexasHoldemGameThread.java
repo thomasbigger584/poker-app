@@ -78,7 +78,7 @@ public class TexasHoldemGameThread extends GameThread {
                         .findPlayerActionsNotFolded(currentBettingRound.getId());
 
                 if (!prevPlayerActions.isEmpty()) {
-                    var previousPlayerAction = prevPlayerActions.getLast();
+                    var previousPlayerAction = prevPlayerActions.getFirst();
                     nextActions = ActionType.getNextActions(previousPlayerAction.getActionType());
                     amountToCall = getAmountToCall(previousPlayerAction);
                 }
@@ -90,6 +90,7 @@ public class TexasHoldemGameThread extends GameThread {
             var playerActionSumAmounts = playerActionRepository.sumAmounts(currentBettingRound.getId());
             playersPaidUp = playerActionSumAmounts != currentBettingRound.getPot();
         } while (playersPaidUp);
+        currentRound = roundService.updatePot(currentRound, currentBettingRound);
     }
 
     private double getAmountToCall(PlayerAction previousPlayerAction) {
@@ -120,7 +121,7 @@ public class TexasHoldemGameThread extends GameThread {
                 .stream().allMatch(action -> action.getActionType() == ActionType.CHECK);
         if (!canPerformCheck) {
             logger.warn("Cannot check as previous actions was not a check");
-            dispatcher.send(pokerTable, playerSession, messageFactory.logMessage("Cannot check as previous actions was not a check"));
+            dispatcher.send(pokerTable, playerSession, messageFactory.errorMessage("Cannot check as previous actions was not a check"));
             return;
         }
         createActionDto.setAmount(0d);
@@ -129,11 +130,45 @@ public class TexasHoldemGameThread extends GameThread {
     }
 
     private void betAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
+        if (createActionDto.getAmount() <= 0) {
+            logger.warn("Cannot bet as amount is less than or equal to zero");
+            dispatcher.send(pokerTable, playerSession, messageFactory.errorMessage("Cannot bet as amount is less than or equal to zero"));
+            return;
+        }
+        var lastPlayerActions = playerActionRepository.findPlayerActionsNotFolded(currentBettingRound.getId());
+        if (!lastPlayerActions.isEmpty()) {
+            var lastPlayerAction = lastPlayerActions.getFirst();
+            if (List.of(ActionType.BET, ActionType.CALL, ActionType.RAISE).contains(lastPlayerAction.getActionType())) {
+                logger.warn("Cannot bet as previous action was not a check");
+                dispatcher.send(pokerTable, playerSession, messageFactory.errorMessage("Cannot bet as previous action was not a check"));
+                return;
+            }
+        }
+        var actionDto = playerActionService.create(playerSession, currentBettingRound, createActionDto);
+        currentBettingRound = bettingRoundService.updatePot(currentBettingRound, createActionDto);
 
+        dispatcher.send(pokerTable, messageFactory.playerAction(actionDto));
     }
 
     private void callAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
+        if (createActionDto.getAmount() <= 0) {
+            logger.warn("Cannot call as amount is less than or equal to zero");
+            dispatcher.send(pokerTable, playerSession, messageFactory.errorMessage("Cannot bet as amount is less than or equal to zero"));
+            return;
+        }
+        var lastPlayerActions = playerActionRepository.findPlayerActionsNotFolded(currentBettingRound.getId());
+        if (!lastPlayerActions.isEmpty()) {
+            var lastPlayerAction = lastPlayerActions.getFirst();
+            if (lastPlayerAction.getActionType() == ActionType.CHECK) {
+                logger.warn("Cannot call as previous action was a check");
+                dispatcher.send(pokerTable, playerSession, messageFactory.errorMessage("Cannot bet as previous action was not a check"));
+                return;
+            }
+        }
+        var actionDto = playerActionService.create(playerSession, currentBettingRound, createActionDto);
+        currentBettingRound = bettingRoundService.updatePot(currentBettingRound, createActionDto);
 
+        dispatcher.send(pokerTable, messageFactory.playerAction(actionDto));
     }
 
     private void raiseAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {

@@ -29,6 +29,9 @@ public class Round {
     @Column(name = "round_state")
     private RoundState roundState;
 
+    @Column(name = "pot")
+    private Double pot;
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "poker_table_id")
     private PokerTable pokerTable;
@@ -45,13 +48,15 @@ public class Round {
         if (o == null || getClass() != o.getClass()) return false;
         var round = (Round) o;
         return new EqualsBuilder().append(id, round.id)
-                .append(roundState, round.roundState).isEquals();
+                .append(roundState, round.roundState)
+                .append(pot, round.pot)
+                .isEquals();
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
-                .append(id).append(roundState).toHashCode();
+                .append(id).append(roundState).append(pot).toHashCode();
     }
 
     @Override
@@ -59,6 +64,7 @@ public class Round {
         return "Round{" +
                 "id=" + id +
                 ", roundState=" + roundState +
+                ", pot=" + pot +
                 '}';
     }
 }

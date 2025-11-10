@@ -12,5 +12,6 @@ import java.util.UUID;
 public class RoundDTO {
     private UUID id;
     private RoundState roundState;
+    private Double pot;
     private List<CardDTO> communityCards = new ArrayList<>();
 }

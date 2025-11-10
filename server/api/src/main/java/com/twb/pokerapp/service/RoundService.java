@@ -1,5 +1,6 @@
 package com.twb.pokerapp.service;
 
+import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.domain.Round;
 import com.twb.pokerapp.domain.enumeration.RoundState;
@@ -46,5 +47,14 @@ public class RoundService {
                 .stream()
                 .map(mapper::modelToDto)
                 .toList();
+    }
+
+    public Round updatePot(Round round, BettingRound bettingRound) {
+        var newPot = round.getPot() + bettingRound.getPot();
+        round.setPot(newPot);
+
+        round = repository.save(round);
+
+        return round;
     }
 }

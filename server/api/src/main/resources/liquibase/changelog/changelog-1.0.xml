@@ -53,6 +53,9 @@
             <column name="round_state" type="text" defaultValue="WAITING_FOR_PLAYERS">
                 <constraints nullable="false"/>
             </column>
+            <column name="pot" type="double" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
             <column name="poker_table_id" type="uuid">
                 <constraints nullable="false"/>
             </column>
@@ -94,7 +97,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="hand_type" type="text"/>
-            <column name="winner" type="boolean"/>
+            <column name="winner" type="boolean" defaultValue="0"/>
             <column name="player_session_id" type="uuid">
                 <constraints nullable="false"/>
             </column>
@@ -148,7 +151,7 @@
             <column name="state" type="text">
                 <constraints nullable="false"/>
             </column>
-            <column name="pot" type="double">
+            <column name="pot" type="double" defaultValueNumeric="0">
                 <constraints nullable="false"/>
             </column>
             <column name="round_id" type="uuid">
@@ -175,7 +178,7 @@
             <column name="action_type" type="text">
                 <constraints nullable="false"/>
             </column>
-            <column name="amount" type="double"/>
+            <column name="amount" type="double" defaultValueNumeric="0"/>
         </createTable>
         <addPrimaryKey columnNames="id" constraintName="pk_player_action" tableName="player_action"/>
         <addForeignKeyConstraint constraintName="fk_player_action_player_session_id" onDelete="CASCADE"
