@@ -29,9 +29,9 @@ public interface RoundRepository extends JpaRepository<Round, UUID> {
 
     @Query("""
             SELECT r
-            "FROM Round r
-            "WHERE r.pokerTable.id = :tableId
-            "AND r.roundState <> com.twb.pokerapp.domain.enumeration.RoundState.FINISH
+            FROM Round r
+            WHERE r.pokerTable.id = :tableId
+            AND r.roundState <> com.twb.pokerapp.domain.enumeration.RoundState.FINISH
             """)
     Optional<Round> findCurrentByTableId(@Param("tableId") UUID tableId);
 }
