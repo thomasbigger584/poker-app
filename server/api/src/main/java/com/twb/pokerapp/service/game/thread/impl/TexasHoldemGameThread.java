@@ -71,7 +71,7 @@ public class TexasHoldemGameThread extends GameThread {
                 return;
             }
             for (var currentPlayer : activePlayers) {
-                double amountToCall = 0d;
+                var amountToCall = 0d;
                 var nextActions = ActionType.getDefaultActions();
 
                 var prevPlayerActions = playerActionRepository

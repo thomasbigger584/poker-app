@@ -42,7 +42,7 @@ public class PlayerSessionService {
         session.setSessionState(SessionState.CONNECTED);
 
         if (connectionType == ConnectionType.PLAYER) {
-            int position = getSessionTablePosition(pokerTable);
+            var position = getSessionTablePosition(pokerTable);
             session.setPosition(position);
             session.setFunds(1000d); // todo: dynamically set funds
         }
@@ -71,8 +71,8 @@ public class PlayerSessionService {
 
     private int getSessionTablePosition(PokerTable pokerTable) {
         var sessions = repository.findConnectedPlayersByTableId(pokerTable.getId());
-        int otherPlayersMaxCount = pokerTable.getGameType().getMaxPlayerCount() - 1;
-        for (int position = 1; position <= otherPlayersMaxCount; position++) {
+        var otherPlayersMaxCount = pokerTable.getGameType().getMaxPlayerCount() - 1;
+        for (var position = 1; position <= otherPlayersMaxCount; position++) {
             if (!isPositionAlreadyTaken(sessions, position)) {
                 return position;
             }
@@ -89,7 +89,7 @@ public class PlayerSessionService {
 
     private boolean isPositionAlreadyTaken(List<PlayerSession> sessions, int position) {
         for (var session : sessions) {
-            Integer thisPosition = session.getPosition();
+            var thisPosition = session.getPosition();
             if (thisPosition != null && thisPosition == position) {
                 return true;
             }

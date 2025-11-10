@@ -15,7 +15,7 @@ public class DeckOfCardsFactory {
     private static final List<Card> CARDS = new ArrayList<>();
 
     static {
-        int valueIndex = 0;
+        var valueIndex = 0;
         for (var rank : RankType.values()) {
             for (var suit : SuitType.values()) {
                 CARDS.add(new Card(rank, suit, valueIndex++));

@@ -1,13 +1,11 @@
 package com.twb.pokerapp.service.keycloak;
 
-import com.twb.pokerapp.domain.AppUser;
 import com.twb.pokerapp.mapper.UserMapper;
 import com.twb.pokerapp.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.keycloak.admin.client.resource.GroupResource;
-import org.keycloak.representations.idm.UserRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +13,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -38,13 +35,13 @@ public class KeycloakUserService {
     @PostConstruct
     public void init() {
         logger.info("Synchronizing Keycloak users...");
-        List<UserRepresentation> userMembers = userGroupResource.members();
-        List<AppUser> databaseUsersFetched = new ArrayList<>(userRepository.findAll());
+        var userMembers = userGroupResource.members();
+        var databaseUsersFetched = new ArrayList<>(userRepository.findAll());
 
-        int updatedUsers = 0;
-        int createdUsers = 0;
+        var updatedUsers = 0;
+        var createdUsers = 0;
 
-        for (UserRepresentation representation : userMembers) {
+        for (var representation : userMembers) {
             logger.info(ReflectionToStringBuilder.toString(representation, ToStringStyle.JSON_STYLE));
 
             var id = UUID.fromString(representation.getId());

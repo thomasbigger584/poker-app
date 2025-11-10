@@ -1,7 +1,6 @@
 package com.twb.pokerapp.service;
 
 import com.twb.pokerapp.domain.PokerTable;
-import com.twb.pokerapp.domain.Round;
 import com.twb.pokerapp.domain.enumeration.GameType;
 import com.twb.pokerapp.domain.enumeration.RoundState;
 import com.twb.pokerapp.dto.pokertable.CreateTableDTO;
@@ -15,8 +14,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Component
 @Transactional
@@ -33,13 +30,13 @@ public class TableService {
         // on application restart, complete all rounds previously saved
         // only doing this here to ensure ordering with creating dummy poker table data
         var allRounds = roundRepository.findAllNotFinished();
-        for (Round round : allRounds) {
+        for (var round : allRounds) {
             round.setRoundState(RoundState.FINISH);
             roundRepository.save(round);
         }
 
 
-        List<PokerTable> allPokerTables = repository.findAll();
+        var allPokerTables = repository.findAll();
         if (allPokerTables.isEmpty()) {
             CreateTableDTO createTableDto1 = new CreateTableDTO();
             createTableDto1.setName("Poker Table 1");
@@ -55,7 +52,7 @@ public class TableService {
     }
 
     public PokerTable create(CreateTableDTO dto) {
-        PokerTable table = mapper.createDtoToModel(dto);
+        var table = mapper.createDtoToModel(dto);
         table = repository.save(table);
         return table;
     }

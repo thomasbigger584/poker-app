@@ -54,7 +54,7 @@ public class AppUser {
     // -----------------------------------------------------------------
 
     @Column(name = "total_funds")
-    private double totalFunds = 0d;
+    private Double totalFunds = 0d;
 
     @Override
     public boolean equals(Object o) {

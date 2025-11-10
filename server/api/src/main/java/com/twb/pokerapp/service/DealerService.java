@@ -93,7 +93,7 @@ public class DealerService {
     }
 
     private int getDealerIndex(List<PlayerSession> playerSessions) {
-        for (int index = 0; index < playerSessions.size(); index++) {
+        for (var index = 0; index < playerSessions.size(); index++) {
             var playerSession = playerSessions.get(index);
             if (Boolean.TRUE.equals(playerSession.getDealer())) {
                 return index;
@@ -103,15 +103,15 @@ public class DealerService {
     }
 
     private List<PlayerSession> sortDealerLast(List<PlayerSession> playerSessions, int dealerIndex) {
-        int start = dealerIndex + 1;
+        var start = dealerIndex + 1;
         if (start > playerSessions.size()) {
             start = 0;
         }
         var dealerSortedList = new ArrayList<PlayerSession>();
-        for (int index = start; index < playerSessions.size(); index++) {
+        for (var index = start; index < playerSessions.size(); index++) {
             dealerSortedList.add(playerSessions.get(index));
         }
-        for (int index = 0; index < start; index++) {
+        for (var index = 0; index < start; index++) {
             dealerSortedList.add(playerSessions.get(index));
         }
         return dealerSortedList;

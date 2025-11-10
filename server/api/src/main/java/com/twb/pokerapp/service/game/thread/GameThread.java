@@ -36,7 +36,7 @@ public abstract class GameThread extends BaseGameThread {
     // Constructor Fields
     // *****************************************************************************************
     protected final GameThreadParams params;
-    protected final Set<PlayerSession> foldedPlayers = Collections.synchronizedSet(new HashSet<>());
+
     // *****************************************************************************************
     // Flags
     // *****************************************************************************************
@@ -44,6 +44,7 @@ public abstract class GameThread extends BaseGameThread {
     private final AtomicBoolean interruptRound = new AtomicBoolean(false);
     private final AtomicBoolean roundInProgress = new AtomicBoolean(false);
     private final AtomicBoolean gameInProgress = new AtomicBoolean(false);
+
     // *****************************************************************************************
     // Fields
     // *****************************************************************************************
@@ -51,6 +52,7 @@ public abstract class GameThread extends BaseGameThread {
     protected Round currentRound;
     protected BettingRound currentBettingRound;
     protected List<PlayerSession> playerSessions = new ArrayList<>();
+    protected final Set<PlayerSession> foldedPlayers = Collections.synchronizedSet(new HashSet<>());
     private CountDownLatch playerTurnLatch;
     private List<Card> deckOfCards;
     private int deckCardPointer;
@@ -368,7 +370,7 @@ public abstract class GameThread extends BaseGameThread {
 
     private String getReadableWinners(List<EvalPlayerHandDTO> winners) {
         var sb = new StringBuilder();
-        for (int index = 0; index < winners.size(); index++) {
+        for (var index = 0; index < winners.size(); index++) {
             var eval = winners.get(index);
             var user = eval.getPlayerSession().getUser();
             sb.append(user.getUsername());
