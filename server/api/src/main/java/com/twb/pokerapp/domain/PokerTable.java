@@ -43,14 +43,19 @@ public class PokerTable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        PokerTable that = (PokerTable) o;
-        return new EqualsBuilder().append(id, that.id).isEquals();
+        var pokerTable = (PokerTable) o;
+        return new EqualsBuilder()
+                .append(id, pokerTable.id)
+                .append(name, pokerTable.name)
+                .append(gameType, pokerTable.gameType)
+                .isEquals();
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
-                .append(id).toHashCode();
+                .append(id).append(name).append(gameType)
+                .toHashCode();
     }
 
     @Override

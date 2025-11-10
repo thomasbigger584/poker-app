@@ -43,7 +43,7 @@ public class Round {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Round round = (Round) o;
+        var round = (Round) o;
         return new EqualsBuilder().append(id, round.id)
                 .append(roundState, round.roundState).isEquals();
     }

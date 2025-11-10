@@ -75,7 +75,7 @@ public class Card {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Card card = (Card) o;
+        var card = (Card) o;
         return new EqualsBuilder()
                 .append(rankValue, card.rankValue)
                 .append(id, card.id)

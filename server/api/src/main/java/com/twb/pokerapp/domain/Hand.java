@@ -50,7 +50,7 @@ public class Hand {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Hand hand = (Hand) o;
+        var hand = (Hand) o;
         return new EqualsBuilder().append(id, hand.id)
                 .append(handType, hand.handType).isEquals();
     }

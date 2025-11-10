@@ -43,7 +43,7 @@ public class BettingRound {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        BettingRound bettingRound = (BettingRound) o;
+        var bettingRound = (BettingRound) o;
         return new EqualsBuilder().append(id, bettingRound.id)
                 .append(state, bettingRound.state)
                 .append(pot, bettingRound.pot).isEquals();

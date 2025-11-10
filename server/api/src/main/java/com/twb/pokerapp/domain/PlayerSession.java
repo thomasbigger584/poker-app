@@ -69,13 +69,22 @@ public class PlayerSession {
         if (o == null || getClass() != o.getClass()) return false;
         var that = (PlayerSession) o;
         return new EqualsBuilder()
-                .append(id, that.id).isEquals();
+                .append(id, that.id)
+                .append(position, that.position)
+                .append(dealer, that.dealer)
+                .append(current, that.current)
+                .append(funds, that.funds)
+                .append(sessionState, that.sessionState)
+                .append(connectionType, that.connectionType)
+                .isEquals();
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
-                .append(id).toHashCode();
+                .append(id).append(position).append(dealer).append(current)
+                .append(funds).append(sessionState).append(connectionType)
+                .toHashCode();
     }
 
     @Override
