@@ -45,7 +45,7 @@ public class SessionService {
     // *****************************************************************************************
 
     private Map<String, Object> getSessionAttributes(StompHeaderAccessor headerAccessor) {
-        Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
+        var sessionAttributes = headerAccessor.getSessionAttributes();
         if (sessionAttributes == null) {
             sessionAttributes = new HashMap<>();
         }
@@ -53,14 +53,14 @@ public class SessionService {
     }
 
     private void put(StompHeaderAccessor headerAccessor, String key, Object value) {
-        Map<String, Object> sessionAttributes = getSessionAttributes(headerAccessor);
+        var sessionAttributes = getSessionAttributes(headerAccessor);
         sessionAttributes.put(key, value);
         headerAccessor.setSessionAttributes(sessionAttributes);
     }
 
     @SuppressWarnings("unchecked")
     private <T> Optional<T> get(StompHeaderAccessor headerAccessor, String key) {
-        Map<String, Object> sessionAttributes = headerAccessor.getSessionAttributes();
+        var sessionAttributes = headerAccessor.getSessionAttributes();
         if (sessionAttributes == null || !sessionAttributes.containsKey(key)) {
             return Optional.empty();
         }

@@ -26,16 +26,21 @@ public class TableService {
 
     @PostConstruct
     public void init() {
+        finishAllUnfinishedRounds();
+        createTestTables();
+    }
 
+    private void finishAllUnfinishedRounds() {
         // on application restart, complete all rounds previously saved
         // only doing this here to ensure ordering with creating dummy poker table data
-        var allRounds = roundRepository.findAllNotFinished();
-        for (var round : allRounds) {
+        var unfinishedRounds = roundRepository.findAllNotFinished();
+        for (var round : unfinishedRounds) {
             round.setRoundState(RoundState.FINISH);
             roundRepository.save(round);
         }
+    }
 
-
+    private void createTestTables() {
         var allPokerTables = repository.findAll();
         if (allPokerTables.isEmpty()) {
             var createTableDto1 = new CreateTableDTO();
@@ -47,7 +52,6 @@ public class TableService {
             createTableDto2.setName("Poker Table 2");
             createTableDto2.setGameType(GameType.BLACKJACK);
             create(createTableDto2);
-
         }
     }
 
