@@ -26,6 +26,7 @@ public class RoundService {
         var round = new Round();
         round.setRoundState(RoundState.WAITING_FOR_PLAYERS);
         round.setPokerTable(pokerTable);
+        round.setPot(0d);
 
         round = repository.saveAndFlush(round);
 
