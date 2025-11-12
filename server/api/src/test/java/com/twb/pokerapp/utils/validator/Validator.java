@@ -3,6 +3,7 @@ package com.twb.pokerapp.utils.validator;
 import com.twb.pokerapp.domain.enumeration.SessionState;
 import com.twb.pokerapp.utils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.utils.sql.SqlClient;
+import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
 import com.twb.pokerapp.web.websocket.message.server.payload.PlayerConnectedDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.PlayerSubscribedDTO;
@@ -15,11 +16,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public abstract class Validator {
     protected final SqlClient sqlClient;
 
+    public void validateHandleMessage(ServerMessageDTO message) {
+
+        onValidateHandleMessage(message);
+    }
+
     public void validateEndOfRun(PlayersServerMessages messages) {
         messages.getListenerMessages().stream()
                 .filter(message -> message.getType() == ServerMessageType.PLAYER_CONNECTED)
                 .forEach(message -> {
-                    PlayerConnectedDTO payload = (PlayerConnectedDTO) message.getPayload();
+                    var payload = (PlayerConnectedDTO) message.getPayload();
 
                     // PlayerSession Assertions
                     var playerSessionDto = payload.getPlayerSession();
@@ -63,12 +69,14 @@ public abstract class Validator {
         messages.getListenerMessages().stream()
                 .filter(message -> message.getType() == ServerMessageType.PLAYER_SUBSCRIBED)
                 .forEach(message -> {
-                    PlayerSubscribedDTO payload = (PlayerSubscribedDTO) message.getPayload();
+                    var payload = (PlayerSubscribedDTO) message.getPayload();
 
                 });
 
         onValidateEndOfRun(messages);
     }
+
+    protected abstract void onValidateHandleMessage(ServerMessageDTO message);
 
     protected abstract void onValidateEndOfRun(PlayersServerMessages messages);
 }

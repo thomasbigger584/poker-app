@@ -5,6 +5,7 @@ import com.twb.pokerapp.utils.game.player.TestUserParams;
 import com.twb.pokerapp.utils.game.player.impl.TestGameListenerUser;
 import com.twb.pokerapp.utils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.utils.keycloak.KeycloakClients;
+import com.twb.pokerapp.utils.validator.Validator;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -41,6 +42,7 @@ public class GameRunner {
                 .keycloak(keycloak)
                 .latches(params.getLatches())
                 .username(KeycloakClients.VIEWER_USERNAME)
+                .validator(params.getValidator())
                 .build();
         var listener = new TestGameListenerUser(listenerParams, params.getNumberOfRounds());
         listener.connect();

@@ -4,6 +4,7 @@ import com.twb.pokerapp.domain.enumeration.SessionState;
 import com.twb.pokerapp.utils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.utils.sql.SqlClient;
 import com.twb.pokerapp.utils.validator.Validator;
+import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
 import com.twb.pokerapp.web.websocket.message.server.payload.DealerDeterminedDTO;
 
@@ -15,6 +16,11 @@ public class TexasHoldemValidator extends Validator {
 
     public TexasHoldemValidator(SqlClient sqlClient) {
         super(sqlClient);
+    }
+
+    @Override
+    protected void onValidateHandleMessage(ServerMessageDTO message) {
+        // todo specific intra game message assertions
     }
 
     @Override

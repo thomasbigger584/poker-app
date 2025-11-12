@@ -24,6 +24,11 @@ public class TestGameListenerUser extends AbstractTestUser {
 
     @Override
     protected void handleMessage(StompHeaders headers, ServerMessageDTO message) {
+        var validator = params.getValidator();
+        if (validator != null) {
+            validator.validateHandleMessage(message);
+        }
+
         var payload = message.getPayload();
 
         // stopping game after a certain number of rounds

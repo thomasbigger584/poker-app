@@ -10,6 +10,7 @@ import jakarta.persistence.Persistence;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,7 +19,7 @@ public class SqlClient implements AutoCloseable {
     private final EntityManagerFactory emf;
     private final EntityManager em;
 
-    public SqlClient(JdbcDatabaseContainer container) {
+    public SqlClient(JdbcDatabaseContainer<?> container) {
         this(container.getJdbcUrl(), container.getUsername(), container.getPassword());
     }
 
@@ -32,6 +33,18 @@ public class SqlClient implements AutoCloseable {
         em = emf.createEntityManager();
     }
 
+    // *****************************************************************************************
+    // Get All
+    // *****************************************************************************************
+
+    public List<PokerTable> getPokerTables() {
+        return getAll(PokerTable.class);
+    }
+
+    // *****************************************************************************************
+    // Get By ID
+    // *****************************************************************************************
+
     public Optional<PlayerSession> getPlayerSession(UUID id) {
         return getById(id, PlayerSession.class);
     }
@@ -44,16 +57,31 @@ public class SqlClient implements AutoCloseable {
         return getById(id, PokerTable.class);
     }
 
+    // *****************************************************************************************
+    // Helper Methods
+    // *****************************************************************************************
+
     private <T> Optional<T> getById(UUID id, Class<T> clazz) {
         try {
             var className = clazz.getSimpleName();
-            return Optional.of(em.createQuery("SELECT o FROM " + className + " o WHERE o.id = :id", clazz)
+            var query = "SELECT o FROM " + className + " o WHERE o.id = :id";
+            return Optional.of(em.createQuery(query, clazz)
                     .setParameter("id", id)
                     .getSingleResult());
         } catch (NoResultException e) {
             return Optional.empty();
         }
     }
+
+    private <T> List<T> getAll(Class<T> clazz) {
+        var className = clazz.getSimpleName();
+        var query = "SELECT o FROM " + className + " o";
+        return em.createQuery(query, clazz).getResultList();
+    }
+
+    // *****************************************************************************************
+    // Lifecycle
+    // *****************************************************************************************
 
     @Override
     public void close() {

@@ -1,7 +1,8 @@
 package com.twb.pokerapp.utils.game;
 
-import com.twb.pokerapp.dto.pokertable.TableDTO;
+import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.utils.keycloak.KeycloakClients;
+import com.twb.pokerapp.utils.validator.Validator;
 import lombok.Builder;
 import lombok.Data;
 
@@ -11,7 +12,8 @@ public class GameRunnerParams {
     private KeycloakClients keycloakClients;
     private int numberOfRounds;
     private GameLatches latches;
-    private TableDTO table;
+    private PokerTable table;
+    private final Validator validator;
 }
 
 
