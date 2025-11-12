@@ -8,6 +8,7 @@ import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
 import com.twb.pokerapp.web.websocket.session.SessionService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -21,11 +22,10 @@ import org.springframework.stereotype.Controller;
 import java.security.Principal;
 import java.util.UUID;
 
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 public class PokerTableWebSocketController {
-    private static final Logger logger = LoggerFactory.getLogger(PokerTableWebSocketController.class);
-
     private static final String TOPIC = "/loops.{tableId}";
     private static final String SERVER_MESSAGE_TOPIC = "/topic" + TOPIC;
     private static final String INBOUND_MESSAGE_PREFIX = "/pokerTable/{tableId}";
@@ -46,14 +46,14 @@ public class PokerTableWebSocketController {
         ConnectionType connectionType = getConnectionType(headerAccessor);
         sessionService.putPokerTableId(headerAccessor, tableId);
 
-        logger.info(">>>> sendPlayerSubscribed - Poker Table: {} - User: {} - Type: {}", tableId, principal.getName(), connectionType);
+        log.info(">>>> sendPlayerSubscribed - Poker Table: {} - User: {} - Type: {}", tableId, principal.getName(), connectionType);
         ServerMessageDTO message;
         try {
             message = pokerTableGameService.onUserConnected(tableId, connectionType, principal.getName());
-            logger.info("<<<< sendPlayerSubscribed - " + message);
+            log.info("<<<< sendPlayerSubscribed - " + message);
         } catch (Exception exception) {
             message = messageFactory.errorMessage(exception.getMessage());
-            logger.info("<<<< sendPlayerSubscribed FAILED - " + message);
+            log.info("<<<< sendPlayerSubscribed FAILED - " + message);
         }
         return message;
     }
@@ -78,7 +78,7 @@ public class PokerTableWebSocketController {
     @MessageMapping(INBOUND_MESSAGE_PREFIX + SEND_DISCONNECT_PLAYER)
     public void sendDisconnectPlayer(Principal principal,
                                      @DestinationVariable(POKER_TABLE_ID) UUID tableId) {
-        logger.info(">>>> sendDisconnectPlayer - Poker Table: {} - User: {}", tableId, principal.getName());
+        log.info(">>>> sendDisconnectPlayer - Poker Table: {} - User: {}", tableId, principal.getName());
         pokerTableGameService.onUserDisconnected(tableId, principal.getName());
     }
 

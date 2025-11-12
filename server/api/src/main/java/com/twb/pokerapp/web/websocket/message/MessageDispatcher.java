@@ -6,6 +6,7 @@ import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -13,10 +14,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class MessageDispatcher {
-    private static final Logger logger = LoggerFactory.getLogger(MessageDispatcher.class);
     private static final String TOPIC = "/topic/loops.%s";
 
     private final SimpMessagingTemplate template;
@@ -36,7 +37,7 @@ public class MessageDispatcher {
             var destination = String.format(TOPIC, tableId);
             var payload = objectMapper.writeValueAsString(message);
             template.convertAndSend(destination, payload);
-            logger.info("<<<< {}", payload);
+            log.info("<<<< {}", payload);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to send message", e);
         }
@@ -47,7 +48,7 @@ public class MessageDispatcher {
             var destination = String.format(TOPIC, tableId);
             var payload = objectMapper.writeValueAsString(message);
             template.convertAndSendToUser(username, destination, payload);
-            logger.info("<<<< [{}] {}", username, payload);
+            log.info("<<<< [{}] {}", username, payload);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to send message", e);
         }

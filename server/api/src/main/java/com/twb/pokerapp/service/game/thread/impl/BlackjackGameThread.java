@@ -5,6 +5,7 @@ import com.twb.pokerapp.domain.enumeration.RoundState;
 import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,12 +13,10 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public final class BlackjackGameThread extends GameThread {
-    private static final Logger logger =
-            LoggerFactory.getLogger(BlackjackGameThread.class);
-
     public BlackjackGameThread(GameThreadParams params) {
         super(params);
     }

@@ -3,6 +3,7 @@ package com.twb.pokerapp.service.game.thread;
 import com.antkorwin.xsync.XSync;
 import com.twb.pokerapp.domain.PokerTable;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -18,10 +19,10 @@ import java.util.concurrent.TimeUnit;
 /**
  * Manages game threads for poker tables.
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class GameThreadManager {
-    private static final Logger logger = LoggerFactory.getLogger(GameThreadManager.class);
     private static final Map<UUID, GameThread> POKER_GAME_RUNNABLE_MAP = new ConcurrentHashMap<>();
     private static final int GAME_START_TIMEOUT_IN_SECS = 10;
     private final XSync<UUID> mutex;
@@ -117,7 +118,7 @@ public class GameThreadManager {
     public Optional<GameThread> getIfExists(UUID tableId) {
         return mutex.evaluate(tableId, () -> {
             if (!POKER_GAME_RUNNABLE_MAP.containsKey(tableId)) {
-                logger.warn("Poker Table {} doesn't have a game thread running.", tableId);
+                log.warn("Poker Table {} doesn't have a game thread running.", tableId);
                 return Optional.empty();
             }
             return Optional.of(POKER_GAME_RUNNABLE_MAP.get(tableId));

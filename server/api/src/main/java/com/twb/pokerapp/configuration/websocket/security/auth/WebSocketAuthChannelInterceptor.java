@@ -3,6 +3,7 @@ package com.twb.pokerapp.configuration.websocket.security.auth;
 import com.twb.pokerapp.configuration.jwt.JwtAuthConverter;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -15,11 +16,10 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
-    private static final Logger logger = LoggerFactory.getLogger(WebSocketAuthChannelInterceptor.class);
-
     private final JwtDecoder jwtDecoder;
     private final JwtAuthConverter jwtAuthConverter;
 
@@ -29,7 +29,7 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
                 .getAccessor(message, StompHeaderAccessor.class);
 
         if (accessor == null) {
-            logger.warn("MessageHeaderAccessor is null");
+            log.warn("MessageHeaderAccessor is null");
             return message;
         }
 
@@ -37,7 +37,7 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
             var authorization = accessor.getNativeHeader(HttpHeaders.AUTHORIZATION);
 
             if (authorization == null) {
-                logger.warn("Header {} is null", HttpHeaders.AUTHORIZATION);
+                log.warn("Header {} is null", HttpHeaders.AUTHORIZATION);
                 return message;
             }
 

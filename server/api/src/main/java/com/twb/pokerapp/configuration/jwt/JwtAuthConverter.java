@@ -3,6 +3,7 @@ package com.twb.pokerapp.configuration.jwt;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.twb.pokerapp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.convert.converter.Converter;
@@ -21,10 +22,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationToken> {
-    private static final Logger logger = LoggerFactory.getLogger(JwtAuthConverter.class);
     private static final String RESOURCE_ACCESS = "resource_access";
     private static final String ROLES = "roles";
     private static final String AUTHORITY_PREFIX = "ROLE_";
@@ -86,7 +87,7 @@ public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationTo
                 authToken.setAuthenticated(true);
             }
         } catch (Exception e) {
-            logger.warn("Failed to retrieve user to populate the authentication token details", e);
+            log.warn("Failed to retrieve user to populate the authentication token details", e);
         }
     }
 }

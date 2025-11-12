@@ -8,6 +8,7 @@ import com.twb.pokerapp.web.websocket.message.server.payload.ErrorMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.LogMessageDTO;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,8 +34,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+@Slf4j
 public abstract class AbstractTestUser implements StompSessionHandler, StompFrameHandler {
-    private static final Logger logger = LoggerFactory.getLogger(AbstractTestUser.class);
     private static final String CONNECTION_URL = "ws://localhost:8081/looping";
     private static final String SUBSCRIPTION_TOPIC_SUFFIX = "/topic/loops.%s";
     private static final String SEND_PLAYER_ACTION = "/app/pokerTable/%s/sendPlayerAction";
@@ -61,7 +62,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     }
 
     public void connect() throws InterruptedException {
-        logger.info("Connecting {} to {}", params.getUsername(), params.getTable().getId());
+        log.info("Connecting {} to {}", params.getUsername(), params.getTable().getId());
         var url = URI.create(CONNECTION_URL);
         var headers = new WebSocketHttpHeaders();
         var stompHeaders = new StompHeaders();
@@ -70,13 +71,13 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
         client.connectAsync(url, headers, stompHeaders, this);
         if (!connectLatch.await(10, TimeUnit.SECONDS)) {
-            logger.error("Timed out user {} from connecting to table {} via websocket", params.getUsername(), params.getTable().getId());
+            log.error("Timed out user {} from connecting to table {} via websocket", params.getUsername(), params.getTable().getId());
         }
     }
 
     public void disconnect() {
         if (session != null && session.isConnected()) {
-            logger.info("Disconnecting {} from {}", params.getUsername(), params.getTable().getId());
+            log.info("Disconnecting {} from {}", params.getUsername(), params.getTable().getId());
             session.disconnect();
         }
         session = null;
@@ -96,7 +97,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     @Override
     public void handleException(StompSession session, StompCommand command,
                                 StompHeaders headers, byte[] payload, Throwable exception) {
-        logger.error("Exception thrown during stomp session", exception);
+        log.error("Exception thrown during stomp session", exception);
         exceptionThrown.set(exception);
         connectLatch.countDown();
         params.getLatches().roundLatch().countDown();
@@ -105,7 +106,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
     @Override
     public void handleTransportError(StompSession session, Throwable exception) {
-        logger.error("Exception thrown after connect failure", exception);
+        log.error("Exception thrown after connect failure", exception);
         exceptionThrown.set(exception);
         connectLatch.countDown();
         params.getLatches().roundLatch().countDown();
@@ -119,18 +120,18 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     @Override
     public void handleFrame(StompHeaders headers, Object payload) {
         if (payload == null) {
-            logger.warn("Frame received but payload is null with headers {}", headers);
+            log.warn("Frame received but payload is null with headers {}", headers);
             return;
         }
         connectLatch.countDown();
         var message = (ServerMessageDTO) payload;
         receivedMessages.add(message);
 
-        if (message.getPayload() instanceof ErrorMessageDTO error) {
-            logger.error("{} received error message: {}", params.getUsername(), error.getMessage());
+        if (message.getPayload() instanceof ErrorMessageDTO errorDto) {
+            log.error("{} received error message: {}", params.getUsername(), errorDto.getMessage());
             return;
-        } else if (message.getPayload() instanceof LogMessageDTO log) {
-            logger.info("{} received log message: {}", params.getUsername(), log.getMessage());
+        } else if (message.getPayload() instanceof LogMessageDTO logDto) {
+            log.info("{} received log message: {}", params.getUsername(), logDto.getMessage());
             return;
         }
         handleMessage(headers, message);
@@ -171,13 +172,13 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
     protected void send(String destination, Object dto) {
         if (session == null || !session.isConnected()) {
-            logger.warn("Cannot send to destination {} for user {} as not connected", destination, params.getUsername());
+            log.warn("Cannot send to destination {} for user {} as not connected", destination, params.getUsername());
             return;
         }
-        logger.info(">>>> [{}] sending {}", params.getUsername(), dto);
+        log.info(">>>> [{}] sending {}", params.getUsername(), dto);
         var receiptable = session.send(destination, dto);
-        receiptable.addReceiptTask(() -> logger.info("Receipt received for user {} destination {} and payload {}", params.getUsername(), destination, dto));
-        receiptable.addReceiptLostTask(() -> logger.info("Failed to receive receipt for user {} destination {} and payload {}", params.getUsername(), destination, dto));
+        receiptable.addReceiptTask(() -> log.info("Receipt received for user {} destination {} and payload {}", params.getUsername(), destination, dto));
+        receiptable.addReceiptLostTask(() -> log.info("Failed to receive receipt for user {} destination {} and payload {}", params.getUsername(), destination, dto));
     }
 
     // ***************************************************************

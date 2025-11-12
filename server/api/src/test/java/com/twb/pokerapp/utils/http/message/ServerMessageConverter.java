@@ -2,6 +2,7 @@ package com.twb.pokerapp.utils.http.message;
 
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -17,8 +18,8 @@ import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+@Slf4j
 public class ServerMessageConverter implements MessageConverter {
-    private static final Logger logger = LoggerFactory.getLogger(ServerMessageConverter.class);
     private static final String SERVER_MESSAGE_TYPE_KEY = "type";
     private static final String TIMESTAMP_KEY = "timestamp";
     private static final String PAYLOAD_KEY = "payload";
@@ -59,7 +60,7 @@ public class ServerMessageConverter implements MessageConverter {
 
     private long getTimestamp(JSONObject jsonObject) {
         if (!jsonObject.has(TIMESTAMP_KEY)) {
-            logger.warn("Expected Server Message to provide " + TIMESTAMP_KEY
+            log.warn("Expected Server Message to provide " + TIMESTAMP_KEY
                     + " but it is null. Returning from app instead");
             return System.currentTimeMillis();
         }

@@ -11,6 +11,7 @@ import com.twb.pokerapp.service.eval.dto.EvalPlayerHandDTO;
 import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -20,12 +21,10 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Component
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class TexasHoldemGameThread extends GameThread {
-    private static final Logger logger =
-            LoggerFactory.getLogger(TexasHoldemGameThread.class);
-
     public TexasHoldemGameThread(GameThreadParams params) {
         super(params);
     }
@@ -120,7 +119,7 @@ public class TexasHoldemGameThread extends GameThread {
         var canPerformCheck = playerActionRepository.findPlayerActionsNotFolded(currentBettingRound.getId())
                 .stream().allMatch(action -> action.getActionType() == ActionType.CHECK);
         if (!canPerformCheck) {
-            logger.warn("Cannot check as previous actions was not a check");
+            log.warn("Cannot check as previous actions was not a check");
             dispatcher.send(pokerTable, playerSession, messageFactory.errorMessage("Cannot check as previous actions was not a check"));
             return;
         }
@@ -131,7 +130,7 @@ public class TexasHoldemGameThread extends GameThread {
 
     private void betAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
         if (createActionDto.getAmount() <= 0) {
-            logger.warn("Cannot bet as amount is less than or equal to zero");
+            log.warn("Cannot bet as amount is less than or equal to zero");
             dispatcher.send(pokerTable, playerSession, messageFactory.errorMessage("Cannot bet as amount is less than or equal to zero"));
             return;
         }
@@ -139,7 +138,7 @@ public class TexasHoldemGameThread extends GameThread {
         if (!lastPlayerActions.isEmpty()) {
             var lastPlayerAction = lastPlayerActions.getFirst();
             if (List.of(ActionType.BET, ActionType.CALL, ActionType.RAISE).contains(lastPlayerAction.getActionType())) {
-                logger.warn("Cannot bet as previous action was not a check");
+                log.warn("Cannot bet as previous action was not a check");
                 dispatcher.send(pokerTable, playerSession, messageFactory.errorMessage("Cannot bet as previous action was not a check"));
                 return;
             }
@@ -152,7 +151,7 @@ public class TexasHoldemGameThread extends GameThread {
 
     private void callAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
         if (createActionDto.getAmount() <= 0) {
-            logger.warn("Cannot call as amount is less than or equal to zero");
+            log.warn("Cannot call as amount is less than or equal to zero");
             dispatcher.send(pokerTable, playerSession, messageFactory.errorMessage("Cannot bet as amount is less than or equal to zero"));
             return;
         }
@@ -160,7 +159,7 @@ public class TexasHoldemGameThread extends GameThread {
         if (!lastPlayerActions.isEmpty()) {
             var lastPlayerAction = lastPlayerActions.getFirst();
             if (lastPlayerAction.getActionType() == ActionType.CHECK) {
-                logger.warn("Cannot call as previous action was a check");
+                log.warn("Cannot call as previous action was a check");
                 dispatcher.send(pokerTable, playerSession, messageFactory.errorMessage("Cannot bet as previous action was not a check"));
                 return;
             }

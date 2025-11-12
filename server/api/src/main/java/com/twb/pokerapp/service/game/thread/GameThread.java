@@ -9,6 +9,7 @@ import com.twb.pokerapp.service.eval.dto.EvalPlayerHandDTO;
 import com.twb.pokerapp.service.game.DeckOfCardsFactory;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@Slf4j
 @RequiredArgsConstructor
 public abstract class GameThread extends BaseGameThread {
     // *****************************************************************************************
@@ -27,7 +29,6 @@ public abstract class GameThread extends BaseGameThread {
     protected static final long DB_POLL_WAIT_MS = 1000; // 1 second
     protected static final long EVALUATION_WAIT_MS = 4 * 1000; // 4 seconds
     protected static final long PLAYER_TURN_WAIT_MS = 30 * 1000; // 30 seconds
-    private static final Logger logger = LoggerFactory.getLogger(GameThread.class);
     private static final int MESSAGE_POLL_DIVISOR = 5;
     private static final int MINIMUM_PLAYERS_CONNECTED = 1;
     private static final String NO_MORE_PLAYERS_CONNECTED = "No more players connected";
@@ -83,7 +84,7 @@ public abstract class GameThread extends BaseGameThread {
             }
             finishGame();
         } catch (Exception e) {
-            logger.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
             finishRound();
             finishGame();
             if (e instanceof GameInterruptedException) {
@@ -188,7 +189,7 @@ public abstract class GameThread extends BaseGameThread {
                 onRunRound(roundState);
                 roundState = getNextRoundState(roundState);
             } catch (RoundInterruptedException e) {
-                logger.info(e.getMessage());
+                log.info(e.getMessage());
                 interruptRound.set(false);
                 if (roundState != RoundState.EVAL) {
                     roundState = RoundState.EVAL;
@@ -228,14 +229,14 @@ public abstract class GameThread extends BaseGameThread {
     // *****************************************************************************************
 
     public void playerAction(String username, CreatePlayerActionDTO createDto) {
-        logger.info("***************************************************************");
-        logger.info("GameThread.playerAction");
-        logger.info("username = {}, action = {}", username, createDto);
-        logger.info("***************************************************************");
+        log.info("***************************************************************");
+        log.info("GameThread.playerAction");
+        log.info("username = {}, action = {}", username, createDto);
+        log.info("***************************************************************");
         var playerSessionOpt = playerSessionRepository
                 .findByTableIdAndUsername(pokerTable.getId(), username);
         if (playerSessionOpt.isEmpty()) {
-            logger.warn("No player {} found on table {}", username, pokerTable.getId());
+            log.warn("No player {} found on table {}", username, pokerTable.getId());
             return;
         }
         playerAction(playerSessionOpt.get(), createDto);
