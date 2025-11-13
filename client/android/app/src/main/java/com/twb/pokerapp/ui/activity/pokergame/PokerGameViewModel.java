@@ -5,6 +5,7 @@ import android.util.Log;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.twb.pokerapp.data.model.dto.playeraction.PlayerActionDTO;
 import com.twb.pokerapp.data.websocket.WebSocketClient;
 import com.twb.pokerapp.data.websocket.message.client.SendChatMessageDTO;
 import com.twb.pokerapp.data.websocket.message.client.SendPlayerActionDTO;
@@ -16,6 +17,7 @@ import com.twb.pokerapp.data.websocket.message.server.payload.DealerDeterminedDT
 import com.twb.pokerapp.data.websocket.message.server.payload.ErrorMessageDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.GameFinishedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.LogMessageDTO;
+import com.twb.pokerapp.data.websocket.message.server.payload.PlayerActionEventDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerConnectedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerDisconnectedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerSubscribedDTO;
@@ -43,6 +45,7 @@ public class PokerGameViewModel extends ViewModel
     public MutableLiveData<DealPlayerCardDTO> dealPlayerCard = new MutableLiveData<>();
     public MutableLiveData<DealCommunityCardDTO> dealCommunityCard = new MutableLiveData<>();
     public MutableLiveData<PlayerTurnDTO> playerTurn = new MutableLiveData<>();
+    public MutableLiveData<PlayerActionEventDTO> playerAction = new MutableLiveData<>();
     public MutableLiveData<RoundFinishedDTO> roundFinished = new MutableLiveData<>();
     public MutableLiveData<GameFinishedDTO> gameFinished = new MutableLiveData<>();
 
@@ -102,6 +105,13 @@ public class PokerGameViewModel extends ViewModel
                 playerTurn.setValue((PlayerTurnDTO) message.getPayload());
                 break;
             }
+            case PLAYER_ACTION: {
+                playerAction.setValue((PlayerActionEventDTO) message.getPayload());
+                break;
+            }
+
+            //todo: add more
+
             case ROUND_FINISHED: {
                 roundFinished.setValue((RoundFinishedDTO) message.getPayload());
                 break;
@@ -110,9 +120,6 @@ public class PokerGameViewModel extends ViewModel
                 gameFinished.setValue((GameFinishedDTO) message.getPayload());
                 break;
             }
-
-            //todo: add more
-
             case CHAT: {
                 chatMessage.setValue((ChatMessageDTO) message.getPayload());
                 break;

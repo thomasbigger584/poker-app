@@ -1,5 +1,6 @@
 package com.twb.pokerapp.data.websocket.message.server.enumeration;
 
+import com.twb.pokerapp.data.websocket.message.client.SendPlayerActionDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.ChatMessageDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.DealCommunityCardDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.DealPlayerCardDTO;
@@ -7,6 +8,7 @@ import com.twb.pokerapp.data.websocket.message.server.payload.DealerDeterminedDT
 import com.twb.pokerapp.data.websocket.message.server.payload.ErrorMessageDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.GameFinishedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.LogMessageDTO;
+import com.twb.pokerapp.data.websocket.message.server.payload.PlayerActionEventDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerConnectedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerDisconnectedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerSubscribedDTO;
@@ -49,6 +51,11 @@ public enum ServerMessageType {
      * Used to notify all players of the current player turn
      */
     PLAYER_TURN,
+
+    /*
+     * Used to notify all players of a players action
+     */
+    PLAYER_ACTION,
 
     // todo: add more
 
@@ -102,6 +109,8 @@ public enum ServerMessageType {
                 return DealCommunityCardDTO.class;
             case PLAYER_TURN:
                 return PlayerTurnDTO.class;
+            case PLAYER_ACTION:
+                return PlayerActionEventDTO.class;
 
             //todo: add more
 
