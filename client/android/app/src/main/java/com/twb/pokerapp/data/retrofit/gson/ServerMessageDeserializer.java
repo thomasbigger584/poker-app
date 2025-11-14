@@ -55,6 +55,10 @@ public class ServerMessageDeserializer implements JsonDeserializer<ServerMessage
                     + SERVER_MESSAGE_TYPE_KEY + " in response");
         }
         String messageTypeString = jsonObject.get(SERVER_MESSAGE_TYPE_KEY).getAsString();
-        return ServerMessageType.valueOf(messageTypeString);
+        try {
+            return ServerMessageType.valueOf(messageTypeString);
+        } catch (IllegalArgumentException ex) {
+            throw new UnsupportedOperationException("Unsupported Message Type: " + messageTypeString, ex);
+        }
     }
 }

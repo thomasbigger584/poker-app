@@ -5,7 +5,6 @@ import android.util.Log;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.twb.pokerapp.data.model.dto.playeraction.PlayerActionDTO;
 import com.twb.pokerapp.data.websocket.WebSocketClient;
 import com.twb.pokerapp.data.websocket.message.client.SendChatMessageDTO;
 import com.twb.pokerapp.data.websocket.message.client.SendPlayerActionDTO;
@@ -148,8 +147,13 @@ public class PokerGameViewModel extends ViewModel
     }
 
     public void onPlayerAction(String action) {
+        onPlayerAction(action, null);
+    }
+
+    public void onPlayerAction(String action, Double amount) {
         SendPlayerActionDTO dto = new SendPlayerActionDTO();
         dto.setAction(action);
+        dto.setAmount(amount);
         webSocketClient.sendPlayerAction(pokerTableId, dto, this);
     }
 

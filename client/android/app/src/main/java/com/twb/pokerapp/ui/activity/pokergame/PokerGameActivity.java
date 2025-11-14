@@ -14,6 +14,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.auth.AuthService;
+import com.twb.pokerapp.data.model.dto.bettinground.BettingRoundDTO;
+import com.twb.pokerapp.data.model.dto.playeraction.PlayerActionDTO;
 import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.data.model.dto.pokertable.TableDTO;
 import com.twb.pokerapp.data.model.enumeration.ActionType;
@@ -26,6 +28,8 @@ import com.twb.pokerapp.ui.dialog.BasePokerGameDialog;
 import com.twb.pokerapp.ui.dialog.BetRaisePokerGameDialog;
 import com.twb.pokerapp.ui.dialog.DialogHelper;
 import com.twb.pokerapp.ui.dialog.FinishActivityOnClickListener;
+
+import java.util.Locale;
 
 import javax.inject.Inject;
 
@@ -143,6 +147,29 @@ public class PokerGameActivity extends BaseAuthActivity implements BetRaisePoker
                 controlsController.hide();
             }
         });
+        viewModel.playerAction.observe(this, playerActionEvent -> {
+            dismissDialogs();
+            controlsController.hide();
+            PlayerActionDTO playerAction = playerActionEvent.getAction();
+            String thirdPerson = playerAction.getPlayerSession().getUser().getUsername();
+            if (authService.isCurrentUser(playerAction.getPlayerSession().getUser())) {
+                thirdPerson = "You";
+            }
+            String message = String.format("%s %s", thirdPerson, playerAction.getActionType().toLowerCase());
+            Double amount = playerAction.getAmount();
+            if (amount != null && amount > 0) {
+                message += " with " + playerAction.getAmount();
+            }
+            BettingRoundDTO bettingRound = playerAction.getBettingRound();
+            Double bettingRoundPot = bettingRound.getPot();
+            if (bettingRoundPot != null && bettingRoundPot > 0) {
+                message += String.format(Locale.getDefault(), " (betting round: %f)", bettingRoundPot);
+            }
+            chatBoxAdapter.add(message);
+        });
+
+
+        //todo: add more
         viewModel.dealCommunityCard.observe(this, dealCommunityCard -> {
             dismissDialogs();
             controlsController.hide();
@@ -161,10 +188,6 @@ public class PokerGameActivity extends BaseAuthActivity implements BetRaisePoker
             alertModalDialog.show(getSupportFragmentManager(), MODAL_TAG);
             chatBoxAdapter.add("Game Finished");
         });
-
-
-        //todo: add more
-
         viewModel.chatMessage.observe(this, chatMessage -> {
             chatBoxAdapter.add(chatMessage.getUsername() + ": " + chatMessage.getMessage());
         });
@@ -244,11 +267,11 @@ public class PokerGameActivity extends BaseAuthActivity implements BetRaisePoker
     public void onBetSelected(ActionType type, double betAmount) {
         switch (type) {
             case BET: {
-                viewModel.onPlayerAction("BET");
+                viewModel.onPlayerAction("BET", betAmount);
                 break;
             }
             case RAISE: {
-                viewModel.onPlayerAction("RAISE");
+                viewModel.onPlayerAction("RAISE", betAmount);
                 break;
             }
         }

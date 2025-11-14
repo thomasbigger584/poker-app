@@ -56,9 +56,6 @@ public class BetRaisePokerGameDialog extends BasePokerGameDialog {
         Button successButton = inflatedView.findViewById(R.id.successButton);
         successButton.setOnClickListener(v -> {
             if (betRaiseListener != null) {
-//                Bet bet = new Bet();
-//                bet.setBetType(type);
-//                bet.setBetAmount(amountSelected);
                 betRaiseListener.onBetSelected(type, amountSelected);
             }
         });
