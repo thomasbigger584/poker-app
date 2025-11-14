@@ -9,8 +9,6 @@ import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
 import com.twb.pokerapp.web.websocket.session.SessionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;

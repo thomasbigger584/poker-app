@@ -7,9 +7,6 @@ import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 

@@ -6,12 +6,11 @@ import com.twb.pokerapp.utils.game.player.TestUserParams;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
 import com.twb.pokerapp.web.websocket.message.server.payload.PlayerTurnDTO;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 
+@Slf4j
 public class TestTexasHoldemPlayerUser extends AbstractTestUser {
-    private final static Logger logger = LoggerFactory.getLogger(TestTexasHoldemPlayerUser.class);
 
     public TestTexasHoldemPlayerUser(TestUserParams params) {
         super(params);
