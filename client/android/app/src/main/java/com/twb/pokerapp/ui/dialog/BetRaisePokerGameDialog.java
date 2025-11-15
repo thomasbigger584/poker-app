@@ -58,6 +58,7 @@ public class BetRaisePokerGameDialog extends BasePokerGameDialog {
             if (betRaiseListener != null) {
                 betRaiseListener.onBetSelected(type, amountSelected);
             }
+            dismissAllowingStateLoss();
         });
 
         setSeekBar(playerCurrentFunds);
