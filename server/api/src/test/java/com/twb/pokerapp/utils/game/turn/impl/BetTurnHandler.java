@@ -12,7 +12,7 @@ import java.util.Arrays;
 public class BetTurnHandler implements TurnHandler {
     @Override
     public void handle(AbstractTestUser user, StompHeaders headers, PlayerTurnDTO playerTurn) {
-        if (Arrays.stream(playerTurn.getActions())
+        if (Arrays.stream(playerTurn.getNextActions())
                 .anyMatch(actionType -> actionType == ActionType.BET)) {
             var createActionDto = new CreatePlayerActionDTO();
             createActionDto.setAction(ActionType.BET);
