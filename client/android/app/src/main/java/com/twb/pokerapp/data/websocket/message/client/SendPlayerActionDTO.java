@@ -4,7 +4,7 @@ import androidx.annotation.NonNull;
 
 public class SendPlayerActionDTO {
     private String action;
-    private double amount;
+    private Double amount;
 
     public String getAction() {
         return action;
@@ -14,11 +14,11 @@ public class SendPlayerActionDTO {
         this.action = action;
     }
 
-    public double getAmount() {
+    public Double getAmount() {
         return amount;
     }
 
-    public void setAmount(double amount) {
+    public void setAmount(Double amount) {
         this.amount = amount;
     }
 

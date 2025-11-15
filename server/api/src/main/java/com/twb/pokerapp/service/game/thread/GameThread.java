@@ -241,28 +241,31 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     private void playerAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
-        switch (createActionDto.getAction()) {
+        //noinspection SwitchStatementWithTooFewBranches
+        var actioned = switch (createActionDto.getAction()) {
             case FOLD -> foldAction(playerSession, createActionDto);
             // todo: add more generic actions
+            default ->  onPlayerAction(playerSession, createActionDto);
+        };
+        if (actioned) {
+            playerTurnLatch.countDown();
         }
-        onPlayerAction(playerSession, createActionDto);
-        playerTurnLatch.countDown();
     }
 
     // NOTE: called from both game thread and main thread
-    private void foldAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
+    private boolean foldAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
         synchronized (foldedPlayers) {
             foldedPlayers.add(playerSession);
 
             createActionDto.setAmount(0d);
-            var actionDto = playerActionService.create(playerSession, currentBettingRound, createActionDto);
-            dispatcher.send(pokerTable, messageFactory.playerAction(actionDto));
+            playerActionService.create(playerSession, currentBettingRound, createActionDto);
 
             if (playerSessions.stream().filter(foldedPlayers::contains).count() == 1) {
                 // there is only 1 player left in a started game
                 interruptRound.set(true);
             }
         }
+        return true;
     }
 
     // *****************************************************************************************
@@ -400,7 +403,7 @@ public abstract class GameThread extends BaseGameThread {
 
     protected abstract void onRunRound(RoundState roundState);
 
-    protected abstract void onPlayerAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto);
+    protected abstract boolean onPlayerAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto);
 
     protected abstract RoundState getNextRoundState(RoundState roundState);
 }

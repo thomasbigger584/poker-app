@@ -3,7 +3,6 @@ package com.twb.pokerapp.service;
 import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.dto.playeraction.PlayerActionDTO;
 import com.twb.pokerapp.mapper.PlayerActionMapper;
 import com.twb.pokerapp.repository.PlayerActionRepository;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
@@ -18,9 +17,9 @@ public class PlayerActionService {
     private final PlayerActionRepository repository;
     private final PlayerActionMapper mapper;
 
-    public PlayerActionDTO create(PlayerSession playerSession,
-                                  BettingRound bettingRound,
-                                  CreatePlayerActionDTO createDto) {
+    public void create(PlayerSession playerSession,
+                       BettingRound bettingRound,
+                       CreatePlayerActionDTO createDto) {
 
         var playerAction = new PlayerAction();
         playerAction.setPlayerSession(playerSession);
@@ -28,8 +27,6 @@ public class PlayerActionService {
         playerAction.setActionType(createDto.getAction());
         playerAction.setAmount(createDto.getAmount());
 
-        repository.save(playerAction);
-
-        return mapper.modelToDto(playerAction);
+        repository.saveAndFlush(playerAction);
     }
 }

@@ -6,6 +6,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -41,7 +42,10 @@ public class ChatBoxRecyclerAdapter extends RecyclerView.Adapter<ChatBoxRecycler
         return items.size();
     }
 
-    public void add(String item) {
+    public void add(@Nullable String item) {
+        if (item == null) {
+            return;
+        }
         int positionStart = items.size() + 1;
         items.add(item);
         notifyItemRangeInserted(positionStart, items.size());

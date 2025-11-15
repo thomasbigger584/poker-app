@@ -5,6 +5,7 @@ import android.util.Log;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.twb.pokerapp.data.model.enumeration.ActionType;
 import com.twb.pokerapp.data.websocket.WebSocketClient;
 import com.twb.pokerapp.data.websocket.message.client.SendChatMessageDTO;
 import com.twb.pokerapp.data.websocket.message.client.SendPlayerActionDTO;
@@ -44,7 +45,6 @@ public class PokerGameViewModel extends ViewModel
     public MutableLiveData<DealPlayerCardDTO> dealPlayerCard = new MutableLiveData<>();
     public MutableLiveData<DealCommunityCardDTO> dealCommunityCard = new MutableLiveData<>();
     public MutableLiveData<PlayerTurnDTO> playerTurn = new MutableLiveData<>();
-    public MutableLiveData<PlayerActionEventDTO> playerAction = new MutableLiveData<>();
     public MutableLiveData<RoundFinishedDTO> roundFinished = new MutableLiveData<>();
     public MutableLiveData<GameFinishedDTO> gameFinished = new MutableLiveData<>();
 
@@ -104,10 +104,6 @@ public class PokerGameViewModel extends ViewModel
                 playerTurn.setValue((PlayerTurnDTO) message.getPayload());
                 break;
             }
-            case PLAYER_ACTION: {
-                playerAction.setValue((PlayerActionEventDTO) message.getPayload());
-                break;
-            }
 
             //todo: add more
 
@@ -146,13 +142,13 @@ public class PokerGameViewModel extends ViewModel
         webSocketClient.sendChatMessage(pokerTableId, dto, this);
     }
 
-    public void onPlayerAction(String action) {
-        onPlayerAction(action, null);
+    public void onPlayerAction(ActionType actionType) {
+        onPlayerAction(actionType, null);
     }
 
-    public void onPlayerAction(String action, Double amount) {
+    public void onPlayerAction(ActionType actionType, Double amount) {
         SendPlayerActionDTO dto = new SendPlayerActionDTO();
-        dto.setAction(action);
+        dto.setAction(actionType.name());
         dto.setAmount(amount);
         webSocketClient.sendPlayerAction(pokerTableId, dto, this);
     }

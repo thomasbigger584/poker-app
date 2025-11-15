@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.lifecycle.ViewModelProvider;
@@ -19,6 +20,7 @@ import com.twb.pokerapp.data.model.dto.playeraction.PlayerActionDTO;
 import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.data.model.dto.pokertable.TableDTO;
 import com.twb.pokerapp.data.model.enumeration.ActionType;
+import com.twb.pokerapp.data.websocket.message.server.payload.PlayerTurnDTO;
 import com.twb.pokerapp.ui.activity.login.BaseAuthActivity;
 import com.twb.pokerapp.ui.activity.pokergame.chatbox.ChatBoxRecyclerAdapter;
 import com.twb.pokerapp.ui.activity.pokergame.controller.ControlsController;
@@ -142,30 +144,11 @@ public class PokerGameActivity extends BaseAuthActivity implements BetRaisePoker
             PlayerSessionDTO playerSession = playerTurn.getPlayerSession();
             tableController.updatePlayerTurn(playerSession);
             if (authService.isCurrentUser(playerSession.getUser())) {
-                controlsController.show(playerTurn.getActions());
+                controlsController.show(playerTurn.getNextActions());
             } else {
                 controlsController.hide();
             }
-        });
-        viewModel.playerAction.observe(this, playerActionEvent -> {
-            dismissDialogs();
-            controlsController.hide();
-            PlayerActionDTO playerAction = playerActionEvent.getAction();
-            String thirdPerson = playerAction.getPlayerSession().getUser().getUsername();
-            if (authService.isCurrentUser(playerAction.getPlayerSession().getUser())) {
-                thirdPerson = "You";
-            }
-            String message = String.format("%s %s", thirdPerson, playerAction.getActionType().toLowerCase());
-            Double amount = playerAction.getAmount();
-            if (amount != null && amount > 0) {
-                message += " with " + playerAction.getAmount();
-            }
-            BettingRoundDTO bettingRound = playerAction.getBettingRound();
-            Double bettingRoundPot = bettingRound.getPot();
-            if (bettingRoundPot != null && bettingRoundPot > 0) {
-                message += String.format(Locale.getDefault(), " (betting round: %f)", bettingRoundPot);
-            }
-            chatBoxAdapter.add(message);
+            chatBoxAdapter.add(getTurnChatMessage(playerTurn));
         });
 
 
@@ -231,15 +214,11 @@ public class PokerGameActivity extends BaseAuthActivity implements BetRaisePoker
      */
 
     public void onFoldClick(View view) {
-        viewModel.onPlayerAction("FOLD");
+        viewModel.onPlayerAction(ActionType.FOLD);
     }
 
-    public void onRaiseClick(View view) {
-        dismissDialogs();
-        double funds = 1000d; //todo: get current player funds
-        double minimumBet = 10d; //todo: get minimum bet
-        betRaisePokerGameDialog = BetRaisePokerGameDialog.newInstance(ActionType.RAISE, funds, minimumBet, this);
-        betRaisePokerGameDialog.show(getSupportFragmentManager());
+    public void onCheckClick(View view) {
+        viewModel.onPlayerAction(ActionType.CHECK);
     }
 
     public void onBetClick(View view) {
@@ -251,11 +230,15 @@ public class PokerGameActivity extends BaseAuthActivity implements BetRaisePoker
     }
 
     public void onCallClick(View view) {
-        viewModel.onPlayerAction("CALL");
+        viewModel.onPlayerAction(ActionType.CALL);
     }
 
-    public void onCheckClick(View view) {
-        viewModel.onPlayerAction("CHECK");
+    public void onRaiseClick(View view) {
+        dismissDialogs();
+        double funds = 1000d; //todo: get current player funds
+        double minimumBet = 10d; //todo: get minimum bet
+        betRaisePokerGameDialog = BetRaisePokerGameDialog.newInstance(ActionType.RAISE, funds, minimumBet, this);
+        betRaisePokerGameDialog.show(getSupportFragmentManager());
     }
 
     /*
@@ -264,23 +247,36 @@ public class PokerGameActivity extends BaseAuthActivity implements BetRaisePoker
      */
 
     @Override
-    public void onBetSelected(ActionType type, double betAmount) {
-        switch (type) {
-            case BET: {
-                viewModel.onPlayerAction("BET", betAmount);
-                break;
-            }
-            case RAISE: {
-                viewModel.onPlayerAction("RAISE", betAmount);
-                break;
-            }
-        }
+    public void onBetSelected(ActionType actionType, double betAmount) {
+        viewModel.onPlayerAction(actionType, betAmount);
     }
 
     /*
      * Helper Methods
      * ****************************************************************************
      */
+
+    private String getTurnChatMessage(PlayerTurnDTO playerTurn) {
+        PlayerActionDTO prevPlayerAction =  playerTurn.getPrevPlayerAction();
+        if (playerTurn.getPrevPlayerAction() == null) {
+            return null;
+        }
+        String thirdPerson = prevPlayerAction.getPlayerSession().getUser().getUsername();
+        if (authService.isCurrentUser(prevPlayerAction.getPlayerSession().getUser())) {
+            thirdPerson = "You ";
+        }
+        String message = String.format("%s %s", thirdPerson, prevPlayerAction.getActionType().toLowerCase());
+        Double amount = prevPlayerAction.getAmount();
+        if (amount != null && amount > 0) {
+            message += " with " + prevPlayerAction.getAmount();
+        }
+        BettingRoundDTO bettingRound = prevPlayerAction.getBettingRound();
+        Double bettingRoundPot = bettingRound.getPot();
+        if (bettingRoundPot != null && bettingRoundPot > 0) {
+            message += String.format(Locale.getDefault(), " (betting round: %f)", bettingRoundPot);
+        }
+        return message;
+    }
 
     private void handleErrorMessage(String message) {
         DialogHelper.dismiss(loadingSpinner);

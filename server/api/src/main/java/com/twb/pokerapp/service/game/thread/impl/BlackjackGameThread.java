@@ -30,7 +30,7 @@ public final class BlackjackGameThread extends GameThread {
     }
 
     @Override
-    protected void onPlayerAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
+    protected boolean onPlayerAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
         throw new NotImplementedException("Blackjack not implemented yet");
     }
 

@@ -1,13 +1,15 @@
 package com.twb.pokerapp.web.websocket.message.server;
 
 import com.twb.pokerapp.domain.Card;
+import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.enumeration.ActionType;
-import com.twb.pokerapp.dto.playeraction.PlayerActionDTO;
 import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.mapper.CardMapper;
+import com.twb.pokerapp.mapper.PlayerActionMapper;
 import com.twb.pokerapp.mapper.PlayerSessionMapper;
 import com.twb.pokerapp.web.websocket.message.server.payload.*;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class ServerMessageFactory {
     private final PlayerSessionMapper playerSessionMapper;
+    private final PlayerActionMapper playerActionMapper;
     private final CardMapper cardMapper;
 
     public ServerMessageDTO playerSubscribed(List<PlayerSessionDTO> playerSessions) {
@@ -52,10 +55,16 @@ public class ServerMessageFactory {
         return ServerMessageDTO.create(ServerMessageType.DEAL_COMMUNITY, payload);
     }
 
-    public ServerMessageDTO playerTurn(PlayerSession playerSession, ActionType[] actions, Double amountToCall) {
+    public ServerMessageDTO playerTurn(PlayerSession playerSession,
+                                       @Nullable PlayerAction prevPlayerAction,
+                                       ActionType[] nextActions,
+                                       Double amountToCall) {
         var payload = new PlayerTurnDTO();
         payload.setPlayerSession(playerSessionMapper.modelToDto(playerSession));
-        payload.setActions(actions);
+        if (prevPlayerAction != null) {
+            payload.setPrevPlayerAction(playerActionMapper.modelToDto(prevPlayerAction));
+        }
+        payload.setNextActions(nextActions);
         payload.setAmountToCall(amountToCall);
         return ServerMessageDTO.create(ServerMessageType.PLAYER_TURN, payload);
     }
@@ -68,12 +77,6 @@ public class ServerMessageFactory {
     public ServerMessageDTO gameFinished() {
         var payload = new GameFinishedDTO();
         return ServerMessageDTO.create(ServerMessageType.GAME_FINISHED, payload);
-    }
-
-    public ServerMessageDTO playerAction(PlayerActionDTO action) {
-        var payload = new PlayerActionEventDTO();
-        payload.setAction(action);
-        return ServerMessageDTO.create(ServerMessageType.PLAYER_ACTION, payload);
     }
 
     // TODO: add more ...

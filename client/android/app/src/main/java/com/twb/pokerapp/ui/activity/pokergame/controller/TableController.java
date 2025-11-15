@@ -110,6 +110,14 @@ public class TableController {
         communityCardLayout.dealCard(dealCommunityCard.getCard());
     }
 
+    public void reset(RoundFinishedDTO roundFinished) {
+        hidePlayerTurns();
+        communityCardLayout.reset();
+        for (CardPairLayout cardPairLayout : cardPairLayouts) {
+            cardPairLayout.reset();
+        }
+    }
+
     // ------------------------------------------------------------------------------
 
     @Nullable
@@ -132,13 +140,5 @@ public class TableController {
             throw new RuntimeException("Card pair layout is null for position: " + position);
         }
         return cardPairLayout;
-    }
-
-    public void reset(RoundFinishedDTO roundFinished) {
-        hidePlayerTurns();
-        communityCardLayout.reset();
-        for (CardPairLayout cardPairLayout : cardPairLayouts) {
-            cardPairLayout.reset();
-        }
     }
 }
