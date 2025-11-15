@@ -9,6 +9,7 @@ import com.twb.pokerapp.utils.game.player.AbstractTestUser;
 import com.twb.pokerapp.utils.game.player.TestUserParams;
 import com.twb.pokerapp.utils.game.player.impl.TestTexasHoldemPlayerUser;
 import com.twb.pokerapp.utils.game.turn.TurnHandler;
+import com.twb.pokerapp.utils.game.turn.impl.OptimisticTurnHandler;
 import com.twb.pokerapp.utils.game.turn.impl.DefaultTurnHandler;
 import com.twb.pokerapp.utils.testcontainers.BaseTestContainersIT;
 import com.twb.pokerapp.utils.validator.impl.TexasHoldemValidator;
@@ -66,6 +67,21 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
 
         validator.validateEndOfRun(messages);
     }
+
+    @Test
+    void testGameWithOptimisticActions() throws Throwable {
+        var turnHandlers = new HashMap<String, TurnHandler>();
+        turnHandlers.put(PLAYER_1, new OptimisticTurnHandler());
+        turnHandlers.put(PLAYER_2, new OptimisticTurnHandler());
+
+        var messages = runner.run(getPlayers(turnHandlers))
+                .getByNumberOfRounds(params.getNumberOfRounds());
+        System.out.println("messages = " + messages);
+
+        validator.validateEndOfRun(messages);
+    }
+
+
 
 
     // *****************************************************************************************

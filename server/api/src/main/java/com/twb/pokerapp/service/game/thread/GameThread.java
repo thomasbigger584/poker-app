@@ -238,6 +238,7 @@ public abstract class GameThread extends BaseGameThread {
             return;
         }
         playerAction(playerSessionOpt.get(), createDto);
+
     }
 
     private void playerAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
@@ -245,7 +246,7 @@ public abstract class GameThread extends BaseGameThread {
         var actioned = switch (createActionDto.getAction()) {
             case FOLD -> foldAction(playerSession, createActionDto);
             // todo: add more generic actions
-            default ->  onPlayerAction(playerSession, createActionDto);
+            default -> onPlayerAction(playerSession, createActionDto);
         };
         if (actioned) {
             playerTurnLatch.countDown();

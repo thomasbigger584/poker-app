@@ -17,7 +17,7 @@ public class PlayerActionService {
     private final PlayerActionRepository repository;
     private final PlayerActionMapper mapper;
 
-    public void create(PlayerSession playerSession,
+    public PlayerAction create(PlayerSession playerSession,
                        BettingRound bettingRound,
                        CreatePlayerActionDTO createDto) {
 
@@ -27,6 +27,6 @@ public class PlayerActionService {
         playerAction.setActionType(createDto.getAction());
         playerAction.setAmount(createDto.getAmount());
 
-        repository.saveAndFlush(playerAction);
+        return repository.saveAndFlush(playerAction);
     }
 }

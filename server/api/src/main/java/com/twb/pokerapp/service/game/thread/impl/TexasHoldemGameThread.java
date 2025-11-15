@@ -154,20 +154,19 @@ public class TexasHoldemGameThread extends GameThread {
     }
 
     private boolean callAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
-        if (createActionDto.getAmount() <= 0) {
-            log.warn("Cannot call as amount is less than or equal to zero");
-            dispatcher.send(pokerTable, playerSession, messageFactory.errorMessage("Cannot bet as amount is less than or equal to zero"));
+        var lastPlayerActions = playerActionRepository.findPlayerActionsNotFolded(currentBettingRound.getId());
+        if (lastPlayerActions.isEmpty()) {
+            log.warn("Cannot call as there was no previous action");
+            dispatcher.send(pokerTable, playerSession, messageFactory.errorMessage("Cannot call as there was no previous action"));
             return false;
         }
-        var lastPlayerActions = playerActionRepository.findPlayerActionsNotFolded(currentBettingRound.getId());
-        if (!lastPlayerActions.isEmpty()) {
-            var lastPlayerAction = lastPlayerActions.getFirst();
-            if (lastPlayerAction.getActionType() == ActionType.CHECK) {
-                log.warn("Cannot call as previous action was a check");
-                dispatcher.send(pokerTable, playerSession, messageFactory.errorMessage("Cannot bet as previous action was not a check"));
-                return false;
-            }
+        var lastPlayerAction = lastPlayerActions.getFirst();
+        if (lastPlayerAction.getActionType() == ActionType.CHECK) {
+            log.warn("Cannot call as previous action was a check");
+            dispatcher.send(pokerTable, playerSession, messageFactory.errorMessage("Cannot call as previous action was a check"));
+            return false;
         }
+        createActionDto.setAmount(getAmountToCall(lastPlayerAction));
         playerActionService.create(playerSession, currentBettingRound, createActionDto);
         currentBettingRound = bettingRoundService.updatePot(currentBettingRound, createActionDto);
         return true;
