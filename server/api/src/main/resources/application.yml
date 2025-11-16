@@ -47,11 +47,6 @@ jwt:
 server:
   port:
     8081
-app:
-  deal-wait-ms: 1
-  db-poll-wait-ms: 1
-  eval-wait-ms: 4
-  player-turn-wait-ms: 30
 #logging:
 #  level:
 #    org.springframework.security: DEBUG
