@@ -84,10 +84,10 @@ public class GameThreadManager {
                 .tableId(pokerTable.getId())
                 .gameType(pokerTable.getGameType())
                 .startLatch(new CountDownLatch(1))
-                .dealWaitMs(environment.getProperty("app.deal-wait-ms", Long.class, 1000L))
-                .dbPollWaitMs(environment.getProperty("app.db-poll-wait-ms", Long.class, 1000L))
-                .evalWaitMs(environment.getProperty("app.eval-wait-ms", Long.class, 4 * 1000L))
-                .playerTurnWaitMs(environment.getProperty("app.player-turn-wait-ms", Long.class, 30 * 1000L))
+                .dealWaitMs(environment.getRequiredProperty("app.deal-wait-ms", Long.class))
+                .dbPollWaitMs(environment.getRequiredProperty("app.db-poll-wait-ms", Long.class))
+                .evalWaitMs(environment.getRequiredProperty("app.eval-wait-ms", Long.class))
+                .playerTurnWaitMs(environment.getRequiredProperty("app.player-turn-wait-ms", Long.class))
                 .build();
     }
 

@@ -46,6 +46,9 @@ public abstract class BaseTestContainersIT {
     private static final String API_SERVICE = "api";
     private static final String KEYCLOAK_SERVER_URL_INTERNAL_KEY = "KEYCLOAK_SERVER_URL_INTERNAL";
     private static final String KEYCLOAK_SERVER_URL_EXTERNAL_KEY = "KEYCLOAK_SERVER_URL_EXTERNAL";
+    private static final String APP_PLAYER_TURN_WAIT_KEY = "APP_PLAYER_TURN_WAIT";
+    private static final String APP_EVAL_WAIT_MS = "APP_EVAL_WAIT_MS";
+    private static final int API_DEFAULT_WAIT_MS = 1000;
     private static final int API_PORT = 8081;
     private static final int API_DEBUG_PORT = 5005;
 
@@ -61,7 +64,7 @@ public abstract class BaseTestContainersIT {
                     .withEnv(KEYCLOAK_HOSTNAME_KEY, KEYCLOAK_HOSTNAME)
                     .withVerboseOutput();
     private static final PostgreSQLContainer<?> DB_CONTAINER =
-            new PostgreSQLContainer<>(DB_IMAGE_NAME + ":" + DB_IMAGE_VERSION)
+            new PostgreSQLContainer<>(String.format("%s:%s", DB_IMAGE_NAME, DB_IMAGE_VERSION))
                     .withUsername(DB_USERNAME)
                     .withPassword(DB_PASSWORD)
                     .withDatabaseName(DB_NAME)
@@ -71,11 +74,14 @@ public abstract class BaseTestContainersIT {
                     .withNetworkAliases(DB_SERVICE)
                     .dependsOn(KEYCLOAK_CONTAINER);
 
+
     private static final GenericContainer<?> API_CONTAINER =
-            new GenericContainer<>(API_IMAGE_NAME + ":" + API_IMAGE_VERSION)
+            new GenericContainer<>(String.format("%s:%s", API_IMAGE_NAME, API_IMAGE_VERSION))
                     .withEnv(KEYCLOAK_SERVER_URL_INTERNAL_KEY, KEYCLOAK_HOSTNAME)
                     .withEnv(KEYCLOAK_SERVER_URL_EXTERNAL_KEY, KEYCLOAK_HOSTNAME)
                     .withEnv(SPRING_DATASOURCE_URL_KEY, DB_DATASOURCE_URL)
+                    .withEnv(APP_PLAYER_TURN_WAIT_KEY, String.valueOf(API_DEFAULT_WAIT_MS))
+                    .withEnv(APP_EVAL_WAIT_MS, String.valueOf(API_DEFAULT_WAIT_MS))
                     .withExposedPorts(API_PORT)
                     .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(API_SERVICE))
                     .withNetwork(NETWORK)
