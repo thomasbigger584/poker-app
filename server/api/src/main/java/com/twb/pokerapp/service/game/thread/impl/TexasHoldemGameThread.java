@@ -183,7 +183,7 @@ public class TexasHoldemGameThread extends GameThread {
         handService.addPlayerCard(playerSession, currentRound, card);
         dispatcher.send(pokerTable, messageFactory.initDeal(playerSession, card));
 
-        sleepInMs(DEAL_WAIT_MS);
+        sleepInMs(params.getDealWaitMs());
     }
 
     private void dealFlop() {
@@ -208,7 +208,7 @@ public class TexasHoldemGameThread extends GameThread {
         cardService.createCommunityCard(currentRound, card);
         dispatcher.send(pokerTable, messageFactory.communityCardDeal(card));
 
-        sleepInMs(DEAL_WAIT_MS);
+        sleepInMs(params.getDealWaitMs());
     }
 
     @Override
@@ -235,7 +235,7 @@ public class TexasHoldemGameThread extends GameThread {
         } else {
             evaluateMultiPlayersStanding();
         }
-        sleepInMs(EVALUATION_WAIT_MS);
+        sleepInMs(params.getEvalWaitMs());
     }
 
     private void evaluateLastPlayerStanding(List<PlayerSession> playersNotFolded) {

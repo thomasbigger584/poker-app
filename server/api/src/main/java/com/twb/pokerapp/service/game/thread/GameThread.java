@@ -23,10 +23,6 @@ public abstract class GameThread extends BaseGameThread {
     // *****************************************************************************************
     // Constants
     // *****************************************************************************************
-    protected static final long DEAL_WAIT_MS = 1000; // 1 second
-    protected static final long DB_POLL_WAIT_MS = 1000; // 1 second
-    protected static final long EVALUATION_WAIT_MS = 4 * 1000; // 4 seconds
-    protected static final long PLAYER_TURN_WAIT_MS = 30 * 1000; // 30 seconds
     private static final int MESSAGE_POLL_DIVISOR = 5;
     private static final int MINIMUM_PLAYERS_CONNECTED = 1;
     private static final String NO_MORE_PLAYERS_CONNECTED = "No more players connected";
@@ -126,7 +122,7 @@ public abstract class GameThread extends BaseGameThread {
             if (pollCount % MESSAGE_POLL_DIVISOR == 0) {
                 sendLogMessage("Waiting for players to join...");
             }
-            sleepInMs(DB_POLL_WAIT_MS);
+            sleepInMs(params.getDbPollWaitMs());
             pollCount++;
         } while (playerSessions.size() < minPlayerCount);
     }
@@ -304,7 +300,7 @@ public abstract class GameThread extends BaseGameThread {
     protected void waitPlayerTurn(PlayerSession playerSession) {
         playerTurnLatch = new CountDownLatch(1);
         try {
-            var await = playerTurnLatch.await(PLAYER_TURN_WAIT_MS, TimeUnit.MILLISECONDS);
+            var await = playerTurnLatch.await(params.getPlayerTurnWaitMs(), TimeUnit.MILLISECONDS);
             if (!await) {
                 var createPlayerActionDTO = new CreatePlayerActionDTO();
                 createPlayerActionDTO.setAction(ActionType.FOLD);

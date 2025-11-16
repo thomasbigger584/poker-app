@@ -79,10 +79,15 @@ public class GameThreadManager {
      * @return the game thread parameters
      */
     private GameThreadParams getGameThreadParams(PokerTable pokerTable) {
+        var environment = context.getEnvironment();
         return GameThreadParams.builder()
                 .tableId(pokerTable.getId())
                 .gameType(pokerTable.getGameType())
                 .startLatch(new CountDownLatch(1))
+                .dealWaitMs(environment.getProperty("app.deal-wait-ms", Long.class, 1000L))
+                .dbPollWaitMs(environment.getProperty("app.db-poll-wait-ms", Long.class, 1000L))
+                .evalWaitMs(environment.getProperty("app.eval-wait-ms", Long.class, 4 * 1000L))
+                .playerTurnWaitMs(environment.getProperty("app.player-turn-wait-ms", Long.class, 30 * 1000L))
                 .build();
     }
 

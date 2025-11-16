@@ -13,4 +13,8 @@ public class GameThreadParams {
     private GameType gameType;
     private UUID tableId;
     private CountDownLatch startLatch;
+    private long dealWaitMs;
+    private long dbPollWaitMs;
+    private long evalWaitMs;
+    private long playerTurnWaitMs;
 }
