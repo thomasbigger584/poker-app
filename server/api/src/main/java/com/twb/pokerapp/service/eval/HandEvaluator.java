@@ -1,9 +1,13 @@
 package com.twb.pokerapp.service.eval;
 
+import com.twb.pokerapp.domain.Hand;
+import com.twb.pokerapp.domain.Round;
+import com.twb.pokerapp.repository.HandRepository;
 import com.twb.pokerapp.service.eval.dto.EvalPlayerHandDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -13,11 +17,15 @@ import java.util.Objects;
 public class HandEvaluator {
     private final RankEvaluator rankEvaluator;
     private final HandTypeEvaluator handTypeEvaluator;
+    private final HandRepository handRepository;
 
-    public void evaluate(List<EvalPlayerHandDTO> playerHandList) {
+    public List<EvalPlayerHandDTO> evaluate(Round round, List<EvalPlayerHandDTO> playerHandList) {
         evaluateRankAndHandType(playerHandList);
         setWinners(playerHandList);
+        savePlayerHandEvaluation(round, playerHandList);
+        return getWinners(playerHandList);
     }
+
 
     private void evaluateRankAndHandType(List<EvalPlayerHandDTO> playerHandList) {
         for (var playerHand : playerHandList) {
@@ -36,5 +44,25 @@ public class HandEvaluator {
                 playerHand.setWinner(true);
             }
         }
+    }
+
+    private void savePlayerHandEvaluation(Round round, List<EvalPlayerHandDTO> playerHandsList) {
+        var savingHands = new ArrayList<Hand>();
+        for (var playerHand : playerHandsList) {
+            var playerSession = playerHand.getPlayerSession();
+            handRepository.findHandForRound(playerSession.getId(), round.getId())
+                    .ifPresent(hand -> {
+                        hand.setHandType(playerHand.getHandType());
+                        hand.setWinner(playerHand.isWinner());
+                        savingHands.add(hand);
+                    });
+        }
+        handRepository.saveAllAndFlush(savingHands);
+    }
+
+    private List<EvalPlayerHandDTO> getWinners(List<EvalPlayerHandDTO> playerHandList) {
+        return playerHandList.stream()
+                .filter(EvalPlayerHandDTO::isWinner)
+                .toList();
     }
 }

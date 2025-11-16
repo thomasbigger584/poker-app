@@ -47,7 +47,6 @@ public abstract class GameThread extends BaseGameThread {
     protected Round currentRound;
     protected BettingRound currentBettingRound;
     protected List<PlayerSession> playerSessions = new ArrayList<>();
-    protected final Set<PlayerSession> foldedPlayers = Collections.synchronizedSet(new HashSet<>());
     private CountDownLatch playerTurnLatch;
     private List<Card> deckOfCards;
     private int deckCardPointer;
@@ -167,7 +166,6 @@ public abstract class GameThread extends BaseGameThread {
     private void initRound() {
         roundInProgress.set(true);
         interruptRound.set(false);
-        foldedPlayers.clear();
         shuffleCards();
         checkRoundInterrupted();
         onInitRound();
@@ -251,16 +249,13 @@ public abstract class GameThread extends BaseGameThread {
 
     // NOTE: called from both game thread and main thread
     private boolean foldAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
-        synchronized (foldedPlayers) {
-            foldedPlayers.add(playerSession);
+        playerActionService.create(playerSession, currentBettingRound, createActionDto);
 
-            createActionDto.setAmount(0d);
-            playerActionService.create(playerSession, currentBettingRound, createActionDto);
-
-            if (playerSessions.stream().filter(foldedPlayers::contains).count() == 1) {
-                // there is only 1 player left in a started game
-                interruptRound.set(true);
-            }
+        var playerActionsNotFolded =
+                playerActionRepository.findPlayerActionsNotFolded(currentBettingRound.getId());
+        if (playerActionsNotFolded.size() < 2) {
+            // there is only 1 player left in a started game
+            interruptRound.set(true);
         }
         return true;
     }
@@ -309,10 +304,6 @@ public abstract class GameThread extends BaseGameThread {
         } catch (InterruptedException e) {
             throw new RuntimeException("Failed to wait for player turn latch", e);
         }
-    }
-
-    protected boolean isPlayerFolded(PlayerSession playerSession) {
-        return foldedPlayers.contains(playerSession);
     }
 
     // *****************************************************************************************

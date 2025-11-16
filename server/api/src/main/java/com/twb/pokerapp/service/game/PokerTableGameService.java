@@ -74,11 +74,8 @@ public class PokerTableGameService {
 
     public void onPlayerAction(UUID tableId, String username, CreatePlayerActionDTO action) {
         mutex.execute(tableId, () -> {
-            var threadOpt = threadManager.getIfExists(tableId);
-            if (threadOpt.isPresent()) {
-                GameThread thread = threadOpt.get();
-                thread.playerAction(username, action);
-            }
+            threadManager.getIfExists(tableId)
+                    .ifPresent(thread -> thread.playerAction(username, action));
         });
     }
 

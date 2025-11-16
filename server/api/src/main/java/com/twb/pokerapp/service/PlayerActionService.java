@@ -18,14 +18,18 @@ public class PlayerActionService {
     private final PlayerActionMapper mapper;
 
     public PlayerAction create(PlayerSession playerSession,
-                       BettingRound bettingRound,
-                       CreatePlayerActionDTO createDto) {
+                               BettingRound bettingRound,
+                               CreatePlayerActionDTO createDto) {
 
         var playerAction = new PlayerAction();
         playerAction.setPlayerSession(playerSession);
         playerAction.setBettingRound(bettingRound);
         playerAction.setActionType(createDto.getAction());
-        playerAction.setAmount(createDto.getAmount());
+        if (createDto.getAmount() != null) {
+            playerAction.setAmount(createDto.getAmount());
+        } else {
+            playerAction.setAmount(0d);
+        }
 
         return repository.saveAndFlush(playerAction);
     }
