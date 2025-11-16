@@ -173,7 +173,7 @@ public class TexasHoldemGameThread extends GameThread {
     }
 
     private boolean raiseAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
-        return true;
+        throw new UnsupportedOperationException("Raise action not implemented yet");
     }
 
     private void dealPlayerCard(CardType cardType, PlayerSession playerSession) {

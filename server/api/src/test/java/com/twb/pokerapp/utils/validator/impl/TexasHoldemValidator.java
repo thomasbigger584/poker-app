@@ -1,6 +1,7 @@
 package com.twb.pokerapp.utils.validator.impl;
 
 import com.twb.pokerapp.domain.enumeration.SessionState;
+import com.twb.pokerapp.utils.game.GameRunnerParams;
 import com.twb.pokerapp.utils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.utils.sql.SqlClient;
 import com.twb.pokerapp.utils.validator.Validator;
@@ -14,18 +15,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TexasHoldemValidator extends Validator {
 
-    public TexasHoldemValidator(SqlClient sqlClient) {
-        super(sqlClient);
+    public TexasHoldemValidator(GameRunnerParams params, SqlClient sqlClient) {
+        super(params, sqlClient);
     }
 
     @Override
     protected void onValidateHandleMessage(ServerMessageDTO message) {
-        // todo specific intra game message assertions
+        // todo specific intra-game message assertions
     }
 
     @Override
     protected void onValidateEndOfRun(PlayersServerMessages messages) {
-        messages.getListenerMessages().stream()
+        var listenerMessages = messages.getListenerMessages();
+
+        listenerMessages.stream()
                 .filter(message -> message.getType() == ServerMessageType.DEALER_DETERMINED)
                 .forEach(message -> {
                     var payload = (DealerDeterminedDTO) message.getPayload();

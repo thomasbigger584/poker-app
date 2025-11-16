@@ -9,8 +9,8 @@ import com.twb.pokerapp.utils.game.player.AbstractTestUser;
 import com.twb.pokerapp.utils.game.player.TestUserParams;
 import com.twb.pokerapp.utils.game.player.impl.TestTexasHoldemPlayerUser;
 import com.twb.pokerapp.utils.game.turn.TurnHandler;
-import com.twb.pokerapp.utils.game.turn.impl.OptimisticTurnHandler;
 import com.twb.pokerapp.utils.game.turn.impl.DefaultTurnHandler;
+import com.twb.pokerapp.utils.game.turn.impl.OptimisticTurnHandler;
 import com.twb.pokerapp.utils.testcontainers.BaseTestContainersIT;
 import com.twb.pokerapp.utils.validator.impl.TexasHoldemValidator;
 import lombok.extern.slf4j.Slf4j;
@@ -31,14 +31,14 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
 
     @Override
     protected void beforeEach() throws Throwable {
-        this.validator = new TexasHoldemValidator(sqlClient);
         this.params = GameRunnerParams.builder()
                 .keycloakClients(keycloakClients)
                 .numberOfRounds(1)
                 .latches(GameLatches.create())
                 .table(getTexasHoldemTable())
-                .validator(this.validator)
+                .validator(validator)
                 .build();
+        this.validator = new TexasHoldemValidator(params, sqlClient);
         this.runner = new GameRunner(params);
     }
 
@@ -48,8 +48,7 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
         turnHandlers.put(PLAYER_1, null);
         turnHandlers.put(PLAYER_2, null);
 
-        var messages = runner.run(getPlayers(turnHandlers))
-                .getByNumberOfRounds(params.getNumberOfRounds());
+        var messages = runner.run(getPlayers(turnHandlers));
         System.out.println("messages = " + messages);
 
         validator.validateEndOfRun(messages);
@@ -61,8 +60,7 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
         turnHandlers.put(PLAYER_1, new DefaultTurnHandler());
         turnHandlers.put(PLAYER_2, new DefaultTurnHandler());
 
-        var messages = runner.run(getPlayers(turnHandlers))
-                .getByNumberOfRounds(params.getNumberOfRounds());
+        var messages = runner.run(getPlayers(turnHandlers));
         System.out.println("messages = " + messages);
 
         validator.validateEndOfRun(messages);
@@ -74,14 +72,10 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
         turnHandlers.put(PLAYER_1, new OptimisticTurnHandler());
         turnHandlers.put(PLAYER_2, new OptimisticTurnHandler());
 
-        var messages = runner.run(getPlayers(turnHandlers))
-                .getByNumberOfRounds(params.getNumberOfRounds());
-        System.out.println("messages = " + messages);
+        var messages = runner.run(getPlayers(turnHandlers));
 
         validator.validateEndOfRun(messages);
     }
-
-
 
 
     // *****************************************************************************************

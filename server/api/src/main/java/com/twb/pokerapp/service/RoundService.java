@@ -54,7 +54,7 @@ public class RoundService {
         var newPot = round.getPot() + bettingRound.getPot();
         round.setPot(newPot);
 
-        round = repository.save(round);
+        round = repository.saveAndFlush(round);
 
         return round;
     }

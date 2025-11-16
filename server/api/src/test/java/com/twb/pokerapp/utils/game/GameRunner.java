@@ -27,7 +27,8 @@ public class GameRunner {
 
         throwExceptionIfOccurred(players);
 
-        return new PlayersServerMessages(listener, players);
+        var messages = new PlayersServerMessages(listener, players);
+        return messages.getByNumberOfRounds(params.getNumberOfRounds());
     }
 
     // ***************************************************************
