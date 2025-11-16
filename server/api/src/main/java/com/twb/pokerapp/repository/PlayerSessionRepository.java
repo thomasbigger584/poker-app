@@ -74,7 +74,7 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
                 FROM PlayerAction a
                 WHERE a.playerSession = s
                 AND a.bettingRound.round.id = :roundId
-                AND a.actionType <> com.twb.pokerapp.domain.enumeration.ActionType.FOLD
+                AND a.actionType = com.twb.pokerapp.domain.enumeration.ActionType.FOLD
             )
             ORDER BY s.position ASC
             """)
