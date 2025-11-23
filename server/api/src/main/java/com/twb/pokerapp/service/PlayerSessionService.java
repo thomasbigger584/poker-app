@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -22,8 +23,8 @@ public class PlayerSessionService {
     private final PlayerSessionRepository repository;
     private final PlayerSessionMapper mapper;
 
-    public PlayerSessionDTO connectUserToRound(AppUser user, ConnectionType connectionType, PokerTable pokerTable) {
-        var tableId = pokerTable.getId();
+    public PlayerSessionDTO connectUserToRound(AppUser user, ConnectionType connectionType, PokerTable table) {
+        var tableId = table.getId();
         var username = user.getUsername();
 
         var sessionOpt = repository
@@ -35,14 +36,14 @@ public class PlayerSessionService {
         } else {
             session = new PlayerSession();
             session.setUser(user);
-            session.setPokerTable(pokerTable);
+            session.setPokerTable(table);
         }
 
         session.setConnectionType(connectionType);
         session.setSessionState(SessionState.CONNECTED);
 
         if (connectionType == ConnectionType.PLAYER) {
-            var position = getSessionTablePosition(pokerTable);
+            var position = getSessionTablePosition(table);
             session.setPosition(position);
             session.setFunds(1000d); // todo: dynamically set funds
         }
@@ -53,25 +54,27 @@ public class PlayerSessionService {
 
     //todo: think about what to do with funds, it should be persisted elsewhere,
     // probably on AppUser or separate Bank table
-    public void disconnectUser(UUID tableId, String username) {
+    public Optional<PlayerSession> disconnectUser(UUID tableId, String username) {
         var sessionOpt =
                 repository.findByTableIdAndUsername(tableId, username);
-        if (sessionOpt.isPresent()) {
-            var playerSession = sessionOpt.get();
-
-            playerSession.setDealer(null);
-            playerSession.setFunds(null);
-            playerSession.setPokerTable(null);
-            playerSession.setConnectionType(null);
-            playerSession.setSessionState(SessionState.DISCONNECTED);
-
-            repository.saveAndFlush(playerSession);
+        if (sessionOpt.isEmpty()) {
+            return Optional.empty();
         }
+        var playerSession = sessionOpt.get();
+
+        playerSession.setDealer(null);
+        playerSession.setFunds(null);
+        playerSession.setPokerTable(null);
+        playerSession.setConnectionType(null);
+        playerSession.setSessionState(SessionState.DISCONNECTED);
+
+        playerSession = repository.saveAndFlush(playerSession);
+        return Optional.of(playerSession);
     }
 
-    private int getSessionTablePosition(PokerTable pokerTable) {
-        var sessions = repository.findConnectedPlayersByTableId(pokerTable.getId());
-        var otherPlayersMaxCount = pokerTable.getGameType().getMaxPlayerCount() - 1;
+    private int getSessionTablePosition(PokerTable table) {
+        var sessions = repository.findConnectedPlayersByTableId(table.getId());
+        var otherPlayersMaxCount = table.getGameType().getMaxPlayerCount() - 1;
         for (var position = 1; position <= otherPlayersMaxCount; position++) {
             if (!isPositionAlreadyTaken(sessions, position)) {
                 return position;

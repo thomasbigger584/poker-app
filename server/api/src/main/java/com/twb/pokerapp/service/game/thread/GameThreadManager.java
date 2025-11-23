@@ -29,23 +29,23 @@ public class GameThreadManager {
     /**
      * Creates a game thread for the given poker table if it does not already exist.
      *
-     * @param pokerTable the poker table
+     * @param table the poker table
      * @return the created or existing game thread
      */
-    public GameThread createIfNotExist(PokerTable pokerTable) {
-        return mutex.evaluate(pokerTable.getId(), () -> {
-            var threadOpt = getIfExists(pokerTable);
+    public GameThread createIfNotExist(PokerTable table) {
+        return mutex.evaluate(table.getId(), () -> {
+            var threadOpt = getIfExists(table);
             if (threadOpt.isPresent()) {
                 return threadOpt.get();
             }
-            var params = getGameThreadParams(pokerTable);
+            var params = getGameThreadParams(table);
             var thread = create(params);
             thread.start();
             try {
                 if (!params.getStartLatch().await(GAME_START_TIMEOUT_IN_SECS, TimeUnit.SECONDS)) {
                     throw new RuntimeException("Failed to wait for game to start");
                 }
-                POKER_GAME_RUNNABLE_MAP.put(pokerTable.getId(), thread);
+                POKER_GAME_RUNNABLE_MAP.put(table.getId(), thread);
                 return thread;
             } catch (InterruptedException e) {
                 throw new RuntimeException("Exception thrown while waiting for game to start", e);
@@ -75,14 +75,14 @@ public class GameThreadManager {
     /**
      * Retrieves game thread parameters for the given poker table.
      *
-     * @param pokerTable the poker table
+     * @param table the poker table
      * @return the game thread parameters
      */
-    private GameThreadParams getGameThreadParams(PokerTable pokerTable) {
+    private GameThreadParams getGameThreadParams(PokerTable table) {
         var environment = context.getEnvironment();
         return GameThreadParams.builder()
-                .tableId(pokerTable.getId())
-                .gameType(pokerTable.getGameType())
+                .tableId(table.getId())
+                .gameType(table.getGameType())
                 .startLatch(new CountDownLatch(1))
                 .dealWaitMs(environment.getRequiredProperty("app.deal-wait-ms", Long.class))
                 .dbPollWaitMs(environment.getRequiredProperty("app.db-poll-wait-ms", Long.class))
@@ -105,11 +105,11 @@ public class GameThreadManager {
     /**
      * Retrieves the game thread for the given poker table if it exists.
      *
-     * @param pokerTable the poker table
+     * @param table the poker table
      * @return an Optional containing the game thread if it exists, otherwise empty
      */
-    public Optional<GameThread> getIfExists(PokerTable pokerTable) {
-        return getIfExists(pokerTable.getId());
+    public Optional<GameThread> getIfExists(PokerTable table) {
+        return getIfExists(table.getId());
     }
 
     /**

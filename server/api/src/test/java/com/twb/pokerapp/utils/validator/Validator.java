@@ -68,14 +68,14 @@ public abstract class Validator {
             assertTrue(appUser.isEnabled(), "AppUser enabled is not true");
 
             // PokerTable Assertions
-            var pokerTableDto = playerSessionDto.getPokerTable();
-            var pokerTableId = pokerTableDto.getId();
-            var pokerTableOpt = sqlClient.getPokerTable(pokerTableId);
-            assertTrue(pokerTableOpt.isPresent(), "PokerTable not found for ID");
-            var pokerTable = pokerTableOpt.get();
-            assertEquals(pokerTableId, pokerTable.getId(), "PokerTable ids do not match");
-            assertEquals(pokerTableDto.getName(), pokerTable.getName(), "PokerTable names do not match");
-            assertEquals(pokerTableDto.getGameType(), pokerTable.getGameType(), "PokerTable gameTypes do not match");
+            var tableDto = playerSessionDto.getPokerTable();
+            var tableId = tableDto.getId();
+            var tableOpt = sqlClient.getPokerTable(tableId);
+            assertTrue(tableOpt.isPresent(), "PokerTable not found for ID");
+            var table = tableOpt.get();
+            assertEquals(tableId, table.getId(), "PokerTable ids do not match");
+            assertEquals(tableDto.getName(), table.getName(), "PokerTable names do not match");
+            assertEquals(tableDto.getGameType(), table.getGameType(), "PokerTable gameTypes do not match");
         });
     }
 

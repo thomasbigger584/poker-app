@@ -37,6 +37,7 @@ public class BettingRoundDTO {
         this.pot = pot;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "BettingRoundDTO{" +

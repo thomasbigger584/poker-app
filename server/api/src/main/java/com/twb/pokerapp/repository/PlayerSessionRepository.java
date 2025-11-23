@@ -69,8 +69,6 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
             ORDER BY s.position ASC
             """)
-    @Transactional
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
     List<PlayerSession> findConnectedPlayersByTableId(@Param("tableId") UUID tableId);
 
     @Query("""
@@ -88,8 +86,6 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             )
             ORDER BY s.position ASC
             """)
-    @Transactional
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
     List<PlayerSession> findActivePlayersByTableId(@Param("tableId") UUID tableId, @Param("roundId") UUID roundId);
 
     @Query("""

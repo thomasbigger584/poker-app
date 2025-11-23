@@ -44,9 +44,6 @@ public class PokerTableActivity extends BaseAuthActivity
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
         loadingSpinner = DialogHelper.createLoadingSpinner(this);
         DialogHelper.show(loadingSpinner);
 

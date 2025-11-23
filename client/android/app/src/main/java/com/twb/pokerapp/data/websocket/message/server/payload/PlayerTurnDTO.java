@@ -2,6 +2,7 @@ package com.twb.pokerapp.data.websocket.message.server.payload;
 
 import androidx.annotation.NonNull;
 
+import com.twb.pokerapp.data.model.dto.bettinground.BettingRoundDTO;
 import com.twb.pokerapp.data.model.dto.playeraction.PlayerActionDTO;
 import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
 

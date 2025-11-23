@@ -17,6 +17,8 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 
 import java.util.List;
 
+import static java.lang.management.ManagementFactory.getRuntimeMXBean;
+
 // NOTE: Requires building docker image before: `docker compose build api`
 
 public abstract class BaseTestContainersIT {
@@ -48,7 +50,7 @@ public abstract class BaseTestContainersIT {
     private static final String KEYCLOAK_SERVER_URL_EXTERNAL_KEY = "KEYCLOAK_SERVER_URL_EXTERNAL";
     private static final String APP_PLAYER_TURN_WAIT_KEY = "APP_PLAYER_TURN_WAIT";
     private static final String APP_EVAL_WAIT_MS = "APP_EVAL_WAIT_MS";
-    private static final int API_DEFAULT_WAIT_MS = 1000;
+    private static final int API_DEFAULT_WAIT_MS = 5000;
     private static final int API_PORT = 8081;
     private static final int API_DEBUG_PORT = 5005;
 
@@ -99,6 +101,24 @@ public abstract class BaseTestContainersIT {
         API_CONTAINER.setPortBindings(
                 List.of(getPortBindingString(API_PORT),
                         getPortBindingString(API_DEBUG_PORT)));
+
+        boolean isDebug = getRuntimeMXBean()
+                .getInputArguments().toString().contains("jdwp");
+        if (isDebug) {
+            API_CONTAINER.setPortBindings(
+                    List.of(getPortBindingString(API_PORT),
+                            getPortBindingString(API_DEBUG_PORT)));
+            API_CONTAINER.setCommand(
+                    "java",
+                    "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:" + API_DEBUG_PORT,
+                    "-Djava.security.egd=file:/dev/./urandom",
+                    "-jar",
+                    "api.jar"
+            );
+        } else {
+            API_CONTAINER.setPortBindings(
+                    List.of(getPortBindingString(API_PORT)));
+        }
     }
 
     // *****************************************************************************************

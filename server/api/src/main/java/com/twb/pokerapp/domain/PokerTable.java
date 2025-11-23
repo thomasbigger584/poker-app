@@ -43,11 +43,11 @@ public class PokerTable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        var pokerTable = (PokerTable) o;
+        var table = (PokerTable) o;
         return new EqualsBuilder()
-                .append(id, pokerTable.id)
-                .append(name, pokerTable.name)
-                .append(gameType, pokerTable.gameType)
+                .append(id, table.id)
+                .append(name, table.name)
+                .append(gameType, table.gameType)
                 .isEquals();
     }
 

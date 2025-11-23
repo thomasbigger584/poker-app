@@ -1,5 +1,9 @@
 package com.twb.stomplib.dto;
 
+import org.jetbrains.annotations.NotNull;
+
+import io.reactivex.annotations.NonNull;
+
 public class StompHeader {
     public static final String VERSION = "accept-version";
     public static final String HEART_BEAT = "heart-beat";
@@ -26,6 +30,7 @@ public class StompHeader {
         return mValue;
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "StompHeader{" + mKey + '=' + mValue + '}';

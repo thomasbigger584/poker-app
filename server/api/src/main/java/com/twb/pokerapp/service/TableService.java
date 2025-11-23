@@ -41,8 +41,8 @@ public class TableService {
     }
 
     private void createTestTables() {
-        var allPokerTables = repository.findAll();
-        if (allPokerTables.isEmpty()) {
+        var allTables = repository.findAll();
+        if (allTables.isEmpty()) {
             var createTableDto1 = new CreateTableDTO();
             createTableDto1.setName("Poker Table 1");
             createTableDto1.setGameType(GameType.TEXAS_HOLDEM);

@@ -13,9 +13,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
-public class TexasHoldemValidator extends Validator {
+public class TexasValidator extends Validator {
 
-    public TexasHoldemValidator(GameRunnerParams params, SqlClient sqlClient) {
+    public TexasValidator(GameRunnerParams params, SqlClient sqlClient) {
         super(params, sqlClient);
     }
 

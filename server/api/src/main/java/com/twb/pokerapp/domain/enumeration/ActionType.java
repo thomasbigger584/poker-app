@@ -31,4 +31,17 @@ public enum ActionType {
             }
         };
     }
+
+    public double getAmountToCall(double previousAmount) {
+        return switch (this) {
+            case FOLD:
+            case CHECK:
+                yield 0d;
+            case BET:
+            case CALL:
+            case RAISE: {
+                yield previousAmount;
+            }
+        };
+    }
 }
