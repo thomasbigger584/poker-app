@@ -23,7 +23,7 @@ public interface RoundRepository extends JpaRepository<Round, UUID> {
     @Query("""
             SELECT r
             FROM Round r
-            WHERE r.roundState <> com.twb.pokerapp.domain.enumeration.RoundState.FINISH
+            WHERE r.roundState <> com.twb.pokerapp.domain.enumeration.RoundState.FINISHED
             """)
     List<Round> findAllNotFinished();
 
@@ -31,7 +31,15 @@ public interface RoundRepository extends JpaRepository<Round, UUID> {
             SELECT r
             FROM Round r
             WHERE r.pokerTable.id = :tableId
-            AND r.roundState <> com.twb.pokerapp.domain.enumeration.RoundState.FINISH
+            AND r.roundState <> com.twb.pokerapp.domain.enumeration.RoundState.FINISHED
             """)
     Optional<Round> findCurrentByTableId(@Param("tableId") UUID tableId);
+
+    @Query("""
+            SELECT r
+            FROM Round r
+            WHERE r.pokerTable.id = :tableId
+            AND r.roundState <> com.twb.pokerapp.domain.enumeration.RoundState.FINISHED
+            """)
+    Optional<Round> findCurrentByTableId_Lock(@Param("tableId") UUID tableId);
 }

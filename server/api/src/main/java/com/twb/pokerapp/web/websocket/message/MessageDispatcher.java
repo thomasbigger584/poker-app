@@ -21,13 +21,13 @@ public class MessageDispatcher {
     private final SimpMessagingTemplate template;
     private final ObjectMapper objectMapper;
 
-    public void send(PokerTable pokerTable, ServerMessageDTO message) {
-        send(pokerTable.getId(), message);
+    public void send(PokerTable table, ServerMessageDTO message) {
+        send(table.getId(), message);
     }
 
-    public void send(PokerTable pokerTable, PlayerSession playerSession, ServerMessageDTO message) {
+    public void send(PokerTable table, PlayerSession playerSession, ServerMessageDTO message) {
         var username = playerSession.getUser().getUsername();
-        send(pokerTable.getId(), username, message);
+        send(table.getId(), username, message);
     }
 
     public void send(UUID tableId, ServerMessageDTO message) {

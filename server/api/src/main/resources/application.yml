@@ -52,6 +52,7 @@ app:
   db-poll-wait-ms: 1000
   eval-wait-ms: 4000
   player-turn-wait-ms: 30000
+  round-end-wait-ms: 3000
 #logging:
 #  level:
 #    org.springframework.security: DEBUG

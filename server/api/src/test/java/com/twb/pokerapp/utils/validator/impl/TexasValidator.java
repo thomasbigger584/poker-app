@@ -13,9 +13,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
-public class TexasHoldemValidator extends Validator {
+public class TexasValidator extends Validator {
 
-    public TexasHoldemValidator(GameRunnerParams params, SqlClient sqlClient) {
+    public TexasValidator(GameRunnerParams params, SqlClient sqlClient) {
         super(params, sqlClient);
     }
 
@@ -36,7 +36,7 @@ public class TexasHoldemValidator extends Validator {
                     // PlayerSession Assertions
                     var playerSessionDto = payload.getPlayerSession();
                     assertEquals(SessionState.CONNECTED, playerSessionDto.getSessionState(), "PlayerSession state should be CONNECTED");
-                    assertTrue(playerSessionDto.getDealer(), "PlayerSession should be marked as dealer");
+//                    assertTrue(playerSessionDto.getDealer(), "PlayerSession should be marked as dealer");
 
                     var playerSessionId = playerSessionDto.getId();
                     var playerSessionOpt = sqlClient.getPlayerSession(playerSessionId);

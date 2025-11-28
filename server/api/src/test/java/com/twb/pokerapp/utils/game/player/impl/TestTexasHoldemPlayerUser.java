@@ -24,7 +24,13 @@ public class TestTexasHoldemPlayerUser extends AbstractTestUser {
                     .getUser().getUsername().equals(params.getUsername())) {
                 var turnHandler = params.getTurnHandler();
                 if (turnHandler != null) {
-                    turnHandler.handle(this, headers, playerTurn);
+                    try {
+                        Thread.sleep(2000L);
+                        turnHandler.handle(this, headers, playerTurn);
+                    } catch (InterruptedException e) {
+                        log.error("Failed to handle player turn", e);
+                        throw new RuntimeException("Failed to handle player turn", e);
+                    }
                 }
             }
         }

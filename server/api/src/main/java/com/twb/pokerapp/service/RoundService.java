@@ -22,10 +22,10 @@ public class RoundService {
     private final RoundRepository repository;
     private final RoundMapper mapper;
 
-    public Round create(PokerTable pokerTable) {
+    public Round create(PokerTable table) {
         var round = new Round();
         round.setRoundState(RoundState.WAITING_FOR_PLAYERS);
-        round.setPokerTable(pokerTable);
+        round.setPokerTable(table);
         round.setPot(0d);
 
         round = repository.saveAndFlush(round);

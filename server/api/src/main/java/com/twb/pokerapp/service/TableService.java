@@ -35,14 +35,14 @@ public class TableService {
         // only doing this here to ensure ordering with creating dummy poker table data
         var unfinishedRounds = roundRepository.findAllNotFinished();
         for (var round : unfinishedRounds) {
-            round.setRoundState(RoundState.FINISH);
+            round.setRoundState(RoundState.FINISHED);
             roundRepository.save(round);
         }
     }
 
     private void createTestTables() {
-        var allPokerTables = repository.findAll();
-        if (allPokerTables.isEmpty()) {
+        var allTables = repository.findAll();
+        if (allTables.isEmpty()) {
             var createTableDto1 = new CreateTableDTO();
             createTableDto1.setName("Poker Table 1");
             createTableDto1.setGameType(GameType.TEXAS_HOLDEM);

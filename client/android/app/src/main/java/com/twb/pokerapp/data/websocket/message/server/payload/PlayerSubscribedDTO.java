@@ -1,5 +1,7 @@
 package com.twb.pokerapp.data.websocket.message.server.payload;
 
+import androidx.annotation.NonNull;
+
 import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
 
 import java.util.ArrayList;
@@ -25,6 +27,7 @@ public class PlayerSubscribedDTO {
         this.playerSessions = playerSessions;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "PlayerSubscribedDTO{" +

@@ -1,9 +1,8 @@
-package com.twb.pokerapp.service;
+package com.twb.pokerapp.service.game.thread.impl.texas;
 
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,55 +15,45 @@ import java.util.UUID;
 @Component
 @Transactional
 @RequiredArgsConstructor
-public class DealerService {
+public class TexasDealerService {
     private static final SecureRandom RANDOM = new SecureRandom();
     private final PlayerSessionRepository playerSessionRepository;
 
-    public List<PlayerSession> nextDealerReorder(UUID tableId, List<PlayerSession> playerSessions) {
-        List<PlayerSession> copyPlayerSessions = new ArrayList<>(playerSessions);
-
-        var nextDealer = getNextDealer(copyPlayerSessions);
+    public PlayerSession nextDealerReorder(UUID tableId, List<PlayerSession> playerSessions) {
+        var nextDealer = getNextDealer(playerSessions);
         setNextDealer(tableId, nextDealer);
-
-        copyPlayerSessions = playerSessionRepository
-                .findConnectedPlayersByTableId(tableId);
-
-        return dealerReorder(copyPlayerSessions);
+        return nextDealer;
     }
 
     private PlayerSession getNextDealer(List<PlayerSession> playerSessions) {
+        playerSessions = new ArrayList<>(playerSessions);
+
         var currentDealerOpt = getCurrentDealerWithIndex(playerSessions);
 
-        if (currentDealerOpt.isPresent()) {
-            var currentDealerWithIndex = currentDealerOpt.get();
-
-            var dealerIndex = currentDealerWithIndex.getFirst();
-            var currentDealer = currentDealerWithIndex.getSecond();
-
-            playerSessions = sortDealerLast(playerSessions, dealerIndex);
-
-            var numPlayers = playerSessions.size();
-            for (var index = 0; index < numPlayers; index++) {
-                var thisPlayerSession = playerSessions.get(index);
-
-                if (thisPlayerSession.getPosition()
-                        .equals(currentDealer.getPosition())) {
-                    var nextIndex = index + 1;
-                    if (nextIndex >= numPlayers) {
-                        nextIndex = 0;
-                    }
-                    return playerSessions.get(nextIndex);
-                }
-            }
-        } else {
+        if (currentDealerOpt.isEmpty()) {
             return playerSessions.get(RANDOM.nextInt(playerSessions.size()));
         }
-        throw new RuntimeException("Failed to get next dealer");
-    }
 
-    private void setNextDealer(UUID tableId, PlayerSession nextDealer) {
-        playerSessionRepository.resetDealerForTableId(tableId);
-        playerSessionRepository.setDealer(nextDealer.getId(), true);
+        var currentDealerWithIndex = currentDealerOpt.get();
+        var dealerIndex = currentDealerWithIndex.index();
+        var currentDealer = currentDealerWithIndex.dealerPlayerSession();
+
+        playerSessions = sortDealerLast(playerSessions, dealerIndex);
+
+        var numPlayers = playerSessions.size();
+        for (var index = 0; index < numPlayers; index++) {
+            var thisPlayerSession = playerSessions.get(index);
+
+            if (thisPlayerSession.getPosition()
+                    .equals(currentDealer.getPosition())) {
+                var nextIndex = index + 1;
+                if (nextIndex >= numPlayers) {
+                    nextIndex = 0;
+                }
+                return playerSessions.get(nextIndex);
+            }
+        }
+        throw new RuntimeException("Failed to get next dealer");
     }
 
     private List<PlayerSession> dealerReorder(List<PlayerSession> playerSessions) {
@@ -72,12 +61,11 @@ public class DealerService {
         return sortDealerLast(playerSessions, dealerIndex);
     }
 
-    //todo: maybe tidy with dto
-    public Optional<Pair<Integer, PlayerSession>> getCurrentDealerWithIndex(List<PlayerSession> playerSessions) {
+    private Optional<DealerWithIndexDTO> getCurrentDealerWithIndex(List<PlayerSession> playerSessions) {
         for (var index = 0; index < playerSessions.size(); index++) {
             var playerSession = playerSessions.get(index);
             if (Boolean.TRUE.equals(playerSession.getDealer())) {
-                return Optional.of(Pair.of(index, playerSession));
+                return Optional.of(new DealerWithIndexDTO(index, playerSession));
             }
         }
         return Optional.empty();
@@ -115,5 +103,13 @@ public class DealerService {
             dealerSortedList.add(playerSessions.get(index));
         }
         return dealerSortedList;
+    }
+
+    private void setNextDealer(UUID tableId, PlayerSession nextDealer) {
+        playerSessionRepository.resetDealerForTableId(tableId);
+        playerSessionRepository.setDealer(nextDealer.getId(), true);
+    }
+
+    private record DealerWithIndexDTO(int index, PlayerSession dealerPlayerSession) {
     }
 }

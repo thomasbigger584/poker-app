@@ -1,19 +1,18 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="TexasHoldemGameIT" type="JUnit" factoryName="JUnit" nameIsGenerated="true">
+  <configuration default="false" name="TexasGameIT" type="JUnit" factoryName="JUnit" nameIsGenerated="true">
     <module name="api" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="com.twb.pokerapp.service.game.thread.impl.*" />
+        <option name="PATTERN" value="com.twb.pokerapp.service.game.thread.impl.texas.dto.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>
     <option name="PACKAGE_NAME" value="com.twb.pokerapp.service.game.thread.impl" />
-    <option name="MAIN_CLASS_NAME" value="com.twb.pokerapp.service.game.thread.impl.TexasHoldemGameIT" />
+    <option name="MAIN_CLASS_NAME" value="com.twb.pokerapp.service.game.thread.impl.TexasGameIT" />
     <option name="METHOD_NAME" value="testGameWithDefaultActions" />
     <option name="TEST_OBJECT" value="class" />
     <method v="2">
       <option name="Make" enabled="true" />
-      <option name="RunConfigurationTask" enabled="true" run_configuration_name="Docker Build API" run_configuration_type="ShConfigurationType" />
       <option name="Maven.BeforeRunTask" enabled="true" file="$PROJECT_DIR$/pom.xml" goal="process-test-resources" />
     </method>
   </configuration>

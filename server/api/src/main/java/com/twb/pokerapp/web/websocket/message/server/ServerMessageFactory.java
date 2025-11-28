@@ -1,10 +1,12 @@
 package com.twb.pokerapp.web.websocket.message.server;
 
+import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.Card;
 import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
+import com.twb.pokerapp.mapper.BettingRoundMapper;
 import com.twb.pokerapp.mapper.CardMapper;
 import com.twb.pokerapp.mapper.PlayerActionMapper;
 import com.twb.pokerapp.mapper.PlayerSessionMapper;
@@ -22,6 +24,7 @@ import java.util.List;
 public class ServerMessageFactory {
     private final PlayerSessionMapper playerSessionMapper;
     private final PlayerActionMapper playerActionMapper;
+    private final BettingRoundMapper bettingRoundMapper;
     private final CardMapper cardMapper;
 
     public ServerMessageDTO playerSubscribed(List<PlayerSessionDTO> playerSessions) {
@@ -57,6 +60,7 @@ public class ServerMessageFactory {
 
     public ServerMessageDTO playerTurn(PlayerSession playerSession,
                                        @Nullable PlayerAction prevPlayerAction,
+                                       BettingRound bettingRound,
                                        ActionType[] nextActions,
                                        Double amountToCall) {
         var payload = new PlayerTurnDTO();
@@ -64,6 +68,7 @@ public class ServerMessageFactory {
         if (prevPlayerAction != null) {
             payload.setPrevPlayerAction(playerActionMapper.modelToDto(prevPlayerAction));
         }
+        payload.setBettingRound(bettingRoundMapper.modelToDto(bettingRound));
         payload.setNextActions(nextActions);
         payload.setAmountToCall(amountToCall);
         return ServerMessageDTO.create(ServerMessageType.PLAYER_TURN, payload);

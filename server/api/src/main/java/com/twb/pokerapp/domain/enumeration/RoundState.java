@@ -2,7 +2,7 @@ package com.twb.pokerapp.domain.enumeration;
 
 import jakarta.annotation.Nullable;
 
-import static com.twb.pokerapp.domain.enumeration.BettingRoundState.*;
+import static com.twb.pokerapp.domain.enumeration.BettingRoundType.*;
 
 public enum RoundState {
     WAITING_FOR_PLAYERS {
@@ -23,7 +23,7 @@ public enum RoundState {
         }
 
         @Override
-        public BettingRoundState getBettingRoundState() {
+        public BettingRoundType getBettingRoundType() {
             return DEAL;
         }
     }, FLOP_DEAL {
@@ -39,7 +39,7 @@ public enum RoundState {
         }
 
         @Override
-        public BettingRoundState getBettingRoundState() {
+        public BettingRoundType getBettingRoundType() {
             return FLOP;
         }
     }, TURN_DEAL {
@@ -54,7 +54,7 @@ public enum RoundState {
         }
 
         @Override
-        public BettingRoundState getBettingRoundState() {
+        public BettingRoundType getBettingRoundType() {
             return TURN;
         }
     }, RIVER_DEAL {
@@ -69,22 +69,22 @@ public enum RoundState {
         }
 
         @Override
-        public BettingRoundState getBettingRoundState() {
+        public BettingRoundType getBettingRoundType() {
             return RIVER;
         }
     }, EVAL {
         @Override
         public RoundState nextTexasHoldemState() {
-            return FINISH;
+            return FINISHED;
         }
-    }, FINISH {
+    }, FINISHED {
         @Override
         public RoundState nextTexasHoldemState() {
             return null;
         }
     };
 
-    public @Nullable BettingRoundState getBettingRoundState() {
+    public @Nullable BettingRoundType getBettingRoundType() {
         return null;
     }
 

@@ -18,11 +18,13 @@ public class CardService {
 
     public Card createPlayerCard(Hand hand, Card card) {
         card.setHand(hand);
-        return repository.saveAndFlush(card);
+        card = repository.saveAndFlush(card);
+        return card;
     }
 
     public Card createCommunityCard(Round round, Card card) {
         card.setRound(round);
-        return repository.saveAndFlush(card);
+        card = repository.saveAndFlush(card);
+        return card;
     }
 }
