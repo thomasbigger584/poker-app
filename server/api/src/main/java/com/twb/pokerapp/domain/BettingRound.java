@@ -52,7 +52,7 @@ public class BettingRound {
         var bettingRound = (BettingRound) o;
         return new EqualsBuilder().append(id, bettingRound.id)
                 .append(type, bettingRound.type)
-                .append(type, bettingRound.type)
+                .append(state, bettingRound.state)
                 .append(pot, bettingRound.pot).isEquals();
     }
 

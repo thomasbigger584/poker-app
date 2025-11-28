@@ -2,7 +2,6 @@ package com.twb.pokerapp.service;
 
 import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.Round;
-import com.twb.pokerapp.domain.enumeration.BettingRoundState;
 import com.twb.pokerapp.domain.enumeration.BettingRoundType;
 import com.twb.pokerapp.mapper.BettingRoundMapper;
 import com.twb.pokerapp.repository.BettingRoundRepository;
