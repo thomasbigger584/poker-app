@@ -7,6 +7,7 @@ import com.twb.pokerapp.exception.game.GameInterruptedException;
 import com.twb.pokerapp.exception.game.RoundInterruptedException;
 import com.twb.pokerapp.service.game.DeckOfCardsFactory;
 import com.twb.pokerapp.service.game.thread.dto.PlayerTurnLatchDTO;
+import com.twb.pokerapp.service.game.thread.util.CallerThread;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -246,6 +247,7 @@ public abstract class GameThread extends BaseGameThread {
         return playerTurnLatch;
     }
 
+    @CallerThread
     public void onPostPlayerAction(CreatePlayerActionDTO createActionDto) {
         if (playerTurnLatch != null) {
             playerTurnLatch.countDown();
@@ -263,7 +265,7 @@ public abstract class GameThread extends BaseGameThread {
         roundRepository.saveAndFlush(round);
     }
 
-    public void checkGameInterrupted() {
+    private void checkGameInterrupted() {
         if (interruptGame.get() || Thread.interrupted()) {
             var endLatch = params.getEndLatch();
             if (endLatch.getCount() > 0) {
@@ -280,7 +282,7 @@ public abstract class GameThread extends BaseGameThread {
         }
     }
 
-    // called from outside thread
+    @CallerThread
     public void stopGame() {
         interruptGame.set(true);
         try {
@@ -288,7 +290,6 @@ public abstract class GameThread extends BaseGameThread {
         } catch (InterruptedException e) {
             log.error("Failed to wait for game end latch", e);
         }
-        System.out.println();
     }
 
     // ***************************************************************
