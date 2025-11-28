@@ -19,6 +19,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -35,20 +39,27 @@ public class TexasBettingRoundService {
     private final TexasPlayerActionService texasPlayerActionService;
 
     public Round runBettingRound(GameThreadParams params, PokerTable table, Round round, BettingRound bettingRound, GameThread gameThread) {
-        var playersPaidUp = false;
         do {
-            var activePlayers = playerSessionRepository
-                    .findActivePlayersByTableId(table.getId(), round.getId());
-            if (activePlayers.isEmpty()) {
-                gameLogService.sendLogMessage(table, "No Active Players found");
-                throw new GameInterruptedException("No Active Players found");
-            }
-            if (activePlayers.size() == 1) {
-                gameLogService.sendErrorMessage(table, "Only one active player in betting round, so skipping");
-                throw new RoundInterruptedException("Only one active player in betting round, so skipping");
-            }
+            int playerIndex = 0;
+            while (true) {
+                var activePlayers = playerSessionRepository
+                        .findActivePlayersByTableId(table.getId(), round.getId());
+                if (activePlayers.isEmpty()) {
+                    gameLogService.sendLogMessage(table, "No Active Players found");
+                    throw new GameInterruptedException("No Active Players found");
+                }
+                if (activePlayers.size() == 1) {
+                    gameLogService.sendErrorMessage(table, "Only one active player in betting round, so skipping");
+                    throw new RoundInterruptedException("Only one active player in betting round, so skipping");
+                }
 
-            for (var currentPlayer : activePlayers) {
+                if (playerIndex >= activePlayers.size()) {
+                    break;
+                }
+
+                PlayerSession currentPlayer = activePlayers.get(playerIndex);
+                int playerCount = activePlayers.size();
+
                 var amountToCall = 0d;
                 var nextActions = ActionType.getDefaultActions();
 
@@ -63,22 +74,70 @@ public class TexasBettingRoundService {
                     nextActions = ActionType.getNextActions(previousPlayerActionType);
                     amountToCall = previousPlayerActionType.getAmountToCall(previousPlayerAction.getAmount());
                 }
+
                 gameThread.checkRoundInterrupted();
+
                 dispatcher.send(table, messageFactory.playerTurn(currentPlayer, previousPlayerAction, bettingRound, nextActions, amountToCall));
                 waitPlayerTurn(params, gameThread, table, currentPlayer);
 
                 var updatedBettingRoundOpt = bettingRoundRepository.findById(bettingRound.getId());
                 if (updatedBettingRoundOpt.isPresent()) bettingRound = updatedBettingRoundOpt.get();
+
+                var playerCountAfterTurn = playerSessionRepository
+                        .findActivePlayersByTableId(table.getId(), round.getId()).size();
+
+                if (playerCount == playerCountAfterTurn) {
+                    playerIndex++;
+                }
             }
-
-            var playerActionSumAmounts = playerActionRepository.sumAmounts(bettingRound.getId());
-            playersPaidUp = playerActionSumAmounts != bettingRound.getPot();
-
-        } while (playersPaidUp);
+        } while (!areAllPlayersPaidUp(table, round, bettingRound));
 
         setBettingRoundFinished(bettingRound);
 
         return roundService.updatePot(round, bettingRound);
+    }
+
+    private boolean areAllPlayersPaidUp(PokerTable table, Round round, BettingRound bettingRound) {
+        var tableId = table.getId();
+        var roundId = round.getId();
+        var bettingRoundId = bettingRound.getId();
+
+        List<PlayerSession> activePlayers = playerSessionRepository.findActivePlayersByTableId(tableId, roundId);
+        if (activePlayers.size() <= 1) {
+            return true;
+        }
+
+        Map<UUID, Double> contributions = getPlayerContributions(bettingRoundId);
+
+        double highestContribution = 0;
+        for (PlayerSession player : activePlayers) {
+            double contribution = contributions.getOrDefault(player.getId(), 0.0);
+            if (contribution > highestContribution) {
+                highestContribution = contribution;
+            }
+        }
+
+        if (highestContribution == 0) {
+            return true; // Everyone has checked
+        }
+
+        for (PlayerSession player : activePlayers) {
+            if (contributions.getOrDefault(player.getId(), 0.0) < highestContribution) {
+                return false; // At least one player has not matched the highest bet
+            }
+        }
+        return true; // All active players have matched the highest bet
+    }
+
+    private Map<UUID, Double> getPlayerContributions(UUID bettingRoundId) {
+        // Note: This relies on a repository method that fetches actions for the round, ordered by time.
+        // If a player calls and then re-raises, we assume the amount on the action is the new total for the round.
+        List<PlayerAction> actions = playerActionRepository.findPlayerActionsForContributions(bettingRoundId);
+        Map<UUID, Double> contributions = new HashMap<>();
+        for (PlayerAction action : actions) {
+            contributions.put(action.getPlayerSession().getId(), action.getAmount());
+        }
+        return contributions;
     }
 
     private void waitPlayerTurn(GameThreadParams params, GameThread gameThread, PokerTable table, PlayerSession playerSession) {
