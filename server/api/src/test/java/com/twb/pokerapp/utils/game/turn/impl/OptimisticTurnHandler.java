@@ -18,14 +18,12 @@ public class OptimisticTurnHandler implements TurnHandler {
             var createActionDto = new CreatePlayerActionDTO();
             createActionDto.setAction(ActionType.BET);
             createActionDto.setAmount(10d);
-            createActionDto.setBettingRoundId(bettingRound.getId());
 
             user.sendPlayerAction(createActionDto);
         } else if (Arrays.stream(playerTurn.getNextActions())
                 .anyMatch(actionType -> actionType == ActionType.CALL)) {
             var createActionDto = new CreatePlayerActionDTO();
             createActionDto.setAction(ActionType.CALL);
-            createActionDto.setBettingRoundId(bettingRound.getId());
 
             user.sendPlayerAction(createActionDto);
         } else {

@@ -1,6 +1,7 @@
 package com.twb.pokerapp.domain;
 
 import com.twb.pokerapp.domain.enumeration.BettingRoundState;
+import com.twb.pokerapp.domain.enumeration.BettingRoundType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -27,6 +28,11 @@ public class BettingRound {
 
     @NotNull
     @Enumerated(EnumType.STRING)
+    @Column(name = "type")
+    private BettingRoundType type;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
     @Column(name = "state")
     private BettingRoundState state;
 
@@ -45,21 +51,23 @@ public class BettingRound {
         if (o == null || getClass() != o.getClass()) return false;
         var bettingRound = (BettingRound) o;
         return new EqualsBuilder().append(id, bettingRound.id)
-                .append(state, bettingRound.state)
+                .append(type, bettingRound.type)
+                .append(type, bettingRound.type)
                 .append(pot, bettingRound.pot).isEquals();
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
-                .append(id).append(state).append(pot).toHashCode();
+                .append(id).append(type).append(state).append(pot).toHashCode();
     }
 
     @Override
     public String toString() {
         return "BettingRound{" +
                 "id=" + id +
-                ", bettingRoundState=" + state +
+                ", type=" + type +
+                ", state=" + state +
                 ", pot=" + pot +
                 '}';
     }

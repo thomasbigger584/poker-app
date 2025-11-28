@@ -18,7 +18,6 @@ public class DefaultTurnHandler implements TurnHandler {
                     var createActionDto = new CreatePlayerActionDTO();
                     createActionDto.setAction(action);
                     createActionDto.setAmount(playerTurn.getAmountToCall());
-                    createActionDto.setBettingRoundId(bettingRound.getId());
 
                     user.sendPlayerAction(createActionDto);
                 });

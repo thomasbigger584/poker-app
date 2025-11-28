@@ -84,10 +84,12 @@ public class GameThreadManager {
                 .tableId(table.getId())
                 .gameType(table.getGameType())
                 .startLatch(new CountDownLatch(1))
+                .endLatch(new CountDownLatch(1))
                 .dealWaitMs(environment.getRequiredProperty("app.deal-wait-ms", Long.class))
                 .dbPollWaitMs(environment.getRequiredProperty("app.db-poll-wait-ms", Long.class))
                 .evalWaitMs(environment.getRequiredProperty("app.eval-wait-ms", Long.class))
                 .playerTurnWaitMs(environment.getRequiredProperty("app.player-turn-wait-ms", Long.class))
+                .roundEndWaitMs(environment.getRequiredProperty("app.round-end-wait-ms", Long.class))
                 .build();
     }
 

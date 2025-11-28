@@ -4,6 +4,7 @@ import com.antkorwin.xsync.XSync;
 import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
+import com.twb.pokerapp.repository.RoundRepository;
 import com.twb.pokerapp.repository.TableRepository;
 import com.twb.pokerapp.repository.UserRepository;
 import com.twb.pokerapp.service.PlayerSessionService;
@@ -30,6 +31,7 @@ public class PokerTableGameService {
     private final UserRepository userRepository;
     private final TableRepository tableRepository;
     private final PlayerSessionRepository playerSessionRepository;
+    private final RoundRepository roundRepository;
 
     private final PlayerSessionService playerSessionService;
 
@@ -136,14 +138,20 @@ public class PokerTableGameService {
             }
             var playerSession = playerSessionOpt.get();
 
-            var playerActionService = table.getGameType().getPlayerActionService(context);
-            var createActionDto = new CreatePlayerActionDTO();
-            createActionDto.setAction(ActionType.FOLD);
+            var roundOpt = roundRepository.findCurrentByTableId(tableId);
 
-            playerActionService.playerAction(table, playerSession, gameThread, createActionDto);
+            if (roundOpt.isPresent()) {
+                var playerActionService = table.getGameType().getPlayerActionService(context);
+                var createActionDto = new CreatePlayerActionDTO();
+                createActionDto.setAction(ActionType.FOLD);
+
+                playerActionService.playerAction(table, playerSession, gameThread, createActionDto);
+            }
+
+            playerSessionService.disconnectUser(playerSession);
 
             var playerSessions =
-                    playerSessionRepository.findConnectedPlayersByTableIdNoLock(tableId);
+                    playerSessionRepository.findConnectedPlayersByTableId_Lock(tableId);
             if (CollectionUtils.isEmpty(playerSessions)) {
                 gameThread.interrupt();
             }

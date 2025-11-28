@@ -54,14 +54,7 @@ public class PlayerSessionService {
 
     //todo: think about what to do with funds, it should be persisted elsewhere,
     // probably on AppUser or separate Bank table
-    public Optional<PlayerSession> disconnectUser(UUID tableId, String username) {
-        var sessionOpt =
-                repository.findByTableIdAndUsername(tableId, username);
-        if (sessionOpt.isEmpty()) {
-            return Optional.empty();
-        }
-        var playerSession = sessionOpt.get();
-
+    public Optional<PlayerSession> disconnectUser(PlayerSession playerSession) {
         playerSession.setDealer(null);
         playerSession.setFunds(null);
         playerSession.setPokerTable(null);

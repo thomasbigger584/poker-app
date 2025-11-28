@@ -2,6 +2,7 @@ package com.twb.pokerapp.service.game.thread.impl.texas;
 
 import com.twb.pokerapp.domain.*;
 import com.twb.pokerapp.domain.enumeration.ActionType;
+import com.twb.pokerapp.domain.enumeration.BettingRoundState;
 import com.twb.pokerapp.exception.game.GameInterruptedException;
 import com.twb.pokerapp.exception.game.RoundInterruptedException;
 import com.twb.pokerapp.repository.BettingRoundRepository;
@@ -64,7 +65,7 @@ public class TexasBettingRoundService {
                 }
                 gameThread.checkRoundInterrupted();
                 dispatcher.send(table, messageFactory.playerTurn(currentPlayer, previousPlayerAction, bettingRound, nextActions, amountToCall));
-                waitPlayerTurn(params, gameThread, table, currentPlayer, bettingRound);
+                waitPlayerTurn(params, gameThread, table, currentPlayer);
 
                 var updatedBettingRoundOpt = bettingRoundRepository.findById(bettingRound.getId());
                 if (updatedBettingRoundOpt.isPresent()) bettingRound = updatedBettingRoundOpt.get();
@@ -75,22 +76,28 @@ public class TexasBettingRoundService {
 
         } while (playersPaidUp);
 
+        setBettingRoundFinished(bettingRound);
+
         return roundService.updatePot(round, bettingRound);
     }
 
-    private void waitPlayerTurn(GameThreadParams params, GameThread gameThread, PokerTable table, PlayerSession playerSession, BettingRound bettingRound) {
+    private void waitPlayerTurn(GameThreadParams params, GameThread gameThread, PokerTable table, PlayerSession playerSession) {
         var playerTurnLatch = gameThread.newPlayerTurnLatch(playerSession);
         var latch = playerTurnLatch.playerTurnLatch();
         try {
             var await = latch.await(params.getPlayerTurnWaitMs(), TimeUnit.MILLISECONDS);
             if (!await) {
                 var createActionDto = new CreatePlayerActionDTO();
-                createActionDto.setBettingRoundId(bettingRound.getId());
                 createActionDto.setAction(ActionType.FOLD);
                 texasPlayerActionService.playerAction(table, playerSession, gameThread, createActionDto);
             }
         } catch (InterruptedException e) {
             throw new RuntimeException("Failed to wait for player turn latch", e);
         }
+    }
+
+    private void setBettingRoundFinished(BettingRound bettingRound) {
+        bettingRound.setState(BettingRoundState.FINISHED);
+        bettingRoundRepository.saveAndFlush(bettingRound);
     }
 }

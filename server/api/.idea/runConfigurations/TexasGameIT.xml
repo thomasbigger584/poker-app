@@ -13,7 +13,6 @@
     <option name="TEST_OBJECT" value="class" />
     <method v="2">
       <option name="Make" enabled="true" />
-      <option name="RunConfigurationTask" enabled="true" run_configuration_name="Docker Build API" run_configuration_type="ShConfigurationType" />
       <option name="Maven.BeforeRunTask" enabled="true" file="$PROJECT_DIR$/pom.xml" goal="process-test-resources" />
     </method>
   </configuration>

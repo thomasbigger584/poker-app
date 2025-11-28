@@ -7,7 +7,6 @@ import java.util.UUID;
 
 @Data
 public class CreatePlayerActionDTO {
-    private UUID bettingRoundId;
     private ActionType action;
     private Double amount;
 }

@@ -35,16 +35,16 @@ public class TexasPlayerActionService implements GamePlayerActionService {
         log.info("GameThread.playerAction");
         log.info("playerSession = {}, createDto = {}", playerSession, createDto);
         log.info("***************************************************************");
-        if (createDto.getAmount() == null) {
-            createDto.setAmount(0d);
-        }
-        var bettingRoundId = createDto.getBettingRoundId();
-        var bettingRoundOpt = bettingRoundRepository.findById(bettingRoundId);
+        var bettingRoundOpt = bettingRoundRepository.findLatestInProgress(table.getId());
         if (bettingRoundOpt.isEmpty()) {
-            log.error("Betting Round not found for ID: {}", bettingRoundId);
+            log.error("Latest Betting Round not found for Table ID: {}", table.getId());
             return false;
         }
         var bettingRound = bettingRoundOpt.get();
+
+        if (createDto.getAmount() == null) {
+            createDto.setAmount(0d);
+        }
 
         return switch (createDto.getAction()) {
             case FOLD -> foldAction(table, playerSession, bettingRound, createDto);

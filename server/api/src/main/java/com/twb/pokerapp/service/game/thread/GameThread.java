@@ -66,13 +66,12 @@ public abstract class GameThread extends BaseGameThread {
                 while (isPlayersJoined()) {
                     checkGameInterrupted();
                     createNewRound();
-                    checkGameInterrupted();
+                    checkRoundInterrupted();
                     initRound();
-                    checkGameInterrupted();
+                    checkRoundInterrupted();
                     runRound();
-                    checkGameInterrupted();
+                    checkRoundInterrupted();
                     finishRound();
-                    checkGameInterrupted();
                 }
             }
             finishGame();
@@ -96,7 +95,7 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     private void initializeTable() {
-        var tableOpt = tableRepository.findById(params.getTableId());
+        var tableOpt = tableRepository.findById_Lock(params.getTableId());
         if (tableOpt.isEmpty()) {
             throw new GameInterruptedException("No table found cannot start game");
         }
@@ -114,7 +113,7 @@ public abstract class GameThread extends BaseGameThread {
         do {
             checkGameInterrupted();
             playerSessions = playerSessionRepository
-                    .findConnectedPlayersByTableId(params.getTableId());
+                    .findConnectedPlayersByTableId_Lock(params.getTableId());
             if (playerSessions.size() >= minPlayerCount) {
                 return;
             }
@@ -127,7 +126,7 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     private void createNewRound() {
-        var roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
+        var roundOpt = roundRepository.findCurrentByTableId_Lock(params.getTableId());
         if (roundOpt.isPresent()) {
             this.round = roundOpt.get();
             if (round.getRoundState() != RoundState.WAITING_FOR_PLAYERS) {
@@ -135,7 +134,7 @@ public abstract class GameThread extends BaseGameThread {
             }
 
         } else {
-            var tableOpt = tableRepository.findById(params.getTableId());
+            var tableOpt = tableRepository.findById_Lock(params.getTableId());
             if (tableOpt.isEmpty()) {
                 throw new GameInterruptedException("Cannot start as table doesn't exist");
             }
@@ -156,7 +155,7 @@ public abstract class GameThread extends BaseGameThread {
 
     protected List<PlayerSession> getPlayerSessionsNotZero() {
         var playerSessions = playerSessionRepository
-                .findConnectedPlayersByTableId(params.getTableId());
+                .findConnectedPlayersByTableId_Lock(params.getTableId());
         if (CollectionUtils.isEmpty(playerSessions)) {
             throw new GameInterruptedException(NO_MORE_PLAYERS_CONNECTED);
         }
@@ -192,7 +191,7 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     private void initBettingRound(RoundState roundState) {
-        var bettingRoundStateOpt = Optional.ofNullable(roundState.getBettingRoundState());
+        var bettingRoundStateOpt = Optional.ofNullable(roundState.getBettingRoundType());
         if (bettingRoundStateOpt.isEmpty()) {
             bettingRound = null;
             return;
@@ -206,6 +205,7 @@ public abstract class GameThread extends BaseGameThread {
             dispatcher.send(table, messageFactory.roundFinished());
         }
         roundInProgress.set(false);
+        sleepInMs(params.getRoundEndWaitMs());
     }
 
     private void finishGame() {
@@ -241,7 +241,7 @@ public abstract class GameThread extends BaseGameThread {
             playerTurnLatch.countDown();
         }
         var activePlayers = playerSessionRepository
-                .findActivePlayersByTableId(table.getId(), round.getId());
+                .findActivePlayersByTableId_Lock(table.getId(), round.getId());
         if (activePlayers.size() < 2) {
             // there is only 1 player left in a started game
             interruptRound.set(true);
@@ -273,6 +273,7 @@ public abstract class GameThread extends BaseGameThread {
     @Override
     public void interrupt() {
         interruptGame.set(true);
+        checkGameInterrupted();
         super.interrupt();
     }
 
