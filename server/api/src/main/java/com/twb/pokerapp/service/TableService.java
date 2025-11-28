@@ -35,7 +35,7 @@ public class TableService {
         // only doing this here to ensure ordering with creating dummy poker table data
         var unfinishedRounds = roundRepository.findAllNotFinished();
         for (var round : unfinishedRounds) {
-            round.setRoundState(RoundState.FINISH);
+            round.setRoundState(RoundState.FINISHED);
             roundRepository.save(round);
         }
     }

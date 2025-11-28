@@ -75,9 +75,9 @@ public enum RoundState {
     }, EVAL {
         @Override
         public RoundState nextTexasHoldemState() {
-            return FINISH;
+            return FINISHED;
         }
-    }, FINISH {
+    }, FINISHED {
         @Override
         public RoundState nextTexasHoldemState() {
             return null;

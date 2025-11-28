@@ -1,6 +1,7 @@
 package com.twb.pokerapp.service.game.thread;
 
 import com.twb.pokerapp.domain.*;
+import com.twb.pokerapp.domain.enumeration.BettingRoundState;
 import com.twb.pokerapp.domain.enumeration.RoundState;
 import com.twb.pokerapp.exception.game.GameInterruptedException;
 import com.twb.pokerapp.exception.game.RoundInterruptedException;
@@ -72,6 +73,7 @@ public abstract class GameThread extends BaseGameThread {
                     runRound();
                     checkRoundInterrupted();
                     finishRound();
+                    checkGameInterrupted();
                 }
             }
             finishGame();
@@ -173,7 +175,7 @@ public abstract class GameThread extends BaseGameThread {
     private void runRound() {
         var roundState = RoundState.INIT_DEAL;
         saveRoundState(roundState);
-        while (roundState != RoundState.FINISH) {
+        while (roundState != RoundState.FINISHED) {
             checkRoundInterrupted();
             try {
                 initBettingRound(roundState);
@@ -201,11 +203,19 @@ public abstract class GameThread extends BaseGameThread {
 
     private void finishRound() {
         if (roundInProgress.get()) {
-            saveRoundState(RoundState.FINISH);
+            finishBettingRoundState();
+            saveRoundState(RoundState.FINISHED);
             dispatcher.send(table, messageFactory.roundFinished());
         }
         roundInProgress.set(false);
         sleepInMs(params.getRoundEndWaitMs());
+    }
+
+    private void finishBettingRoundState() {
+        if (bettingRound != null) {
+            bettingRound.setState(BettingRoundState.FINISHED);
+            bettingRoundRepository.saveAndFlush(bettingRound);
+        }
     }
 
     private void finishGame() {
@@ -255,6 +265,10 @@ public abstract class GameThread extends BaseGameThread {
 
     public void checkGameInterrupted() {
         if (interruptGame.get() || Thread.interrupted()) {
+            var endLatch = params.getEndLatch();
+            if (endLatch.getCount() > 0) {
+                endLatch.countDown();
+            }
             throw new GameInterruptedException("Game is interrupted");
         }
     }
@@ -266,15 +280,15 @@ public abstract class GameThread extends BaseGameThread {
         }
     }
 
-    // ***************************************************************
-    // Lifecycle Methods
-    // ***************************************************************
-
-    @Override
-    public void interrupt() {
+    // called from outside thread
+    public void stopGame() {
         interruptGame.set(true);
-        checkGameInterrupted();
-        super.interrupt();
+        try {
+            params.getEndLatch().await();
+        } catch (InterruptedException e) {
+            log.error("Failed to wait for game end latch", e);
+        }
+        System.out.println();
     }
 
     // ***************************************************************

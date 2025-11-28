@@ -153,13 +153,13 @@ public class PokerTableGameService {
             var playerSessions =
                     playerSessionRepository.findConnectedPlayersByTableId_Lock(tableId);
             if (CollectionUtils.isEmpty(playerSessions)) {
-                gameThread.interrupt();
+                gameThread.stopGame();
             }
             var message = messageFactory.playerDisconnected(username);
             dispatcher.send(tableId, message);
 
             if (playerSessions.size() < 2) {
-                gameThread.interrupt();
+                gameThread.stopGame();
             }
         });
     }
