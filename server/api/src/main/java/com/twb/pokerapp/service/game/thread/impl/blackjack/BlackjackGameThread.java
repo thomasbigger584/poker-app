@@ -1,10 +1,8 @@
-package com.twb.pokerapp.service.game.thread.impl;
+package com.twb.pokerapp.service.game.thread.impl.blackjack;
 
-import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.enumeration.RoundState;
 import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
-import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -26,11 +24,6 @@ public final class BlackjackGameThread extends GameThread {
 
     @Override
     protected void onRunRound(RoundState roundState) {
-        throw new NotImplementedException("Blackjack not implemented yet");
-    }
-
-    @Override
-    protected boolean onPlayerAction(PlayerSession playerSession, CreatePlayerActionDTO createActionDto) {
         throw new NotImplementedException("Blackjack not implemented yet");
     }
 

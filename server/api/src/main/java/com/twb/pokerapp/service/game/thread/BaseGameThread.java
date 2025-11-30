@@ -2,7 +2,6 @@ package com.twb.pokerapp.service.game.thread;
 
 import com.twb.pokerapp.repository.*;
 import com.twb.pokerapp.service.*;
-import com.twb.pokerapp.service.eval.HandEvaluator;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +26,9 @@ public abstract class BaseGameThread extends Thread {
     protected MessageDispatcher dispatcher;
 
     @Autowired
+    protected GameLogService gameLogService;
+
+    @Autowired
     protected TableRepository tableRepository;
 
     @Autowired
@@ -36,13 +38,10 @@ public abstract class BaseGameThread extends Thread {
     protected RoundService roundService;
 
     @Autowired
-    protected BettingRoundRepository bettingRoundRepository;
-
-    @Autowired
     protected BettingRoundService bettingRoundService;
 
     @Autowired
-    protected DealerService dealerService;
+    protected BettingRoundRepository bettingRoundRepository;
 
     @Autowired
     protected PlayerSessionRepository playerSessionRepository;
@@ -51,16 +50,7 @@ public abstract class BaseGameThread extends Thread {
     protected HandService handService;
 
     @Autowired
-    protected HandRepository handRepository;
-
-    @Autowired
     protected CardService cardService;
-
-    @Autowired
-    protected CardRepository cardRepository;
-
-    @Autowired
-    protected HandEvaluator handEvaluator;
 
     @Autowired
     protected PlayerActionService playerActionService;

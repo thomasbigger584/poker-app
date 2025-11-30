@@ -17,7 +17,6 @@ public class DefaultTurnHandler implements TurnHandler {
                     var createActionDto = new CreatePlayerActionDTO();
                     createActionDto.setAction(action);
                     createActionDto.setAmount(playerTurn.getAmountToCall());
-
                     user.sendPlayerAction(createActionDto);
                 });
     }

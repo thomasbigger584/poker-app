@@ -69,16 +69,19 @@ public class PokerTableAdapter extends RecyclerView.Adapter<PokerTableAdapter.Vi
     public static class ViewHolder extends RecyclerView.ViewHolder {
         private final TextView nameTextView;
         private final TextView gameTypeTextView;
+        private final TextView playersTextView;
 
         public ViewHolder(View itemView) {
             super(itemView);
             nameTextView = itemView.findViewById(R.id.nameTextView);
             gameTypeTextView = itemView.findViewById(R.id.gameTypeTextView);
+            playersTextView = itemView.findViewById(R.id.playersTextView);
         }
 
         public void bind(TableDTO pokerTable) {
             nameTextView.setText(pokerTable.getName());
             gameTypeTextView.setText(pokerTable.getGameType());
+            playersTextView.setText("-/6");
         }
     }
 }

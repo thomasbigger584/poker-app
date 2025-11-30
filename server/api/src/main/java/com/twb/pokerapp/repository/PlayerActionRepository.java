@@ -24,7 +24,16 @@ public interface PlayerActionRepository extends JpaRepository<PlayerAction, UUID
             FROM PlayerAction a
             WHERE a.bettingRound.id = :bettingRoundId
             AND a.actionType <> com.twb.pokerapp.domain.enumeration.ActionType.FOLD
-            ORDER BY a.id DESC
+            ORDER BY a.createdDateTime DESC
             """)
     List<PlayerAction> findPlayerActionsNotFolded(@Param("bettingRoundId") UUID bettingRoundId);
+
+    @Query("""
+            SELECT a
+            FROM PlayerAction a
+            WHERE a.bettingRound.id = :bettingRoundId
+            AND a.actionType <> com.twb.pokerapp.domain.enumeration.ActionType.FOLD
+            ORDER BY a.createdDateTime ASC
+            """)
+    List<PlayerAction> findPlayerActionsForContributions(@Param("bettingRoundId") UUID bettingRoundId);
 }

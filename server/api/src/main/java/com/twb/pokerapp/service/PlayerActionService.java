@@ -25,12 +25,10 @@ public class PlayerActionService {
         playerAction.setPlayerSession(playerSession);
         playerAction.setBettingRound(bettingRound);
         playerAction.setActionType(createDto.getAction());
-        if (createDto.getAmount() != null) {
-            playerAction.setAmount(createDto.getAmount());
-        } else {
-            playerAction.setAmount(0d);
-        }
+        playerAction.setAmount(createDto.getAmount());
 
-        return repository.saveAndFlush(playerAction);
+        playerAction = repository.saveAndFlush(playerAction);
+
+        return playerAction;
     }
 }

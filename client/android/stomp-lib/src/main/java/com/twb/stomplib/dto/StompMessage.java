@@ -1,5 +1,7 @@
 package com.twb.stomplib.dto;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -91,6 +93,7 @@ public class StompMessage {
         return builder.toString();
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "StompMessage{" +

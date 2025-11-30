@@ -12,7 +12,7 @@ import com.twb.pokerapp.utils.game.turn.TurnHandler;
 import com.twb.pokerapp.utils.game.turn.impl.DefaultTurnHandler;
 import com.twb.pokerapp.utils.game.turn.impl.OptimisticTurnHandler;
 import com.twb.pokerapp.utils.testcontainers.BaseTestContainersIT;
-import com.twb.pokerapp.utils.validator.impl.TexasHoldemValidator;
+import com.twb.pokerapp.utils.validator.impl.TexasValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
-class TexasHoldemGameIT extends BaseTestContainersIT {
+class TexasGameIT extends BaseTestContainersIT {
     private static final String PLAYER_1 = "user1";
     private static final String PLAYER_2 = "user2";
 
@@ -38,7 +38,7 @@ class TexasHoldemGameIT extends BaseTestContainersIT {
                 .table(getTexasHoldemTable())
                 .validator(validator)
                 .build();
-        this.validator = new TexasHoldemValidator(params, sqlClient);
+        this.validator = new TexasValidator(params, sqlClient);
         this.runner = new GameRunner(params);
     }
 

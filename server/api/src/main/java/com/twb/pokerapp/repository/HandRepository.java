@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,7 +25,7 @@ public interface HandRepository extends JpaRepository<Hand, UUID> {
     @Query("""
             UPDATE Hand h
             SET h.winner = false
-            WHERE h.playerSession.id <> :playerSession
+            WHERE h.playerSession.id <> :playerSessionId
             AND h.round.id = :roundId
             """)
     void markHandsAsLosersWithWinner(@Param("roundId") UUID roundId, @Param("playerSessionId") UUID playerSessionId);

@@ -1,0 +1,22 @@
+package com.twb.pokerapp.service.game.thread;
+
+import com.twb.pokerapp.domain.PokerTable;
+import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
+import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+@Component
+@RequiredArgsConstructor
+public class GameLogService {
+    private final MessageDispatcher dispatcher;
+    private final ServerMessageFactory messageFactory;
+
+    public void sendLogMessage(PokerTable table, String message) {
+        dispatcher.send(table, messageFactory.logMessage(message));
+    }
+
+    public void sendErrorMessage(PokerTable table, String message) {
+        dispatcher.send(table, messageFactory.errorMessage(message));
+    }
+}

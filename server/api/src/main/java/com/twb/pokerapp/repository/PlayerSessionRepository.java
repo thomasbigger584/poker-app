@@ -30,32 +30,6 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             SELECT s
             FROM PlayerSession s
             WHERE s.pokerTable.id = :tableId
-            AND s.user.username = :username
-            AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
-            """)
-    Optional<PlayerSession> findConnectedByTableIdAndUsername(@Param("tableId") UUID tableId,
-                                                              @Param("username") String username);
-
-    @Query("""
-            SELECT s
-            FROM PlayerSession s
-            WHERE s.id = :id
-            AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
-            """)
-    Optional<PlayerSession> findConnectedById(@Param("id") UUID id);
-
-    @Query("""
-            SELECT s
-            FROM PlayerSession s
-            WHERE s.pokerTable.id = :tableId
-            ORDER BY s.position ASC
-            """)
-    List<PlayerSession> findByTableId(@Param("tableId") UUID tableId);
-
-    @Query("""
-            SELECT s
-            FROM PlayerSession s
-            WHERE s.pokerTable.id = :tableId
             AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
             ORDER BY s.position ASC
             """)
@@ -69,9 +43,36 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
             ORDER BY s.position ASC
             """)
+    List<PlayerSession> findConnectedPlayersByTableId(@Param("tableId") UUID tableId);
+
+    @Query("""
+            SELECT s
+            FROM PlayerSession s
+            WHERE s.pokerTable.id = :tableId
+            AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
+            AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
+            ORDER BY s.position ASC
+            """)
     @Transactional
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    List<PlayerSession> findConnectedPlayersByTableId(@Param("tableId") UUID tableId);
+    List<PlayerSession> findConnectedPlayersByTableId_Lock(@Param("tableId") UUID tableId);
+
+    @Query("""
+            SELECT s
+            FROM PlayerSession s
+            WHERE s.pokerTable.id = :tableId
+            AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
+            AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
+            AND NOT EXISTS (
+                SELECT 1
+                FROM PlayerAction a
+                WHERE a.playerSession = s
+                AND a.bettingRound.round.id = :roundId
+                AND a.actionType = com.twb.pokerapp.domain.enumeration.ActionType.FOLD
+            )
+            ORDER BY s.position ASC
+            """)
+    List<PlayerSession> findActivePlayersByTableId(@Param("tableId") UUID tableId, @Param("roundId") UUID roundId);
 
     @Query("""
             SELECT s
@@ -90,7 +91,7 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             """)
     @Transactional
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    List<PlayerSession> findActivePlayersByTableId(@Param("tableId") UUID tableId, @Param("roundId") UUID roundId);
+    List<PlayerSession> findActivePlayersByTableId_Lock(@Param("tableId") UUID tableId, @Param("roundId") UUID roundId);
 
     @Query("""
             SELECT s
@@ -121,14 +122,4 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             AND s.id = :id
             """)
     void setDealer(@Param("id") UUID id, @Param("dealer") boolean dealer);
-
-    @Modifying(flushAutomatically = true)
-    @Query("""
-            UPDATE PlayerSession s
-            SET s.current = :current
-            WHERE s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
-            AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
-            AND s.id = :id
-            """)
-    void setCurrent(@Param("id") UUID id, @Param("current") boolean current);
 }
