@@ -27,6 +27,8 @@ public class PlayerActionService {
         playerAction.setActionType(createDto.getAction());
         playerAction.setAmount(createDto.getAmount());
 
-        return repository.saveAndFlush(playerAction);
+        playerAction = repository.saveAndFlush(playerAction);
+
+        return playerAction;
     }
 }

@@ -15,7 +15,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Table(name = "player_action")
-public class PlayerAction {
+public class PlayerAction extends Auditable {
 
     @Id
     @NotNull

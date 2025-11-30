@@ -18,7 +18,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Table(name = "betting_round")
-public class BettingRound {
+public class BettingRound extends Auditable {
 
     @Id
     @NotNull

@@ -11,14 +11,12 @@ import java.util.Arrays;
 public class DefaultTurnHandler implements TurnHandler {
     @Override
     public void handle(AbstractTestUser user, StompHeaders headers, PlayerTurnDTO playerTurn) {
-        var bettingRound = playerTurn.getBettingRound();
         Arrays.stream(playerTurn.getNextActions())
                 .findFirst()
                 .ifPresent(action -> {
                     var createActionDto = new CreatePlayerActionDTO();
                     createActionDto.setAction(action);
                     createActionDto.setAmount(playerTurn.getAmountToCall());
-
                     user.sendPlayerAction(createActionDto);
                 });
     }

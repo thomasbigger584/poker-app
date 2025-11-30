@@ -19,7 +19,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Table(name = "player_session")
-public class PlayerSession {
+public class PlayerSession extends Auditable {
 
     @Id
     @NotNull

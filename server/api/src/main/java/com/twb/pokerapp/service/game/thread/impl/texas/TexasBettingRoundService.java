@@ -49,7 +49,7 @@ public class TexasBettingRoundService {
                     throw new GameInterruptedException("No Active Players found");
                 }
                 if (activePlayers.size() == 1) {
-                    gameLogService.sendErrorMessage(table, "Only one active player in betting round, so skipping");
+                    gameLogService.sendLogMessage(table, "Only one active player in betting round, so skipping");
                     throw new RoundInterruptedException("Only one active player in betting round, so skipping");
                 }
 

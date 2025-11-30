@@ -20,7 +20,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Table(name = "app_user")
-public class AppUser {
+public class AppUser extends Auditable {
 
     @Id
     @NotNull
