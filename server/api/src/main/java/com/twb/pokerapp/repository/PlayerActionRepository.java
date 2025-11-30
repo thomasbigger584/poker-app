@@ -33,6 +33,8 @@ public interface PlayerActionRepository extends JpaRepository<PlayerAction, UUID
             FROM PlayerAction a
             WHERE a.bettingRound.id = :bettingRoundId
             AND a.actionType <> com.twb.pokerapp.domain.enumeration.ActionType.FOLD
+            ORDER BY a.createdDateTime ASC
+            ORDER BY a.createdDateTime ASC
             """)
     List<PlayerAction> findPlayerActionsForContributions(@Param("bettingRoundId") UUID bettingRoundId);
 }

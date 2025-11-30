@@ -25,7 +25,7 @@ public interface HandRepository extends JpaRepository<Hand, UUID> {
     @Query("""
             UPDATE Hand h
             SET h.winner = false
-            WHERE h.playerSession.id <> :playerSession
+            WHERE h.playerSession.id <> :playerSessionId
             AND h.round.id = :roundId
             """)
     void markHandsAsLosersWithWinner(@Param("roundId") UUID roundId, @Param("playerSessionId") UUID playerSessionId);

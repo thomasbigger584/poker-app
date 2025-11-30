@@ -58,7 +58,6 @@ public class TexasBettingRoundService {
                 }
 
                 PlayerSession currentPlayer = activePlayers.get(playerIndex);
-                int playerCount = activePlayers.size();
 
                 var amountToCall = 0d;
                 var nextActions = ActionType.getDefaultActions();
@@ -83,12 +82,7 @@ public class TexasBettingRoundService {
                 var updatedBettingRoundOpt = bettingRoundRepository.findById(bettingRound.getId());
                 if (updatedBettingRoundOpt.isPresent()) bettingRound = updatedBettingRoundOpt.get();
 
-                var playerCountAfterTurn = playerSessionRepository
-                        .findActivePlayersByTableId(table.getId(), round.getId()).size();
-
-                if (playerCount == playerCountAfterTurn) {
-                    playerIndex++;
-                }
+                playerIndex++;
             }
         } while (!areAllPlayersPaidUp(table, round, bettingRound));
 

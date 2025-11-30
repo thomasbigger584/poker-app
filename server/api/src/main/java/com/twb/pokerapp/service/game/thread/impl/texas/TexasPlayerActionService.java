@@ -14,6 +14,8 @@ import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -30,6 +32,7 @@ public class TexasPlayerActionService implements GamePlayerActionService {
     private final GameLogService gameLogService;
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public boolean playerAction(PokerTable table, PlayerSession playerSession, GameThread gameThread, CreatePlayerActionDTO createDto) {
         log.info("***************************************************************");
         log.info("GameThread.playerAction");
