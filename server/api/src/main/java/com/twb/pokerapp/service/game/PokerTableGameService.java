@@ -45,21 +45,21 @@ public class PokerTableGameService {
         return mutex.evaluate(tableId, () -> {
             var tableOpt = tableRepository.findById(tableId);
             if (tableOpt.isEmpty()) {
-                var message = String.format("Failed to connect user %s to table %s as table not found", username, tableId);
+                var message = "Failed to connect user %s to table %s as table not found".formatted(username, tableId);
                 throw new RuntimeException(message);
             }
             var table = tableOpt.get();
 
             var userOpt = userRepository.findByUsername(username);
             if (userOpt.isEmpty()) {
-                var message = String.format("Failed to connect user %s to table %s as user not found", username, tableId);
+                var message = "Failed to connect user %s to table %s as user not found".formatted(username, tableId);
                 throw new RuntimeException(message);
             }
             var appUser = userOpt.get();
 
             var playerSessionOpt = playerSessionRepository.findByTableIdAndUsername(tableId, username);
             if (playerSessionOpt.isPresent()) {
-                var message = String.format("User %s already connected to table %s", username, tableId);
+                var message = "User %s already connected to table %s".formatted(username, tableId);
                 throw new RuntimeException(message);
             }
 

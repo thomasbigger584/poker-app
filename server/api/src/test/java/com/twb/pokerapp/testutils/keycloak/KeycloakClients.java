@@ -19,7 +19,7 @@ public class KeycloakClients extends HashMap<String, Keycloak> {
         put(ADMIN_USERNAME, createKeycloakClient(serverUrl, ADMIN_USERNAME, ADMIN_PASSWORD));
         put(VIEWER_USERNAME, createKeycloakClient(serverUrl, VIEWER_USERNAME, USER_PASSWORD));
         for (var index = 0; index < USER_COUNT; index++) {
-            var username = String.format(USER_USERNAME_FORMAT, index + 1);
+            var username = USER_USERNAME_FORMAT.formatted(index + 1);
             put(username, createKeycloakClient(serverUrl, username, USER_PASSWORD));
         }
     }

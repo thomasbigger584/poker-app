@@ -33,7 +33,7 @@ public class MessageDispatcher {
 
     public void send(UUID tableId, ServerMessageDTO message) {
         try {
-            var destination = String.format(GAME_TOPIC, tableId);
+            var destination = GAME_TOPIC.formatted(tableId);
             var payload = objectMapper.writeValueAsString(message);
             template.convertAndSend(destination, payload);
             log.info("<<<< {}", payload);

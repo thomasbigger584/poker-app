@@ -47,7 +47,7 @@ public class TexasEvaluationService {
         handRepository.markHandAsWinner(round.getId(), winner.getId());
         handRepository.markHandsAsLosersWithWinner(round.getId(), winner.getId());
 
-        gameLogService.sendLogMessage(table, String.format("%s wins round", winner.getUser().getUsername()));
+        gameLogService.sendLogMessage(table, "%s wins round".formatted(winner.getUser().getUsername()));
     }
 
     private void evaluateMultiPlayersStanding(PokerTable table, Round round, List<PlayerSession> activePlayers) {
