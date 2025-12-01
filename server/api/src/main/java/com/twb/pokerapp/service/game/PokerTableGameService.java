@@ -98,7 +98,7 @@ public class PokerTableGameService {
             }
             var playerSession = playerSessionOpt.get();
 
-            PlayerTurnLatchDTO playerTurnLatch = gameThread.getPlayerTurnLatch();
+            var playerTurnLatch = gameThread.getPlayerTurnLatch();
             if (!username.equals(playerTurnLatch.playerSession().getUser().getUsername())) {
                 log.error("Not waiting for {} to play on table {}", username, tableId);
                 return;

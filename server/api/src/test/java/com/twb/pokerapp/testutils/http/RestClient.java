@@ -1,4 +1,4 @@
-package com.twb.pokerapp.utils.http;
+package com.twb.pokerapp.testutils.http;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.core.HttpHeaders;

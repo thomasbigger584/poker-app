@@ -1,4 +1,4 @@
-package com.twb.pokerapp.utils.http.message;
+package com.twb.pokerapp.testutils.http.message;
 
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;

@@ -1,4 +1,4 @@
-package com.twb.pokerapp.utils.game;
+package com.twb.pokerapp.testutils.game;
 
 import java.util.concurrent.CountDownLatch;
 

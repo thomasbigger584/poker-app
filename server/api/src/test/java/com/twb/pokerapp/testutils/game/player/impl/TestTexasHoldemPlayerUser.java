@@ -1,8 +1,8 @@
-package com.twb.pokerapp.utils.game.player.impl;
+package com.twb.pokerapp.testutils.game.player.impl;
 
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
-import com.twb.pokerapp.utils.game.player.AbstractTestUser;
-import com.twb.pokerapp.utils.game.player.TestUserParams;
+import com.twb.pokerapp.testutils.game.player.AbstractTestUser;
+import com.twb.pokerapp.testutils.game.player.TestUserParams;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
 import com.twb.pokerapp.web.websocket.message.server.payload.PlayerTurnDTO;

@@ -16,7 +16,8 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class MessageDispatcher {
-    private static final String TOPIC = "/topic/loops.%s";
+    private static final String GAME_TOPIC = "/topic/loops.%s";
+    private static final String USER_NOTIFICATION_TOPIC = "/notifications";
 
     private final SimpMessagingTemplate template;
     private final ObjectMapper objectMapper;
@@ -25,14 +26,14 @@ public class MessageDispatcher {
         send(table.getId(), message);
     }
 
-    public void send(PokerTable table, PlayerSession playerSession, ServerMessageDTO message) {
+    public void send(PlayerSession playerSession, ServerMessageDTO message) {
         var username = playerSession.getUser().getUsername();
-        send(table.getId(), username, message);
+        send(username, message);
     }
 
     public void send(UUID tableId, ServerMessageDTO message) {
         try {
-            var destination = String.format(TOPIC, tableId);
+            var destination = String.format(GAME_TOPIC, tableId);
             var payload = objectMapper.writeValueAsString(message);
             template.convertAndSend(destination, payload);
             log.info("<<<< {}", payload);
@@ -41,11 +42,10 @@ public class MessageDispatcher {
         }
     }
 
-    public void send(UUID tableId, String username, ServerMessageDTO message) {
+    public void send(String username, ServerMessageDTO message) {
         try {
-            var destination = String.format(TOPIC, tableId);
             var payload = objectMapper.writeValueAsString(message);
-            template.convertAndSendToUser(username, destination, payload);
+            template.convertAndSendToUser(username, USER_NOTIFICATION_TOPIC, payload);
             log.info("<<<< [{}] {}", username, payload);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to send message", e);

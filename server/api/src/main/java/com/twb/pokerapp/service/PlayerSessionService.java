@@ -10,15 +10,15 @@ import com.twb.pokerapp.mapper.PlayerSessionMapper;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Component
-@Transactional
 @RequiredArgsConstructor
+@Transactional(propagation = Propagation.REQUIRES_NEW)
 public class PlayerSessionService {
     private final PlayerSessionRepository repository;
     private final PlayerSessionMapper mapper;
@@ -54,15 +54,14 @@ public class PlayerSessionService {
 
     //todo: think about what to do with funds, it should be persisted elsewhere,
     // probably on AppUser or separate Bank table
-    public Optional<PlayerSession> disconnectUser(PlayerSession playerSession) {
+    public void disconnectUser(PlayerSession playerSession) {
         playerSession.setDealer(null);
         playerSession.setFunds(null);
         playerSession.setPokerTable(null);
         playerSession.setConnectionType(null);
         playerSession.setSessionState(SessionState.DISCONNECTED);
 
-        playerSession = repository.saveAndFlush(playerSession);
-        return Optional.of(playerSession);
+        repository.saveAndFlush(playerSession);
     }
 
     private int getSessionTablePosition(PokerTable table) {

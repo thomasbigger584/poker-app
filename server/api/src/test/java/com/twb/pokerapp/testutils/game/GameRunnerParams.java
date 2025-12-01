@@ -1,8 +1,8 @@
-package com.twb.pokerapp.utils.game;
+package com.twb.pokerapp.testutils.game;
 
 import com.twb.pokerapp.domain.PokerTable;
-import com.twb.pokerapp.utils.keycloak.KeycloakClients;
-import com.twb.pokerapp.utils.validator.Validator;
+import com.twb.pokerapp.testutils.keycloak.KeycloakClients;
+import com.twb.pokerapp.testutils.validator.Validator;
 import lombok.Builder;
 import lombok.Data;
 

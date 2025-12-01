@@ -1,8 +1,8 @@
-package com.twb.pokerapp.utils.testcontainers;
+package com.twb.pokerapp.testutils.testcontainers;
 
-import com.twb.pokerapp.utils.keycloak.KeycloakClients;
-import com.twb.pokerapp.utils.sql.SqlClient;
-import com.twb.pokerapp.utils.validator.Validator;
+import com.twb.pokerapp.testutils.keycloak.KeycloakClients;
+import com.twb.pokerapp.testutils.sql.SqlClient;
+import com.twb.pokerapp.testutils.validator.Validator;
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;

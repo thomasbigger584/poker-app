@@ -2,17 +2,17 @@ package com.twb.pokerapp.service.game.thread.impl;
 
 import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.domain.enumeration.GameType;
-import com.twb.pokerapp.utils.game.GameLatches;
-import com.twb.pokerapp.utils.game.GameRunner;
-import com.twb.pokerapp.utils.game.GameRunnerParams;
-import com.twb.pokerapp.utils.game.player.AbstractTestUser;
-import com.twb.pokerapp.utils.game.player.TestUserParams;
-import com.twb.pokerapp.utils.game.player.impl.TestTexasHoldemPlayerUser;
-import com.twb.pokerapp.utils.game.turn.TurnHandler;
-import com.twb.pokerapp.utils.game.turn.impl.DefaultTurnHandler;
-import com.twb.pokerapp.utils.game.turn.impl.OptimisticTurnHandler;
-import com.twb.pokerapp.utils.testcontainers.BaseTestContainersIT;
-import com.twb.pokerapp.utils.validator.impl.TexasValidator;
+import com.twb.pokerapp.testutils.game.GameLatches;
+import com.twb.pokerapp.testutils.game.GameRunner;
+import com.twb.pokerapp.testutils.game.GameRunnerParams;
+import com.twb.pokerapp.testutils.game.player.AbstractTestUser;
+import com.twb.pokerapp.testutils.game.player.TestUserParams;
+import com.twb.pokerapp.testutils.game.player.impl.TestTexasHoldemPlayerUser;
+import com.twb.pokerapp.testutils.game.turn.TurnHandler;
+import com.twb.pokerapp.testutils.game.turn.impl.DefaultTurnHandler;
+import com.twb.pokerapp.testutils.game.turn.impl.OptimisticTurnHandler;
+import com.twb.pokerapp.testutils.testcontainers.BaseTestContainersIT;
+import com.twb.pokerapp.testutils.validator.impl.TexasValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 

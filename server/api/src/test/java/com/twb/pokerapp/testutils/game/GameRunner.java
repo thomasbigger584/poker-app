@@ -1,10 +1,10 @@
-package com.twb.pokerapp.utils.game;
+package com.twb.pokerapp.testutils.game;
 
-import com.twb.pokerapp.utils.game.player.AbstractTestUser;
-import com.twb.pokerapp.utils.game.player.TestUserParams;
-import com.twb.pokerapp.utils.game.player.impl.TestGameListenerUser;
-import com.twb.pokerapp.utils.http.message.PlayersServerMessages;
-import com.twb.pokerapp.utils.keycloak.KeycloakClients;
+import com.twb.pokerapp.testutils.game.player.AbstractTestUser;
+import com.twb.pokerapp.testutils.game.player.TestUserParams;
+import com.twb.pokerapp.testutils.game.player.impl.TestGameListenerUser;
+import com.twb.pokerapp.testutils.http.message.PlayersServerMessages;
+import com.twb.pokerapp.testutils.keycloak.KeycloakClients;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.twb.pokerapp.utils.sql;
+package com.twb.pokerapp.testutils.sql;
 
 import com.twb.pokerapp.domain.AppUser;
 import com.twb.pokerapp.domain.PlayerSession;

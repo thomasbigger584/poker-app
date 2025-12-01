@@ -1,9 +1,9 @@
-package com.twb.pokerapp.utils.validator;
+package com.twb.pokerapp.testutils.validator;
 
 import com.twb.pokerapp.domain.enumeration.SessionState;
-import com.twb.pokerapp.utils.game.GameRunnerParams;
-import com.twb.pokerapp.utils.http.message.PlayersServerMessages;
-import com.twb.pokerapp.utils.sql.SqlClient;
+import com.twb.pokerapp.testutils.game.GameRunnerParams;
+import com.twb.pokerapp.testutils.http.message.PlayersServerMessages;
+import com.twb.pokerapp.testutils.sql.SqlClient;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
 import com.twb.pokerapp.web.websocket.message.server.payload.PlayerConnectedDTO;

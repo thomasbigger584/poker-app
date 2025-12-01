@@ -1,4 +1,4 @@
-package com.twb.pokerapp.utils.keycloak;
+package com.twb.pokerapp.testutils.keycloak;
 
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;

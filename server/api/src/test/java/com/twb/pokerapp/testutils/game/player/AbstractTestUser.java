@@ -1,7 +1,7 @@
-package com.twb.pokerapp.utils.game.player;
+package com.twb.pokerapp.testutils.game.player;
 
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
-import com.twb.pokerapp.utils.http.message.ServerMessageConverter;
+import com.twb.pokerapp.testutils.http.message.ServerMessageConverter;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.ErrorMessageDTO;
@@ -24,9 +24,7 @@ import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
 import java.lang.reflect.Type;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -37,7 +35,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 @Slf4j
 public abstract class AbstractTestUser implements StompSessionHandler, StompFrameHandler {
     private static final String CONNECTION_URL = "ws://localhost:8081/looping";
-    private static final String SUBSCRIPTION_TOPIC_SUFFIX = "/topic/loops.%s";
+    private static final String GAME_TOPIC_SUFFIX = "/topic/loops.%s";
+    private static final String NOTIFICATION_TOPIC_SUFFIX = "/user/%s/notifications";
     private static final String SEND_PLAYER_ACTION = "/app/pokerTable/%s/sendPlayerAction";
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String HEADER_CONNECTION_TYPE = "X-Connection-Type";
@@ -47,7 +46,8 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     protected final TestUserParams params;
     private final Keycloak keycloak;
     private final WebSocketStompClient client;
-    private final CountDownLatch connectLatch = new CountDownLatch(1);
+    private final CountDownLatch connectLatch = new CountDownLatch(2);
+    private final Set<String> topicsConnected = new HashSet<>();
     @Getter
     private final AtomicReference<Throwable> exceptionThrown = new AtomicReference<>();
     @Getter
@@ -90,7 +90,8 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     @Override
     public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
         session.setAutoReceipt(true);
-        session.subscribe(SUBSCRIPTION_TOPIC_SUFFIX.formatted(params.getTable().getId()), this);
+        session.subscribe(GAME_TOPIC_SUFFIX.formatted(params.getTable().getId()), this);
+        session.subscribe(NOTIFICATION_TOPIC_SUFFIX.formatted(params.getUsername()), this);
         this.session = session;
     }
 
@@ -99,7 +100,9 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
                                 StompHeaders headers, byte[] payload, Throwable exception) {
         log.error("Exception thrown during stomp session", exception);
         exceptionThrown.set(exception);
-        connectLatch.countDown();
+        for (var index = 0; index < connectLatch.getCount(); index++) {
+            connectLatch.countDown();
+        }
         params.getLatches().roundLatch().countDown();
         params.getLatches().gameLatch().countDown();
     }
@@ -108,7 +111,9 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     public void handleTransportError(StompSession session, Throwable exception) {
         log.error("Exception thrown after connect failure", exception);
         exceptionThrown.set(exception);
-        connectLatch.countDown();
+        for (var index = 0; index < connectLatch.getCount(); index++) {
+            connectLatch.countDown();
+        }
         params.getLatches().roundLatch().countDown();
     }
 
@@ -119,11 +124,28 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
     @Override
     public void handleFrame(StompHeaders headers, Object payload) {
-        if (payload == null) {
-            log.warn("Frame received but payload is null with headers {}", headers);
+        if (headers == null) {
+            log.error("Frame received but headers is null with payload {}", payload);
             return;
         }
-        connectLatch.countDown();
+        if (payload == null) {
+            log.error("Frame received but payload is null with headers {}", headers);
+            return;
+        }
+        synchronized (topicsConnected) {
+            var destinationList = headers.get("destination");
+            if (destinationList == null || destinationList.isEmpty()) {
+                log.error("Frame received but destinationList is null or empty with headers {}", headers);
+                return;
+            }
+            var destination = destinationList.getFirst();
+            if (topicsConnected.contains(destination)) {
+                if (connectLatch.getCount() > 0) {
+                    connectLatch.countDown();
+                }
+                topicsConnected.add(destination);
+            }
+        }
         var message = (ServerMessageDTO) payload;
         receivedMessages.add(message);
 
