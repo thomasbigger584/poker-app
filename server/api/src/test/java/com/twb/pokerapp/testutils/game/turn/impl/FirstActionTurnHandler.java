@@ -8,7 +8,7 @@ import org.springframework.messaging.simp.stomp.StompHeaders;
 
 import java.util.Arrays;
 
-public class DefaultTurnHandler implements TurnHandler {
+public class FirstActionTurnHandler implements TurnHandler {
     @Override
     public void handle(AbstractTestUser user, StompHeaders headers, PlayerTurnDTO playerTurn) {
         Arrays.stream(playerTurn.getNextActions())

@@ -1,6 +1,7 @@
 package com.twb.pokerapp.web.websocket.message.server;
 
 import com.twb.pokerapp.web.websocket.message.server.payload.*;
+import com.twb.pokerapp.web.websocket.message.server.payload.validation.ValidationDTO;
 
 public enum ServerMessageType {
     /*
@@ -77,6 +78,12 @@ public enum ServerMessageType {
     ERROR,
 
     /*
+     * Error message sent from server which are validation
+     * errors on events coming into server
+     */
+    VALIDATION,
+
+    /*
      * Used to notify all players on the
      * table that a player has disconnected
      */
@@ -99,6 +106,7 @@ public enum ServerMessageType {
             case CHAT -> ChatMessageDTO.class;
             case LOG -> LogMessageDTO.class;
             case ERROR -> ErrorMessageDTO.class;
+            case VALIDATION -> ValidationDTO.class;
             case PLAYER_DISCONNECTED -> PlayerDisconnectedDTO.class;
         };
     }

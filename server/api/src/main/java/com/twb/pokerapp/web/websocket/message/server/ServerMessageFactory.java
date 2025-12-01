@@ -11,6 +11,7 @@ import com.twb.pokerapp.mapper.CardMapper;
 import com.twb.pokerapp.mapper.PlayerActionMapper;
 import com.twb.pokerapp.mapper.PlayerSessionMapper;
 import com.twb.pokerapp.web.websocket.message.server.payload.*;
+import com.twb.pokerapp.web.websocket.message.server.payload.validation.ValidationDTO;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -112,4 +113,7 @@ public class ServerMessageFactory {
         return ServerMessageDTO.create(ServerMessageType.CHAT, payload);
     }
 
+    public ServerMessageDTO validationErrors(ValidationDTO validationDto) {
+        return ServerMessageDTO.create(ServerMessageType.VALIDATION, validationDto);
+    }
 }

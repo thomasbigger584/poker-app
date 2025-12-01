@@ -7,6 +7,7 @@ import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
 import com.twb.pokerapp.web.websocket.session.SessionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -60,7 +61,7 @@ public class PokerTableWebSocketController {
     @SendTo(SERVER_MESSAGE_TOPIC)
     public ServerMessageDTO sendChatMessage(Principal principal,
                                             @DestinationVariable(POKER_TABLE_ID) UUID tableId,
-                                            @Payload CreateChatMessageDTO message) {
+                                            @Payload @Valid CreateChatMessageDTO message) {
         return messageFactory.chatMessage(principal.getName(), message.getMessage());
     }
 
@@ -68,7 +69,7 @@ public class PokerTableWebSocketController {
     @SendTo(SERVER_MESSAGE_TOPIC)
     public void sendPlayerAction(Principal principal,
                                  @DestinationVariable(POKER_TABLE_ID) UUID tableId,
-                                 @Payload CreatePlayerActionDTO action) {
+                                 @Payload @Valid CreatePlayerActionDTO action) {
         pokerTableGameService.onPlayerAction(tableId, principal.getName(), action);
     }
 
