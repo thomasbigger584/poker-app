@@ -20,8 +20,7 @@ public class SecurityConfiguration {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        //todo: fix this
-        http.authorizeHttpRequests()
+        http.authorizeHttpRequests(requests -> requests
                 .requestMatchers("/actuator", "/actuator/**").permitAll()
 
                 // public endpoint
@@ -35,11 +34,11 @@ public class SecurityConfiguration {
                 .requestMatchers("/admin", "/admin/**").hasRole(ADMIN)
 
                 //catch-all
-                .anyRequest().hasAnyRole(ADMIN, USER);
-        http.oauth2ResourceServer()
-                .jwt()
-                .jwtAuthenticationConverter(jwtAuthConverter);
-        http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+                .anyRequest().hasAnyRole(ADMIN, USER));
+        http.oauth2ResourceServer(server -> server
+                .jwt(jwt -> jwt
+                        .jwtAuthenticationConverter(jwtAuthConverter)));
+        http.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         return http.build();
     }
 }

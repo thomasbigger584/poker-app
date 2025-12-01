@@ -12,8 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.util.List;
 
@@ -29,7 +29,7 @@ public abstract class BaseTestContainersIT {
     private static final int KEYCLOAK_PORT = 8080;
     private static final String KEYCLOAK_REALM_JSON = "poker-app-realm.json";
     private static final String KEYCLOAK_HOSTNAME_KEY = "KC_HOSTNAME";
-    private static final String KEYCLOAK_HOSTNAME = String.format("http://%s:%d", KEYCLOAK_SERVICE, KEYCLOAK_PORT);
+    private static final String KEYCLOAK_HOSTNAME = "http://%s:%d".formatted(KEYCLOAK_SERVICE, KEYCLOAK_PORT);
 
     // DB Constants
     private static final String DB_IMAGE_NAME = "postgres";
@@ -40,7 +40,7 @@ public abstract class BaseTestContainersIT {
     private static final String DB_NAME = "db";
     private static final int DB_PORT = 5432;
     private static final String SPRING_DATASOURCE_URL_KEY = "SPRING_DATASOURCE_URL";
-    private static final String DB_DATASOURCE_URL = String.format("jdbc:postgresql://%s:%d/%s", DB_SERVICE, DB_PORT, DB_NAME);
+    private static final String DB_DATASOURCE_URL = "jdbc:postgresql://%s:%d/%s".formatted(DB_SERVICE, DB_PORT, DB_NAME);
 
     // API Constants
     private static final String API_IMAGE_NAME = "com.twb.pokerapp/api";
@@ -62,8 +62,8 @@ public abstract class BaseTestContainersIT {
                     .withNetworkAliases(KEYCLOAK_SERVICE)
                     .withEnv(KEYCLOAK_HOSTNAME_KEY, KEYCLOAK_HOSTNAME)
                     .withVerboseOutput();
-    private static final PostgreSQLContainer<?> DB_CONTAINER =
-            new PostgreSQLContainer<>(String.format("%s:%s", DB_IMAGE_NAME, DB_IMAGE_VERSION))
+    private static final PostgreSQLContainer DB_CONTAINER =
+            new PostgreSQLContainer("%s:%s".formatted(DB_IMAGE_NAME, DB_IMAGE_VERSION))
                     .withUsername(DB_USERNAME)
                     .withPassword(DB_PASSWORD)
                     .withDatabaseName(DB_NAME)
@@ -75,7 +75,7 @@ public abstract class BaseTestContainersIT {
 
 
     private static final GenericContainer<?> API_CONTAINER =
-            new GenericContainer<>(String.format("%s:%s", API_IMAGE_NAME, API_IMAGE_VERSION))
+            new GenericContainer<>("%s:%s".formatted(API_IMAGE_NAME, API_IMAGE_VERSION))
                     .withEnv(KEYCLOAK_SERVER_URL_INTERNAL_KEY, KEYCLOAK_HOSTNAME)
                     .withEnv(KEYCLOAK_SERVER_URL_EXTERNAL_KEY, KEYCLOAK_HOSTNAME)
                     .withEnv(SPRING_DATASOURCE_URL_KEY, DB_DATASOURCE_URL)
@@ -162,6 +162,6 @@ public abstract class BaseTestContainersIT {
     // *****************************************************************************************
 
     private static String getPortBindingString(int port) {
-        return String.format("%d:%d", port, port);
+        return "%d:%d".formatted(port, port);
     }
 }

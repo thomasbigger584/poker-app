@@ -25,14 +25,14 @@ public class WinnerService {
         var username = playerSession.getUser().getUsername();
         var handTypeStr = winningPlayerHandDTO.getHandType().getValue();
 
-        gameLogService.sendLogMessage(table, String.format("%s wins round with a %s", username, handTypeStr));
+        gameLogService.sendLogMessage(table, "%s wins round with a %s".formatted(username, handTypeStr));
     }
 
     private void handleMultiplePlayerWin(PokerTable table, List<EvalPlayerHandDTO> winners) {
         var winnerNames = getReadableWinners(winners);
         var handTypeStr = winners.getFirst().getHandType().getValue();
 
-        gameLogService.sendLogMessage(table, String.format("%s draws round with a %s", winnerNames, handTypeStr));
+        gameLogService.sendLogMessage(table, "%s draws round with a %s".formatted(winnerNames, handTypeStr));
     }
 
     private String getReadableWinners(List<EvalPlayerHandDTO> winners) {

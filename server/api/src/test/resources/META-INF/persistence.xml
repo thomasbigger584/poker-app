@@ -13,6 +13,7 @@
         <class>com.twb.pokerapp.domain.PlayerSession</class>
         <class>com.twb.pokerapp.domain.PokerTable</class>
         <class>com.twb.pokerapp.domain.Round</class>
+        <shared-cache-mode>NONE</shared-cache-mode>
 
         <properties>
             <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver"/>
