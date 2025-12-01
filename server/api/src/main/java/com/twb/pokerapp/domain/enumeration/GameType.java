@@ -9,11 +9,9 @@ import com.twb.pokerapp.service.game.thread.impl.texas.TexasGameThread;
 import com.twb.pokerapp.service.game.thread.impl.texas.TexasPlayerActionService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 import org.springframework.context.ApplicationContext;
 
 @Getter
-@ToString
 @RequiredArgsConstructor
 public enum GameType {
     TEXAS_HOLDEM(2, 6) {
