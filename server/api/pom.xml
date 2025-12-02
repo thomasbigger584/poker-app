@@ -28,7 +28,7 @@
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
 
         <!--  Test Properties  -->
-        <junit.version>5.10.2</junit.version>
+        <junit.version>6.0.1</junit.version>
         <docker-maven-plugin.version>0.48.0</docker-maven-plugin.version>
         <build-helper-maven-plugin.version>3.6.1</build-helper-maven-plugin.version>
         <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
