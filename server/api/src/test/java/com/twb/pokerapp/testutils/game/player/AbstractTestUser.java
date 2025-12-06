@@ -6,6 +6,7 @@ import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.ErrorMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.LogMessageDTO;
+import com.twb.pokerapp.web.websocket.message.server.payload.validation.ValidationDTO;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +25,9 @@ import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
 import java.lang.reflect.Type;
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -46,8 +49,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     protected final TestUserParams params;
     private final Keycloak keycloak;
     private final WebSocketStompClient client;
-    private final CountDownLatch connectLatch = new CountDownLatch(2);
-    private final Set<String> topicsConnected = new HashSet<>();
+    private final CountDownLatch connectLatch = new CountDownLatch(1);
     @Getter
     private final AtomicReference<Throwable> exceptionThrown = new AtomicReference<>();
     @Getter
@@ -72,6 +74,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         client.connectAsync(url, headers, stompHeaders, this);
         if (!connectLatch.await(10, TimeUnit.SECONDS)) {
             log.error("Timed out user {} from connecting to table {} via websocket", params.getUsername(), params.getTable().getId());
+            throw new RuntimeException("Timed out user " + params.getUsername() + " from connecting to table " + params.getTable().getId());
         }
     }
 
@@ -124,27 +127,12 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
     @Override
     public void handleFrame(StompHeaders headers, Object payload) {
-        if (headers == null) {
-            log.error("Frame received but headers is null with payload {}", payload);
-            return;
-        }
         if (payload == null) {
             log.error("Frame received but payload is null with headers {}", headers);
             return;
         }
-        synchronized (topicsConnected) {
-            var destinationList = headers.get("destination");
-            if (destinationList == null || destinationList.isEmpty()) {
-                log.error("Frame received but destinationList is null or empty with headers {}", headers);
-                return;
-            }
-            var destination = destinationList.getFirst();
-            if (topicsConnected.contains(destination)) {
-                if (connectLatch.getCount() > 0) {
-                    connectLatch.countDown();
-                }
-                topicsConnected.add(destination);
-            }
+        if (connectLatch.getCount() > 0) {
+            connectLatch.countDown();
         }
         var message = (ServerMessageDTO) payload;
         receivedMessages.add(message);
@@ -155,6 +143,9 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
             return;
         } else if (message.getPayload() instanceof LogMessageDTO logDto) {
             log.info("{} received log message: {}", params.getUsername(), logDto.getMessage());
+            return;
+        } else if (message.getPayload() instanceof ValidationDTO validationDto) {
+            log.info("{} received validation message: {}", params.getUsername(), validationDto.getFields());
             return;
         }
         handleMessage(headers, message);

@@ -5,33 +5,26 @@ import com.twb.pokerapp.domain.enumeration.GameType;
 import com.twb.pokerapp.testutils.game.GameLatches;
 import com.twb.pokerapp.testutils.game.GameRunner;
 import com.twb.pokerapp.testutils.game.GameRunnerParams;
-import com.twb.pokerapp.testutils.game.player.AbstractTestUser;
-import com.twb.pokerapp.testutils.game.player.TestUserParams;
-import com.twb.pokerapp.testutils.game.player.impl.TestTexasHoldemPlayerUser;
 import com.twb.pokerapp.testutils.game.turn.TurnHandler;
 import com.twb.pokerapp.testutils.game.turn.impl.FirstActionTurnHandler;
+import com.twb.pokerapp.testutils.game.turn.impl.InvalidActionTurnHandler;
 import com.twb.pokerapp.testutils.game.turn.impl.OptimisticTurnHandler;
 import com.twb.pokerapp.testutils.testcontainers.BaseTestContainersIT;
 import com.twb.pokerapp.testutils.validator.impl.TexasValidator;
+import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
+import com.twb.pokerapp.web.websocket.message.server.payload.validation.ValidationDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @Slf4j
 class TexasGameIT extends BaseTestContainersIT {
-    private static final String PLAYER_1 = "user1";
-    private static final String PLAYER_2 = "user2";
-
-    private GameRunnerParams params;
-    private GameRunner runner;
 
     @Override
-    protected void beforeEach() throws Throwable {
-        this.params = GameRunnerParams.builder()
+    protected void beforeEach() {
+        var params = GameRunnerParams.builder()
                 .keycloakClients(keycloakClients)
                 .numberOfRounds(1)
                 .latches(GameLatches.create())
@@ -44,35 +37,81 @@ class TexasGameIT extends BaseTestContainersIT {
 
     @Test
     void testGameWithoutPlayerActions() throws Throwable {
-        var turnHandlers = new HashMap<String, TurnHandler>();
-        turnHandlers.put(PLAYER_1, null);
-        turnHandlers.put(PLAYER_2, null);
 
-        var messages = runner.run(getPlayers(turnHandlers));
-        System.out.println("messages = " + messages);
+        // given
+        var turnHandlers
+                = TurnHandler.of(null, null);
 
+        // when
+        var messages = runner.run(turnHandlers);
+
+        // then
         validator.validateEndOfRun(messages);
     }
 
     @Test
     void testGameWithDefaultActions() throws Throwable {
-        var turnHandlers = new HashMap<String, TurnHandler>();
-        turnHandlers.put(PLAYER_1, new FirstActionTurnHandler());
-        turnHandlers.put(PLAYER_2, new FirstActionTurnHandler());
 
-        var messages = runner.run(getPlayers(turnHandlers));
-        System.out.println("messages = " + messages);
+        // given
+        var turnHandlers
+                = TurnHandler.of(
+                new FirstActionTurnHandler(),
+                new FirstActionTurnHandler()
+        );
 
+        // when
+        var messages = runner.run(turnHandlers);
+
+        // then
         validator.validateEndOfRun(messages);
     }
 
     @Test
     void testGameWithOptimisticActions() throws Throwable {
-        var turnHandlers = new HashMap<String, TurnHandler>();
-        turnHandlers.put(PLAYER_1, new OptimisticTurnHandler());
-        turnHandlers.put(PLAYER_2, new OptimisticTurnHandler());
 
-        var messages = runner.run(getPlayers(turnHandlers));
+        // given
+        var turnHandlers
+                = TurnHandler.of(
+                new OptimisticTurnHandler(),
+                new OptimisticTurnHandler()
+        );
+
+        // when
+        var messages = runner.run(turnHandlers);
+
+        // then
+        validator.validateEndOfRun(messages);
+    }
+
+    @Test
+    void testGameWithInvalidActions() throws Throwable {
+
+        // given
+        var turnHandlers
+                = TurnHandler.of(
+                new OptimisticTurnHandler(),
+                new InvalidActionTurnHandler()
+        );
+
+        // when
+        var messages = runner.run(turnHandlers);
+
+        // then
+        var validationMessages = validator.get(2, messages, ServerMessageType.VALIDATION);
+        assertEquals(1, validationMessages.size(), "Expected 1 validation message but got " + validationMessages.size());
+        var validationMessage = validationMessages.getFirst();
+        var validationDto = (ValidationDTO) validationMessage.getPayload();
+
+        var fields = validationDto.getFields();
+        assertEquals(2, fields.size(), "Expected 1 field but got " + fields.size());
+
+        var firstField = fields.getFirst();
+        assertEquals("amount", firstField.getField(), "Expected field to be amount but got " + firstField.getField());
+        assertNotNull(firstField.getMessage(), "Expected validation message for amount but did not get one");
+
+        var secondField = fields.get(1);
+        assertEquals("action", secondField.getField(), "Expected field to be action but got " + secondField.getField());
+        assertNotNull(secondField.getMessage(), "Expected validation message for action but did not get one");
 
         validator.validateEndOfRun(messages);
     }
@@ -88,22 +127,5 @@ class TexasGameIT extends BaseTestContainersIT {
                 .filter(pokerTable -> pokerTable.getGameType() == GameType.TEXAS_HOLDEM)
                 .findFirst()
                 .orElseThrow();
-    }
-
-    private List<AbstractTestUser> getPlayers(Map<String, TurnHandler> playerToTurnHandler) {
-        var players = new ArrayList<AbstractTestUser>();
-        for (var playerTurn : playerToTurnHandler.entrySet()) {
-            var username = playerTurn.getKey();
-            var userParams = TestUserParams.builder()
-                    .table(params.getTable())
-                    .username(username)
-                    .latches(params.getLatches())
-                    .keycloak(keycloakClients.get(username))
-                    .turnHandler(playerTurn.getValue())
-                    .validator(validator)
-                    .build();
-            players.add(new TestTexasHoldemPlayerUser(userParams));
-        }
-        return players;
     }
 }

@@ -9,7 +9,6 @@ import com.twb.pokerapp.repository.TableRepository;
 import com.twb.pokerapp.repository.UserRepository;
 import com.twb.pokerapp.service.PlayerSessionService;
 import com.twb.pokerapp.service.game.thread.GameThreadManager;
-import com.twb.pokerapp.service.game.thread.dto.PlayerTurnLatchDTO;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;

@@ -30,11 +30,13 @@ public class LocalWebsocketConfiguration implements WebSocketMessageBrokerConfig
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         // - /app used for MessageMapping
         // - /topic used for SubscribeMapping
+        // - /user/{username}/{destination} for users to receive specific notifications
         //     (client connects directly to topic so we wait to forward this into application)
-        registry.setApplicationDestinationPrefixes("/app", "/topic");
-        registry.enableSimpleBroker("/topic")
+        registry.setApplicationDestinationPrefixes("/app", "/topic")
+                .setUserDestinationPrefix("/user")
+                .setPreservePublishOrder(true)
+                .enableSimpleBroker("/topic", "/user")
                 .setTaskScheduler(heartBeatScheduler());
-        registry.setPreservePublishOrder(true);
     }
 
     @Override

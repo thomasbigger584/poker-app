@@ -92,7 +92,12 @@ public abstract class Validator {
     // Helper Methods
     // ***************************************************************
 
-    protected List<ServerMessageDTO> get(List<ServerMessageDTO> messages, ServerMessageType type) {
+    public List<ServerMessageDTO> get(int userIndex, PlayersServerMessages messages, ServerMessageType type) {
+        var userMessages = messages.get("user" + userIndex);
+        return get(userMessages, type);
+    }
+
+    private List<ServerMessageDTO> get(List<ServerMessageDTO> messages, ServerMessageType type) {
         return messages.stream()
                 .filter(message -> message.getType() == type)
                 .toList();

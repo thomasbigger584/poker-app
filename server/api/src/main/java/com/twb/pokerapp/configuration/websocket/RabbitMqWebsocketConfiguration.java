@@ -52,8 +52,9 @@ public class RabbitMqWebsocketConfiguration implements WebSocketMessageBrokerCon
         // - /app used for MessageMapping
         // - /topic used for SubscribeMapping
         //     (client connects directly to topic so we wait to forward this into application)
-        registry.setApplicationDestinationPrefixes("/app", "/topic");
-        registry.enableStompBrokerRelay("/topic")
+        registry.setApplicationDestinationPrefixes("/app", "/topic")
+                .setUserDestinationPrefix("/user");
+        registry.enableStompBrokerRelay("/topic", "/user")
                 .setRelayHost(relayHost)
                 .setRelayPort(relayPort)
                 .setVirtualHost(virtualHost)

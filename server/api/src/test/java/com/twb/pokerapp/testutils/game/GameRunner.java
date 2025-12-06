@@ -3,17 +3,26 @@ package com.twb.pokerapp.testutils.game;
 import com.twb.pokerapp.testutils.game.player.AbstractTestUser;
 import com.twb.pokerapp.testutils.game.player.TestUserParams;
 import com.twb.pokerapp.testutils.game.player.impl.TestGameListenerUser;
+import com.twb.pokerapp.testutils.game.player.impl.TestTexasHoldemPlayerUser;
+import com.twb.pokerapp.testutils.game.turn.TurnHandler;
 import com.twb.pokerapp.testutils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.testutils.keycloak.KeycloakClients;
 import lombok.RequiredArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 public class GameRunner {
     private final GameRunnerParams params;
 
-    public PlayersServerMessages run(List<AbstractTestUser> players) throws Exception {
+    public PlayersServerMessages run(Map<String, TurnHandler> turnHandlers) throws Exception {
+        var players = getPlayers(turnHandlers);
+        return run(players);
+    }
+
+    private PlayersServerMessages run(List<AbstractTestUser> players) throws Exception {
         var listener = connectListener();
         connectPlayers(players);
 
@@ -59,6 +68,24 @@ public class GameRunner {
         for (var player : players) {
             player.disconnect();
         }
+    }
+
+    private List<AbstractTestUser> getPlayers(Map<String, TurnHandler> playerToTurnHandler) {
+        var players = new ArrayList<AbstractTestUser>();
+        for (var playerTurn : playerToTurnHandler.entrySet()) {
+            var username = playerTurn.getKey();
+            var keycloak = params.getKeycloakClients().get(username);
+            var userParams = TestUserParams.builder()
+                    .table(params.getTable())
+                    .username(username)
+                    .latches(params.getLatches())
+                    .keycloak(keycloak)
+                    .turnHandler(playerTurn.getValue())
+                    .validator(params.getValidator())
+                    .build();
+            players.add(new TestTexasHoldemPlayerUser(userParams));
+        }
+        return players;
     }
 
     private void throwExceptionIfOccurred(List<AbstractTestUser> players) {

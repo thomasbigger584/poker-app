@@ -1,5 +1,6 @@
 package com.twb.pokerapp.testutils.testcontainers;
 
+import com.twb.pokerapp.testutils.game.GameRunner;
 import com.twb.pokerapp.testutils.keycloak.KeycloakClients;
 import com.twb.pokerapp.testutils.sql.SqlClient;
 import com.twb.pokerapp.testutils.validator.Validator;
@@ -87,6 +88,7 @@ public abstract class BaseTestContainersIT {
 
     protected static KeycloakClients keycloakClients;
 
+    protected GameRunner runner;
     protected SqlClient sqlClient;
     protected Validator validator;
 
