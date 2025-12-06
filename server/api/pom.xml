@@ -20,11 +20,11 @@
         <org.mapstruct.version>1.6.3</org.mapstruct.version>
         <error-prone.version>2.45.0</error-prone.version>
         <spring-security-jwt.version>1.1.1.RELEASE</spring-security-jwt.version>
-        <keycloak.version>26.4.6</keycloak.version>
+        <keycloak.version>26.4.7</keycloak.version>
         <commons-lang3.version>3.20.0</commons-lang3.version>
         <keycloak-admin-client.version>26.0.7</keycloak-admin-client.version>
         <xsync.version>1.3</xsync.version>
-        <commons-io.version>2.16.1</commons-io.version>
+        <commons-io.version>2.21.0</commons-io.version>
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
 
         <!--  Test Properties  -->
