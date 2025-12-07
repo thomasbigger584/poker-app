@@ -14,7 +14,7 @@ import org.springframework.context.ApplicationContext;
 @Getter
 @RequiredArgsConstructor
 public enum GameType {
-    TEXAS_HOLDEM(2, 6) {
+    TEXAS_HOLDEM(2, 8) {
         @Override
         public GameThread getGameThread(ApplicationContext context, GameThreadParams params) {
             return context.getBean(TexasGameThread.class, params);

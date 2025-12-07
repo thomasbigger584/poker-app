@@ -66,7 +66,7 @@ public class PlayerSessionService {
 
     private int getSessionTablePosition(PokerTable table) {
         var sessions = repository.findConnectedPlayersByTableId(table.getId());
-        var otherPlayersMaxCount = table.getGameType().getMaxPlayerCount() - 1;
+        var otherPlayersMaxCount = table.getMaxPlayers() - 1;
         for (var position = 1; position <= otherPlayersMaxCount; position++) {
             if (!isPositionAlreadyTaken(sessions, position)) {
                 return position;
