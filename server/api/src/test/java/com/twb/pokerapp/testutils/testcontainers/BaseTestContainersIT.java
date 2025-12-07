@@ -134,7 +134,7 @@ public abstract class BaseTestContainersIT {
     public void onBeforeEach() throws Throwable {
         DB_CONTAINER.start();
         API_CONTAINER.start();
-        adminRestClient = new RestClient(keycloakClients.getAdminKeycloak());
+        adminRestClient = RestClient.getInstance(keycloakClients.getAdminKeycloak());
         sqlClient = new SqlClient(DB_CONTAINER);
         beforeEach();
     }

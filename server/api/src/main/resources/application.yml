@@ -19,7 +19,7 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: ${keycloak.server-url.external}/realms/${keycloak.realm}
-          jwk-set-uri: ${keycloak.server-url.external}/realms/${keycloak.realm}/protocol/openid-connect/certs
+          jwk-set-uri: ${keycloak.server-url.internal}/realms/${keycloak.realm}/protocol/openid-connect/certs
   rabbitmq:
     host: localhost
     port: 5672
