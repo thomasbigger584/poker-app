@@ -144,6 +144,7 @@ public abstract class GameThread extends BaseGameThread {
             this.round = roundService.create(table);
         }
         gameLogService.sendLogMessage(table, "New Round...");
+        sleepInMs(params.getRoundStartWaitMs());
     }
 
     private boolean isPlayersJoined() {

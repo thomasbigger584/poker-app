@@ -84,6 +84,38 @@ class TexasGameIT extends BaseTestContainersIT {
     }
 
     @Test
+    void testGameWithSingleOptimisticActions() throws Throwable {
+
+        // given
+        var turnHandlers = TurnHandler.of(
+                new OptimisticTurnHandler(),
+                new FirstActionTurnHandler()
+        );
+
+        // when
+        var messages = runner.run(turnHandlers);
+
+        // then
+        validator.validateEndOfRun(messages);
+    }
+
+    @Test
+    void testGameWithSingleFirstActionActions() throws Throwable {
+
+        // given
+        var turnHandlers = TurnHandler.of(
+                new FirstActionTurnHandler(),
+                new OptimisticTurnHandler()
+        );
+
+        // when
+        var messages = runner.run(turnHandlers);
+
+        // then
+        validator.validateEndOfRun(messages);
+    }
+
+    @Test
     void testGameWithInvalidActions() throws Throwable {
 
         // given

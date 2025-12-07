@@ -18,5 +18,6 @@ public class GameThreadParams {
     private long dbPollWaitMs;
     private long evalWaitMs;
     private long playerTurnWaitMs;
+    private long roundStartWaitMs;
     private long roundEndWaitMs;
 }
