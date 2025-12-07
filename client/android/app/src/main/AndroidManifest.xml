@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".PokerApplication"
@@ -14,8 +14,8 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
+        android:theme="@style/AppTheme"
         tools:targetApi="35">
         <activity
             android:name=".ui.activity.login.LoginActivity"
@@ -29,8 +29,7 @@
         </activity>
         <activity
             android:name=".ui.activity.pokertable.PokerTableActivity"
-            android:exported="false"
-            android:label="@string/title_activity_poker_tables" />
+            android:exported="false" />
         <activity
             android:name=".ui.activity.pokergame.PokerGameActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"

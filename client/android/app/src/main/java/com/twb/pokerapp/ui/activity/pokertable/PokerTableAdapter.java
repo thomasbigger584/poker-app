@@ -3,6 +3,7 @@ package com.twb.pokerapp.ui.activity.pokertable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -28,11 +29,10 @@ public class PokerTableAdapter extends RecyclerView.Adapter<PokerTableAdapter.Vi
         PokerTableAdapter.ViewHolder viewHolder = new PokerTableAdapter.ViewHolder(LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.poker_table_item_layout, parent, false));
 
-        viewHolder.itemView.setOnClickListener(view -> {
+        viewHolder.connectButton.setOnClickListener(view -> {
 
             int position = viewHolder.getAdapterPosition();
             if (position != RecyclerView.NO_POSITION) {
-
                 TableDTO pokerTable = dataset.get(position);
                 clickListener.onPokerTableClicked(pokerTable);
             }
@@ -70,12 +70,14 @@ public class PokerTableAdapter extends RecyclerView.Adapter<PokerTableAdapter.Vi
         private final TextView nameTextView;
         private final TextView gameTypeTextView;
         private final TextView playersTextView;
+        final Button connectButton;
 
         public ViewHolder(View itemView) {
             super(itemView);
             nameTextView = itemView.findViewById(R.id.nameTextView);
             gameTypeTextView = itemView.findViewById(R.id.gameTypeTextView);
             playersTextView = itemView.findViewById(R.id.playersTextView);
+            connectButton = itemView.findViewById(R.id.connectButton);
         }
 
         public void bind(TableDTO pokerTable) {

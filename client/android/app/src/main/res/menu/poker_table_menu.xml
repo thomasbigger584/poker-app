@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".ui.activity.pokertable.PokerTableActivity">
     <item
-        android:id="@+id/action_logout"
-        android:icon="@drawable/ic_trash"
-        android:title="@string/logout"
+        android:id="@+id/action_create_table"
+        android:icon="@drawable/ic_add"
+        android:title="@string/create_table"
         app:showAsAction="always" />
 </menu>
