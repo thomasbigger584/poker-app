@@ -46,11 +46,15 @@ public class TableService {
             var createTableDto1 = new CreateTableDTO();
             createTableDto1.setName("Poker Table 1");
             createTableDto1.setGameType(GameType.TEXAS_HOLDEM);
+            createTableDto1.setMinPlayers(2);
+            createTableDto1.setMaxPlayers(6);
             create(createTableDto1);
 
             var createTableDto2 = new CreateTableDTO();
             createTableDto2.setName("Poker Table 2");
             createTableDto2.setGameType(GameType.BLACKJACK);
+            createTableDto2.setMinPlayers(2);
+            createTableDto2.setMaxPlayers(6);
             create(createTableDto2);
         }
     }

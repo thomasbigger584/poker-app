@@ -10,4 +10,6 @@ public class TableDTO {
     private UUID id;
     private String name;
     private GameType gameType;
+    private Integer minPlayers;
+    private Integer maxPlayers;
 }

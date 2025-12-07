@@ -3,6 +3,7 @@ package com.twb.pokerapp.domain;
 import com.twb.pokerapp.domain.enumeration.GameType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -33,6 +34,16 @@ public class PokerTable extends Auditable {
     @Column(name = "game_type")
     private GameType gameType;
 
+    @NotNull
+    @Positive
+    @Column(name = "min_players")
+    private Integer minPlayers;
+
+    @NotNull
+    @Positive
+    @Column(name = "max_players")
+    private Integer maxPlayers;
+
     @OneToMany(mappedBy = "pokerTable", cascade = CascadeType.ALL)
     private List<Round> rounds = new ArrayList<>();
 
@@ -48,13 +59,15 @@ public class PokerTable extends Auditable {
                 .append(id, table.id)
                 .append(name, table.name)
                 .append(gameType, table.gameType)
+                .append(minPlayers, table.minPlayers)
+                .append(maxPlayers, table.maxPlayers)
                 .isEquals();
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
-                .append(id).append(name).append(gameType)
+                .append(id).append(name).append(gameType).append(minPlayers).append(minPlayers)
                 .toHashCode();
     }
 
@@ -64,6 +77,8 @@ public class PokerTable extends Auditable {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", gameType=" + gameType +
+                ", minPlayers=" + minPlayers +
+                ", maxPlayers=" + maxPlayers +
                 '}';
     }
 }

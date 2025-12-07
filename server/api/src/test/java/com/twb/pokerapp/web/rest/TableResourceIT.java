@@ -10,8 +10,7 @@ import org.springframework.http.HttpStatus;
 import java.util.Arrays;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class TableResourceIT extends BaseTestContainersIT {
     private static final String ENDPOINT = "/poker-table";
@@ -32,8 +31,11 @@ class TableResourceIT extends BaseTestContainersIT {
         assertEquals(HttpStatus.CREATED.value(), createResponse.httpResponse().statusCode());
 
         var createdTableDto = createResponse.resultBody();
+        assertNotNull(createdTableDto.getId());
         assertEquals(createDto.getName(), createdTableDto.getName());
         assertEquals(createDto.getGameType(), createdTableDto.getGameType());
+        assertEquals(createDto.getMinPlayers(), createdTableDto.getMinPlayers());
+        assertEquals(createDto.getMaxPlayers(), createdTableDto.getMaxPlayers());
 
         var getResponse = adminRestClient.get(TableDTO[].class, ENDPOINT);
         assertEquals(HttpStatus.OK.value(), getResponse.httpResponse().statusCode());
@@ -48,5 +50,7 @@ class TableResourceIT extends BaseTestContainersIT {
         assertEquals(createdTableDto.getId(), createdTableFetched.getId());
         assertEquals(createdTableDto.getName(), createdTableFetched.getName());
         assertEquals(createdTableDto.getGameType(), createdTableFetched.getGameType());
+        assertEquals(createdTableDto.getMinPlayers(), createdTableFetched.getMinPlayers());
+        assertEquals(createdTableDto.getMaxPlayers(), createdTableFetched.getMaxPlayers());
     }
 }
