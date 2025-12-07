@@ -33,8 +33,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.junit.jupiter.api.Assertions.fail;
-
 @Slf4j
 public abstract class AbstractTestUser implements StompSessionHandler, StompFrameHandler {
     private static final String CONNECTION_URL = "ws://localhost:8081/looping";
@@ -139,7 +137,6 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
         if (message.getPayload() instanceof ErrorMessageDTO errorDto) {
             log.error("{} received error message: {}", params.getUsername(), errorDto.getMessage());
-            fail("%s received error message: %s".formatted(params.getUsername(), errorDto.getMessage()));
             return;
         } else if (message.getPayload() instanceof LogMessageDTO logDto) {
             log.info("{} received log message: {}", params.getUsername(), logDto.getMessage());

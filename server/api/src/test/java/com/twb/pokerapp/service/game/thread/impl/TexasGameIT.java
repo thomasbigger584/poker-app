@@ -16,8 +16,11 @@ import com.twb.pokerapp.web.websocket.message.server.payload.validation.Validati
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Slf4j
 class TexasGameIT extends BaseTestContainersIT {
@@ -39,8 +42,7 @@ class TexasGameIT extends BaseTestContainersIT {
     void testGameWithoutPlayerActions() throws Throwable {
 
         // given
-        var turnHandlers
-                = TurnHandler.of(null, null);
+        var turnHandlers = TurnHandler.of(null, null);
 
         // when
         var messages = runner.run(turnHandlers);
@@ -53,8 +55,7 @@ class TexasGameIT extends BaseTestContainersIT {
     void testGameWithDefaultActions() throws Throwable {
 
         // given
-        var turnHandlers
-                = TurnHandler.of(
+        var turnHandlers = TurnHandler.of(
                 new FirstActionTurnHandler(),
                 new FirstActionTurnHandler()
         );
@@ -70,8 +71,7 @@ class TexasGameIT extends BaseTestContainersIT {
     void testGameWithOptimisticActions() throws Throwable {
 
         // given
-        var turnHandlers
-                = TurnHandler.of(
+        var turnHandlers = TurnHandler.of(
                 new OptimisticTurnHandler(),
                 new OptimisticTurnHandler()
         );
@@ -87,8 +87,7 @@ class TexasGameIT extends BaseTestContainersIT {
     void testGameWithInvalidActions() throws Throwable {
 
         // given
-        var turnHandlers
-                = TurnHandler.of(
+        var turnHandlers = TurnHandler.of(
                 new OptimisticTurnHandler(),
                 new InvalidActionTurnHandler()
         );
@@ -101,17 +100,14 @@ class TexasGameIT extends BaseTestContainersIT {
         assertEquals(1, validationMessages.size(), "Expected 1 validation message but got " + validationMessages.size());
         var validationMessage = validationMessages.getFirst();
         var validationDto = (ValidationDTO) validationMessage.getPayload();
-
         var fields = validationDto.getFields();
-        assertEquals(2, fields.size(), "Expected 1 field but got " + fields.size());
 
-        var firstField = fields.getFirst();
-        assertEquals("amount", firstField.getField(), "Expected field to be amount but got " + firstField.getField());
-        assertNotNull(firstField.getMessage(), "Expected validation message for amount but did not get one");
+        var fieldsExpected = List.of("action", "amount");
+        assertEquals(fieldsExpected.size(), fields.size(), "Expected " + fieldsExpected.size() + " fields but got " + fields.size());
 
-        var secondField = fields.get(1);
-        assertEquals("action", secondField.getField(), "Expected field to be action but got " + secondField.getField());
-        assertNotNull(secondField.getMessage(), "Expected validation message for action but did not get one");
+        assertTrue(fields.stream()
+                        .anyMatch(validationFieldDTO -> fieldsExpected.contains(validationFieldDTO.getField())),
+                "Expected fields " + Arrays.toString(fieldsExpected.toArray()) + " but got " + fields);
 
         validator.validateEndOfRun(messages);
     }

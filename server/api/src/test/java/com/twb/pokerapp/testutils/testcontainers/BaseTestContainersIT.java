@@ -1,6 +1,7 @@
 package com.twb.pokerapp.testutils.testcontainers;
 
 import com.twb.pokerapp.testutils.game.GameRunner;
+import com.twb.pokerapp.testutils.http.RestClient;
 import com.twb.pokerapp.testutils.keycloak.KeycloakClients;
 import com.twb.pokerapp.testutils.sql.SqlClient;
 import com.twb.pokerapp.testutils.validator.Validator;
@@ -89,6 +90,7 @@ public abstract class BaseTestContainersIT {
     protected static KeycloakClients keycloakClients;
 
     protected GameRunner runner;
+    protected RestClient adminRestClient;
     protected SqlClient sqlClient;
     protected Validator validator;
 
@@ -132,6 +134,7 @@ public abstract class BaseTestContainersIT {
     public void onBeforeEach() throws Throwable {
         DB_CONTAINER.start();
         API_CONTAINER.start();
+        adminRestClient = new RestClient(keycloakClients.getAdminKeycloak());
         sqlClient = new SqlClient(DB_CONTAINER);
         beforeEach();
     }

@@ -105,8 +105,8 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-jwt</artifactId>
-            <version>${spring-security-jwt.version}</version>
+            <artifactId>spring-security-oauth2-jose</artifactId>
+            <version>7.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -1,15 +1,16 @@
 package com.twb.pokerapp.web.rest;
 
+import com.twb.pokerapp.dto.pokertable.CreateTableDTO;
 import com.twb.pokerapp.dto.pokertable.TableDTO;
+import com.twb.pokerapp.mapper.TableMapper;
 import com.twb.pokerapp.service.PaginationService;
 import com.twb.pokerapp.service.TableService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -18,7 +19,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TableResource {
     private final TableService service;
+    private final TableMapper tableMapper;
     private final PaginationService paginationService;
+
+    @PostMapping
+    public ResponseEntity<TableDTO> create(@Valid @RequestBody CreateTableDTO dto) {
+        var table = service.create(dto);
+        var response = tableMapper.modelToDto(table);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
 
     @GetMapping
     public ResponseEntity<List<TableDTO>> getAll(Pageable pageable) {
