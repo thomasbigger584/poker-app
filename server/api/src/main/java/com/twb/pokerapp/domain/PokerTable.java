@@ -44,6 +44,16 @@ public class PokerTable extends Auditable {
     @Column(name = "max_players")
     private Integer maxPlayers;
 
+    @NotNull
+    @Positive
+    @Column(name = "min_buyin")
+    private Double minBuyin;
+
+    @NotNull
+    @Positive
+    @Column(name = "max_buyin")
+    private Double maxBuyin;
+
     @OneToMany(mappedBy = "pokerTable", cascade = CascadeType.ALL)
     private List<Round> rounds = new ArrayList<>();
 
@@ -61,13 +71,17 @@ public class PokerTable extends Auditable {
                 .append(gameType, table.gameType)
                 .append(minPlayers, table.minPlayers)
                 .append(maxPlayers, table.maxPlayers)
+                .append(minBuyin, table.minBuyin)
+                .append(maxBuyin, table.maxBuyin)
                 .isEquals();
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
-                .append(id).append(name).append(gameType).append(minPlayers).append(minPlayers)
+                .append(id).append(name).append(gameType)
+                .append(minPlayers).append(minPlayers)
+                .append(minBuyin).append(maxBuyin)
                 .toHashCode();
     }
 
@@ -79,6 +93,8 @@ public class PokerTable extends Auditable {
                 ", gameType=" + gameType +
                 ", minPlayers=" + minPlayers +
                 ", maxPlayers=" + maxPlayers +
+                ", minBuyin=" + minBuyin +
+                ", maxBuyin=" + maxBuyin +
                 '}';
     }
 }

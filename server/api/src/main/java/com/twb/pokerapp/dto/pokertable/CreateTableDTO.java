@@ -1,7 +1,6 @@
 package com.twb.pokerapp.dto.pokertable;
 
 import com.twb.pokerapp.domain.enumeration.GameType;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -23,4 +22,12 @@ public class CreateTableDTO {
     @NotNull(message = "Max Players is required")
     @Positive(message = "Max Players should be a positive number")
     private Integer maxPlayers;
+
+    @NotNull(message = "Min Buy-In is required")
+    @Positive(message = "Min Buy-In should be a positive number")
+    private Double minBuyin;
+
+    @NotNull(message = "Max Buy-In is required")
+    @Positive(message = "Max Buy-In should be a positive number")
+    private Double maxBuyin;
 }

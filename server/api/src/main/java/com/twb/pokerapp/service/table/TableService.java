@@ -51,6 +51,8 @@ public class TableService {
             createTableDto1.setGameType(GameType.TEXAS_HOLDEM);
             createTableDto1.setMinPlayers(2);
             createTableDto1.setMaxPlayers(6);
+            createTableDto1.setMinBuyin(100d);
+            createTableDto1.setMaxBuyin(10_000d);
             create(createTableDto1);
         }
     }

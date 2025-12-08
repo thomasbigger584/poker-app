@@ -12,4 +12,6 @@ public class TableDTO {
     private GameType gameType;
     private Integer minPlayers;
     private Integer maxPlayers;
+    private Double minBuyin;
+    private Double maxBuyin;
 }
