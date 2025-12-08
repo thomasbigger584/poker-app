@@ -16,7 +16,7 @@ import java.util.ArrayList;
 @Slf4j
 @ControllerAdvice
 @RequiredArgsConstructor
-public class PokerValidationErrorHandler {
+public class MessageValidationErrorHandler {
     private final ServerMessageFactory messageFactory;
     private final MessageDispatcher dispatcher;
 

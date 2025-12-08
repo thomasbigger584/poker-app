@@ -7,6 +7,9 @@ import com.twb.pokerapp.service.game.thread.impl.blackjack.BlackjackGameThread;
 import com.twb.pokerapp.service.game.thread.impl.blackjack.BlackjackPlayerActionService;
 import com.twb.pokerapp.service.game.thread.impl.texas.TexasGameThread;
 import com.twb.pokerapp.service.game.thread.impl.texas.TexasPlayerActionService;
+import com.twb.pokerapp.service.table.validation.TableValidationService;
+import com.twb.pokerapp.service.table.validation.impl.BlackjackTableValidationService;
+import com.twb.pokerapp.service.table.validation.impl.TexasTableValidationService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
@@ -15,6 +18,11 @@ import org.springframework.context.ApplicationContext;
 @RequiredArgsConstructor
 public enum GameType {
     TEXAS_HOLDEM(2, 8) {
+        @Override
+        public TableValidationService getValidationService(ApplicationContext context) {
+            return context.getBean(TexasTableValidationService.class);
+        }
+
         @Override
         public GameThread getGameThread(ApplicationContext context, GameThreadParams params) {
             return context.getBean(TexasGameThread.class, params);
@@ -26,6 +34,11 @@ public enum GameType {
         }
     },
     BLACKJACK(1, 1) {
+        @Override
+        public TableValidationService getValidationService(ApplicationContext context) {
+            return context.getBean(BlackjackTableValidationService.class);
+        }
+
         @Override
         public GameThread getGameThread(ApplicationContext context, GameThreadParams params) {
             return context.getBean(BlackjackGameThread.class, params);
@@ -39,6 +52,8 @@ public enum GameType {
 
     private final int minPlayerCount;
     private final int maxPlayerCount;
+
+    public abstract TableValidationService getValidationService(ApplicationContext context);
 
     public abstract GameThread getGameThread(ApplicationContext context, GameThreadParams params);
 

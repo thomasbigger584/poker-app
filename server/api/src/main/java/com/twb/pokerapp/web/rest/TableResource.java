@@ -4,7 +4,7 @@ import com.twb.pokerapp.dto.pokertable.CreateTableDTO;
 import com.twb.pokerapp.dto.pokertable.TableDTO;
 import com.twb.pokerapp.mapper.TableMapper;
 import com.twb.pokerapp.service.PaginationService;
-import com.twb.pokerapp.service.TableService;
+import com.twb.pokerapp.service.table.TableService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;

@@ -24,7 +24,7 @@ import java.util.UUID;
 @Slf4j
 @Controller
 @RequiredArgsConstructor
-public class PokerTableWebSocketController {
+public class TableWebSocketController {
     private static final String TOPIC = "/loops.{tableId}";
     private static final String SERVER_MESSAGE_TOPIC = "/topic" + TOPIC;
     private static final String INBOUND_MESSAGE_PREFIX = "/pokerTable/{tableId}";

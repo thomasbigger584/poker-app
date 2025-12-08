@@ -1,7 +1,7 @@
 package com.twb.pokerapp.web.websocket.session;
 
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
-import com.twb.pokerapp.web.websocket.PokerTableWebSocketController;
+import com.twb.pokerapp.web.websocket.TableWebSocketController;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -17,7 +17,7 @@ public class SessionEventListener {
     private static final String HEADER_CONNECTION_TYPE = "X-Connection-Type";
 
     private final SessionService sessionService;
-    private final PokerTableWebSocketController webSocketController;
+    private final TableWebSocketController webSocketController;
 
     @EventListener
     public void handleEvent(SessionConnectEvent event) {

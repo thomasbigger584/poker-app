@@ -1,4 +1,4 @@
-package com.twb.pokerapp.service;
+package com.twb.pokerapp.service.table;
 
 import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.domain.enumeration.GameType;
@@ -10,6 +10,7 @@ import com.twb.pokerapp.repository.RoundRepository;
 import com.twb.pokerapp.repository.TableRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -19,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 @RequiredArgsConstructor
 public class TableService {
+    private final ApplicationContext context;
+
     private final TableRepository repository;
     private final TableMapper mapper;
 
@@ -60,6 +63,7 @@ public class TableService {
     }
 
     public PokerTable create(CreateTableDTO dto) {
+        dto.getGameType().getValidationService(context).validate(dto);
         var table = mapper.createDtoToModel(dto);
         table = repository.save(table);
         return table;
