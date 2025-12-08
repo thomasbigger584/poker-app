@@ -34,7 +34,7 @@ public class TableListAdapter extends RecyclerView.Adapter<TableListAdapter.View
             int position = viewHolder.getAdapterPosition();
             if (position != RecyclerView.NO_POSITION) {
                 TableDTO pokerTable = dataset.get(position);
-                clickListener.onPokerTableClicked(pokerTable);
+                clickListener.onTableClicked(pokerTable);
             }
         });
 
@@ -63,7 +63,7 @@ public class TableListAdapter extends RecyclerView.Adapter<TableListAdapter.View
     }
 
     public interface PokerTableClickListener {
-        void onPokerTableClicked(TableDTO pokerTable);
+        void onTableClicked(TableDTO pokerTable);
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {

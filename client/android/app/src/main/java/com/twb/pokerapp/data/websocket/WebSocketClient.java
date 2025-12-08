@@ -17,6 +17,7 @@ import com.twb.stomplib.stomp.StompClient;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -34,6 +35,7 @@ public class WebSocketClient {
     private static final int CLIENT_HEARTBEAT_MS = 1000;
     private static final int SERVER_HEARTBEAT_MS = 1000;
     private static final String TOPIC_PREFIX = "/topic/loops.";
+    private static final String NOTIFICATIONS_TOPIC = "/user/%s/notifications";
     private static final String SEND_ENDPOINT_PREFIX = "/app/pokerTable/%s";
     private static final String SEND_CHAT_MESSAGE = "/sendChatMessage";
     private static final String SEND_PLAYER_ACTION = "/sendPlayerAction";
@@ -57,7 +59,7 @@ public class WebSocketClient {
     // WebSocket Lifecycle
     // ***************************************************************
 
-    public void connect(UUID pokerTableId, WebSocketListener listener) {
+    public void connect(UUID tableId, WebSocketListener listener) {
         if (stompClient != null && stompClient.isConnected()) {
             return;
         }
@@ -102,7 +104,7 @@ public class WebSocketClient {
                     }
                 }));
 
-        compositeDisposable.add(stompClient.topic(TOPIC_PREFIX + pokerTableId)
+        compositeDisposable.add(stompClient.topic(TOPIC_PREFIX + tableId)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(topicMessage -> {
@@ -111,6 +113,20 @@ public class WebSocketClient {
                     listener.onMessage(gson.fromJson(payloadJson, ServerMessageDTO.class));
                 }, throwable -> {
                     Log.e(TAG, "SUBSCRIBE: Subscription Error", throwable);
+                    listener.onSubscribeError(throwable);
+                }));
+
+        String currentUser = authService.getCurrentUser();
+        String notificationTopic = String.format(Locale.getDefault(), NOTIFICATIONS_TOPIC, currentUser);
+        compositeDisposable.add(stompClient.topic(notificationTopic)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(topicMessage -> {
+                    String payloadJson = topicMessage.getPayload();
+                    Log.i(TAG, "USER SUBSCRIBE: MESSAGE: " + payloadJson);
+                    listener.onMessage(gson.fromJson(payloadJson, ServerMessageDTO.class));
+                }, throwable -> {
+                    Log.e(TAG, "USER SUBSCRIBE: Subscription Error", throwable);
                     listener.onSubscribeError(throwable);
                 }));
 
@@ -136,14 +152,14 @@ public class WebSocketClient {
     // WebSocket Send Methods
     // ***************************************************************
 
-    public void sendChatMessage(UUID pokerTableId, SendChatMessageDTO dto, SendListener listener) {
-        String destination = String.format(SEND_ENDPOINT_PREFIX + SEND_CHAT_MESSAGE, pokerTableId);
+    public void sendChatMessage(UUID tableId, SendChatMessageDTO dto, SendListener listener) {
+        String destination = String.format(SEND_ENDPOINT_PREFIX + SEND_CHAT_MESSAGE, tableId);
         String message = gson.toJson(dto);
         sendMessage(destination, message, listener);
     }
 
-    public void sendPlayerAction(UUID pokerTableId, SendPlayerActionDTO dto, SendListener listener) {
-        String destination = String.format(SEND_ENDPOINT_PREFIX + SEND_PLAYER_ACTION, pokerTableId);
+    public void sendPlayerAction(UUID tableId, SendPlayerActionDTO dto, SendListener listener) {
+        String destination = String.format(SEND_ENDPOINT_PREFIX + SEND_PLAYER_ACTION, tableId);
         String message = gson.toJson(dto);
         sendMessage(destination, message, listener);
     }

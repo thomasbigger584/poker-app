@@ -22,6 +22,7 @@ import com.twb.pokerapp.data.websocket.message.server.payload.PlayerDisconnected
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerSubscribedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerTurnDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.RoundFinishedDTO;
+import com.twb.pokerapp.data.websocket.message.server.payload.ValidationDTO;
 import com.twb.stomplib.dto.LifecycleEvent;
 
 import java.util.UUID;
@@ -52,10 +53,11 @@ public class TexasGameViewModel extends ViewModel
     public MutableLiveData<ChatMessageDTO> chatMessage = new MutableLiveData<>();
     public MutableLiveData<LogMessageDTO> logMessage = new MutableLiveData<>();
     public MutableLiveData<ErrorMessageDTO> errorMessage = new MutableLiveData<>();
+    public MutableLiveData<ValidationDTO> validationMessage = new MutableLiveData<>();
     public MutableLiveData<PlayerDisconnectedDTO> playerDisconnected = new MutableLiveData<>();
     public MutableLiveData<Void> closedConnection = new MutableLiveData<>();
 
-    private UUID pokerTableId;
+    private UUID tableId;
 
     @Inject
     public TexasGameViewModel(WebSocketClient webSocketClient) {
@@ -66,9 +68,9 @@ public class TexasGameViewModel extends ViewModel
     // WebSocket Lifecycle
     // ***************************************************************
 
-    public void connect(UUID pokerTableId) {
-        this.pokerTableId = pokerTableId;
-        webSocketClient.connect(pokerTableId, this);
+    public void connect(UUID tableId) {
+        this.tableId = tableId;
+        this.webSocketClient.connect(tableId, this);
     }
 
     @Override
@@ -138,7 +140,7 @@ public class TexasGameViewModel extends ViewModel
     public void sendChatMessage(String message) {
         SendChatMessageDTO dto = new SendChatMessageDTO();
         dto.setMessage(message);
-        webSocketClient.sendChatMessage(pokerTableId, dto, this);
+        webSocketClient.sendChatMessage(tableId, dto, this);
     }
 
     public void onPlayerAction(ActionType actionType) {
@@ -149,7 +151,7 @@ public class TexasGameViewModel extends ViewModel
         SendPlayerActionDTO dto = new SendPlayerActionDTO();
         dto.setAction(actionType.name());
         dto.setAmount(amount);
-        webSocketClient.sendPlayerAction(pokerTableId, dto, this);
+        webSocketClient.sendPlayerAction(tableId, dto, this);
     }
 
     @Override

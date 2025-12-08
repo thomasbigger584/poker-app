@@ -9,7 +9,7 @@ import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.QueryMap;
 
-public interface PokerTableApi {
+public interface TableApi {
 
     @GET("/api/poker-table")
     Call<List<TableDTO>> getTables(

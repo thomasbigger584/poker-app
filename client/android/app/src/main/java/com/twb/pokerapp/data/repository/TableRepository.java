@@ -4,8 +4,9 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.twb.pokerapp.data.model.dto.table.CreateTableDTO;
 import com.twb.pokerapp.data.model.dto.table.TableDTO;
-import com.twb.pokerapp.data.retrofit.api.PokerTableApi;
+import com.twb.pokerapp.data.retrofit.api.TableApi;
 
 import java.util.HashMap;
 import java.util.List;
@@ -17,10 +18,10 @@ import retrofit2.Response;
 
 public class TableRepository extends BaseRepository {
     private static final String TAG = TableRepository.class.getSimpleName();
-    private final PokerTableApi api;
+    private final TableApi api;
     private final MutableLiveData<List<TableDTO>> getTablesLiveData = new MutableLiveData<>();
 
-    public TableRepository(PokerTableApi api) {
+    public TableRepository(TableApi api) {
         this.api = api;
     }
 
@@ -42,5 +43,9 @@ public class TableRepository extends BaseRepository {
             }
         });
         return getTablesLiveData;
+    }
+
+    public LiveData<TableDTO> createTable(CreateTableDTO dto) {
+        return null;
     }
 }

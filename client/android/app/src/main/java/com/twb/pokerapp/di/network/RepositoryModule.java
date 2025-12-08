@@ -1,7 +1,7 @@
 package com.twb.pokerapp.di.network;
 
 import com.twb.pokerapp.data.repository.TableRepository;
-import com.twb.pokerapp.data.retrofit.api.PokerTableApi;
+import com.twb.pokerapp.data.retrofit.api.TableApi;
 
 import javax.inject.Singleton;
 
@@ -21,7 +21,7 @@ public class RepositoryModule {
 
     @Provides
     @Singleton
-    public TableRepository pokerTableRepository(PokerTableApi api) {
+    public TableRepository tableRepository(TableApi api) {
         return new TableRepository(api);
     }
 }

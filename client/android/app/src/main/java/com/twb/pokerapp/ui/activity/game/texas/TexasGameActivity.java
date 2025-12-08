@@ -2,6 +2,7 @@ package com.twb.pokerapp.ui.activity.game.texas;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -45,7 +46,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     AuthService authService;
 
     private TexasGameViewModel viewModel;
-    private TableDTO pokerTable;
+    private TableDTO table;
     private AlertDialog loadingSpinner;
     private BaseGameDialog betRaisePokerGameDialog;
     private ChatBoxRecyclerAdapter chatBoxAdapter;
@@ -71,7 +72,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             return;
         }
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        pokerTable = TableDTO.fromBundle(extras);
+        table = TableDTO.fromBundle(extras);
 
         loadingSpinner = DialogHelper.createLoadingSpinner(this);
         DialogHelper.show(loadingSpinner);
@@ -179,6 +180,10 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         viewModel.errorMessage.observe(this, errorMessage -> {
             handleErrorMessage(errorMessage.getMessage());
         });
+        viewModel.validationMessage.observe(this, validation -> {
+            Log.w(TAG, "VALIDATION: Invalid PlayerAction Request: " + validation.toString());
+            Toast.makeText(this, "Invalid PlayerAction Request", Toast.LENGTH_SHORT).show();
+        });
         viewModel.playerDisconnected.observe(this, playerDisconnected -> {
             String username = playerDisconnected.getUsername();
             chatBoxAdapter.add("Disconnected: " + username);
@@ -193,7 +198,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
 
     @Override
     protected void onAuthorized() {
-        viewModel.connect(pokerTable.getId());
+        viewModel.connect(table.getId());
     }
 
     @Override
@@ -256,7 +261,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
      */
 
     private String getTurnChatMessage(PlayerTurnDTO playerTurn) {
-        PlayerActionDTO prevPlayerAction =  playerTurn.getPrevPlayerAction();
+        PlayerActionDTO prevPlayerAction = playerTurn.getPrevPlayerAction();
         if (playerTurn.getPrevPlayerAction() == null) {
             return null;
         }

@@ -17,11 +17,11 @@ public class TableDTO {
     private String gameType;
 
     public static TableDTO fromBundle(Bundle bundle) {
-        TableDTO pokerTable = new TableDTO();
-        pokerTable.setId(UUID.fromString(bundle.getString(KEY_TABLE_ID)));
-        pokerTable.setName(bundle.getString(KEY_TABLE_NAME));
-        pokerTable.setGameType(bundle.getString(KEY_GAME_TYPE));
-        return pokerTable;
+        TableDTO table = new TableDTO();
+        table.setId(UUID.fromString(bundle.getString(KEY_TABLE_ID)));
+        table.setName(bundle.getString(KEY_TABLE_NAME));
+        table.setGameType(bundle.getString(KEY_GAME_TYPE));
+        return table;
     }
 
     public Bundle toBundle() {

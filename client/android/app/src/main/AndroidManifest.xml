@@ -31,6 +31,9 @@
             android:name=".ui.activity.table.list.TableListActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.activity.table.create.TableCreateActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.activity.game.texas.TexasGameActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="false"

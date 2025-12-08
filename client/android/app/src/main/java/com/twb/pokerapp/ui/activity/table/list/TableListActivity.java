@@ -18,6 +18,7 @@ import com.twb.pokerapp.data.auth.AuthStateManager;
 import com.twb.pokerapp.data.model.dto.table.TableDTO;
 import com.twb.pokerapp.ui.activity.login.BaseAuthActivity;
 import com.twb.pokerapp.ui.activity.game.texas.TexasGameActivity;
+import com.twb.pokerapp.ui.activity.table.create.TableCreateActivity;
 import com.twb.pokerapp.ui.dialog.AlertModalDialog;
 
 import javax.inject.Inject;
@@ -50,7 +51,7 @@ public class TableListActivity extends BaseAuthActivity
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
-        swipeRefreshLayout.setOnRefreshListener(() -> viewModel.getPokerTables().observe(this, pokerTables -> {
+        swipeRefreshLayout.setOnRefreshListener(() -> viewModel.getTables().observe(this, pokerTables -> {
             adapter.setData(pokerTables);
             swipeRefreshLayout.setRefreshing(false);
         }));
@@ -82,8 +83,8 @@ public class TableListActivity extends BaseAuthActivity
     @Override
     protected void onAuthorized() {
         swipeRefreshLayout.setRefreshing(true);
-        viewModel.getPokerTables().observe(this, pokerTables -> {
-            adapter.setData(pokerTables);
+        viewModel.getTables().observe(this, tables -> {
+            adapter.setData(tables);
             swipeRefreshLayout.setRefreshing(false);
         });
     }
@@ -98,10 +99,14 @@ public class TableListActivity extends BaseAuthActivity
     }
 
     @Override
-    public void onPokerTableClicked(TableDTO pokerTable) {
-        Intent intent = new Intent(this, TexasGameActivity.class);
-        intent.putExtras(pokerTable.toBundle());
-        startActivity(intent);
+    public void onTableClicked(TableDTO table) {
+        if (table.getGameType().equals("TEXAS_HOLDEM")) {
+            Intent intent = new Intent(this, TexasGameActivity.class);
+            intent.putExtras(table.toBundle());
+            startActivity(intent);
+        } else {
+            Toast.makeText(this, "Unsupported Game Type", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -114,7 +119,8 @@ public class TableListActivity extends BaseAuthActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.action_create_table) {
-            Toast.makeText(this, "Create Table...", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(this, TableCreateActivity.class);
+            startActivity(intent);
             return true;
         }
         return super.onOptionsItemSelected(item);
