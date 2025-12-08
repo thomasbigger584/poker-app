@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="game_types_array">
+        <item>Texas Hold\'em</item>
+    </string-array>
+</resources>

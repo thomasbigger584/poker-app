@@ -14,30 +14,24 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.twb.pokerapp.R;
-import com.twb.pokerapp.data.auth.AuthStateManager;
 import com.twb.pokerapp.data.model.dto.table.TableDTO;
 import com.twb.pokerapp.ui.activity.login.BaseAuthActivity;
 import com.twb.pokerapp.ui.activity.game.texas.TexasGameActivity;
 import com.twb.pokerapp.ui.activity.table.create.TableCreateActivity;
 import com.twb.pokerapp.ui.dialog.AlertModalDialog;
 
-import javax.inject.Inject;
-
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class TableListActivity extends BaseAuthActivity
         implements TableListAdapter.PokerTableClickListener {
-
-    @Inject
-    AuthStateManager authStateManager;
     private SwipeRefreshLayout swipeRefreshLayout;
     private TableListViewModel viewModel;
     private TableListAdapter adapter;
 
     @Override
     protected int getContentView() {
-        return R.layout.activity_list_table;
+        return R.layout.activity_table_list;
     }
 
     @Override

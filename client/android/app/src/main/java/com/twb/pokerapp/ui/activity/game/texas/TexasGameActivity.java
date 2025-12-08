@@ -55,7 +55,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
 
     @Override
     protected int getContentView() {
-        return R.layout.activity_texas_game;
+        return R.layout.activity_game_texas;
     }
 
     @Override
