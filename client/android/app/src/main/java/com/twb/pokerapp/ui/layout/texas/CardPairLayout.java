@@ -1,4 +1,4 @@
-package com.twb.pokerapp.ui.layout;
+package com.twb.pokerapp.ui.layout.texas;
 
 import android.content.Context;
 import android.util.AttributeSet;

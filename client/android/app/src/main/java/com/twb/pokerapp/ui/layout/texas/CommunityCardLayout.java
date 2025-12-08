@@ -1,4 +1,4 @@
-package com.twb.pokerapp.ui.layout;
+package com.twb.pokerapp.ui.layout.texas;
 
 
 import android.content.Context;
@@ -8,6 +8,7 @@ import android.widget.FrameLayout;
 
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.model.dto.card.CardDTO;
+import com.twb.pokerapp.ui.layout.CardLayout;
 
 public class CommunityCardLayout extends FrameLayout {
     private static final String FLOP_CARD_1 = "FLOP_CARD_1";

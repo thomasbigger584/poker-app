@@ -1,4 +1,4 @@
-package com.twb.pokerapp.ui.activity.pokergame.controller;
+package com.twb.pokerapp.ui.activity.game.texas.controller;
 
 import android.app.Activity;
 import android.view.View;

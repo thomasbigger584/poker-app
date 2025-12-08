@@ -1,4 +1,4 @@
-package com.twb.pokerapp.ui.dialog;
+package com.twb.pokerapp.ui.dialog.game;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -17,7 +17,7 @@ import com.twb.pokerapp.ui.util.SeekBarChangeListener;
 
 import java.util.Locale;
 
-public class BetRaisePokerGameDialog extends BasePokerGameDialog {
+public class BetRaiseGameDialog extends BaseGameDialog {
     private BetRaiseClickListener betRaiseListener;
     private ActionType type;
     private TextView titleTextView;
@@ -26,10 +26,10 @@ public class BetRaisePokerGameDialog extends BasePokerGameDialog {
     private double minimumBet;
     private double amountSelected;
 
-    public static BetRaisePokerGameDialog newInstance(ActionType type,
-                                                      double playerCurrentFunds, double minimumBet,
-                                                      BetRaiseClickListener listener) {
-        BetRaisePokerGameDialog fragment = new BetRaisePokerGameDialog();
+    public static BetRaiseGameDialog newInstance(ActionType type,
+                                                 double playerCurrentFunds, double minimumBet,
+                                                 BetRaiseClickListener listener) {
+        BetRaiseGameDialog fragment = new BetRaiseGameDialog();
         fragment.betRaiseListener = listener;
         fragment.type = type;
         fragment.minimumBet = minimumBet;

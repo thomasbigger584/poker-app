@@ -1,4 +1,4 @@
-package com.twb.pokerapp.ui.dialog;
+package com.twb.pokerapp.ui.dialog.game;
 
 import android.util.Log;
 import android.view.View;
@@ -9,8 +9,8 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
-public abstract class BasePokerGameDialog extends DialogFragment {
-    private static final String TAG = BasePokerGameDialog.class.getSimpleName();
+public abstract class BaseGameDialog extends DialogFragment {
+    private static final String TAG = BaseGameDialog.class.getSimpleName();
     private static final float DIM_AMOUNT = 0.5f;
 
     View inflatedView;

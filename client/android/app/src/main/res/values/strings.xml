@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name">pokerapp</string>
     <string name="title_activity_login">Login Activity</string>
-    <string name="title_activity_poker_tables">Poker Tables Activity</string>
-    <string name="title_activity_poker_game">Poker Game Activity</string>
+    <string name="title_activity_tables">Tables Activity</string>
+    <string name="title_activity_game">Game Activity</string>
 
     <string name="keycloak_testing">Keycloak testing</string>
     <string name="login_register">Login / Register</string>

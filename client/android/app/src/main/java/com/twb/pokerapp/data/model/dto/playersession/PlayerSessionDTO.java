@@ -3,8 +3,7 @@ package com.twb.pokerapp.data.model.dto.playersession;
 import androidx.annotation.NonNull;
 
 import com.twb.pokerapp.data.model.dto.appuser.AppUserDTO;
-import com.twb.pokerapp.data.model.dto.hand.HandDTO;
-import com.twb.pokerapp.data.model.dto.pokertable.TableDTO;
+import com.twb.pokerapp.data.model.dto.table.TableDTO;
 
 import java.util.UUID;
 

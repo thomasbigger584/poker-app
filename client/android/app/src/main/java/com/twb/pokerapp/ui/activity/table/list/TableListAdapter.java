@@ -1,4 +1,4 @@
-package com.twb.pokerapp.ui.activity.pokertable;
+package com.twb.pokerapp.ui.activity.table.list;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,24 +10,24 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.twb.pokerapp.R;
-import com.twb.pokerapp.data.model.dto.pokertable.TableDTO;
+import com.twb.pokerapp.data.model.dto.table.TableDTO;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class PokerTableAdapter extends RecyclerView.Adapter<PokerTableAdapter.ViewHolder> {
+public class TableListAdapter extends RecyclerView.Adapter<TableListAdapter.ViewHolder> {
     private final PokerTableClickListener clickListener;
     private final List<TableDTO> dataset = new ArrayList<>();
 
-    public PokerTableAdapter(PokerTableClickListener clickListener) {
+    public TableListAdapter(PokerTableClickListener clickListener) {
         this.clickListener = clickListener;
     }
 
     @NonNull
     @Override
-    public PokerTableAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        PokerTableAdapter.ViewHolder viewHolder = new PokerTableAdapter.ViewHolder(LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.poker_table_item_layout, parent, false));
+    public TableListAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        TableListAdapter.ViewHolder viewHolder = new TableListAdapter.ViewHolder(LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.table_list_item, parent, false));
 
         viewHolder.connectButton.setOnClickListener(view -> {
 
@@ -42,7 +42,7 @@ public class PokerTableAdapter extends RecyclerView.Adapter<PokerTableAdapter.Vi
     }
 
     @Override
-    public void onBindViewHolder(PokerTableAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(TableListAdapter.ViewHolder holder, int position) {
         holder.bind(dataset.get(position));
     }
 

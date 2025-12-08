@@ -8,7 +8,7 @@
     android:orientation="vertical"
     android:padding="10dp"
     android:weightSum="1"
-    tools:context=".ui.activity.pokergame.PokerGameActivity"
+    tools:context=".ui.activity.game.texas.TexasGameActivity"
     tools:ignore="NestedWeights">
 
     <LinearLayout
@@ -23,7 +23,7 @@
             android:layout_height="1dp"
             android:layout_weight="1" />
 
-        <com.twb.pokerapp.ui.layout.CardPairLayout
+        <com.twb.pokerapp.ui.layout.texas.CardPairLayout
             android:id="@+id/tablePlayer2CardPairLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
@@ -33,7 +33,7 @@
             android:layout_height="1dp"
             android:layout_weight="1" />
 
-        <com.twb.pokerapp.ui.layout.CardPairLayout
+        <com.twb.pokerapp.ui.layout.texas.CardPairLayout
             android:id="@+id/tablePlayer3CardPairLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
@@ -43,7 +43,7 @@
             android:layout_height="1dp"
             android:layout_weight="1" />
 
-        <com.twb.pokerapp.ui.layout.CardPairLayout
+        <com.twb.pokerapp.ui.layout.texas.CardPairLayout
             android:id="@+id/tablePlayer4CardPairLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
@@ -66,7 +66,7 @@
             android:layout_height="1dp"
             android:layout_weight="1" />
 
-        <com.twb.pokerapp.ui.layout.CardPairLayout
+        <com.twb.pokerapp.ui.layout.texas.CardPairLayout
             android:id="@+id/tablePlayer1CardPairLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
@@ -76,7 +76,7 @@
             android:layout_height="1dp"
             android:layout_weight="1" />
 
-        <com.twb.pokerapp.ui.layout.CommunityCardLayout
+        <com.twb.pokerapp.ui.layout.texas.CommunityCardLayout
             android:id="@+id/communityCardLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
@@ -86,7 +86,7 @@
             android:layout_height="1dp"
             android:layout_weight="1" />
 
-        <com.twb.pokerapp.ui.layout.CardPairLayout
+        <com.twb.pokerapp.ui.layout.texas.CardPairLayout
             android:id="@+id/tablePlayer5CardPairLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
@@ -129,7 +129,7 @@
 
         </FrameLayout>
 
-        <com.twb.pokerapp.ui.layout.CardPairLayout
+        <com.twb.pokerapp.ui.layout.texas.CardPairLayout
             android:id="@+id/playerCardPairLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />

@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".ui.activity.pokertable.PokerTableActivity">
+    tools:context=".ui.activity.table.list.TableListActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -33,7 +33,7 @@
             android:layout_height="match_parent"
             android:clipToPadding="false"
             android:padding="4dp"
-            tools:listitem="@layout/poker_table_item_layout" />
+            tools:listitem="@layout/table_list_item" />
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 </LinearLayout>

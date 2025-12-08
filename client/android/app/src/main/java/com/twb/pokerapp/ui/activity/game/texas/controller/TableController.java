@@ -1,4 +1,4 @@
-package com.twb.pokerapp.ui.activity.pokergame.controller;
+package com.twb.pokerapp.ui.activity.game.texas.controller;
 
 import android.app.Activity;
 
@@ -10,8 +10,8 @@ import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.DealCommunityCardDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.DealPlayerCardDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.RoundFinishedDTO;
-import com.twb.pokerapp.ui.layout.CardPairLayout;
-import com.twb.pokerapp.ui.layout.CommunityCardLayout;
+import com.twb.pokerapp.ui.layout.texas.CardPairLayout;
+import com.twb.pokerapp.ui.layout.texas.CommunityCardLayout;
 
 import java.util.HashMap;
 import java.util.Map;

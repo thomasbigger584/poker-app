@@ -1,42 +1,38 @@
 package com.twb.pokerapp.data.repository;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import com.twb.pokerapp.data.model.dto.pokertable.TableDTO;
+import com.twb.pokerapp.data.model.dto.table.TableDTO;
 import com.twb.pokerapp.data.retrofit.api.PokerTableApi;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class PokerTableRepository extends BaseRepository {
-    private static final String TAG = PokerTableRepository.class.getSimpleName();
+public class TableRepository extends BaseRepository {
+    private static final String TAG = TableRepository.class.getSimpleName();
     private final PokerTableApi api;
-    private final MutableLiveData<List<TableDTO>> getPokerTablesLiveData = new MutableLiveData<>();
+    private final MutableLiveData<List<TableDTO>> getTablesLiveData = new MutableLiveData<>();
 
-    public PokerTableRepository(PokerTableApi api) {
+    public TableRepository(PokerTableApi api) {
         this.api = api;
     }
 
-    public LiveData<List<TableDTO>> getPokerTables() {
+    public LiveData<List<TableDTO>> getTables() {
         Map<String, Integer> queryParams = new HashMap<>();
-        api.getPokerTables(queryParams).enqueue(new Callback<>() {
+        api.getTables(queryParams).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<List<TableDTO>> call, @NonNull Response<List<TableDTO>> response) {
                 if (response.isSuccessful()) {
-                    getPokerTablesLiveData.setValue(response.body());
+                    getTablesLiveData.setValue(response.body());
                 } else {
-                    errorLiveData.setValue(new RuntimeException("Failed to get poker tables"));
+                    errorLiveData.setValue(new RuntimeException("Failed to get tables"));
                 }
             }
 
@@ -45,6 +41,6 @@ public class PokerTableRepository extends BaseRepository {
                 errorLiveData.setValue(throwable);
             }
         });
-        return getPokerTablesLiveData;
+        return getTablesLiveData;
     }
 }

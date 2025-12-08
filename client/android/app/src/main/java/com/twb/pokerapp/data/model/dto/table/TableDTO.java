@@ -1,4 +1,4 @@
-package com.twb.pokerapp.data.model.dto.pokertable;
+package com.twb.pokerapp.data.model.dto.table;
 
 
 import android.os.Bundle;

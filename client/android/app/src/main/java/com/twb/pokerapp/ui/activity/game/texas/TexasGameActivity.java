@@ -1,4 +1,4 @@
-package com.twb.pokerapp.ui.activity.pokergame;
+package com.twb.pokerapp.ui.activity.game.texas;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -6,7 +6,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.lifecycle.ViewModelProvider;
@@ -18,16 +17,16 @@ import com.twb.pokerapp.data.auth.AuthService;
 import com.twb.pokerapp.data.model.dto.bettinground.BettingRoundDTO;
 import com.twb.pokerapp.data.model.dto.playeraction.PlayerActionDTO;
 import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
-import com.twb.pokerapp.data.model.dto.pokertable.TableDTO;
+import com.twb.pokerapp.data.model.dto.table.TableDTO;
 import com.twb.pokerapp.data.model.enumeration.ActionType;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerTurnDTO;
 import com.twb.pokerapp.ui.activity.login.BaseAuthActivity;
-import com.twb.pokerapp.ui.activity.pokergame.chatbox.ChatBoxRecyclerAdapter;
-import com.twb.pokerapp.ui.activity.pokergame.controller.ControlsController;
-import com.twb.pokerapp.ui.activity.pokergame.controller.TableController;
+import com.twb.pokerapp.ui.activity.game.chatbox.ChatBoxRecyclerAdapter;
+import com.twb.pokerapp.ui.activity.game.texas.controller.ControlsController;
+import com.twb.pokerapp.ui.activity.game.texas.controller.TableController;
 import com.twb.pokerapp.ui.dialog.AlertModalDialog;
-import com.twb.pokerapp.ui.dialog.BasePokerGameDialog;
-import com.twb.pokerapp.ui.dialog.BetRaisePokerGameDialog;
+import com.twb.pokerapp.ui.dialog.game.BaseGameDialog;
+import com.twb.pokerapp.ui.dialog.game.BetRaiseGameDialog;
 import com.twb.pokerapp.ui.dialog.DialogHelper;
 import com.twb.pokerapp.ui.dialog.FinishActivityOnClickListener;
 
@@ -38,24 +37,24 @@ import javax.inject.Inject;
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
-public class PokerGameActivity extends BaseAuthActivity implements BetRaisePokerGameDialog.BetRaiseClickListener {
-    private static final String TAG = PokerGameActivity.class.getSimpleName();
+public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameDialog.BetRaiseClickListener {
+    private static final String TAG = TexasGameActivity.class.getSimpleName();
     private static final String MODAL_TAG = "modal_alert";
 
     @Inject
     AuthService authService;
 
-    private PokerGameViewModel viewModel;
+    private TexasGameViewModel viewModel;
     private TableDTO pokerTable;
     private AlertDialog loadingSpinner;
-    private BasePokerGameDialog betRaisePokerGameDialog;
+    private BaseGameDialog betRaisePokerGameDialog;
     private ChatBoxRecyclerAdapter chatBoxAdapter;
     private TableController tableController;
     private ControlsController controlsController;
 
     @Override
     protected int getContentView() {
-        return R.layout.activity_poker_game;
+        return R.layout.activity_texas_game;
     }
 
     @Override
@@ -88,7 +87,7 @@ public class PokerGameActivity extends BaseAuthActivity implements BetRaisePoker
         chatBoxAdapter = new ChatBoxRecyclerAdapter(layoutManager);
         chatBoxRecyclerView.setAdapter(chatBoxAdapter);
 
-        viewModel = new ViewModelProvider(this).get(PokerGameViewModel.class);
+        viewModel = new ViewModelProvider(this).get(TexasGameViewModel.class);
         viewModel.errors.observe(this, throwable -> {
             if (throwable == null) return;
             DialogHelper.dismiss(loadingSpinner);
@@ -225,7 +224,7 @@ public class PokerGameActivity extends BaseAuthActivity implements BetRaisePoker
         dismissDialogs();
         double funds = 1000d; //todo: get current player funds
         double minimumBet = 10d; //todo: get current minimum bet
-        betRaisePokerGameDialog = BetRaisePokerGameDialog.newInstance(ActionType.BET, funds, minimumBet, this);
+        betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.BET, funds, minimumBet, this);
         betRaisePokerGameDialog.show(getSupportFragmentManager());
     }
 
@@ -237,7 +236,7 @@ public class PokerGameActivity extends BaseAuthActivity implements BetRaisePoker
         dismissDialogs();
         double funds = 1000d; //todo: get current player funds
         double minimumBet = 10d; //todo: get minimum bet
-        betRaisePokerGameDialog = BetRaisePokerGameDialog.newInstance(ActionType.RAISE, funds, minimumBet, this);
+        betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.RAISE, funds, minimumBet, this);
         betRaisePokerGameDialog.show(getSupportFragmentManager());
     }
 

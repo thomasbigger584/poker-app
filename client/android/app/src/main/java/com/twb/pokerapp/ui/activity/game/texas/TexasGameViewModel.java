@@ -1,4 +1,4 @@
-package com.twb.pokerapp.ui.activity.pokergame;
+package com.twb.pokerapp.ui.activity.game.texas;
 
 import android.util.Log;
 
@@ -17,7 +17,6 @@ import com.twb.pokerapp.data.websocket.message.server.payload.DealerDeterminedDT
 import com.twb.pokerapp.data.websocket.message.server.payload.ErrorMessageDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.GameFinishedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.LogMessageDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.PlayerActionEventDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerConnectedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerDisconnectedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerSubscribedDTO;
@@ -32,10 +31,10 @@ import javax.inject.Inject;
 import dagger.hilt.android.lifecycle.HiltViewModel;
 
 @HiltViewModel
-public class PokerGameViewModel extends ViewModel
+public class TexasGameViewModel extends ViewModel
         implements WebSocketClient.WebSocketListener, WebSocketClient.SendListener {
 
-    private static final String TAG = PokerGameViewModel.class.getSimpleName();
+    private static final String TAG = TexasGameViewModel.class.getSimpleName();
     private final WebSocketClient webSocketClient;
 
     public MutableLiveData<Throwable> errors = new MutableLiveData<>();
@@ -59,7 +58,7 @@ public class PokerGameViewModel extends ViewModel
     private UUID pokerTableId;
 
     @Inject
-    public PokerGameViewModel(WebSocketClient webSocketClient) {
+    public TexasGameViewModel(WebSocketClient webSocketClient) {
         this.webSocketClient = webSocketClient;
     }
 

@@ -1,4 +1,4 @@
-package com.twb.pokerapp.ui.activity.pokergame.chatbox;
+package com.twb.pokerapp.ui.activity.game.chatbox;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,7 +27,7 @@ public class ChatBoxRecyclerAdapter extends RecyclerView.Adapter<ChatBoxRecycler
     @Override
     public ChatBoxViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View chatBoxItemLayout = LayoutInflater.from(parent.getContext()).
-                inflate(R.layout.chat_box_item_layout, parent, false);
+                inflate(R.layout.chat_box_list_item, parent, false);
         return new ChatBoxViewHolder(chatBoxItemLayout);
     }
 

@@ -28,13 +28,13 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ui.activity.pokertable.PokerTableActivity"
+            android:name=".ui.activity.table.list.TableListActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.activity.pokergame.PokerGameActivity"
+            android:name=".ui.activity.game.texas.TexasGameActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="false"
-            android:label="@string/title_activity_poker_game"
+            android:label="@string/title_activity_game"
             android:screenOrientation="landscape"
             android:theme="@style/FullscreenTheme" />
 
