@@ -19,5 +19,5 @@ public abstract class TableValidationService {
         onValidate(dto);
     }
 
-    public abstract void onValidate(CreateTableDTO dto);
+    protected abstract void onValidate(CreateTableDTO dto);
 }
