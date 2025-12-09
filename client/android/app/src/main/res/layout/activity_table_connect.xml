@@ -24,13 +24,102 @@
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:paddingStart="16dp"
+            android:paddingTop="16dp"
+            android:paddingEnd="16dp">
+
+            <TextView
+                android:id="@+id/text_connect_to_table"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="16dp"
+                android:text="Connect to Home Game 1"
+                android:textColor="@android:color/black"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <RadioGroup
+                android:id="@+id/radio_group_connect_type"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="24dp">
+
+                <RadioButton
+                    android:id="@+id/radio_player"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:paddingBottom="8dp"
+                    android:text="Connect as Player" />
+
+                <RadioButton
+                    android:id="@+id/radio_viewer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Connect as Viewer" />
+            </RadioGroup>
+
+            <TextView
+                android:id="@+id/text_choose_buy_in"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="8dp"
+                android:text="Choose Buy-in Amount"
+                android:textColor="@android:color/black"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/spinner_border"
+                android:orientation="vertical"
+                tools:ignore="UselessParent">
+
+                <EditText
+                    android:id="@+id/edit_text_funds"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Enter buy-in amount"
+                    android:importantForAutofill="no"
+                    android:inputType="numberDecimal" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="start"
+                android:orientation="horizontal"
+                android:paddingTop="8dp"
+                android:paddingBottom="32dp"
+                android:weightSum="1">
+
+                <Button
+                    android:id="@+id/button_min_buy_in"
+                    style="@style/PrimaryLightButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="0.5"
+                    android:text="Min Buy-in" />
+
+                <Button
+                    android:id="@+id/button_max_buy_in"
+                    style="@style/PrimaryLightButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5"
+                    android:text="Max Buy-in" />
+            </LinearLayout>
 
             <Button
                 android:id="@+id/button_connect_table"
@@ -38,7 +127,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:onClick="onConnectTableClick"
-                android:text="Connect" />
+                android:text="Connect Table" />
 
         </LinearLayout>
     </ScrollView>
