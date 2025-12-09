@@ -42,7 +42,7 @@ public class WebSocketClient {
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String CONNECTION_TYPE_HEADER = "X-Connection-Type";
-    private static final String PLAYER_CONNECTION_TYPE = "PLAYER";
+    private static final String BUY_IN_AMOUNT_HEADER = "X-BuyIn-Amount";
     private final AuthService authService;
     private final Gson gson;
 
@@ -59,7 +59,7 @@ public class WebSocketClient {
     // WebSocket Lifecycle
     // ***************************************************************
 
-    public void connect(UUID tableId, WebSocketListener listener) {
+    public void connect(UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount) {
         if (stompClient != null && stompClient.isConnected()) {
             return;
         }
@@ -72,7 +72,8 @@ public class WebSocketClient {
 
         List<StompHeader> headers = new ArrayList<>();
         headers.add(new StompHeader(AUTHORIZATION_HEADER, BEARER_PREFIX + accessToken));
-        headers.add(new StompHeader(CONNECTION_TYPE_HEADER, PLAYER_CONNECTION_TYPE));
+        headers.add(new StompHeader(CONNECTION_TYPE_HEADER, connectionType));
+        headers.add(new StompHeader(BUY_IN_AMOUNT_HEADER, String.format(Locale.getDefault(), "%.2f", buyInAmount)));
 
         stompClient.withClientHeartbeat(CLIENT_HEARTBEAT_MS)
                 .withServerHeartbeat(SERVER_HEARTBEAT_MS);

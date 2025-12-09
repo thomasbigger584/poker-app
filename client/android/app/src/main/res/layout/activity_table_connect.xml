@@ -46,7 +46,7 @@
                 android:textStyle="bold" />
 
             <RadioGroup
-                android:id="@+id/radio_group_connect_type"
+                android:id="@+id/connect_Type_radio_group"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
@@ -67,59 +67,68 @@
                     android:text="Connect as Viewer" />
             </RadioGroup>
 
-            <TextView
-                android:id="@+id/text_choose_buy_in"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingBottom="8dp"
-                android:text="Choose Buy-in Amount"
-                android:textColor="@android:color/black"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:background="@drawable/spinner_border"
-                android:orientation="vertical"
-                tools:ignore="UselessParent">
-
-                <EditText
-                    android:id="@+id/edit_text_funds"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Enter buy-in amount"
-                    android:importantForAutofill="no"
-                    android:inputType="numberDecimal" />
-            </FrameLayout>
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="start"
-                android:orientation="horizontal"
-                android:paddingTop="8dp"
-                android:paddingBottom="32dp"
-                android:weightSum="1">
+                android:id="@+id/buy_in_linear_layout"
+                android:orientation="vertical">
 
-                <Button
-                    android:id="@+id/button_min_buy_in"
-                    style="@style/PrimaryLightButton"
-                    android:layout_width="wrap_content"
+                <TextView
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:layout_weight="0.5"
-                    android:text="Min Buy-in" />
+                    android:paddingBottom="8dp"
+                    android:text="Choose Buy-in Amount"
+                    android:textColor="@android:color/black"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
 
-                <Button
-                    android:id="@+id/button_max_buy_in"
-                    style="@style/PrimaryLightButton"
-                    android:layout_width="wrap_content"
+                <FrameLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="0.5"
-                    android:text="Max Buy-in" />
+                    android:layout_marginBottom="16dp"
+                    android:background="@drawable/spinner_border"
+                    android:orientation="vertical"
+                    tools:ignore="UselessParent">
+
+                    <EditText
+                        android:id="@+id/buy_in_edit_text"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Enter buy-in amount"
+                        android:importantForAutofill="no"
+                        android:inputType="numberDecimal" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="start"
+                    android:orientation="horizontal"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="32dp"
+                    android:weightSum="1">
+
+                    <Button
+                        android:id="@+id/button_min_buy_in"
+                        style="@style/PrimaryLightButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:layout_weight="0.5"
+                        android:onClick="onMinBuyInClick"
+                        android:text="Min Buy-in" />
+
+                    <Button
+                        android:id="@+id/button_max_buy_in"
+                        style="@style/PrimaryLightButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.5"
+                        android:onClick="onMaxBuyInClick"
+                        android:text="Max Buy-in" />
+                </LinearLayout>
             </LinearLayout>
+
 
             <Button
                 android:id="@+id/button_connect_table"

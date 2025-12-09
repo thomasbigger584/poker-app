@@ -68,9 +68,9 @@ public class TexasGameViewModel extends ViewModel
     // WebSocket Lifecycle
     // ***************************************************************
 
-    public void connect(UUID tableId) {
+    public void connect(UUID tableId, String connectionType, Double buyInAmount) {
         this.tableId = tableId;
-        this.webSocketClient.connect(tableId, this);
+        this.webSocketClient.connect(tableId, this, connectionType, buyInAmount);
     }
 
     @Override

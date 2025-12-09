@@ -1,5 +1,6 @@
 package com.twb.pokerapp.ui.activity.game.texas;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -41,6 +42,8 @@ import dagger.hilt.android.AndroidEntryPoint;
 public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameDialog.BetRaiseClickListener {
     private static final String TAG = TexasGameActivity.class.getSimpleName();
     private static final String MODAL_TAG = "modal_alert";
+    private static final String KEY_CONNECTION_TYPE = "CONNECTION_TYPE";
+    private static final String KEY_BUY_IN_AMOUNT = "BUY_IN_AMOUNT";
 
     @Inject
     AuthService authService;
@@ -52,6 +55,16 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     private ChatBoxRecyclerAdapter chatBoxAdapter;
     private TableController tableController;
     private ControlsController controlsController;
+    private String connectionType;
+    private Double buyInAmount;
+
+    public static void startActivity(Activity activity, TableDTO table, String connectionType, Double buyInAmount) {
+        Intent intent = new Intent(activity, TexasGameActivity.class);
+        intent.putExtras(table.toBundle());
+        intent.putExtra(KEY_CONNECTION_TYPE, connectionType);
+        intent.putExtra(KEY_BUY_IN_AMOUNT, buyInAmount);
+        activity.startActivity(intent);
+    }
 
     @Override
     protected int getContentView() {
@@ -72,6 +85,8 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             return;
         }
         table = TableDTO.fromBundle(extras);
+        connectionType = intent.getStringExtra(KEY_CONNECTION_TYPE);
+        buyInAmount = intent.getDoubleExtra(KEY_BUY_IN_AMOUNT, 0d);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
@@ -199,7 +214,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
 
     @Override
     protected void onAuthorized() {
-        viewModel.connect(table.getId());
+        viewModel.connect(table.getId(), connectionType, buyInAmount);
     }
 
     @Override
@@ -228,9 +243,8 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
 
     public void onBetClick(View view) {
         dismissDialogs();
-        double funds = 1000d; //todo: get current player funds
         double minimumBet = 10d; //todo: get current minimum bet
-        betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.BET, funds, minimumBet, this);
+        betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.BET, buyInAmount, minimumBet, this);
         betRaisePokerGameDialog.show(getSupportFragmentManager());
     }
 
@@ -240,9 +254,8 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
 
     public void onRaiseClick(View view) {
         dismissDialogs();
-        double funds = 1000d; //todo: get current player funds
         double minimumBet = 10d; //todo: get minimum bet
-        betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.RAISE, funds, minimumBet, this);
+        betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.RAISE, buyInAmount, minimumBet, this);
         betRaisePokerGameDialog.show(getSupportFragmentManager());
     }
 
