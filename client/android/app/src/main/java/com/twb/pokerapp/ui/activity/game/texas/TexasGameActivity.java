@@ -71,8 +71,9 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             Toast.makeText(this, "Bundle extras is null", Toast.LENGTH_SHORT).show();
             return;
         }
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         table = TableDTO.fromBundle(extras);
+
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         loadingSpinner = DialogHelper.createLoadingSpinner(this);
         DialogHelper.show(loadingSpinner);

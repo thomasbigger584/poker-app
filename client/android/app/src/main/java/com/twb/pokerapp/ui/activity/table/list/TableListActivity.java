@@ -16,7 +16,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.model.dto.table.TableDTO;
 import com.twb.pokerapp.ui.activity.login.BaseAuthActivity;
-import com.twb.pokerapp.ui.activity.game.texas.TexasGameActivity;
+import com.twb.pokerapp.ui.activity.table.connect.TableConnectActivity;
 import com.twb.pokerapp.ui.activity.table.create.TableCreateActivity;
 import com.twb.pokerapp.ui.dialog.AlertModalDialog;
 
@@ -94,13 +94,9 @@ public class TableListActivity extends BaseAuthActivity
 
     @Override
     public void onTableClicked(TableDTO table) {
-        if (table.getGameType().equals("TEXAS_HOLDEM")) {
-            Intent intent = new Intent(this, TexasGameActivity.class);
-            intent.putExtras(table.toBundle());
-            startActivity(intent);
-        } else {
-            Toast.makeText(this, "Unsupported Game Type", Toast.LENGTH_SHORT).show();
-        }
+        Intent intent = new Intent(this, TableConnectActivity.class);
+        intent.putExtras(table.toBundle());
+        startActivity(intent);
     }
 
     @Override

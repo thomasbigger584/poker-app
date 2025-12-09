@@ -14,8 +14,8 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:usesCleartextTraffic="true"
         android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true"
         tools:targetApi="35">
         <activity
             android:name=".ui.activity.login.LoginActivity"
@@ -32,6 +32,9 @@
             android:exported="false" />
         <activity
             android:name=".ui.activity.table.create.TableCreateActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.activity.table.connect.TableConnectActivity"
             android:exported="false" />
         <activity
             android:name=".ui.activity.game.texas.TexasGameActivity"
