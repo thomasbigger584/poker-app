@@ -53,10 +53,10 @@
             <column name="max_players" type="int">
                 <constraints nullable="false"/>
             </column>
-            <column name="min_buyin" type="int">
+            <column name="min_buyin" type="double">
                 <constraints nullable="false"/>
             </column>
-            <column name="max_buyin" type="int">
+            <column name="max_buyin" type="double">
                 <constraints nullable="false"/>
             </column>
             <column name="created_date_time" type="TIMESTAMP WITH TIME ZONE">
