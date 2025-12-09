@@ -23,6 +23,8 @@ class TableResourceIT extends BaseTestContainersIT {
         createDto.setGameType(GameType.TEXAS_HOLDEM);
         createDto.setMinPlayers(2);
         createDto.setMaxPlayers(6);
+        createDto.setMinBuyin(100d);
+        createDto.setMaxBuyin(10_000d);
 
         // when
         var createResponse = adminRestClient.post(TableDTO.class, createDto, ENDPOINT);
