@@ -3,10 +3,8 @@ package com.twb.pokerapp.testutils.sql;
 import com.twb.pokerapp.domain.AppUser;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.PokerTable;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.NoResultException;
-import jakarta.persistence.Persistence;
+import jakarta.persistence.*;
+import jakarta.persistence.metamodel.EntityType;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 
 import java.util.HashMap;
@@ -31,6 +29,17 @@ public class SqlClient implements AutoCloseable {
 
         emf = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, properties);
         em = emf.createEntityManager();
+    }
+
+    public void truncate() {
+        var transaction = em.getTransaction();
+        transaction.begin();
+        var entities = em.getMetamodel().getEntities();
+        for (var entity : entities) {
+            var nativeTableName = getNativeTableName(entity);
+            em.createNativeQuery("TRUNCATE TABLE " + nativeTableName + " CASCADE").executeUpdate();
+        }
+        transaction.commit();
     }
 
     // *****************************************************************************************
@@ -77,6 +86,33 @@ public class SqlClient implements AutoCloseable {
         var className = clazz.getSimpleName();
         var query = "SELECT o FROM " + className + " o";
         return em.createQuery(query, clazz).getResultList();
+    }
+
+    private String getNativeTableName(EntityType<?> entity) {
+        var className = entity.getName();
+        var fqClassName = getClassForName(className);
+        return getNativeTableName(fqClassName);
+    }
+
+    // *****************************************************************************************
+    // Entity Helper
+    // *****************************************************************************************
+
+    private Class<?> getClassForName(String className) {
+        try {
+            String fqClassName = "com.twb.pokerapp.domain." + className;
+            return Class.forName(fqClassName);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("Failed to get domain class for name:" + className, e);
+        }
+    }
+
+    private String getNativeTableName(Class<?> entityClass) {
+        Table tableAnnotation = entityClass.getAnnotation(Table.class);
+        if (tableAnnotation == null || tableAnnotation.name().isEmpty()) {
+            throw new RuntimeException("Failed to get table name from entity class: " + entityClass);
+        }
+        return tableAnnotation.name();
     }
 
     // *****************************************************************************************

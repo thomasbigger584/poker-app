@@ -11,7 +11,6 @@ public abstract class TableValidationService {
         onValidate(dto);
     }
 
-
     private void validatePlayerCounts(CreateTableDTO dto) {
         var minPlayers = dto.getGameType().getMinPlayerCount();
         if (dto.getMinPlayers() < minPlayers) {

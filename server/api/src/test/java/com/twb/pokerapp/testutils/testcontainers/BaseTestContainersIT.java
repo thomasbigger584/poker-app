@@ -141,6 +141,7 @@ public abstract class BaseTestContainersIT {
 
     @AfterEach
     public void onAfterEach() throws Throwable {
+        sqlClient.truncate();
         sqlClient.close();
         API_CONTAINER.stop();
         DB_CONTAINER.stop();
