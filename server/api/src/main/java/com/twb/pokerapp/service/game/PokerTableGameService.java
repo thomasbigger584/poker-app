@@ -40,7 +40,7 @@ public class PokerTableGameService {
     private final XSync<UUID> mutex;
     private final ApplicationContext context;
 
-    public ServerMessageDTO onUserConnected(UUID tableId, ConnectionType connectionType, String username) {
+    public ServerMessageDTO onUserConnected(UUID tableId, ConnectionType connectionType, String username, Double buyInAmount) {
         return mutex.evaluate(tableId, () -> {
             var tableOpt = tableRepository.findById(tableId);
             if (tableOpt.isEmpty()) {
@@ -66,7 +66,7 @@ public class PokerTableGameService {
                 threadManager.createIfNotExist(table);
             }
 
-            var connectedPlayerSession = playerSessionService.connectUserToRound(appUser, connectionType, table);
+            var connectedPlayerSession = playerSessionService.connectUserToRound(appUser, connectionType, table, buyInAmount);
             var allPlayerSessions = playerSessionService.getByTableId(tableId);
 
             dispatcher.send(tableId, messageFactory.playerConnected(connectedPlayerSession));

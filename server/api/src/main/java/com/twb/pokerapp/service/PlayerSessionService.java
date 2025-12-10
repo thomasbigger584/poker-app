@@ -23,7 +23,7 @@ public class PlayerSessionService {
     private final PlayerSessionRepository repository;
     private final PlayerSessionMapper mapper;
 
-    public PlayerSessionDTO connectUserToRound(AppUser user, ConnectionType connectionType, PokerTable table) {
+    public PlayerSessionDTO connectUserToRound(AppUser user, ConnectionType connectionType, PokerTable table, Double buyInAmount) {
         var tableId = table.getId();
         var username = user.getUsername();
 
@@ -45,7 +45,7 @@ public class PlayerSessionService {
         if (connectionType == ConnectionType.PLAYER) {
             var position = getSessionTablePosition(table);
             session.setPosition(position);
-            session.setFunds(1000d); // todo: dynamically set funds
+            session.setFunds(buyInAmount);
         }
 
         session = repository.saveAndFlush(session);

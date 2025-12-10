@@ -8,6 +8,6 @@ import lombok.Data;
 public class CreateChatMessageDTO {
 
     @NotBlank(message = "Chat message cannot be blank")
-    @Size(min = 5, max = 50, message = "Chat Message must be between 5 and 50 characters")
+    @Size(min = 1, max = 50, message = "Chat Message must be between 1 and 50 characters")
     private String message;
 }

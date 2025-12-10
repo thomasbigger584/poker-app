@@ -19,6 +19,10 @@ public class SessionEventListener {
     private final SessionService sessionService;
     private final TableWebSocketController webSocketController;
 
+    // *****************************************************************************************
+    // Lifecycle Methods
+    // *****************************************************************************************
+
     @EventListener
     public void handleEvent(SessionConnectEvent event) {
         log.info("Attempting to connect: {}", event);

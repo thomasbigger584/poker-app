@@ -103,7 +103,7 @@ public class SqlClient implements AutoCloseable {
 
     private Class<?> getClassForName(String className) {
         try {
-            String fqClassName = "com.twb.pokerapp.domain." + className;
+            var fqClassName = "com.twb.pokerapp.domain." + className;
             return Class.forName(fqClassName);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException("Failed to get domain class for name:" + className, e);
@@ -111,7 +111,7 @@ public class SqlClient implements AutoCloseable {
     }
 
     private String getNativeTableName(Class<?> entityClass) {
-        Table tableAnnotation = entityClass.getAnnotation(Table.class);
+        var tableAnnotation = entityClass.getAnnotation(Table.class);
         if (tableAnnotation == null || tableAnnotation.name().isEmpty()) {
             throw new RuntimeException("Failed to get table name from entity class: " + entityClass);
         }

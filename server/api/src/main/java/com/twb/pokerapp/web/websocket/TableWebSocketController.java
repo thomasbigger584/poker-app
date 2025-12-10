@@ -35,20 +35,23 @@ public class TableWebSocketController {
 
     private static final String POKER_TABLE_ID = "tableId";
 
+    private static final String HEADER_BUYIN_AMOUNT = "X-BuyIn-Amount";
+
     private final SessionService sessionService;
     private final ServerMessageFactory messageFactory;
     private final PokerTableGameService pokerTableGameService;
 
     @SubscribeMapping(TOPIC)
-    public ServerMessageDTO sendPlayerSubscribed(Principal principal, StompHeaderAccessor headerAccessor,
-                                                 @DestinationVariable(POKER_TABLE_ID) UUID tableId) {
-        ConnectionType connectionType = getConnectionType(headerAccessor);
+    public ServerMessageDTO sendPlayerSubscribed(Principal principal, StompHeaderAccessor headerAccessor, @DestinationVariable(POKER_TABLE_ID) UUID tableId) {
         sessionService.putPokerTableId(headerAccessor, tableId);
 
-        log.info(">>>> sendPlayerSubscribed - Poker Table: {} - User: {} - Type: {}", tableId, principal.getName(), connectionType);
+        ConnectionType connectionType = getConnectionType(headerAccessor);
+        Double buyInAmount = getBuyInAmount(headerAccessor, connectionType);
+
+        log.info(">>>> sendPlayerSubscribed - Table: {}, User: {}, Connection: {}, BuyIn: {}", tableId, principal.getName(), connectionType, buyInAmount);
         ServerMessageDTO message;
         try {
-            message = pokerTableGameService.onUserConnected(tableId, connectionType, principal.getName());
+            message = pokerTableGameService.onUserConnected(tableId, connectionType, principal.getName(), buyInAmount);
             log.info("<<<< sendPlayerSubscribed - " + message);
         } catch (Exception exception) {
             message = messageFactory.errorMessage(exception.getMessage());
@@ -59,30 +62,39 @@ public class TableWebSocketController {
 
     @MessageMapping(INBOUND_MESSAGE_PREFIX + SEND_CHAT_MESSAGE)
     @SendTo(SERVER_MESSAGE_TOPIC)
-    public ServerMessageDTO sendChatMessage(Principal principal,
-                                            @DestinationVariable(POKER_TABLE_ID) UUID tableId,
-                                            @Payload @Valid CreateChatMessageDTO message) {
+    public ServerMessageDTO sendChatMessage(Principal principal, @DestinationVariable(POKER_TABLE_ID) UUID tableId, @Payload @Valid CreateChatMessageDTO message) {
         return messageFactory.chatMessage(principal.getName(), message.getMessage());
     }
 
     @MessageMapping(INBOUND_MESSAGE_PREFIX + SEND_PLAYER_ACTION)
     @SendTo(SERVER_MESSAGE_TOPIC)
-    public void sendPlayerAction(Principal principal,
-                                 @DestinationVariable(POKER_TABLE_ID) UUID tableId,
-                                 @Payload @Valid CreatePlayerActionDTO action) {
+    public void sendPlayerAction(Principal principal, @DestinationVariable(POKER_TABLE_ID) UUID tableId, @Payload @Valid CreatePlayerActionDTO action) {
         pokerTableGameService.onPlayerAction(tableId, principal.getName(), action);
     }
 
     // not returning here as called from multiple places
     @MessageMapping(INBOUND_MESSAGE_PREFIX + SEND_DISCONNECT_PLAYER)
-    public void sendDisconnectPlayer(Principal principal,
-                                     @DestinationVariable(POKER_TABLE_ID) UUID tableId) {
+    public void sendDisconnectPlayer(Principal principal, @DestinationVariable(POKER_TABLE_ID) UUID tableId) {
         log.info(">>>> sendDisconnectPlayer - Poker Table: {} - User: {}", tableId, principal.getName());
         pokerTableGameService.onUserDisconnected(tableId, principal.getName());
     }
 
+    // *****************************************************************************************
+    // Helper Methods
+    // *****************************************************************************************
+
     private ConnectionType getConnectionType(StompHeaderAccessor headerAccessor) {
-        return sessionService.getConnectionType(headerAccessor)
-                .orElse(ConnectionType.LISTENER);
+        return sessionService.getConnectionType(headerAccessor).orElse(ConnectionType.LISTENER);
+    }
+
+    private Double getBuyInAmount(StompHeaderAccessor headerAccessor, ConnectionType connectionType) {
+        if (connectionType == ConnectionType.PLAYER) {
+            var buyInAmountHeader = headerAccessor.getNativeHeader(HEADER_BUYIN_AMOUNT);
+            if (buyInAmountHeader != null && !buyInAmountHeader.isEmpty()) {
+                return Double.parseDouble(buyInAmountHeader.getFirst());
+            }
+            throw new RuntimeException("No BuyIn Amount provided for player");
+        }
+        return 0d;
     }
 }
