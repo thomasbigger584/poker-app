@@ -14,12 +14,13 @@ import com.twb.pokerapp.data.model.dto.table.TableDTO;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class TableListAdapter extends RecyclerView.Adapter<TableListAdapter.ViewHolder> {
-    private final PokerTableClickListener clickListener;
+    private final TableClickListener clickListener;
     private final List<TableDTO> dataset = new ArrayList<>();
 
-    public TableListAdapter(PokerTableClickListener clickListener) {
+    public TableListAdapter(TableClickListener clickListener) {
         this.clickListener = clickListener;
     }
 
@@ -33,8 +34,8 @@ public class TableListAdapter extends RecyclerView.Adapter<TableListAdapter.View
 
             int position = viewHolder.getAdapterPosition();
             if (position != RecyclerView.NO_POSITION) {
-                TableDTO pokerTable = dataset.get(position);
-                clickListener.onTableClicked(pokerTable);
+                TableDTO table = dataset.get(position);
+                clickListener.onTableClicked(table);
             }
         });
 
@@ -62,8 +63,8 @@ public class TableListAdapter extends RecyclerView.Adapter<TableListAdapter.View
         notifyDataSetChanged();
     }
 
-    public interface PokerTableClickListener {
-        void onTableClicked(TableDTO pokerTable);
+    public interface TableClickListener {
+        void onTableClicked(TableDTO table);
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -80,10 +81,10 @@ public class TableListAdapter extends RecyclerView.Adapter<TableListAdapter.View
             connectButton = itemView.findViewById(R.id.connectButton);
         }
 
-        public void bind(TableDTO pokerTable) {
-            nameTextView.setText(pokerTable.getName());
-            gameTypeTextView.setText(pokerTable.getGameType());
-            playersTextView.setText("-/6");
+        public void bind(TableDTO table) {
+            nameTextView.setText(table.getName());
+            gameTypeTextView.setText(table.getGameType());
+            playersTextView.setText(String.format(Locale.getDefault(), "-/%d", table.getMaxPlayers()));
         }
     }
 }

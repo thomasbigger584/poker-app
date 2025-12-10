@@ -23,8 +23,7 @@ import com.twb.pokerapp.ui.dialog.AlertModalDialog;
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
-public class TableListActivity extends BaseAuthActivity
-        implements TableListAdapter.PokerTableClickListener {
+public class TableListActivity extends BaseAuthActivity implements TableListAdapter.TableClickListener {
     private SwipeRefreshLayout swipeRefreshLayout;
     private TableListViewModel viewModel;
     private TableListAdapter adapter;
@@ -45,8 +44,8 @@ public class TableListActivity extends BaseAuthActivity
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
-        swipeRefreshLayout.setOnRefreshListener(() -> viewModel.getTables().observe(this, pokerTables -> {
-            adapter.setData(pokerTables);
+        swipeRefreshLayout.setOnRefreshListener(() -> viewModel.getTables().observe(this, tables -> {
+            adapter.setData(tables);
             swipeRefreshLayout.setRefreshing(false);
         }));
 

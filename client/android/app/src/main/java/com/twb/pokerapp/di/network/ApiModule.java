@@ -17,7 +17,7 @@ public class ApiModule {
 
     @Provides
     @Singleton
-    public TableApi pokerTableApi(@Authenticated Retrofit retrofit) {
+    public TableApi tableApi(@Authenticated Retrofit retrofit) {
         return retrofit.create(TableApi.class);
     }
 }
