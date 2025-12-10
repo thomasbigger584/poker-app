@@ -1,7 +1,8 @@
 package com.twb.pokerapp.service.game.thread.impl;
 
-import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.domain.enumeration.GameType;
+import com.twb.pokerapp.dto.pokertable.CreateTableDTO;
+import com.twb.pokerapp.dto.pokertable.TableDTO;
 import com.twb.pokerapp.testutils.game.GameLatches;
 import com.twb.pokerapp.testutils.game.GameRunner;
 import com.twb.pokerapp.testutils.game.GameRunnerParams;
@@ -15,9 +16,11 @@ import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
 import com.twb.pokerapp.web.websocket.message.server.payload.validation.ValidationDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -26,12 +29,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TexasGameIT extends BaseTestContainersIT {
 
     @Override
-    protected void beforeEach() {
+    protected void beforeEach() throws Exception {
         var params = GameRunnerParams.builder()
                 .keycloakClients(keycloakClients)
                 .numberOfRounds(1)
                 .latches(GameLatches.create())
-                .table(getTexasHoldemTable())
+                .table(createTable())
                 .validator(validator)
                 .build();
         this.validator = new TexasValidator(params, sqlClient);
@@ -149,11 +152,17 @@ class TexasGameIT extends BaseTestContainersIT {
     // Helper Methods
     // *****************************************************************************************
 
-    private PokerTable getTexasHoldemTable() {
-        return sqlClient.getPokerTables()
-                .stream()
-                .filter(pokerTable -> pokerTable.getGameType() == GameType.TEXAS_HOLDEM)
-                .findFirst()
-                .orElseThrow();
+    private TableDTO createTable() throws Exception {
+        var createDto = new CreateTableDTO();
+        createDto.setName(UUID.randomUUID().toString());
+        createDto.setGameType(GameType.TEXAS_HOLDEM);
+        createDto.setMinPlayers(2);
+        createDto.setMaxPlayers(6);
+        createDto.setMinBuyin(100d);
+        createDto.setMaxBuyin(10_000d);
+
+        var createResponse = adminRestClient.post(TableDTO.class, createDto, "/poker-table");
+        assertEquals(HttpStatus.CREATED.value(), createResponse.httpResponse().statusCode());
+        return createResponse.resultBody();
     }
 }

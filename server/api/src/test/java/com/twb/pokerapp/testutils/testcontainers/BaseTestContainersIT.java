@@ -88,10 +88,10 @@ public abstract class BaseTestContainersIT {
                     .dependsOn(KEYCLOAK_CONTAINER, DB_CONTAINER);
 
     protected static KeycloakClients keycloakClients;
+    protected static RestClient adminRestClient;
+    protected static SqlClient sqlClient;
 
     protected GameRunner runner;
-    protected RestClient adminRestClient;
-    protected SqlClient sqlClient;
     protected Validator validator;
 
     static {
@@ -126,31 +126,30 @@ public abstract class BaseTestContainersIT {
 
     @BeforeAll
     public static void onBeforeAll() {
+        DB_CONTAINER.start();
         KEYCLOAK_CONTAINER.start();
+        API_CONTAINER.start();
         keycloakClients = new KeycloakClients(KEYCLOAK_CONTAINER.getAuthServerUrl());
+        adminRestClient = RestClient.getInstance(keycloakClients.getAdminKeycloak());
+        sqlClient = new SqlClient(DB_CONTAINER);
     }
 
     @BeforeEach
     public void onBeforeEach() throws Throwable {
-        DB_CONTAINER.start();
-        API_CONTAINER.start();
-        adminRestClient = RestClient.getInstance(keycloakClients.getAdminKeycloak());
-        sqlClient = new SqlClient(DB_CONTAINER);
         beforeEach();
     }
 
     @AfterEach
     public void onAfterEach() throws Throwable {
         sqlClient.truncate();
-        sqlClient.close();
-        API_CONTAINER.stop();
-        DB_CONTAINER.stop();
         afterEach();
     }
 
     @AfterAll
     public static void onAfterAll() {
+        API_CONTAINER.stop();
         KEYCLOAK_CONTAINER.stop();
+        DB_CONTAINER.stop();
     }
 
     // *****************************************************************************************
