@@ -41,6 +41,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private static final String SEND_PLAYER_ACTION = "/app/pokerTable/%s/sendPlayerAction";
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String HEADER_CONNECTION_TYPE = "X-Connection-Type";
+    private static final String HEADER_BUYIN_AMOUNT = "X-BuyIn-Amount";
     private static final TaskScheduler TASK_SCHEDULER =
             new ConcurrentTaskScheduler(Executors.newSingleThreadScheduledExecutor());
     @Getter
@@ -62,12 +63,19 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     }
 
     public void connect() throws InterruptedException {
+        connect(null);
+    }
+
+    public void connect(Double buyInAmount) throws InterruptedException {
         log.info("Connecting {} to {}", params.getUsername(), params.getTable().getId());
         var url = URI.create(CONNECTION_URL);
         var headers = new WebSocketHttpHeaders();
         var stompHeaders = new StompHeaders();
         stompHeaders.add(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken());
         stompHeaders.put(HEADER_CONNECTION_TYPE, Collections.singletonList(getConnectionType().toString()));
+        if (getConnectionType() == ConnectionType.PLAYER) {
+            stompHeaders.put(HEADER_BUYIN_AMOUNT, Collections.singletonList(Double.toString(buyInAmount)));
+        }
 
         client.connectAsync(url, headers, stompHeaders, this);
         if (!connectLatch.await(10, TimeUnit.SECONDS)) {

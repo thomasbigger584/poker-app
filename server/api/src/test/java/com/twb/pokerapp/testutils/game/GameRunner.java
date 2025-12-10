@@ -17,6 +17,8 @@ import java.util.Map;
 public class GameRunner {
     private final GameRunnerParams params;
 
+    private static final double DEFAULT_BUYIN_AMOUNT = 5_000d;
+
     public PlayersServerMessages run(Map<String, TurnHandler> turnHandlers) throws Exception {
         var players = getPlayers(turnHandlers);
         return run(players);
@@ -60,7 +62,7 @@ public class GameRunner {
 
     private void connectPlayers(List<AbstractTestUser> players) throws Exception {
         for (var player : players) {
-            player.connect();
+            player.connect(DEFAULT_BUYIN_AMOUNT);
         }
     }
 

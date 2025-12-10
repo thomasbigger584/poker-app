@@ -95,6 +95,6 @@ public class TableWebSocketController {
             }
             throw new RuntimeException("No BuyIn Amount provided for player");
         }
-        return 0d;
+        return null;
     }
 }
