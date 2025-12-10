@@ -2,6 +2,7 @@ package com.twb.pokerapp.web.websocket;
 
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.service.game.PokerTableGameService;
+import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.client.CreateChatMessageDTO;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
@@ -33,20 +34,21 @@ public class TableWebSocketController {
     private static final String SEND_PLAYER_ACTION = "/sendPlayerAction";
     private static final String SEND_DISCONNECT_PLAYER = "/sendDisconnectPlayer";
 
-    private static final String POKER_TABLE_ID = "tableId";
+    private static final String TABLE_ID = "tableId";
 
     private static final String HEADER_BUYIN_AMOUNT = "X-BuyIn-Amount";
 
     private final SessionService sessionService;
     private final ServerMessageFactory messageFactory;
+    private final MessageDispatcher dispatcher;
     private final PokerTableGameService pokerTableGameService;
 
     @SubscribeMapping(TOPIC)
-    public ServerMessageDTO sendPlayerSubscribed(Principal principal, StompHeaderAccessor headerAccessor, @DestinationVariable(POKER_TABLE_ID) UUID tableId) {
+    public ServerMessageDTO sendPlayerSubscribed(Principal principal, StompHeaderAccessor headerAccessor, @DestinationVariable(TABLE_ID) UUID tableId) {
         sessionService.putPokerTableId(headerAccessor, tableId);
 
         ConnectionType connectionType = getConnectionType(headerAccessor);
-        Double buyInAmount = getBuyInAmount(headerAccessor, connectionType);
+        Double buyInAmount = getBuyInAmount(headerAccessor);
 
         log.info(">>>> sendPlayerSubscribed - Table: {}, User: {}, Connection: {}, BuyIn: {}", tableId, principal.getName(), connectionType, buyInAmount);
         ServerMessageDTO message;
@@ -62,19 +64,20 @@ public class TableWebSocketController {
 
     @MessageMapping(INBOUND_MESSAGE_PREFIX + SEND_CHAT_MESSAGE)
     @SendTo(SERVER_MESSAGE_TOPIC)
-    public ServerMessageDTO sendChatMessage(Principal principal, @DestinationVariable(POKER_TABLE_ID) UUID tableId, @Payload @Valid CreateChatMessageDTO message) {
-        return messageFactory.chatMessage(principal.getName(), message.getMessage());
+    public void sendChatMessage(Principal principal, @DestinationVariable(TABLE_ID) UUID tableId, @Payload @Valid CreateChatMessageDTO message) {
+        var chatMessage = messageFactory.chatMessage(principal.getName(), message.getMessage());
+        dispatcher.send(tableId, chatMessage);
     }
 
     @MessageMapping(INBOUND_MESSAGE_PREFIX + SEND_PLAYER_ACTION)
     @SendTo(SERVER_MESSAGE_TOPIC)
-    public void sendPlayerAction(Principal principal, @DestinationVariable(POKER_TABLE_ID) UUID tableId, @Payload @Valid CreatePlayerActionDTO action) {
+    public void sendPlayerAction(Principal principal, @DestinationVariable(TABLE_ID) UUID tableId, @Payload @Valid CreatePlayerActionDTO action) {
         pokerTableGameService.onPlayerAction(tableId, principal.getName(), action);
     }
 
     // not returning here as called from multiple places
     @MessageMapping(INBOUND_MESSAGE_PREFIX + SEND_DISCONNECT_PLAYER)
-    public void sendDisconnectPlayer(Principal principal, @DestinationVariable(POKER_TABLE_ID) UUID tableId) {
+    public void sendDisconnectPlayer(Principal principal, @DestinationVariable(TABLE_ID) UUID tableId) {
         log.info(">>>> sendDisconnectPlayer - Poker Table: {} - User: {}", tableId, principal.getName());
         pokerTableGameService.onUserDisconnected(tableId, principal.getName());
     }
@@ -87,14 +90,7 @@ public class TableWebSocketController {
         return sessionService.getConnectionType(headerAccessor).orElse(ConnectionType.LISTENER);
     }
 
-    private Double getBuyInAmount(StompHeaderAccessor headerAccessor, ConnectionType connectionType) {
-        if (connectionType == ConnectionType.PLAYER) {
-            var buyInAmountHeader = headerAccessor.getNativeHeader(HEADER_BUYIN_AMOUNT);
-            if (buyInAmountHeader != null && !buyInAmountHeader.isEmpty()) {
-                return Double.parseDouble(buyInAmountHeader.getFirst());
-            }
-            throw new RuntimeException("No BuyIn Amount provided for player");
-        }
-        return null;
+    private Double getBuyInAmount(StompHeaderAccessor headerAccessor) {
+        return sessionService.getBuyInAmount(headerAccessor).orElse(null);
     }
 }

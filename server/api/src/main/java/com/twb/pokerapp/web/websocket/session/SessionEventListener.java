@@ -15,6 +15,7 @@ import org.springframework.web.socket.messaging.*;
 @RequiredArgsConstructor
 public class SessionEventListener {
     private static final String HEADER_CONNECTION_TYPE = "X-Connection-Type";
+    private static final String HEADER_BUYIN_AMOUNT = "X-BuyIn-Amount";
 
     private final SessionService sessionService;
     private final TableWebSocketController webSocketController;
@@ -29,9 +30,18 @@ public class SessionEventListener {
 
         var headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
         var connectionTypeHeader = headerAccessor.getNativeHeader(HEADER_CONNECTION_TYPE);
+        var buyInAmountHeader = headerAccessor.getNativeHeader(HEADER_BUYIN_AMOUNT);
+
         if (CollectionUtils.isNotEmpty(connectionTypeHeader)) {
             var connectionType = ConnectionType.valueOf(connectionTypeHeader.getFirst());
             sessionService.putConnectionType(headerAccessor, connectionType);
+
+            if (connectionType == ConnectionType.PLAYER) {
+                if (buyInAmountHeader != null && !buyInAmountHeader.isEmpty()) {
+                    var buyInAmount = Double.parseDouble(buyInAmountHeader.getFirst());
+                    sessionService.putBuyInAmount(headerAccessor, buyInAmount);
+                }
+            }
         } else {
             sessionService.putConnectionType(headerAccessor, ConnectionType.LISTENER);
         }

@@ -13,8 +13,8 @@ import java.util.UUID;
 @Component
 public class SessionService {
     private static final String SESSION_CONNECTION_TYPE = "SESSION_CONNECTION_TYPE";
-    private static final String SESSION_POKER_TABLE_ID = "SESSION_POKER_TABLE_ID";
-
+    private static final String SESSION_TABLE_ID = "SESSION_TABLE_ID";
+    private static final String SESSION_BUYIN_AMOUNT = "SESSION_BUYIN_AMOUNT";
 
     // *****************************************************************************************
     // PUT Methods
@@ -25,7 +25,11 @@ public class SessionService {
     }
 
     public void putPokerTableId(StompHeaderAccessor headerAccessor, UUID tableId) {
-        put(headerAccessor, SESSION_POKER_TABLE_ID, tableId);
+        put(headerAccessor, SESSION_TABLE_ID, tableId);
+    }
+
+    public void putBuyInAmount(StompHeaderAccessor headerAccessor, Double buyInAmount) {
+        put(headerAccessor, SESSION_BUYIN_AMOUNT, buyInAmount);
     }
 
     // *****************************************************************************************
@@ -37,7 +41,11 @@ public class SessionService {
     }
 
     public Optional<UUID> getPokerTableId(StompHeaderAccessor headerAccessor) {
-        return get(headerAccessor, SESSION_POKER_TABLE_ID);
+        return get(headerAccessor, SESSION_TABLE_ID);
+    }
+
+    public Optional<Double> getBuyInAmount(StompHeaderAccessor headerAccessor) {
+        return get(headerAccessor, SESSION_BUYIN_AMOUNT);
     }
 
     // *****************************************************************************************
