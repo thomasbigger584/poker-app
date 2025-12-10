@@ -5,6 +5,7 @@ import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.mapper.PlayerActionMapper;
 import com.twb.pokerapp.repository.PlayerActionRepository;
+import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -14,12 +15,19 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 @RequiredArgsConstructor
 public class PlayerActionService {
+    private final PlayerSessionRepository playerSessionRepository;
     private final PlayerActionRepository repository;
     private final PlayerActionMapper mapper;
 
     public PlayerAction create(PlayerSession playerSession,
                                BettingRound bettingRound,
                                CreatePlayerActionDTO createDto) {
+
+        var amount = createDto.getAmount();
+        if (amount != null && amount > 0d) {
+            playerSession.setFunds(playerSession.getFunds() - createDto.getAmount());
+            playerSession = playerSessionRepository.saveAndFlush(playerSession);
+        }
 
         var playerAction = new PlayerAction();
         playerAction.setPlayerSession(playerSession);

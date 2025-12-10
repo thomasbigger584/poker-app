@@ -1,5 +1,6 @@
 package com.twb.pokerapp.service.game.thread;
 
+import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
@@ -18,5 +19,10 @@ public class GameLogService {
 
     public void sendErrorMessage(PokerTable table, String message) {
         dispatcher.send(table, messageFactory.errorMessage(message));
+    }
+
+    public void sendErrorMessage(PlayerSession playerSession, String message) {
+        String username = playerSession.getUser().getUsername();
+        dispatcher.send(username, messageFactory.errorMessage(message));
     }
 }

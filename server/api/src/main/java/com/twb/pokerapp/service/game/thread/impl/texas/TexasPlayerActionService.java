@@ -67,8 +67,7 @@ public class TexasPlayerActionService implements GamePlayerActionService {
         var canPerformCheck = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId())
                 .stream().allMatch(action -> action.getActionType() == ActionType.CHECK);
         if (!canPerformCheck) {
-            log.warn("Cannot check as previous actions was not a check");
-            gameLogService.sendErrorMessage(table, "Cannot check as previous actions was not a check");
+            gameLogService.sendErrorMessage(playerSession, "Cannot check as previous actions was not a check");
             return false;
         }
         playerActionService.create(playerSession, bettingRound, createActionDto);
@@ -77,8 +76,11 @@ public class TexasPlayerActionService implements GamePlayerActionService {
 
     private boolean betAction(PokerTable table, PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
         if (createActionDto.getAmount() <= 0) {
-            log.warn("Cannot bet as amount is less than or equal to zero");
-            gameLogService.sendErrorMessage(table, "Cannot bet as amount is less than or equal to zero");
+            gameLogService.sendErrorMessage(playerSession, "Cannot bet %.2f as amount is less than or equal to zero".formatted(createActionDto.getAmount()));
+            return false;
+        }
+        if (createActionDto.getAmount() > playerSession.getFunds()) {
+            gameLogService.sendErrorMessage(playerSession, "Cannot bet as %.2f is more than current funds".formatted(createActionDto.getAmount()));
             return false;
         }
         var lastPlayerActions = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId());
@@ -86,7 +88,7 @@ public class TexasPlayerActionService implements GamePlayerActionService {
             var lastPlayerAction = lastPlayerActions.getFirst();
             if (List.of(ActionType.BET, ActionType.CALL, ActionType.RAISE).contains(lastPlayerAction.getActionType())) {
                 log.warn("Cannot bet as previous action was not a check");
-                gameLogService.sendErrorMessage(table, "Cannot bet as previous action was not a check");
+                gameLogService.sendErrorMessage(playerSession, "Cannot bet as previous action was not a check");
                 return false;
             }
         }
@@ -98,19 +100,21 @@ public class TexasPlayerActionService implements GamePlayerActionService {
     private boolean callAction(PokerTable table, PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
         var lastPlayerActions = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId());
         if (lastPlayerActions.isEmpty()) {
-            log.warn("Cannot call as there was no previous action");
-            gameLogService.sendErrorMessage(table, "Cannot call as there was no previous action");
+            gameLogService.sendErrorMessage(playerSession, "Cannot call as there was no previous action");
             return false;
         }
         var lastPlayerAction = lastPlayerActions.getFirst();
         var lastPlayerActionType = lastPlayerAction.getActionType();
         if (lastPlayerActionType == ActionType.CHECK) {
-            log.warn("Cannot call as previous action was a check");
-            gameLogService.sendErrorMessage(table, "Cannot call as previous action was a check");
+            gameLogService.sendErrorMessage(playerSession, "Cannot call as previous action was a check");
             return false;
         }
         var amountToCall = lastPlayerActionType.getAmountToCall(lastPlayerAction.getAmount());
         createActionDto.setAmount(amountToCall);
+        if (createActionDto.getAmount() > playerSession.getFunds()) {
+            gameLogService.sendErrorMessage(playerSession, "Cannot call as %.2f is more than current funds".formatted(createActionDto.getAmount()));
+            return false;
+        }
         playerActionService.create(playerSession, bettingRound, createActionDto);
         bettingRoundService.updatePot(bettingRound, createActionDto);
         return true;
