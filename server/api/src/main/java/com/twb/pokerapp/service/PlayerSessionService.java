@@ -8,6 +8,7 @@ import com.twb.pokerapp.domain.enumeration.SessionState;
 import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.mapper.PlayerSessionMapper;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
+import com.twb.pokerapp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -20,10 +21,14 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class PlayerSessionService {
+    private final UserRepository userRepository;
     private final PlayerSessionRepository repository;
     private final PlayerSessionMapper mapper;
 
-    public PlayerSessionDTO connectUserToRound(AppUser user, ConnectionType connectionType, PokerTable table, Double buyInAmount) {
+    public PlayerSessionDTO connectUserToRound(AppUser user,
+                                               ConnectionType connectionType,
+                                               PokerTable table,
+                                               Double buyInAmount) {
         var tableId = table.getId();
         var username = user.getUsername();
 
@@ -35,7 +40,6 @@ public class PlayerSessionService {
             session = sessionOpt.get();
         } else {
             session = new PlayerSession();
-            session.setUser(user);
             session.setPokerTable(table);
         }
 
@@ -46,7 +50,12 @@ public class PlayerSessionService {
             var position = getSessionTablePosition(table);
             session.setPosition(position);
             session.setFunds(buyInAmount);
+
+            user.setTotalFunds(user.getTotalFunds() - buyInAmount);
         }
+
+        user = userRepository.saveAndFlush(user);
+        session.setUser(user);
 
         session = repository.saveAndFlush(session);
         return mapper.modelToDto(session);
@@ -55,6 +64,12 @@ public class PlayerSessionService {
     //todo: think about what to do with funds, it should be persisted elsewhere,
     // probably on AppUser or separate Bank table
     public void disconnectUser(PlayerSession playerSession) {
+        var fundsLeftOver = playerSession.getFunds();
+        var user = playerSession.getUser();
+        user.setTotalFunds(user.getTotalFunds() + fundsLeftOver);
+
+        userRepository.save(user);
+
         playerSession.setDealer(null);
         playerSession.setFunds(null);
         playerSession.setPokerTable(null);

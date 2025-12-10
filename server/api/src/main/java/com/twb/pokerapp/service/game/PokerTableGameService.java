@@ -49,12 +49,25 @@ public class PokerTableGameService {
             }
             var table = tableOpt.get();
 
+            if (connectionType == ConnectionType.PLAYER) {
+                if (buyInAmount < table.getMinBuyin() || buyInAmount > table.getMaxBuyin()) {
+                    var message = "Buy-In amount must be between %.2f and %.2f for table %s".formatted(table.getMinBuyin(), table.getMaxBuyin(), tableId);
+                    throw new RuntimeException(message);
+                }
+            }
+
             var userOpt = userRepository.findByUsername(username);
             if (userOpt.isEmpty()) {
                 var message = "Failed to connect user %s to table %s as user not found".formatted(username, tableId);
                 throw new RuntimeException(message);
             }
             var appUser = userOpt.get();
+            if (connectionType == ConnectionType.PLAYER) {
+                if (buyInAmount < appUser.getTotalFunds()) {
+                    var message = "User %s does not have enough total funds for Buy-In %.2f, has %.2f".formatted(username, buyInAmount, appUser.getTotalFunds());
+                    throw new RuntimeException(message);
+                }
+            }
 
             var playerSessionOpt = playerSessionRepository.findByTableIdAndUsername(tableId, username);
             if (playerSessionOpt.isPresent()) {
