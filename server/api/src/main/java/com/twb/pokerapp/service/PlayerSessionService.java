@@ -61,15 +61,13 @@ public class PlayerSessionService {
         return mapper.modelToDto(session);
     }
 
-    //todo: think about what to do with funds, it should be persisted elsewhere,
-    // probably on AppUser or separate Bank table
     public void disconnectUser(PlayerSession playerSession) {
         var fundsLeftOver = playerSession.getFunds();
         var user = playerSession.getUser();
         user.setTotalFunds(user.getTotalFunds() + fundsLeftOver);
+        userRepository.saveAndFlush(user);
 
-        userRepository.save(user);
-
+        playerSession.setUser(user);
         playerSession.setDealer(null);
         playerSession.setFunds(null);
         playerSession.setPokerTable(null);
