@@ -1,4 +1,4 @@
-name: 🚀 Create Release
+name: 🚀 Create Android Release
 
 on:
   push:
@@ -75,11 +75,22 @@ jobs:
       - name: Generate Commit Log
         id: commit_log
         run: |
-          START_SHA="${{ github.event.before }}"
-          END_SHA="${{ github.event.after }}"
+          END_SHA="HEAD"
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 --exclude='${{ steps.release_meta.outputs.release_tag }}' HEAD^ 2>/dev/null || echo "not_found")
           
-          COMMIT_HISTORY=$(git log --pretty=format:'* `%h` %s - *%an*' $START_SHA..$END_SHA)
+          
+          if [ "$PREVIOUS_TAG" = "not_found" ]; then
+            LOG_RANGE="--root"
+            MAX_COUNT="--max-count=5"
+            LOG_RANGE_INFO="Last 5 commits (Initial Release)"
+          else
+            LOG_RANGE="$PREVIOUS_TAG..$END_SHA"
+            MAX_COUNT="" # No limit needed for a defined range
+            LOG_RANGE_INFO="\`$PREVIOUS_TAG\`...`$END_SHA`"
+          fi
 
+          COMMIT_HISTORY=$(git log --pretty=format:'* `%h` %s - *%an*' $MAX_COUNT $LOG_RANGE)
+          
           {
             echo "## ✨ Release Overview"
             echo ""
@@ -88,9 +99,12 @@ jobs:
             echo "***"
             echo ""
             echo "## 📝 Changes Included in This Build"
+
+            echo "Log range: $LOG_RANGE_INFO"
+            echo ""
           
             if [ -z "$COMMIT_HISTORY" ]; then
-              echo "_No new commits were detected in this push ($START_SHA..$END_SHA)._"
+              echo "_No new commits were detected in this range._"
             else
               echo "$COMMIT_HISTORY"
             fi
