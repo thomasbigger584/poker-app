@@ -79,19 +79,42 @@ jobs:
           END_SHA="HEAD"
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 --exclude='${{ steps.release_meta.outputs.release_tag }}' HEAD^ 2>/dev/null || echo "not_found")
           
-          
           if [ "$PREVIOUS_TAG" = "not_found" ]; then
             LOG_RANGE="--root"
             MAX_COUNT="--max-count=5"
             LOG_RANGE_INFO="Last 5 commits (Initial Release)"
           else
             LOG_RANGE="$PREVIOUS_TAG..$END_SHA"
-            MAX_COUNT="" # No limit needed for a defined range
+            MAX_COUNT=""
             LOG_RANGE_INFO="\`$PREVIOUS_TAG\`...`$END_SHA`"
           fi
 
-          COMMIT_HISTORY=$(git log --pretty=format:'* `%h` %s - *%an*' $MAX_COUNT $LOG_RANGE -- $FILTER_PATH)
-
+          # 1. git log: gets hash and subject, filtered by path and range.
+          # 2. awk: tracks seen subjects ($2), prints only if new, then adds the author.
+          COMMIT_HISTORY=$(git log $MAX_COUNT $LOG_RANGE --pretty=format:'%h %s - *%an*' -- $FILTER_PATH | \
+            awk '
+            {
+                hash = $1;
+                # Get the rest of the line as the message part
+                message = substr($0, length(hash) + 2); 
+          
+                # Split message to find the author (which is at the end inside *...*)
+                match(message, /\*.*\*/)
+                author = substr(message, RSTART, RLENGTH)
+          
+                # Get the message without the author
+                subject = substr(message, 1, RSTART - 4)
+          
+                # If we haven'"'t seen this subject, print it and record it.
+                if (!(subject in seen)) {
+                    print "* `" hash "` " subject " " author
+                    seen[subject] = 1;
+                }
+            }
+          ')
+          # -------------------------------------------
+          
+          # --- Release Body Generation ---
           {
             echo "## ✨ Release Overview"
             echo ""
@@ -99,12 +122,12 @@ jobs:
             echo ""
             echo "***"
             echo ""
-            echo "## 📝 Changes Included in This Build"
-            echo "Log range: $LOG_RANGE_INFO"
+            echo "## 📝 Changes Included in This Build (Unique Messages)" # Adjusted header
+            echo "Log range: $LOG_RANGE_INFO (Filtered by: \`$FILTER_PATH\`)"
             echo ""
           
             if [ -z "$COMMIT_HISTORY" ]; then
-              echo "_No new commits were detected in this range._"
+              echo "_No new commits were detected in this range that affected \`$FILTER_PATH\`._"
             else
               echo "$COMMIT_HISTORY"
             fi
@@ -118,7 +141,7 @@ jobs:
             echo "* **Source Commit:** \`${{ steps.release_meta.outputs.short_sha }}\`"
             echo "* **Target Branch:** \`${{ github.ref_name }}\`"
           } > release_body.txt
-
+          
           echo "COMMIT_LOG<<EOF" >> $GITHUB_OUTPUT
           cat release_body.txt >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
