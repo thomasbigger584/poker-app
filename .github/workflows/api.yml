@@ -6,7 +6,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: API CI
+name: 🛠️ API CI
 
 on:
   push:

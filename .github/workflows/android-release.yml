@@ -1,0 +1,121 @@
+name: 🚀 Create Release
+
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - "client/android/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./client/android
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Upload Debug APK as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk-artifact
+          path: client/android/app/build/outputs/apk/debug/app-debug.apk
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get Release Metadata
+        id: release_meta
+        run: |
+          RELEASE_TAG="v$(date +'%Y.%m.%d-%H%M')"
+          SHORT_SHA=$(git rev-parse --short HEAD)
+
+          RELEASE_APK_NAME="poker-app-${RELEASE_TAG}.apk" 
+
+          echo "release_tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
+          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "release_name=🚀 Poker App Android (${RELEASE_TAG})" >> $GITHUB_OUTPUT
+          echo "release_apk_name=$RELEASE_APK_NAME" >> $GITHUB_OUTPUT
+
+      - name: Download APK Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: debug-apk-artifact
+          path: artifacts/
+
+      - name: 📝 Rename Artifact
+        run: |
+          mv artifacts/app-debug.apk artifacts/${{ steps.release_meta.outputs.release_apk_name }}
+
+      - name: Generate Commit Log
+        id: commit_log
+        run: |
+          START_SHA="${{ github.event.before }}"
+          END_SHA="${{ github.event.after }}"
+          
+          COMMIT_HISTORY=$(git log --pretty=format:'* `%h` %s - *%an*' $START_SHA..$END_SHA)
+
+          {
+            echo "## ✨ Release Overview"
+            echo ""
+            echo "This is a pre-release **Debug** build triggered by the latest changes to the \`client/android\` path on the \`master\` branch."
+            echo ""
+            echo "***"
+            echo ""
+            echo "## 📝 Changes Included in This Build"
+          
+            if [ -z "$COMMIT_HISTORY" ]; then
+              echo "_No new commits were detected in this push ($START_SHA..$END_SHA)._"
+            else
+              echo "$COMMIT_HISTORY"
+            fi
+          
+            echo ""
+            echo "***"
+            echo ""
+            echo "## 📥 Installation and Details"
+            echo ""
+            echo "* **File:** \`${{ steps.release_meta.outputs.release_apk_name }}\`"
+            echo "* **Source Commit:** \`${{ steps.release_meta.outputs.short_sha }}\`"
+            echo "* **Target Branch:** \`${{ github.ref_name }}\`"
+          } > release_body.txt
+
+          echo "COMMIT_LOG<<EOF" >> $GITHUB_OUTPUT
+          cat release_body.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release and Upload APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_meta.outputs.release_tag }}
+          name: ${{ steps.release_meta.outputs.release_name }}
+          prerelease: true
+          body: ${{ steps.commit_log.outputs.COMMIT_LOG }}
+          files: artifacts/${{ steps.release_meta.outputs.release_apk_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

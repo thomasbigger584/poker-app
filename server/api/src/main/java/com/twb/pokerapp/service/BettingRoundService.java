@@ -37,11 +37,8 @@ public class BettingRoundService {
     }
 
     public BettingRound updatePot(BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
-        double newRoundPot = bettingRound.getPot() + createActionDto.getAmount();
-        bettingRound.setPot(newRoundPot);
-
+        bettingRound.setPot(bettingRound.getPot() + createActionDto.getAmount());
         bettingRound = repository.saveAndFlush(bettingRound);
-
         return bettingRound;
     }
 }

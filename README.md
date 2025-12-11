@@ -1,120 +1,149 @@
 # Poker App
 
-[![Android CI](https://github.com/thomasbigger584/poker-app/actions/workflows/android.yml/badge.svg)](https://github.com/thomasbigger584/poker-app/actions/workflows/android.yml)
 [![API CI](https://github.com/thomasbigger584/poker-app/actions/workflows/api.yml/badge.svg)](https://github.com/thomasbigger584/poker-app/actions/workflows/api.yml)
+[![Android Release](https://github.com/thomasbigger584/poker-app/actions/workflows/android-release.yml/badge.svg)](https://github.com/thomasbigger584/poker-app/actions/workflows/android-release.yml)
 
-![logo.png](images/logo.png)
+![Logo](images/logo.png)
 
----
-
-## Server Usage
-
-### API Usage
-
-#### Tailscale
-
-- Create a Tailscale Auth Key: https://login.tailscale.com/admin/settings/keys
-- Make it Reusable, and not ephemeral. Give it the highest expiration.
-- Create file in `api/env/.secrets.env` with this auth key with contents such as:
-```
-TS_AUTHKEY=
-```
-
-#### Starting Application
-
-```shell
-$ cd api
-$ docker compose up --build
-```
-
-#### Running Tests
-
-#### CLI
-
-- Using the `run-tests` maven profile it will run the tests
-```
-$ ./mvnw clean verify -P run-tests
-```
-
-#### Running Blackbox Tests in Intellij
-
-- For running the blackbox tests such as `TexasHoldemGameIT`
-- Docker must already be running on your machine.
-- Ensure that the maven goal `process-test-resources` runs before the test. 
-- This will ensure the required configuration files are in the test classpath before running the containers. 
-- For example: the actual keycloak realm configuration will be used in the tests so as to keep as production-like as possible.
-- Opening the `server/api` in intellij, there will be a saved example run stored in the `runConfigurations`.
-- Another option is to delegate the intellij runner to maven which will happen automatically.
+A comprehensive, real-time multiplayer poker application featuring a robust backend, a native Android client, and a secure, scalable architecture.
 
 ---
 
-## Client Usage
+## Download APK
 
-### Android Studio
+You can download the latest pre-built Android APK from our [**GitHub Releases page**](https://github.com/thomasbigger584/poker-app/releases).
 
-- To run the Android App, install Android Studio and open the folder `client/android` as a project.
-- Once everything syncs and builds you can run it on your device.
-- For testing multiplayer, install Genymotion and setup 2 virtual devices. Can then build and run to multiple devices
-  from Android Studio.
+> **Warning:** The application is currently in a test phase and under active development. To use the downloaded APK without modification it requires connecting to a specific tailnet for now. You may encounter bugs or incomplete features. Feedback and bug reports are highly appreciated!
+
+---
+
+## Table of Contents
+
+- [Download APK](#download-apk)
+- [Architecture](#architecture)
+- [Features](#features)
+- [Technology Stack](#technology-stack)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Server Setup](#server-setup)
+  - [Client Setup](#client-setup)
+- [Testing](#testing)
+  - [Running Backend Tests](#running-backend-tests)
+  - [Running Blackbox Tests (IntelliJ)](#running-blackbox-tests-intellij)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
 ## Architecture
 
-![PokerApp-Architecture.png](images/PokerApp-Architecture.png)
+The application is designed with a modern, microservices-oriented architecture to ensure scalability, security, and maintainability.
+
+![PokerApp-Architecture](images/PokerApp-Architecture.png)
+
+### Core Components
+
+-   **Poker Backend (Java/Spring Boot):** The central service handling all business logic, game management, and real-time communication via WebSockets.
+-   **Consumer Mobile App (Android):** The native Android application for users to play the game. It authenticates with Keycloak and communicates with the backend in real-time.
+-   **Keycloak:** Manages user identity, authentication (SSO), and authorization. It integrates with the backend via RabbitMQ for event-driven user management.
+-   **Nginx:** Acts as a reverse proxy, directing incoming traffic to the appropriate internal services.
+-   **RabbitMQ:** A message broker for asynchronous communication, primarily used for Keycloak user events and as the backing transport for WebSockets.
+-   **PostgreSQL:** The primary relational database for both the application backend and Keycloak persistence.
+-   **Tailscale:** Provides a secure virtual private network, assigning domain names to services for easy and secure inter-service communication and testing.
+-   **Admin & CLI Apps:** Administrative and command-line tools for management and testing purposes.
 
 ---
 
-#### Consumer Mobile App
+## Features
 
-- The mobile application designed for regular users to interact with the games.
-- It will connect to keycloak for authentication and then once logged in can access tables and connect to a table via
-  websocket, and take part in the game.
-- Once it subscripts to a websocket, receiving updates from the server in realtime of any updates which happen on the
-  table and update the UI accordingly.
-
-#### Admin App
-
-- An angular/react application which is used for Administrators to create new tables and view users etc.
-- Can be very basic for now but I would want this in place to make configuration easier once the application is
-  deployed.
-
-#### CLI App
-
-- A CLI application used primarily for test purpose to listen to websocket messages.
-- The user will log in as a listener user, and will select a Table ID and receive all messages on that table.
-
-#### Tailscale
-
-- Tailscale is used to assign domain names to the services and have all the services on its own virtual private network.
-- Useful for testing without exposing the services over the internet.
-
-#### Nginx
-
-- A reverse proxy used to forward requests from the outside towards their respective internal services.
-
-#### Keycloak
-
-- A service used to handle users, roles, authentication and Single Sign-On (SSO).
-- Any events that happen in Keycloak will get published onto a Rabbit MQ queue to be consumed by the java application to
-  handle user signup.
-
-#### Poker Backend
-
-- A Java Spring Boot application to handle all application business logic.
-- It will subscribe to the RabbitMQ keycloak topic to get user related events.
-- It will expose the REST API to handle creating tables and game management.
-- It will expose a websocket for clients to connect to while playing the game to receive updates in real time for
-  updating their UI.
-
-#### Rabbit MQ
-
-- A message broker used to publish events within the application.
-- Currently used as the backing technology for websockets and also for keycloak to backend app user events.
-- Can be used for any other eventing later.
-
-#### PostgresQL (PSQL)
-
-- The database of choice for storing both the keycloak persistence data and backend app persistence data.
+-   **Real-time Multiplayer:** Play poker with others in real-time with updates delivered via WebSockets.
+-   **Secure Authentication:** Robust user management and SSO handled by Keycloak.
+-   **Containerized Deployment:** All backend services are containerized with Docker for consistent and easy setup.
+-   **CI/CD:** Automated build and test pipelines for both the API and the Android client using GitHub Actions.
+-   **Comprehensive Test Suite:** Includes unit, integration, and blackbox tests to ensure reliability.
 
 ---
+
+## Technology Stack
+
+-   **Backend:** Java, Spring Boot, Maven
+-   **Frontend:** Android (Kotlin/Java)
+-   **Database:** PostgreSQL
+-   **Authentication:** Keycloak
+-   **Messaging:** RabbitMQ
+-   **Networking:** Nginx, Tailscale
+-   **Containerization:** Docker, Docker Compose
+
+---
+
+## Getting Started
+
+Follow these instructions to get the project running on your local machine for development and testing purposes.
+
+### Prerequisites
+
+-   [Docker](https://www.docker.com/get-started) and Docker Compose
+-   [Java 21](https://www.oracle.com/java/technologies/downloads/) or newer
+-   [Android Studio](https://developer.android.com/studio) (for the client)
+-   A [Tailscale](https://tailscale.com/download) account and an Auth Key
+
+### Server Setup
+
+1.  **Configure Tailscale:**
+    -   Create a reusable, non-ephemeral Tailscale Auth Key from the [admin console](https://login.tailscale.com/admin/settings/keys).
+    -   Create a file at `server/api/env/.secrets.env`.
+    -   Add your auth key to the file:
+        ```env
+        TS_AUTHKEY=your_tailscale_auth_key
+        ```
+
+2.  **Launch Backend Services:**
+    -   Navigate to the `server/api` directory and run the following command to build and start all services.
+        ```shell
+        cd server/api
+        docker compose up --build
+        ```
+
+### Client Setup
+
+1.  **Open the Project:**
+    -   Launch Android Studio and open the `client/android` directory as a project.
+
+2.  **Run the App:**
+    -   Once the project has synced, you can run the app on an emulator or a physical device.
+    -   For multiplayer testing, consider using [Genymotion](https://www.genymotion.com/) to easily manage and run multiple virtual devices.
+
+---
+
+## Testing
+
+### Running Backend Tests
+
+You can run the complete test suite using the provided Maven wrapper.
+
+-   From the `server/api` directory, execute the `run-tests` profile:
+    ```shell
+    ./mvnw clean verify -P run-tests
+    ```
+    *(If you encounter a permission error, run `chmod +x ./mvnw` first.)*
+
+### Running Blackbox Tests (IntelliJ)
+
+When running integration tests like `TexasHoldemGameIT` directly within IntelliJ IDEA:
+
+1.  **Prerequisite:** Ensure Docker is running.
+2.  **Maven Goal:** Configure your test run configuration to execute the `process-test-resources` Maven goal before the test runs. This copies necessary configuration files (like the Keycloak realm) into the test classpath.
+3.  **Run Configuration:** An example run configuration is included in the `.idea/runConfigurations` directory when you open `server/api` in IntelliJ.
+4.  **Delegate to Maven:** Alternatively, you can delegate the test execution to Maven within IntelliJ's settings, which will handle this automatically.
+
+---
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a pull request or open an issue.
+
+---
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
