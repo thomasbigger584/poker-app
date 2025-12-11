@@ -75,6 +75,7 @@ jobs:
       - name: Generate Commit Log
         id: commit_log
         run: |
+          FILTER_PATH="client/android"
           END_SHA="HEAD"
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 --exclude='${{ steps.release_meta.outputs.release_tag }}' HEAD^ 2>/dev/null || echo "not_found")
           
@@ -89,8 +90,8 @@ jobs:
             LOG_RANGE_INFO="\`$PREVIOUS_TAG\`...`$END_SHA`"
           fi
 
-          COMMIT_HISTORY=$(git log --pretty=format:'* `%h` %s - *%an*' $MAX_COUNT $LOG_RANGE)
-          
+          COMMIT_HISTORY=$(git log --pretty=format:'* `%h` %s - *%an*' $MAX_COUNT $LOG_RANGE -- $FILTER_PATH)
+
           {
             echo "## ✨ Release Overview"
             echo ""
@@ -99,7 +100,6 @@ jobs:
             echo "***"
             echo ""
             echo "## 📝 Changes Included in This Build"
-
             echo "Log range: $LOG_RANGE_INFO"
             echo ""
           
