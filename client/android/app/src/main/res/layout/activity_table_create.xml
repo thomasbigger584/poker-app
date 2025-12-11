@@ -77,7 +77,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@android:drawable/btn_dropdown"
-                    android:entries="@array/game_types_array"
+                    android:entries="@array/game_types_str_array"
                     android:spinnerMode="dropdown" />
             </LinearLayout>
 

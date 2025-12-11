@@ -20,6 +20,7 @@ public class TableRepository extends BaseRepository {
     private static final String TAG = TableRepository.class.getSimpleName();
     private final TableApi api;
     private final MutableLiveData<List<TableDTO>> getTablesLiveData = new MutableLiveData<>();
+    private final MutableLiveData<TableDTO> createdTableLiveData = new MutableLiveData<>();
 
     public TableRepository(TableApi api) {
         this.api = api;
@@ -45,7 +46,26 @@ public class TableRepository extends BaseRepository {
         return getTablesLiveData;
     }
 
-    public LiveData<TableDTO> createTable(CreateTableDTO dto) {
-        return null;
+    public void createTable(CreateTableDTO dto) {
+        api.createTable(dto).enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<TableDTO> call, @NonNull Response<TableDTO> response) {
+                if (response.isSuccessful()) {
+                    createdTableLiveData.setValue(response.body());
+                } else {
+                    errorLiveData.setValue(new RuntimeException("Failed to create table"));
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<TableDTO> call, @NonNull Throwable throwable) {
+                errorLiveData.setValue(throwable);
+            }
+        });
+    }
+
+    public MutableLiveData<TableDTO> getCreatedTableLiveData() {
+        return createdTableLiveData;
     }
 }
+

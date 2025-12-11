@@ -24,6 +24,7 @@ import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class TableListActivity extends BaseAuthActivity implements TableListAdapter.TableClickListener {
+    private static final String MODAL_TAG = "modal_alert";
     private SwipeRefreshLayout swipeRefreshLayout;
     private TableListViewModel viewModel;
     private TableListAdapter adapter;
@@ -53,23 +54,23 @@ public class TableListActivity extends BaseAuthActivity implements TableListAdap
         recyclerView.setAdapter(adapter);
 
         viewModel = new ViewModelProvider(this).get(TableListViewModel.class);
-        viewModel.errors.observe(this, error -> {
-            if (error != null) {
-                swipeRefreshLayout.setRefreshing(false);
-                AlertModalDialog alertModalDialog = AlertModalDialog
-                        .newInstance(AlertModalDialog.AlertModalType.ERROR, error.getMessage(), new AlertModalDialog.OnAlertClickListener() {
-                            @Override
-                            public void onSuccessClick() {
-                                endSession();
-                            }
+        viewModel.errors.observe(this, throwable -> {
+            if (throwable == null) return;
+            swipeRefreshLayout.setRefreshing(false);
+            AlertModalDialog alertModalDialog = AlertModalDialog
+                    .newInstance(AlertModalDialog.AlertModalType.ERROR, throwable.getMessage(), new AlertModalDialog.OnAlertClickListener() {
+                        @Override
+                        public void onSuccessClick() {
+                            endSession();
+                        }
 
-                            @Override
-                            public void onCancelClick() {
-                                endSession();
-                            }
-                        });
-                alertModalDialog.show(getSupportFragmentManager(), "modal_alert");
-            }
+                        @Override
+                        public void onCancelClick() {
+                            endSession();
+                        }
+                    });
+            alertModalDialog.show(getSupportFragmentManager(), MODAL_TAG);
+
         });
     }
 
