@@ -95,17 +95,12 @@ jobs:
             awk '
             {
                 hash = $1;
-                # Get the rest of the line as the message part
                 message = substr($0, length(hash) + 2); 
-          
-                # Split message to find the author (which is at the end inside *...*)
                 match(message, /\*.*\*/)
-                author = substr(message, RSTART, RLENGTH)
           
-                # Get the message without the author
+                author = substr(message, RSTART, RLENGTH)
                 subject = substr(message, 1, RSTART - 4)
           
-                # If we haven'"'t seen this subject, print it and record it.
                 if (!(subject in seen)) {
                     print "* `" hash "` " subject " " author
                     seen[subject] = 1;
