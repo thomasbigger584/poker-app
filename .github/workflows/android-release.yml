@@ -14,23 +14,23 @@ jobs:
         working-directory: ./client/android
 
     steps:
-      - name: Checkout Code
+      - name: 📋 Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: ☕ Set up JDK 21
         uses: actions/setup-java@v3
         with:
           java-version: '21'
           distribution: 'temurin'
           cache: gradle
 
-      - name: Grant execute permission for gradlew
+      - name: ⚙️ Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build Debug APK
+      - name: 🛠️ Build Debug APK
         run: ./gradlew assembleDebug
 
-      - name: Upload Debug APK as Artifact
+      - name: ⬆️ Upload Debug APK as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: debug-apk-artifact
@@ -44,12 +44,12 @@ jobs:
       contents: write
 
     steps:
-      - name: Checkout Code
+      - name: 📋 Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Get Release Metadata
+      - name: 🏷️ Get Release Metadata
         id: release_meta
         run: |
           RELEASE_TAG="v$(date +'%Y.%m.%d-%H%M')"
@@ -62,7 +62,7 @@ jobs:
           echo "release_name=🚀 Poker App Android (${RELEASE_TAG})" >> $GITHUB_OUTPUT
           echo "release_apk_name=$RELEASE_APK_NAME" >> $GITHUB_OUTPUT
 
-      - name: Download APK Artifact
+      - name: ⬇️ Download APK Artifact
         uses: actions/download-artifact@v4
         with:
           name: debug-apk-artifact
@@ -72,7 +72,7 @@ jobs:
         run: |
           mv artifacts/app-debug.apk artifacts/${{ steps.release_meta.outputs.release_apk_name }}
 
-      - name: Generate Commit Log
+      - name: 📜 Generate Commit Log
         id: commit_log
         run: |
           FILTER_PATH="client/android"
@@ -97,7 +97,6 @@ jobs:
                 hash = $1;
                 message = substr($0, length(hash) + 2); 
                 match(message, /\*.*\*/)
-          
                 author = substr(message, RSTART, RLENGTH)
                 subject = substr(message, 1, RSTART - 4)
           
@@ -118,7 +117,7 @@ jobs:
             echo "***"
             echo ""
             echo "## 📝 Changes Included in This Build (Unique Messages)" # Adjusted header
-            echo "Log range: $LOG_RANGE_INFO (Filtered by: \`$FILTER_PATH\`)"
+            echo "Log range: $LOG_RANGE_INFO"
             echo ""
           
             if [ -z "$COMMIT_HISTORY" ]; then
@@ -130,7 +129,7 @@ jobs:
             echo ""
             echo "***"
             echo ""
-            echo "## 📥 Installation and Details"
+            echo "## 📥 Installation Details"
             echo ""
             echo "* **File:** \`${{ steps.release_meta.outputs.release_apk_name }}\`"
             echo "* **Source Commit:** \`${{ steps.release_meta.outputs.short_sha }}\`"
@@ -141,7 +140,7 @@ jobs:
           cat release_body.txt >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Create GitHub Release and Upload APK
+      - name: 📦 Create GitHub Release and Upload APK
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.release_meta.outputs.release_tag }}
