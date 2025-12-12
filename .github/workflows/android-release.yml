@@ -54,7 +54,6 @@ jobs:
         run: |
           RELEASE_TAG="v$(date +'%Y.%m.%d-%H%M')"
           SHORT_SHA=$(git rev-parse --short HEAD)
-
           RELEASE_APK_NAME="poker-app-${RELEASE_TAG}.apk" 
 
           echo "release_tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
@@ -81,8 +80,8 @@ jobs:
           
           if [ "$PREVIOUS_TAG" = "not_found" ]; then
             LOG_RANGE="--root"
-            MAX_COUNT="--max-count=5"
-            LOG_RANGE_INFO="Last 5 commits (Initial Release)"
+            MAX_COUNT="--max-count=10"
+            LOG_RANGE_INFO="Last Few commits (Initial Release)"
           else
             LOG_RANGE="$PREVIOUS_TAG..$END_SHA"
             MAX_COUNT=""
@@ -116,7 +115,7 @@ jobs:
             echo ""
             echo "***"
             echo ""
-            echo "## 📝 Changes Included in This Build (Unique Messages)" # Adjusted header
+            echo "## 📝 Changes Included in This Build"
             echo "Log range: $LOG_RANGE_INFO"
             echo ""
           
@@ -148,5 +147,13 @@ jobs:
           prerelease: true
           body: ${{ steps.commit_log.outputs.COMMIT_LOG }}
           files: artifacts/${{ steps.release_meta.outputs.release_apk_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#
+      - name: 🗑️ Cleanup Older Releases
+        uses: dev-drprasad/delete-older-releases@v0.3.4 # Not Maintained
+        with:
+          keep_latest: 3
+          delete_tags: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
