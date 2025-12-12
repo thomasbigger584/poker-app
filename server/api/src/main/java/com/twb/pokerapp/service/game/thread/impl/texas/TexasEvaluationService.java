@@ -34,34 +34,34 @@ public class TexasEvaluationService {
     private final GameLogService gameLogService;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void evaluate(GameThreadParams params, PokerTable table) {
-        var roundOpt = roundRepository.findCurrentByTableId(table.getId());
+    public void evaluate(GameThreadParams params) {
+        var roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
         if (roundOpt.isEmpty()) {
-            throw new IllegalStateException("Round not found for table: " + table.getId());
+            throw new IllegalStateException("Round not found for table: " + params.getTableId());
         }
         var round = roundOpt.get();
 
         var activePlayers = playerSessionRepository
-                .findActivePlayersByTableId(table.getId(), round.getId());
+                .findActivePlayersByTableId(params.getTableId(), round.getId());
         if (activePlayers.size() == 1) {
             var winner = activePlayers.getFirst();
-            evaluateLastPlayerStanding(table, winner, round);
+            evaluateLastPlayerStanding(params, winner, round);
         } else {
-            evaluateMultiPlayersStanding(table, round, activePlayers);
+            evaluateMultiPlayersStanding(params, round, activePlayers);
         }
         sleepInMs(params.getEvalWaitMs());
     }
 
-    private void evaluateLastPlayerStanding(PokerTable table, PlayerSession winner, Round round) {
+    private void evaluateLastPlayerStanding(GameThreadParams params, PlayerSession winner, Round round) {
         handRepository.markHandAsWinner(round.getId(), winner.getId());
         handRepository.markHandsAsLosersWithWinner(round.getId(), winner.getId());
 
         var winnerUsername = winner.getUser().getUsername();
 
-        gameLogService.sendLogMessage(table, "%s wins round with %.2f".formatted(winnerUsername, round.getPot()));
+        gameLogService.sendLogMessage(params.getTableId(), "%s wins round with %.2f".formatted(winnerUsername, round.getPot()));
     }
 
-    private void evaluateMultiPlayersStanding(PokerTable table, Round round, List<PlayerSession> activePlayers) {
+    private void evaluateMultiPlayersStanding(GameThreadParams params, Round round, List<PlayerSession> activePlayers) {
         var communityCards = cardRepository
                 .findCommunityCardsForRound(round.getId());
 
@@ -87,6 +87,6 @@ public class TexasEvaluationService {
         }
         var winners = handEvaluator.evaluate(round, playerHandsList);
 
-        winnerService.handleWinners(table, round, winners);
+        winnerService.handleWinners(params, round, winners);
     }
 }

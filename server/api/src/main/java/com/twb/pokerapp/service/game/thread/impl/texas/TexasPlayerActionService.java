@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -33,14 +34,16 @@ public class TexasPlayerActionService implements GamePlayerActionService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public boolean playerAction(PokerTable table, PlayerSession playerSession, GameThread gameThread, CreatePlayerActionDTO createDto) {
-        log.info("***************************************************************");
-        log.info("GameThread.playerAction");
-        log.info("playerSession = {}, createDto = {}", playerSession, createDto);
-        log.info("***************************************************************");
-        var bettingRoundOpt = bettingRoundRepository.findLatestInProgress(table.getId());
+    public boolean playerAction(PlayerSession playerSession, GameThread gameThread, CreatePlayerActionDTO createDto) {
+        var pokerTable = playerSession.getPokerTable();
+        if (pokerTable == null) {
+            log.error("Table is null for player session: {}", playerSession);
+            return false;
+        }
+        var tableId = pokerTable.getId();
+        var bettingRoundOpt = bettingRoundRepository.findLatestInProgress(tableId);
         if (bettingRoundOpt.isEmpty()) {
-            log.error("Latest Betting Round not found for Table ID: {}", table.getId());
+            log.error("Latest Betting Round not found for Table ID: {}", tableId);
             return false;
         }
         var bettingRound = bettingRoundOpt.get();
@@ -50,20 +53,20 @@ public class TexasPlayerActionService implements GamePlayerActionService {
         }
 
         return switch (createDto.getAction()) {
-            case FOLD -> foldAction(table, playerSession, bettingRound, createDto);
-            case CHECK -> checkAction(table, playerSession, bettingRound, createDto);
-            case BET -> betAction(table, playerSession, bettingRound, createDto);
-            case CALL -> callAction(table, playerSession, bettingRound, createDto);
-            case RAISE -> raiseAction(table, playerSession, bettingRound, createDto);
+            case FOLD -> foldAction(playerSession, bettingRound, createDto);
+            case CHECK -> checkAction(playerSession, bettingRound, createDto);
+            case BET -> betAction(playerSession, bettingRound, createDto);
+            case CALL -> callAction(playerSession, bettingRound, createDto);
+            case RAISE -> raiseAction(playerSession, bettingRound, createDto);
         };
     }
 
-    private boolean foldAction(PokerTable table, PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
+    private boolean foldAction(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
         playerActionService.create(playerSession, bettingRound, createActionDto);
         return true;
     }
 
-    private boolean checkAction(PokerTable table, PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
+    private boolean checkAction(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
         var canPerformCheck = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId())
                 .stream().allMatch(action -> action.getActionType() == ActionType.CHECK);
         if (!canPerformCheck) {
@@ -74,7 +77,7 @@ public class TexasPlayerActionService implements GamePlayerActionService {
         return true;
     }
 
-    private boolean betAction(PokerTable table, PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
+    private boolean betAction(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
         if (createActionDto.getAmount() <= 0) {
             gameLogService.sendErrorMessage(playerSession, "Cannot bet %.2f as amount is less than or equal to zero".formatted(createActionDto.getAmount()));
             return false;
@@ -98,7 +101,7 @@ public class TexasPlayerActionService implements GamePlayerActionService {
         return true;
     }
 
-    private boolean callAction(PokerTable table, PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
+    private boolean callAction(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
         var lastPlayerActions = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId());
         if (lastPlayerActions.isEmpty()) {
             gameLogService.sendErrorMessage(playerSession, "Cannot call as there was no previous action");
@@ -122,7 +125,7 @@ public class TexasPlayerActionService implements GamePlayerActionService {
         return true;
     }
 
-    private boolean raiseAction(PokerTable table, PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
+    private boolean raiseAction(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
         throw new UnsupportedOperationException("Raise action not implemented yet");
     }
 }

@@ -44,11 +44,11 @@ public class TexasGameThread extends GameThread {
         switch (roundState) {
             case INIT_DEAL -> initDeal();
             case INIT_DEAL_BET, FLOP_DEAL_BET, TURN_DEAL_BET, RIVER_DEAL_BET ->
-                    texasBettingRoundService.runBettingRound(params, table, this);
+                    texasBettingRoundService.runBettingRound(params, this);
             case FLOP_DEAL -> dealFlop();
             case TURN_DEAL -> dealCommunityCard(CardType.TURN_CARD);
             case RIVER_DEAL -> dealCommunityCard(CardType.RIVER_CARD);
-            case EVAL -> evaluationService.evaluate(params, table);
+            case EVAL -> evaluationService.evaluate(params);
         }
     }
 

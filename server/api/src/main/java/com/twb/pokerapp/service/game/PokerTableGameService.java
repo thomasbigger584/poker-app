@@ -118,7 +118,7 @@ public class PokerTableGameService {
 
             var gameType = table.getGameType();
             var playerActionService = gameType.getPlayerActionService(context);
-            var actioned = playerActionService.playerAction(table, playerSession, gameThread, action);
+            var actioned = playerActionService.playerAction(playerSession, gameThread, action);
 
             if (actioned) {
                 gameThread.onPostPlayerAction(action);
@@ -157,7 +157,7 @@ public class PokerTableGameService {
                 var createActionDto = new CreatePlayerActionDTO();
                 createActionDto.setAction(ActionType.FOLD);
 
-                playerActionService.playerAction(table, playerSession, gameThread, createActionDto);
+                playerActionService.playerAction(playerSession, gameThread, createActionDto);
             }
 
             playerSessionService.disconnectUser(playerSession);

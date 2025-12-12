@@ -7,6 +7,8 @@ import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 @RequiredArgsConstructor
 public class GameLogService {
@@ -15,6 +17,10 @@ public class GameLogService {
 
     public void sendLogMessage(PokerTable table, String message) {
         dispatcher.send(table, messageFactory.logMessage(message));
+    }
+
+    public void sendLogMessage(UUID tableId, String message) {
+        dispatcher.send(tableId, messageFactory.logMessage(message));
     }
 
     public void sendErrorMessage(PokerTable table, String message) {

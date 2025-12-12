@@ -1,6 +1,9 @@
 package com.twb.pokerapp.service.game.thread.impl.texas;
 
-import com.twb.pokerapp.domain.*;
+import com.twb.pokerapp.domain.BettingRound;
+import com.twb.pokerapp.domain.PlayerAction;
+import com.twb.pokerapp.domain.PlayerSession;
+import com.twb.pokerapp.domain.Round;
 import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.domain.enumeration.BettingRoundState;
 import com.twb.pokerapp.exception.game.GameInterruptedException;
@@ -44,15 +47,15 @@ public class TexasBettingRoundService {
     private final BettingRoundService bettingRoundService;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void runBettingRound(GameThreadParams params, PokerTable table, GameThread gameThread) {
-        var roundOpt = roundRepository.findCurrentByTableId(table.getId());
+    public void runBettingRound(GameThreadParams params, GameThread gameThread) {
+        var roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
         if (roundOpt.isEmpty()) {
             throw new IllegalStateException("Round not found");
         }
         var round = roundOpt.get();
-        var bettingRoundOpt = bettingRoundRepository.findLatestInProgress(table.getId());
+        var bettingRoundOpt = bettingRoundRepository.findLatestInProgress(params.getTableId());
         if (bettingRoundOpt.isEmpty()) {
-            throw new IllegalStateException("Latest Betting Round not found for Table ID: " + table.getId());
+            throw new IllegalStateException("Latest Betting Round not found for Table ID: " + params.getTableId());
         }
         var bettingRound = bettingRoundOpt.get();
 
@@ -60,13 +63,13 @@ public class TexasBettingRoundService {
             int playerIndex = 0;
             while (true) {
                 var activePlayers = playerSessionRepository
-                        .findActivePlayersByTableId(table.getId(), round.getId());
+                        .findActivePlayersByTableId(params.getTableId(), round.getId());
                 if (activePlayers.isEmpty()) {
-                    gameLogService.sendLogMessage(table, "No Active Players found");
+                    gameLogService.sendLogMessage(params.getTableId(), "No Active Players found");
                     throw new GameInterruptedException("No Active Players found");
                 }
                 if (activePlayers.size() == 1) {
-                    gameLogService.sendLogMessage(table, "Only one active player in betting round, so skipping");
+                    gameLogService.sendLogMessage(params.getTableId(), "Only one active player in betting round, so skipping");
                     throw new RoundInterruptedException("Only one active player in betting round, so skipping");
                 }
 
@@ -93,14 +96,14 @@ public class TexasBettingRoundService {
 
                 gameThread.checkRoundInterrupted();
 
-                dispatcher.send(table, messageFactory.playerTurn(currentPlayer, previousPlayerAction, bettingRound, nextActions, amountToCall));
-                waitPlayerTurn(params, gameThread, table, currentPlayer);
+                dispatcher.send(params.getTableId(), messageFactory.playerTurn(currentPlayer, previousPlayerAction, bettingRound, nextActions, amountToCall));
+                waitPlayerTurn(params, gameThread, currentPlayer);
 
                 bettingRound = bettingRoundService.refreshBettingRound(bettingRound.getId());
 
                 playerIndex++;
             }
-        } while (!areAllPlayersPaidUp(table, round, bettingRound));
+        } while (!areAllPlayersPaidUp(params, round, bettingRound));
 
         setBettingRoundFinished(bettingRound);
 
@@ -108,8 +111,8 @@ public class TexasBettingRoundService {
         log.info("Round pot for after betting updated to {}", round.getPot());
     }
 
-    private boolean areAllPlayersPaidUp(PokerTable table, Round round, BettingRound bettingRound) {
-        var activePlayers = playerSessionRepository.findActivePlayersByTableId(table.getId(), round.getId());
+    private boolean areAllPlayersPaidUp(GameThreadParams params, Round round, BettingRound bettingRound) {
+        var activePlayers = playerSessionRepository.findActivePlayersByTableId(params.getTableId(), round.getId());
         if (activePlayers.size() <= 1) {
             return true;
         }
@@ -147,7 +150,7 @@ public class TexasBettingRoundService {
         return contributions;
     }
 
-    private void waitPlayerTurn(GameThreadParams params, GameThread gameThread, PokerTable table, PlayerSession playerSession) {
+    private void waitPlayerTurn(GameThreadParams params, GameThread gameThread, PlayerSession playerSession) {
         var playerTurnLatch = gameThread.newPlayerTurnLatch(playerSession);
         var latch = playerTurnLatch.playerTurnLatch();
         try {
@@ -155,7 +158,7 @@ public class TexasBettingRoundService {
             if (!await) {
                 var createActionDto = new CreatePlayerActionDTO();
                 createActionDto.setAction(ActionType.FOLD);
-                texasPlayerActionService.playerAction(table, playerSession, gameThread, createActionDto);
+                texasPlayerActionService.playerAction(playerSession, gameThread, createActionDto);
             }
         } catch (InterruptedException e) {
             throw new RuntimeException("Failed to wait for player turn latch", e);

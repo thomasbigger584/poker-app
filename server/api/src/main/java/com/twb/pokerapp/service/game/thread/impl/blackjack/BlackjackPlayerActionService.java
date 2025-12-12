@@ -1,7 +1,6 @@
 package com.twb.pokerapp.service.game.thread.impl.blackjack;
 
 import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.service.game.thread.GamePlayerActionService;
 import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
@@ -15,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Component("blackJackPlayerActionService")
 public class BlackjackPlayerActionService implements GamePlayerActionService {
     @Override
-    public boolean playerAction(PokerTable table, PlayerSession playerSession, GameThread gameThread, CreatePlayerActionDTO createDto) {
+    public boolean playerAction(PlayerSession playerSession, GameThread gameThread, CreatePlayerActionDTO createDto) {
         throw new NotImplementedException("Blackjack player actions not implemented yet");
     }
 
