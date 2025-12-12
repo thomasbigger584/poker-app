@@ -1,13 +1,14 @@
 package com.twb.pokerapp.service.game.thread;
 
-import com.twb.pokerapp.domain.*;
-import com.twb.pokerapp.domain.enumeration.BettingRoundState;
+import com.twb.pokerapp.domain.Card;
+import com.twb.pokerapp.domain.PlayerSession;
+import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.domain.enumeration.RoundState;
 import com.twb.pokerapp.exception.game.GameInterruptedException;
 import com.twb.pokerapp.exception.game.RoundInterruptedException;
 import com.twb.pokerapp.service.game.DeckOfCardsFactory;
+import com.twb.pokerapp.service.game.thread.annotation.CallerThread;
 import com.twb.pokerapp.service.game.thread.dto.PlayerTurnLatchDTO;
-import com.twb.pokerapp.service.game.thread.util.CallerThread;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.twb.pokerapp.service.game.thread.util.SleepUtil.sleepInMs;
@@ -44,8 +45,7 @@ public abstract class GameThread extends BaseGameThread {
     private final AtomicBoolean gameInProgress = new AtomicBoolean(false);
 
     protected PokerTable table;
-    protected Round round;
-    protected BettingRound bettingRound;
+    protected UUID roundId;
 
     private List<Card> deckOfCards;
     private int deckCardPointer;
@@ -131,17 +131,17 @@ public abstract class GameThread extends BaseGameThread {
     private void createNewRound() {
         var roundOpt = roundRepository.findCurrentByTableId_Lock(params.getTableId());
         if (roundOpt.isPresent()) {
-            this.round = roundOpt.get();
+            var round = roundOpt.get();
+            this.roundId = round.getId();
             if (round.getRoundState() != RoundState.WAITING_FOR_PLAYERS) {
                 throw new GameInterruptedException("Cannot start an existing new round not in the WAITING_FOR_PLAYERS state");
             }
-
         } else {
             var tableOpt = tableRepository.findById_Lock(params.getTableId());
             if (tableOpt.isEmpty()) {
                 throw new GameInterruptedException("Cannot start as table doesn't exist");
             }
-            this.round = roundService.create(table);
+            this.roundId = roundService.create(table).getId();
         }
         gameLogService.sendLogMessage(table, "New Round...");
         sleepInMs(params.getRoundStartWaitMs());
@@ -195,29 +195,17 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     private void initBettingRound(RoundState roundState) {
-        var bettingRoundStateOpt = Optional.ofNullable(roundState.getBettingRoundType());
-        if (bettingRoundStateOpt.isEmpty()) {
-            bettingRound = null;
-            return;
-        }
-        bettingRound = bettingRoundService.create(round, bettingRoundStateOpt.get());
+        var bettingRoundTypeOpt = roundState.getBettingRoundType();
+        bettingRoundTypeOpt.ifPresent(bettingRoundType -> bettingRoundService.create(table, bettingRoundType));
     }
 
     private void finishRound() {
         if (roundInProgress.get()) {
-            finishBettingRoundState();
             saveRoundState(RoundState.FINISHED);
             dispatcher.send(table, messageFactory.roundFinished());
         }
         roundInProgress.set(false);
         sleepInMs(params.getRoundEndWaitMs());
-    }
-
-    private void finishBettingRoundState() {
-        if (bettingRound != null) {
-            bettingRound.setState(BettingRoundState.FINISHED);
-            bettingRoundRepository.saveAndFlush(bettingRound);
-        }
     }
 
     private void finishGame() {
@@ -253,6 +241,11 @@ public abstract class GameThread extends BaseGameThread {
         if (playerTurnLatch != null) {
             playerTurnLatch.countDown();
         }
+        var roundOpt = roundRepository.findCurrentByTableId(table.getId());
+        if (roundOpt.isEmpty()) {
+            throw new IllegalStateException("Count not get round as round not found");
+        }
+        var round = roundOpt.get();
         var activePlayers = playerSessionRepository
                 .findActivePlayersByTableId_Lock(table.getId(), round.getId());
         if (activePlayers.size() < 2) {
@@ -262,6 +255,11 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     private void saveRoundState(RoundState roundState) {
+        var roundOpt = roundRepository.findById(roundId);
+        if (roundOpt.isEmpty()) {
+            throw new IllegalStateException("Round not found");
+        }
+        var round = roundOpt.get();
         round.setRoundState(roundState);
         roundRepository.saveAndFlush(round);
     }

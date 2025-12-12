@@ -1,6 +1,7 @@
 package com.twb.pokerapp.service.game.thread;
 
 import com.twb.pokerapp.domain.PokerTable;
+import com.twb.pokerapp.domain.Round;
 import com.twb.pokerapp.service.eval.dto.EvalPlayerHandDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -12,27 +13,28 @@ import java.util.List;
 public class WinnerService {
     private final GameLogService gameLogService;
 
-    public void handleWinners(PokerTable table, List<EvalPlayerHandDTO> winners) {
+    public void handleWinners(PokerTable table, Round round, List<EvalPlayerHandDTO> winners) {
         if (winners.size() == 1) {
-            handleSinglePlayerWin(table, winners.getFirst());
+            handleSinglePlayerWin(table, round, winners.getFirst());
         } else {
-            handleMultiplePlayerWin(table, winners);
+            handleMultiplePlayerWin(table, round, winners);
         }
     }
 
-    private void handleSinglePlayerWin(PokerTable table, EvalPlayerHandDTO winningPlayerHandDTO) {
+    private void handleSinglePlayerWin(PokerTable table, Round round, EvalPlayerHandDTO winningPlayerHandDTO) {
         var playerSession = winningPlayerHandDTO.getPlayerSession();
         var username = playerSession.getUser().getUsername();
         var handTypeStr = winningPlayerHandDTO.getHandType().getValue();
 
-        gameLogService.sendLogMessage(table, "%s wins round with a %s".formatted(username, handTypeStr));
+        gameLogService.sendLogMessage(table, "%s wins round with a %s winning %.2f".formatted(username, handTypeStr, round.getPot()));
     }
 
-    private void handleMultiplePlayerWin(PokerTable table, List<EvalPlayerHandDTO> winners) {
+    private void handleMultiplePlayerWin(PokerTable table, Round round, List<EvalPlayerHandDTO> winners) {
         var winnerNames = getReadableWinners(winners);
         var handTypeStr = winners.getFirst().getHandType().getValue();
+        var splitPot = round.getPot() / winners.size();
 
-        gameLogService.sendLogMessage(table, "%s draws round with a %s".formatted(winnerNames, handTypeStr));
+        gameLogService.sendLogMessage(table, "%s draws round with a %s winning %.2f each".formatted(winnerNames, handTypeStr, splitPot));
     }
 
     private String getReadableWinners(List<EvalPlayerHandDTO> winners) {

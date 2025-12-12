@@ -6,6 +6,7 @@ import com.twb.pokerapp.domain.Round;
 import com.twb.pokerapp.repository.CardRepository;
 import com.twb.pokerapp.repository.HandRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
+import com.twb.pokerapp.repository.RoundRepository;
 import com.twb.pokerapp.service.eval.HandEvaluator;
 import com.twb.pokerapp.service.eval.dto.EvalPlayerHandDTO;
 import com.twb.pokerapp.service.game.thread.GameLogService;
@@ -13,6 +14,7 @@ import com.twb.pokerapp.service.game.thread.GameThreadParams;
 import com.twb.pokerapp.service.game.thread.WinnerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
@@ -21,9 +23,9 @@ import java.util.List;
 import static com.twb.pokerapp.service.game.thread.util.SleepUtil.sleepInMs;
 
 @Component
-@Transactional
 @RequiredArgsConstructor
 public class TexasEvaluationService {
+    private final RoundRepository roundRepository;
     private final PlayerSessionRepository playerSessionRepository;
     private final HandRepository handRepository;
     private final CardRepository cardRepository;
@@ -31,7 +33,14 @@ public class TexasEvaluationService {
     private final WinnerService winnerService;
     private final GameLogService gameLogService;
 
-    public void evaluate(GameThreadParams params, PokerTable table, Round round) {
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void evaluate(GameThreadParams params, PokerTable table) {
+        var roundOpt = roundRepository.findCurrentByTableId(table.getId());
+        if (roundOpt.isEmpty()) {
+            throw new IllegalStateException("Round not found for table: " + table.getId());
+        }
+        var round = roundOpt.get();
+
         var activePlayers = playerSessionRepository
                 .findActivePlayersByTableId(table.getId(), round.getId());
         if (activePlayers.size() == 1) {
@@ -47,7 +56,9 @@ public class TexasEvaluationService {
         handRepository.markHandAsWinner(round.getId(), winner.getId());
         handRepository.markHandsAsLosersWithWinner(round.getId(), winner.getId());
 
-        gameLogService.sendLogMessage(table, "%s wins round".formatted(winner.getUser().getUsername()));
+        var winnerUsername = winner.getUser().getUsername();
+
+        gameLogService.sendLogMessage(table, "%s wins round with %.2f".formatted(winnerUsername, round.getPot()));
     }
 
     private void evaluateMultiPlayersStanding(PokerTable table, Round round, List<PlayerSession> activePlayers) {
@@ -76,6 +87,6 @@ public class TexasEvaluationService {
         }
         var winners = handEvaluator.evaluate(round, playerHandsList);
 
-        winnerService.handleWinners(table, winners);
+        winnerService.handleWinners(table, round, winners);
     }
 }

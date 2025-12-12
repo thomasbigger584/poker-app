@@ -93,7 +93,8 @@ public class TexasPlayerActionService implements GamePlayerActionService {
             }
         }
         playerActionService.create(playerSession, bettingRound, createActionDto);
-        bettingRoundService.updatePot(bettingRound, createActionDto);
+        bettingRound = bettingRoundService.updatePot(bettingRound, createActionDto);
+        log.info("BettingRound pot for bet updated to {}", bettingRound.getPot());
         return true;
     }
 
@@ -116,7 +117,8 @@ public class TexasPlayerActionService implements GamePlayerActionService {
             return false;
         }
         playerActionService.create(playerSession, bettingRound, createActionDto);
-        bettingRoundService.updatePot(bettingRound, createActionDto);
+        bettingRound = bettingRoundService.updatePot(bettingRound, createActionDto);
+        log.info("BettingRound pot for call updated to {}", bettingRound.getPot());
         return true;
     }
 

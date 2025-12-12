@@ -149,11 +149,11 @@ jobs:
           files: artifacts/${{ steps.release_meta.outputs.release_apk_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#
+
       - name: 🗑️ Cleanup Older Releases
         uses: dev-drprasad/delete-older-releases@v0.3.4 # Not Maintained
         with:
           keep_latest: 3
-          delete_tags: true
+          delete_tags: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

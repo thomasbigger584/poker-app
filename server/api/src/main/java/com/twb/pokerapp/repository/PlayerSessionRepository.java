@@ -63,6 +63,7 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             WHERE s.pokerTable.id = :tableId
             AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
             AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
+            AND s.funds > 0
             AND NOT EXISTS (
                 SELECT 1
                 FROM PlayerAction a
@@ -80,6 +81,7 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             WHERE s.pokerTable.id = :tableId
             AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
             AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
+            AND s.funds > 0
             AND NOT EXISTS (
                 SELECT 1
                 FROM PlayerAction a
@@ -92,16 +94,6 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
     @Transactional
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     List<PlayerSession> findActivePlayersByTableId_Lock(@Param("tableId") UUID tableId, @Param("roundId") UUID roundId);
-
-    @Query("""
-            SELECT s
-            FROM PlayerSession s
-            WHERE s.pokerTable.id = :tableId
-            AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
-            AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
-            ORDER BY s.position ASC
-            """)
-    List<PlayerSession> findConnectedPlayersByTableIdNoLock(@Param("tableId") UUID tableId);
 
     @Modifying(flushAutomatically = true)
     @Query("""

@@ -1,4 +1,4 @@
-package com.twb.pokerapp.service.game.thread.util;
+package com.twb.pokerapp.service.game.thread.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

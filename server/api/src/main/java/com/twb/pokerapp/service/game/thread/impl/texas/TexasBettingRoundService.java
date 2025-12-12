@@ -8,6 +8,8 @@ import com.twb.pokerapp.exception.game.RoundInterruptedException;
 import com.twb.pokerapp.repository.BettingRoundRepository;
 import com.twb.pokerapp.repository.PlayerActionRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
+import com.twb.pokerapp.repository.RoundRepository;
+import com.twb.pokerapp.service.BettingRoundService;
 import com.twb.pokerapp.service.RoundService;
 import com.twb.pokerapp.service.game.thread.GameLogService;
 import com.twb.pokerapp.service.game.thread.GameThread;
@@ -16,29 +18,44 @@ import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Component
-@Transactional
 @RequiredArgsConstructor
 public class TexasBettingRoundService {
     private final PlayerSessionRepository playerSessionRepository;
     private final PlayerActionRepository playerActionRepository;
+    private final RoundRepository roundRepository;
     private final BettingRoundRepository bettingRoundRepository;
     private final GameLogService gameLogService;
     private final RoundService roundService;
     private final MessageDispatcher dispatcher;
     private final ServerMessageFactory messageFactory;
     private final TexasPlayerActionService texasPlayerActionService;
+    private final BettingRoundService bettingRoundService;
 
-    public Round runBettingRound(GameThreadParams params, PokerTable table, Round round, BettingRound bettingRound, GameThread gameThread) {
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void runBettingRound(GameThreadParams params, PokerTable table, GameThread gameThread) {
+        var roundOpt = roundRepository.findCurrentByTableId(table.getId());
+        if (roundOpt.isEmpty()) {
+            throw new IllegalStateException("Round not found");
+        }
+        var round = roundOpt.get();
+        var bettingRoundOpt = bettingRoundRepository.findLatestInProgress(table.getId());
+        if (bettingRoundOpt.isEmpty()) {
+            throw new IllegalStateException("Latest Betting Round not found for Table ID: " + table.getId());
+        }
+        var bettingRound = bettingRoundOpt.get();
+
         do {
             int playerIndex = 0;
             while (true) {
@@ -57,7 +74,7 @@ public class TexasBettingRoundService {
                     break;
                 }
 
-                PlayerSession currentPlayer = activePlayers.get(playerIndex);
+                var currentPlayer = activePlayers.get(playerIndex);
 
                 var amountToCall = 0d;
                 var nextActions = ActionType.getDefaultActions();
@@ -79,8 +96,7 @@ public class TexasBettingRoundService {
                 dispatcher.send(table, messageFactory.playerTurn(currentPlayer, previousPlayerAction, bettingRound, nextActions, amountToCall));
                 waitPlayerTurn(params, gameThread, table, currentPlayer);
 
-                var updatedBettingRoundOpt = bettingRoundRepository.findById(bettingRound.getId());
-                if (updatedBettingRoundOpt.isPresent()) bettingRound = updatedBettingRoundOpt.get();
+                bettingRound = bettingRoundService.refreshBettingRound(bettingRound.getId());
 
                 playerIndex++;
             }
@@ -88,24 +104,21 @@ public class TexasBettingRoundService {
 
         setBettingRoundFinished(bettingRound);
 
-        return roundService.updatePot(round, bettingRound);
+        round = roundService.updatePot(round, bettingRound);
+        log.info("Round pot for after betting updated to {}", round.getPot());
     }
 
     private boolean areAllPlayersPaidUp(PokerTable table, Round round, BettingRound bettingRound) {
-        var tableId = table.getId();
-        var roundId = round.getId();
-        var bettingRoundId = bettingRound.getId();
-
-        List<PlayerSession> activePlayers = playerSessionRepository.findActivePlayersByTableId(tableId, roundId);
+        var activePlayers = playerSessionRepository.findActivePlayersByTableId(table.getId(), round.getId());
         if (activePlayers.size() <= 1) {
             return true;
         }
 
-        Map<UUID, Double> contributions = getPlayerContributions(bettingRoundId);
+        var contributions = getPlayerContributions(bettingRound);
 
-        double highestContribution = 0;
+        var highestContribution = 0d;
         for (PlayerSession player : activePlayers) {
-            double contribution = contributions.getOrDefault(player.getId(), 0.0);
+            var contribution = contributions.getOrDefault(player.getId(), 0d);
             if (contribution > highestContribution) {
                 highestContribution = contribution;
             }
@@ -115,7 +128,7 @@ public class TexasBettingRoundService {
             return true; // Everyone has checked
         }
 
-        for (PlayerSession player : activePlayers) {
+        for (var player : activePlayers) {
             if (contributions.getOrDefault(player.getId(), 0.0) < highestContribution) {
                 return false; // At least one player has not matched the highest bet
             }
@@ -123,12 +136,12 @@ public class TexasBettingRoundService {
         return true; // All active players have matched the highest bet
     }
 
-    private Map<UUID, Double> getPlayerContributions(UUID bettingRoundId) {
+    private Map<UUID, Double> getPlayerContributions(BettingRound bettingRound) {
         // Note: This relies on a repository method that fetches actions for the round, ordered by time.
         // If a player calls and then re-raises, we assume the amount on the action is the new total for the round.
-        List<PlayerAction> actions = playerActionRepository.findPlayerActionsForContributions(bettingRoundId);
-        Map<UUID, Double> contributions = new HashMap<>();
-        for (PlayerAction action : actions) {
+        var actions = playerActionRepository.findPlayerActionsForContributions(bettingRound.getId());
+        var contributions = new HashMap<UUID, Double>();
+        for (var action : actions) {
             contributions.put(action.getPlayerSession().getId(), action.getAmount());
         }
         return contributions;

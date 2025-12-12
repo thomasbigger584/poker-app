@@ -1,92 +1,92 @@
 package com.twb.pokerapp.domain.enumeration;
 
-import jakarta.annotation.Nullable;
+import java.util.Optional;
 
 import static com.twb.pokerapp.domain.enumeration.BettingRoundType.*;
 
 public enum RoundState {
     WAITING_FOR_PLAYERS {
         @Override
-        public RoundState nextTexasHoldemState() {
+        public RoundState nextTexasState() {
             return INIT_DEAL;
         }
     },
     INIT_DEAL {
         @Override
-        public RoundState nextTexasHoldemState() {
+        public RoundState nextTexasState() {
             return INIT_DEAL_BET;
         }
     }, INIT_DEAL_BET {
         @Override
-        public RoundState nextTexasHoldemState() {
+        public RoundState nextTexasState() {
             return FLOP_DEAL;
         }
 
         @Override
-        public BettingRoundType getBettingRoundType() {
-            return DEAL;
+        public Optional<BettingRoundType> getBettingRoundType() {
+            return Optional.of(DEAL);
         }
     }, FLOP_DEAL {
         @Override
-        public RoundState nextTexasHoldemState() {
+        public RoundState nextTexasState() {
             return FLOP_DEAL_BET;
         }
 
     }, FLOP_DEAL_BET {
         @Override
-        public RoundState nextTexasHoldemState() {
+        public RoundState nextTexasState() {
             return TURN_DEAL;
         }
 
         @Override
-        public BettingRoundType getBettingRoundType() {
-            return FLOP;
+        public Optional<BettingRoundType> getBettingRoundType() {
+            return Optional.of(FLOP);
         }
     }, TURN_DEAL {
         @Override
-        public RoundState nextTexasHoldemState() {
+        public RoundState nextTexasState() {
             return TURN_DEAL_BET;
         }
     }, TURN_DEAL_BET {
         @Override
-        public RoundState nextTexasHoldemState() {
+        public RoundState nextTexasState() {
             return RIVER_DEAL;
         }
 
         @Override
-        public BettingRoundType getBettingRoundType() {
-            return TURN;
+        public Optional<BettingRoundType> getBettingRoundType() {
+            return Optional.of(TURN);
         }
     }, RIVER_DEAL {
         @Override
-        public RoundState nextTexasHoldemState() {
+        public RoundState nextTexasState() {
             return RIVER_DEAL_BET;
         }
     }, RIVER_DEAL_BET {
         @Override
-        public RoundState nextTexasHoldemState() {
+        public RoundState nextTexasState() {
             return EVAL;
         }
 
         @Override
-        public BettingRoundType getBettingRoundType() {
-            return RIVER;
+        public Optional<BettingRoundType> getBettingRoundType() {
+            return Optional.of(RIVER);
         }
     }, EVAL {
         @Override
-        public RoundState nextTexasHoldemState() {
+        public RoundState nextTexasState() {
             return FINISHED;
         }
     }, FINISHED {
         @Override
-        public RoundState nextTexasHoldemState() {
+        public RoundState nextTexasState() {
             return null;
         }
     };
 
-    public @Nullable BettingRoundType getBettingRoundType() {
-        return null;
+    public Optional<BettingRoundType> getBettingRoundType() {
+        return Optional.empty();
     }
 
-    public abstract RoundState nextTexasHoldemState();
+    public abstract RoundState nextTexasState();
 }

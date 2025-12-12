@@ -44,17 +44,17 @@ public class TexasGameThread extends GameThread {
         switch (roundState) {
             case INIT_DEAL -> initDeal();
             case INIT_DEAL_BET, FLOP_DEAL_BET, TURN_DEAL_BET, RIVER_DEAL_BET ->
-                    round = texasBettingRoundService.runBettingRound(params, table, round, bettingRound, this);
+                    texasBettingRoundService.runBettingRound(params, table, this);
             case FLOP_DEAL -> dealFlop();
             case TURN_DEAL -> dealCommunityCard(CardType.TURN_CARD);
             case RIVER_DEAL -> dealCommunityCard(CardType.RIVER_CARD);
-            case EVAL -> evaluationService.evaluate(params, table, round);
+            case EVAL -> evaluationService.evaluate(params, table);
         }
     }
 
     private void initDeal() {
         var activePlayers = playerSessionRepository
-                .findActivePlayersByTableId_Lock(table.getId(), round.getId());
+                .findActivePlayersByTableId_Lock(table.getId(), roundId);
 
         for (var cardType : CardType.PLAYER_CARDS) {
             for (var playerSession : activePlayers) {
@@ -68,7 +68,7 @@ public class TexasGameThread extends GameThread {
         var card = getCard();
         card.setCardType(cardType);
 
-        handService.addPlayerCard(round, playerSession, card);
+        handService.addPlayerCard(table, playerSession, card);
         dispatcher.send(table, messageFactory.initDeal(playerSession, card));
 
         sleepInMs(params.getDealWaitMs());
@@ -85,7 +85,7 @@ public class TexasGameThread extends GameThread {
         var card = getCard();
         card.setCardType(cardType);
 
-        cardService.createCommunityCard(round, card);
+        cardService.createCommunityCard(table, card);
         dispatcher.send(table, messageFactory.communityCardDeal(card));
 
         sleepInMs(params.getDealWaitMs());
@@ -93,7 +93,7 @@ public class TexasGameThread extends GameThread {
 
     @Override
     protected RoundState getNextRoundState(RoundState roundState) {
-        return roundState.nextTexasHoldemState();
+        return roundState.nextTexasState();
     }
 
     private void determineNextDealer() {
