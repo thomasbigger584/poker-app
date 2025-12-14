@@ -45,10 +45,9 @@ public class CardPairLayout extends FrameLayout {
     }
 
     public void reset() {
-        for (ImageView imageView : cardImageViews) {
-            imageView.setVisibility(INVISIBLE);
-        }
+        fold();
         updateDealerChip(false);
+        updateTurnPlayer(false);
     }
 
     public void updateCardImageView(CardDTO card) {
