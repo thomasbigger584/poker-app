@@ -118,11 +118,7 @@ public class PokerTableGameService {
 
             var gameType = table.getGameType();
             var playerActionService = gameType.getPlayerActionService(context);
-            var actioned = playerActionService.playerAction(playerSession, gameThread, action);
-
-            if (actioned) {
-                gameThread.onPostPlayerAction(action);
-            }
+            playerActionService.playerAction(playerSession, gameThread, action);
         });
     }
 

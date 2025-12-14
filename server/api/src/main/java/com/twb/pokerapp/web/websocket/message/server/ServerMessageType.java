@@ -43,7 +43,7 @@ public enum ServerMessageType {
     /*
      * Used to notify all players of a players action
      */
-    PLAYER_ACTION,
+    PLAYER_ACTIONED,
 
     // todo: add more
 
@@ -97,7 +97,7 @@ public enum ServerMessageType {
             case DEAL_INIT -> DealPlayerCardDTO.class;
             case DEAL_COMMUNITY -> DealCommunityCardDTO.class;
             case PLAYER_TURN -> PlayerTurnDTO.class;
-            case PLAYER_ACTION -> PlayerActionEventDTO.class;
+            case PLAYER_ACTIONED -> PlayerActionEventDTO.class;
 
             //todo: add more
 

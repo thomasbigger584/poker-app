@@ -1,5 +1,6 @@
 package com.twb.pokerapp.service.game.thread.impl.blackjack;
 
+import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.service.game.thread.GamePlayerActionService;
 import com.twb.pokerapp.service.game.thread.GameThread;
@@ -12,10 +13,9 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @RequiredArgsConstructor
 @Component("blackJackPlayerActionService")
-public class BlackjackPlayerActionService implements GamePlayerActionService {
+public class BlackjackPlayerActionService extends GamePlayerActionService {
     @Override
-    public boolean playerAction(PlayerSession playerSession, GameThread gameThread, CreatePlayerActionDTO createDto) {
+    public boolean onPlayerAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread, CreatePlayerActionDTO createDto) {
         throw new NotImplementedException("Blackjack player actions not implemented yet");
     }
-
 }

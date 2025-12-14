@@ -24,7 +24,7 @@ import java.util.UUID;
 @Slf4j
 @RequiredArgsConstructor
 @Component("texasPlayerActionService")
-public class TexasPlayerActionService implements GamePlayerActionService {
+public class TexasPlayerActionService extends GamePlayerActionService {
     private final PlayerActionRepository playerActionRepository;
     private final BettingRoundRepository bettingRoundRepository;
 
@@ -34,23 +34,8 @@ public class TexasPlayerActionService implements GamePlayerActionService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public boolean playerAction(PlayerSession playerSession, GameThread gameThread, CreatePlayerActionDTO createDto) {
-        var pokerTable = playerSession.getPokerTable();
-        if (pokerTable == null) {
-            log.error("Table is null for player session: {}", playerSession);
-            return false;
-        }
-        var tableId = pokerTable.getId();
-        var bettingRoundOpt = bettingRoundRepository.findLatestInProgress(tableId);
-        if (bettingRoundOpt.isEmpty()) {
-            log.error("Latest Betting Round not found for Table ID: {}", tableId);
-            return false;
-        }
-        var bettingRound = bettingRoundOpt.get();
+    public boolean onPlayerAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread, CreatePlayerActionDTO createDto) {
 
-        if (createDto.getAmount() == null) {
-            createDto.setAmount(0d);
-        }
 
         return switch (createDto.getAction()) {
             case FOLD -> foldAction(playerSession, bettingRound, createDto);
