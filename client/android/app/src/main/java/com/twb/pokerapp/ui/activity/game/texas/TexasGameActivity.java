@@ -21,6 +21,7 @@ import com.twb.pokerapp.data.model.dto.playeraction.PlayerActionDTO;
 import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.data.model.dto.table.TableDTO;
 import com.twb.pokerapp.data.model.enumeration.ActionType;
+import com.twb.pokerapp.data.websocket.message.server.payload.PlayerActionedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerTurnDTO;
 import com.twb.pokerapp.ui.activity.login.BaseAuthActivity;
 import com.twb.pokerapp.ui.activity.game.chatbox.ChatBoxRecyclerAdapter;
@@ -164,11 +165,12 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             } else {
                 controlsController.hide();
             }
-            chatBoxAdapter.add(getTurnChatMessage(playerTurn));
         });
-
-
-        //todo: add more
+        viewModel.playerActioned.observe(this, playerActioned -> {
+            dismissDialogs();
+            controlsController.hide();
+            chatBoxAdapter.add(getPlayerActionedMessage(playerActioned));
+        });
         viewModel.dealCommunityCard.observe(this, dealCommunityCard -> {
             dismissDialogs();
             controlsController.hide();
@@ -254,9 +256,10 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
 
     public void onRaiseClick(View view) {
         dismissDialogs();
-        double minimumBet = 10d; //todo: get minimum bet
-        betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.RAISE, buyInAmount, minimumBet, this);
-        betRaisePokerGameDialog.show(getSupportFragmentManager());
+//        double minimumBet = 10d; //todo: get minimum bet
+//        betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.RAISE, buyInAmount, minimumBet, this);
+//        betRaisePokerGameDialog.show(getSupportFragmentManager());
+        Toast.makeText(this, "Raise not implemented yet", Toast.LENGTH_SHORT).show();
     }
 
     /*
@@ -274,21 +277,18 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
      * ****************************************************************************
      */
 
-    private String getTurnChatMessage(PlayerTurnDTO playerTurn) {
-        PlayerActionDTO prevPlayerAction = playerTurn.getPrevPlayerAction();
-        if (playerTurn.getPrevPlayerAction() == null) {
-            return null;
-        }
-        String thirdPerson = prevPlayerAction.getPlayerSession().getUser().getUsername();
-        if (authService.isCurrentUser(prevPlayerAction.getPlayerSession().getUser())) {
+    private String getPlayerActionedMessage(PlayerActionedDTO playerActioned) {
+        PlayerActionDTO playerAction = playerActioned.getAction();
+        String thirdPerson = playerAction.getPlayerSession().getUser().getUsername();
+        if (authService.isCurrentUser(playerAction.getPlayerSession().getUser())) {
             thirdPerson = "You ";
         }
-        String message = String.format("%s %s", thirdPerson, prevPlayerAction.getActionType().toLowerCase());
-        Double amount = prevPlayerAction.getAmount();
+        String message = String.format("%s %s", thirdPerson, playerAction.getActionType().toLowerCase());
+        Double amount = playerAction.getAmount();
         if (amount != null && amount > 0) {
-            message += " with " + prevPlayerAction.getAmount();
+            message += " with " + playerAction.getAmount();
         }
-        BettingRoundDTO bettingRound = prevPlayerAction.getBettingRound();
+        BettingRoundDTO bettingRound = playerAction.getBettingRound();
         Double bettingRoundPot = bettingRound.getPot();
         if (bettingRoundPot != null && bettingRoundPot > 0) {
             message += String.format(Locale.getDefault(), " (betting round: %f)", bettingRoundPot);

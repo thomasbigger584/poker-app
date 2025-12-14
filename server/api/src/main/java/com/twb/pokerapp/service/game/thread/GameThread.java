@@ -201,6 +201,7 @@ public abstract class GameThread extends BaseGameThread {
 
     private void finishRound() {
         if (roundInProgress.get()) {
+            finishCurrentBettingRound();
             saveRoundState(RoundState.FINISHED);
             dispatcher.send(table, messageFactory.roundFinished());
         }
@@ -255,14 +256,14 @@ public abstract class GameThread extends BaseGameThread {
         }
     }
 
+    private void finishCurrentBettingRound() {
+        var bettingRoundOpt = bettingRoundRepository.findCurrentByRoundId(roundId);
+        bettingRoundOpt.ifPresent(bettingRound -> bettingRoundService.setBettingRoundFinished(bettingRound));
+    }
+
     private void saveRoundState(RoundState roundState) {
         var roundOpt = roundRepository.findById(roundId);
-        if (roundOpt.isEmpty()) {
-            throw new IllegalStateException("Round not found");
-        }
-        var round = roundOpt.get();
-        round.setRoundState(roundState);
-        roundRepository.saveAndFlush(round);
+        roundOpt.ifPresent(round -> roundService.setRoundState(round, roundState));
     }
 
     private void checkGameInterrupted() {

@@ -103,6 +103,10 @@ public class TableConnectActivity extends BaseAuthActivity {
             connectionType = "LISTENER";
             buyIn = 0d;
         }
+        if (connectionType.equals("LISTENER")) {
+            Toast.makeText(this, "Listener connection type not fully available yet", Toast.LENGTH_SHORT).show();
+            return;
+        }
         if (table.getGameType().equals("TEXAS_HOLDEM")) {
             TexasGameActivity.startActivity(this, table, connectionType, buyIn);
         } else {

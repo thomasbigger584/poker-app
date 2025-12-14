@@ -99,8 +99,6 @@ public enum ServerMessageType {
             case PLAYER_TURN -> PlayerTurnDTO.class;
             case PLAYER_ACTIONED -> PlayerActionedDTO.class;
 
-            //todo: add more
-
             case ROUND_FINISHED -> RoundFinishedDTO.class;
             case GAME_FINISHED -> GameFinishedDTO.class;
             case CHAT -> ChatMessageDTO.class;

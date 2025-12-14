@@ -4,7 +4,6 @@ import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.enumeration.ActionType;
-import com.twb.pokerapp.repository.PlayerActionRepository;
 import com.twb.pokerapp.service.BettingRoundService;
 import com.twb.pokerapp.service.PlayerActionService;
 import com.twb.pokerapp.service.game.thread.GameLogService;
@@ -24,7 +23,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Component("texasPlayerActionService")
 public class TexasPlayerActionService extends GamePlayerActionService {
-    private final PlayerActionRepository playerActionRepository;
     private final PlayerActionService playerActionService;
     private final BettingRoundService bettingRoundService;
     private final GameLogService gameLogService;
@@ -46,7 +44,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
     }
 
     private Optional<PlayerAction> checkAction(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
-        var canPerformCheck = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId())
+        var canPerformCheck = playerActionService.getPlayerActionsNotFolded(bettingRound.getId())
                 .stream().allMatch(action -> action.getActionType() == ActionType.CHECK);
         if (!canPerformCheck) {
             gameLogService.sendLogMessage(playerSession, "Cannot check as previous actions was not a check");
@@ -65,7 +63,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
             gameLogService.sendLogMessage(playerSession, "Cannot bet as %.2f is more than current funds".formatted(createActionDto.getAmount()));
             return Optional.empty();
         }
-        var lastPlayerActions = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId());
+        var lastPlayerActions = playerActionService.getPlayerActionsNotFolded(bettingRound.getId());
         if (!lastPlayerActions.isEmpty()) {
             var lastPlayerAction = lastPlayerActions.getFirst();
             if (List.of(ActionType.BET, ActionType.CALL, ActionType.RAISE).contains(lastPlayerAction.getActionType())) {
@@ -81,7 +79,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
     }
 
     private Optional<PlayerAction> callAction(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
-        var lastPlayerActions = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId());
+        var lastPlayerActions = playerActionService.getPlayerActionsNotFolded(bettingRound.getId());
         if (lastPlayerActions.isEmpty()) {
             gameLogService.sendLogMessage(playerSession, "Cannot call as there was no previous action");
             return Optional.empty();

@@ -3,7 +3,7 @@ package com.twb.pokerapp.service.game.thread;
 import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.repository.BettingRoundRepository;
+import com.twb.pokerapp.service.BettingRoundService;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
@@ -16,7 +16,7 @@ import java.util.Optional;
 public abstract class GamePlayerActionService {
 
     @Autowired
-    private BettingRoundRepository bettingRoundRepository;
+    private BettingRoundService bettingRoundService;
 
     @Autowired
     private GameLogService gameLogService;
@@ -35,19 +35,13 @@ public abstract class GamePlayerActionService {
             return;
         }
         var tableId = pokerTable.getId();
-        var bettingRoundOpt = bettingRoundRepository.findCurrentByTableId(tableId);
-        if (bettingRoundOpt.isEmpty()) {
-            gameLogService.sendLogMessage(playerSession, "Latest Betting Round not found for Table ID: " + tableId);
-            return;
-        }
-        var bettingRound = bettingRoundOpt.get();
+        var bettingRound = bettingRoundService.getTableBettingRound(tableId);
         if (createDto.getAmount() == null) {
             createDto.setAmount(0d);
         }
         var playerActionOpt = onPlayerAction(playerSession, bettingRound, gameThread, createDto);
         if (playerActionOpt.isPresent()) {
             var playerAction = playerActionOpt.get();
-
             dispatcher.send(tableId, messageFactory.playerActioned(playerAction));
             gameThread.onPostPlayerAction(createDto);
         }

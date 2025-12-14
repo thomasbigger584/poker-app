@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+import static com.twb.pokerapp.domain.enumeration.BettingRoundState.FINISHED;
 import static com.twb.pokerapp.domain.enumeration.BettingRoundState.IN_PROGRESS;
 
 @Slf4j
@@ -54,14 +55,25 @@ public class BettingRoundService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
-    public BettingRound refreshCurrentBettingRound(UUID roundId) {
+    public BettingRound getTableBettingRound(UUID tableId) {
+        return repository.findCurrentByTableId(tableId)
+                .orElseThrow(() -> new IllegalStateException("BettingRound not found for table"));
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
+    public BettingRound getCurrentBettingRound(UUID roundId) {
         return repository.findCurrentByRoundId(roundId)
                 .orElseThrow(() -> new IllegalStateException("BettingRound not found for current"));
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
-    public BettingRound refreshBettingRound(UUID bettingRoundId) {
+    public BettingRound getBettingRound(UUID bettingRoundId) {
         return repository.findById(bettingRoundId)
                 .orElseThrow(() -> new IllegalStateException("BettingRound not found after update"));
+    }
+
+    public void setBettingRoundFinished(BettingRound bettingRound) {
+        bettingRound.setState(FINISHED);
+        repository.saveAndFlush(bettingRound);
     }
 }

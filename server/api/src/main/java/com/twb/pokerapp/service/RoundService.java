@@ -38,4 +38,9 @@ public class RoundService {
 
         return round;
     }
+
+    public void setRoundState(Round round, RoundState roundState) {
+        round.setRoundState(roundState);
+        repository.saveAndFlush(round);
+    }
 }

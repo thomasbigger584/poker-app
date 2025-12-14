@@ -49,4 +49,9 @@ public class PlayerActionService {
     public List<PlayerAction> refreshPlayerActionsNotFolded(UUID bettingRoundId) {
         return repository.findPlayerActionsNotFolded(bettingRoundId);
     }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
+    public List<PlayerAction> getPlayerActionsNotFolded(UUID bettingRoundId) {
+        return repository.findPlayerActionsNotFolded(bettingRoundId);
+    }
 }

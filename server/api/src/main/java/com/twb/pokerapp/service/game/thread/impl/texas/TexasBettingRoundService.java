@@ -5,7 +5,6 @@ import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.Round;
 import com.twb.pokerapp.domain.enumeration.ActionType;
-import com.twb.pokerapp.domain.enumeration.BettingRoundState;
 import com.twb.pokerapp.exception.game.GameInterruptedException;
 import com.twb.pokerapp.exception.game.RoundInterruptedException;
 import com.twb.pokerapp.repository.BettingRoundRepository;
@@ -49,7 +48,7 @@ public class TexasBettingRoundService {
     public void runBettingRound(GameThreadParams params, GameThread gameThread) {
         var round = getCurrentRound(params);
         var bettingRound = bettingRoundService
-                .refreshCurrentBettingRound(round.getId());
+                .getCurrentBettingRound(round.getId());
         do {
             int playerIndex = 0;
             while (true) {
@@ -60,7 +59,6 @@ public class TexasBettingRoundService {
                     throw new GameInterruptedException("No Active Players found");
                 }
                 if (activePlayers.size() == 1) {
-                    gameLogService.sendLogMessage(params.getTableId(), "Only one active player in betting round, so skipping");
                     throw new RoundInterruptedException("Only one active player in betting round, so skipping");
                 }
 
@@ -90,20 +88,21 @@ public class TexasBettingRoundService {
                 dispatcher.send(params, messageFactory.playerTurn(currentPlayer, previousPlayerAction, bettingRound, nextActions, amountToCall));
                 waitPlayerTurn(params, gameThread, currentPlayer);
 
-                bettingRound = bettingRoundService.refreshBettingRound(bettingRound.getId());
+                bettingRound = bettingRoundService.getBettingRound(bettingRound.getId());
 
                 playerIndex++;
             }
         } while (!areAllPlayersPaidUp(params, round, bettingRound));
 
-        setBettingRoundFinished(bettingRound);
+        bettingRoundService.setBettingRoundFinished(bettingRound);
 
         round = roundService.updatePot(round, bettingRound);
         log.info("Round pot for after betting updated to {}", round.getPot());
     }
 
     private Round getCurrentRound(GameThreadParams params) {
-        var roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
+        var roundOpt = roundRepository
+                .findCurrentByTableId(params.getTableId());
         if (roundOpt.isEmpty()) {
             throw new IllegalStateException("Current Round not found for Table ID: " + params.getTableId());
         }
@@ -111,7 +110,8 @@ public class TexasBettingRoundService {
     }
 
     private boolean areAllPlayersPaidUp(GameThreadParams params, Round round, BettingRound bettingRound) {
-        var activePlayers = playerSessionRepository.findActivePlayersByTableId(params.getTableId(), round.getId());
+        var activePlayers = playerSessionRepository
+                .findActivePlayersByTableId(params.getTableId(), round.getId());
         if (activePlayers.size() <= 1) {
             return true;
         }
@@ -141,7 +141,8 @@ public class TexasBettingRoundService {
     private Map<UUID, Double> getPlayerContributions(BettingRound bettingRound) {
         // Note: This relies on a repository method that fetches actions for the round, ordered by time.
         // If a player calls and then re-raises, we assume the amount on the action is the new total for the round.
-        var actions = playerActionRepository.findPlayerActionsForContributions(bettingRound.getId());
+        var actions = playerActionRepository
+                .findPlayerActionsForContributions(bettingRound.getId());
         var contributions = new HashMap<UUID, Double>();
         for (var action : actions) {
             contributions.put(action.getPlayerSession().getId(), action.getAmount());
@@ -162,10 +163,5 @@ public class TexasBettingRoundService {
         } catch (InterruptedException e) {
             throw new RuntimeException("Failed to wait for player turn latch", e);
         }
-    }
-
-    private void setBettingRoundFinished(BettingRound bettingRound) {
-        bettingRound.setState(BettingRoundState.FINISHED);
-        bettingRoundRepository.saveAndFlush(bettingRound);
     }
 }

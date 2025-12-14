@@ -3,12 +3,8 @@ package com.twb.pokerapp.data.websocket.message.server.payload;
 import androidx.annotation.NonNull;
 
 import com.twb.pokerapp.data.model.dto.playeraction.PlayerActionDTO;
-import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class PlayerActionEventDTO {
+public class PlayerActionedDTO {
     private PlayerActionDTO action;
 
     public PlayerActionDTO getAction() {

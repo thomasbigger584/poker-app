@@ -17,6 +17,7 @@ import com.twb.pokerapp.data.websocket.message.server.payload.DealerDeterminedDT
 import com.twb.pokerapp.data.websocket.message.server.payload.ErrorMessageDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.GameFinishedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.LogMessageDTO;
+import com.twb.pokerapp.data.websocket.message.server.payload.PlayerActionedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerConnectedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerDisconnectedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerSubscribedDTO;
@@ -45,11 +46,9 @@ public class TexasGameViewModel extends ViewModel
     public MutableLiveData<DealPlayerCardDTO> dealPlayerCard = new MutableLiveData<>();
     public MutableLiveData<DealCommunityCardDTO> dealCommunityCard = new MutableLiveData<>();
     public MutableLiveData<PlayerTurnDTO> playerTurn = new MutableLiveData<>();
+    public MutableLiveData<PlayerActionedDTO> playerActioned = new MutableLiveData<>();
     public MutableLiveData<RoundFinishedDTO> roundFinished = new MutableLiveData<>();
     public MutableLiveData<GameFinishedDTO> gameFinished = new MutableLiveData<>();
-
-    //todo: add more
-
     public MutableLiveData<ChatMessageDTO> chatMessage = new MutableLiveData<>();
     public MutableLiveData<LogMessageDTO> logMessage = new MutableLiveData<>();
     public MutableLiveData<ErrorMessageDTO> errorMessage = new MutableLiveData<>();
@@ -105,8 +104,10 @@ public class TexasGameViewModel extends ViewModel
                 playerTurn.setValue((PlayerTurnDTO) message.getPayload());
                 break;
             }
-
-            //todo: add more
+            case PLAYER_ACTIONED: {
+                playerActioned.setValue((PlayerActionedDTO) message.getPayload());
+                break;
+            }
 
             case ROUND_FINISHED: {
                 roundFinished.setValue((RoundFinishedDTO) message.getPayload());

@@ -1,5 +1,7 @@
 package com.twb.pokerapp.data.model.dto.playeraction;
 
+import androidx.annotation.NonNull;
+
 import com.twb.pokerapp.data.model.dto.bettinground.BettingRoundDTO;
 import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
 
@@ -53,6 +55,7 @@ public class PlayerActionDTO {
         this.amount = amount;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "PlayerActionDTO{" +

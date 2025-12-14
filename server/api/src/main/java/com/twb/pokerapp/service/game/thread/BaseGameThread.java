@@ -1,5 +1,6 @@
 package com.twb.pokerapp.service.game.thread;
 
+import com.twb.pokerapp.repository.BettingRoundRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.RoundRepository;
 import com.twb.pokerapp.repository.TableRepository;
@@ -35,6 +36,9 @@ public abstract class BaseGameThread extends Thread {
 
     @Autowired
     protected TableRepository tableRepository;
+
+    @Autowired
+    protected BettingRoundRepository bettingRoundRepository;
 
     @Autowired
     protected RoundRepository roundRepository;
