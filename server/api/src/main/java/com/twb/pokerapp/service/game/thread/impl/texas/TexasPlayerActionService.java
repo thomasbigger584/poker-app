@@ -103,6 +103,29 @@ public class TexasPlayerActionService extends GamePlayerActionService {
     }
 
     private Optional<PlayerAction> raiseAction(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
-        throw new UnsupportedOperationException("Raise action not implemented yet");
+        var lastPlayerActions = playerActionService.getPlayerActionsNotFolded(bettingRound.getId());
+        if (lastPlayerActions.isEmpty()) {
+            gameLogService.sendLogMessage(playerSession, "Cannot raise as there was no previous action");
+            return Optional.empty();
+        }
+        var lastPlayerAction = lastPlayerActions.getFirst();
+        var lastPlayerActionType = lastPlayerAction.getActionType();
+        if (lastPlayerActionType == ActionType.CHECK) {
+            gameLogService.sendLogMessage(playerSession, "Cannot call as previous action was a check");
+            return Optional.empty();
+        }
+        if (createActionDto.getAmount() > playerSession.getFunds()) {
+            gameLogService.sendLogMessage(playerSession, "Cannot raise as %.2f is more than current funds".formatted(createActionDto.getAmount()));
+            return Optional.empty();
+        }
+        var amountToCall = lastPlayerActionType.getAmountToCall(lastPlayerAction.getAmount());
+        if (createActionDto.getAmount() <= amountToCall) {
+            gameLogService.sendLogMessage(playerSession, "Cannot raise as %.2f is less than or equal to %.2f".formatted(createActionDto.getAmount(), amountToCall));
+            return Optional.empty();
+        }
+        var action = playerActionService.create(playerSession, bettingRound, createActionDto);
+        bettingRound = bettingRoundService.updatePot(bettingRound, createActionDto);
+        log.info("BettingRound pot for raise updated to {}", bettingRound.getPot());
+        return Optional.of(action);
     }
 }

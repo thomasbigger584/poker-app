@@ -77,8 +77,6 @@ jobs:
           FILTER_PATH="client/android"
           END_SHA="HEAD"
           CURRENT_RELEASE_TAG="${{ steps.release_meta.outputs.release_tag }}"
-          
-          # Remove single quotes around the git command and use the shell variable
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 --exclude="$CURRENT_RELEASE_TAG" HEAD^ 2>/dev/null || echo "not_found")
           
           if [ "$PREVIOUS_TAG" = "not_found" ]; then

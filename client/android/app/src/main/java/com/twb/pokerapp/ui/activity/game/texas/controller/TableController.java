@@ -60,6 +60,11 @@ public class TableController {
         cardPairLayout.updateDealerChip(dealer != null && dealer);
     }
 
+    public void updateDetails(PlayerSessionDTO playerSession) {
+        CardPairLayout cardPairLayout = getCardPairLayout(playerSession.getPosition());
+        cardPairLayout.updateDetails(playerSession);
+    }
+
     public void disconnectOtherPlayer(String username) {
         CardPairLayout cardPairLayout = findCardPairLayout(username);
         if (cardPairLayout != null) {

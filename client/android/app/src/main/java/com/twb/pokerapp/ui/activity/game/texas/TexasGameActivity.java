@@ -59,6 +59,8 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     private String connectionType;
     private Double buyInAmount;
 
+    private PlayerTurnDTO currentPlayerTurn;
+
     public static void startActivity(Activity activity, TableDTO table, String connectionType, Double buyInAmount) {
         Intent intent = new Intent(activity, TexasGameActivity.class);
         intent.putExtras(table.toBundle());
@@ -162,12 +164,19 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             tableController.updatePlayerTurn(playerSession);
             if (authService.isCurrentUser(playerSession.getUser())) {
                 controlsController.show(playerTurn.getNextActions());
+                currentPlayerTurn = playerTurn;
             } else {
                 controlsController.hide();
+                currentPlayerTurn = null;
             }
         });
         viewModel.playerActioned.observe(this, playerActioned -> {
             dismissDialogs();
+
+            var playerSession =
+                    playerActioned.getAction().getPlayerSession();
+            tableController.updateDetails(playerSession);
+
             controlsController.hide();
             chatBoxAdapter.add(getPlayerActionedMessage(playerActioned));
         });
@@ -245,9 +254,9 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
 
     public void onBetClick(View view) {
         dismissDialogs();
-        double minimumBet = 10d; //todo: get current minimum bet
+        double minimumBet = 10d;
         betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.BET, buyInAmount, minimumBet, this);
-        betRaisePokerGameDialog.show(getSupportFragmentManager());
+        betRaisePokerGameDialog.show(getSupportFragmentManager(), "bet_dialog");
     }
 
     public void onCallClick(View view) {
@@ -256,10 +265,9 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
 
     public void onRaiseClick(View view) {
         dismissDialogs();
-//        double minimumBet = 10d; //todo: get minimum bet
-//        betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.RAISE, buyInAmount, minimumBet, this);
-//        betRaisePokerGameDialog.show(getSupportFragmentManager());
-        Toast.makeText(this, "Raise not implemented yet", Toast.LENGTH_SHORT).show();
+        double minimumBet = getRaiseMinimumBet();
+        betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.RAISE, buyInAmount, minimumBet, this);
+        betRaisePokerGameDialog.show(getSupportFragmentManager(), "raise_dialog");
     }
 
     /*
@@ -277,6 +285,16 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
      * ****************************************************************************
      */
 
+    private double getRaiseMinimumBet() {
+        if (currentPlayerTurn != null) {
+            Double amountToCall = currentPlayerTurn.getAmountToCall();
+            if (amountToCall != null) {
+                return amountToCall + 0.01;
+            }
+        }
+        return 10d;
+    }
+
     private String getPlayerActionedMessage(PlayerActionedDTO playerActioned) {
         PlayerActionDTO playerAction = playerActioned.getAction();
         String thirdPerson = playerAction.getPlayerSession().getUser().getUsername();
@@ -291,7 +309,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         BettingRoundDTO bettingRound = playerAction.getBettingRound();
         Double bettingRoundPot = bettingRound.getPot();
         if (bettingRoundPot != null && bettingRoundPot > 0) {
-            message += String.format(Locale.getDefault(), " (betting round: %f)", bettingRoundPot);
+            message += String.format(Locale.getDefault(), " (betting round: %.2f)", bettingRoundPot);
         }
         return message;
     }
