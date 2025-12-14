@@ -1,6 +1,6 @@
 package com.twb.pokerapp.testutils.game.player;
 
-import com.twb.pokerapp.dto.pokertable.TableDTO;
+import com.twb.pokerapp.dto.table.TableDTO;
 import com.twb.pokerapp.testutils.game.GameLatches;
 import com.twb.pokerapp.testutils.game.turn.TurnHandler;
 import com.twb.pokerapp.testutils.validator.Validator;

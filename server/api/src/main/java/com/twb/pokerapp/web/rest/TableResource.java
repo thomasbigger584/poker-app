@@ -1,7 +1,8 @@
 package com.twb.pokerapp.web.rest;
 
-import com.twb.pokerapp.dto.pokertable.CreateTableDTO;
-import com.twb.pokerapp.dto.pokertable.TableDTO;
+import com.twb.pokerapp.dto.table.AvailableTableDTO;
+import com.twb.pokerapp.dto.table.CreateTableDTO;
+import com.twb.pokerapp.dto.table.TableDTO;
 import com.twb.pokerapp.mapper.TableMapper;
 import com.twb.pokerapp.service.PaginationService;
 import com.twb.pokerapp.service.table.TableService;
@@ -30,8 +31,8 @@ public class TableResource {
     }
 
     @GetMapping
-    public ResponseEntity<List<TableDTO>> getAll(Pageable pageable) {
-        var page = service.getAll(pageable);
+    public ResponseEntity<List<AvailableTableDTO>> getAll(Pageable pageable) {
+        var page = service.getAllAvailable(pageable);
         var headers = paginationService.createHeaders(page);
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }

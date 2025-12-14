@@ -45,7 +45,7 @@ public class TableListActivity extends BaseAuthActivity implements TableListAdap
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
-        swipeRefreshLayout.setOnRefreshListener(() -> viewModel.getTables().observe(this, tables -> {
+        swipeRefreshLayout.setOnRefreshListener(() -> viewModel.getAvailableTables().observe(this, tables -> {
             adapter.setData(tables);
             swipeRefreshLayout.setRefreshing(false);
         }));
@@ -69,7 +69,7 @@ public class TableListActivity extends BaseAuthActivity implements TableListAdap
                             endSession();
                         }
                     });
-            alertModalDialog.show(getSupportFragmentManager(), MODAL_TAG);
+            alertModalDialog.show(getSupportFragmentManager(), "error_dialog");
 
         });
     }
@@ -77,7 +77,7 @@ public class TableListActivity extends BaseAuthActivity implements TableListAdap
     @Override
     protected void onAuthorized() {
         swipeRefreshLayout.setRefreshing(true);
-        viewModel.getTables().observe(this, tables -> {
+        viewModel.getAvailableTables().observe(this, tables -> {
             adapter.setData(tables);
             swipeRefreshLayout.setRefreshing(false);
         });
@@ -90,6 +90,7 @@ public class TableListActivity extends BaseAuthActivity implements TableListAdap
         } else {
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
         }
+        finish();
     }
 
     @Override

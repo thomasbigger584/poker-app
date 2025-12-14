@@ -1,8 +1,9 @@
 package com.twb.pokerapp.web.rest;
 
 import com.twb.pokerapp.domain.enumeration.GameType;
-import com.twb.pokerapp.dto.pokertable.CreateTableDTO;
-import com.twb.pokerapp.dto.pokertable.TableDTO;
+import com.twb.pokerapp.dto.table.AvailableTableDTO;
+import com.twb.pokerapp.dto.table.CreateTableDTO;
+import com.twb.pokerapp.dto.table.TableDTO;
 import com.twb.pokerapp.testutils.testcontainers.BaseTestContainersIT;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -41,15 +42,16 @@ class TableResourceIT extends BaseTestContainersIT {
         assertEquals(createDto.getMinBuyin(), createdTableDto.getMinBuyin());
         assertEquals(createDto.getMaxBuyin(), createdTableDto.getMaxBuyin());
 
-        var getResponse = adminRestClient.get(TableDTO[].class, ENDPOINT);
+        var getResponse = adminRestClient.get(AvailableTableDTO[].class, ENDPOINT);
         assertEquals(HttpStatus.OK.value(), getResponse.httpResponse().statusCode());
 
         var tables = getResponse.resultBody();
         var createdTableFetchedOpt = Arrays.stream(tables)
-                .filter(tableDTO -> tableDTO.getId().equals(createdTableDto.getId())).findFirst();
+                .filter(availableTableDto -> availableTableDto.getTable().getId().equals(createdTableDto.getId())).findFirst();
         assertTrue(createdTableFetchedOpt.isPresent());
 
-        var createdTableFetched = createdTableFetchedOpt.get();
+        var createdAvailableTableFetched = createdTableFetchedOpt.get();
+        var createdTableFetched = createdAvailableTableFetched.getTable();
 
         assertEquals(createdTableDto.getId(), createdTableFetched.getId());
         assertEquals(createdTableDto.getName(), createdTableFetched.getName());

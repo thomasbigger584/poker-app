@@ -2,6 +2,7 @@ package com.twb.pokerapp.repository;
 
 import com.twb.pokerapp.domain.PlayerSession;
 import jakarta.persistence.LockModeType;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
@@ -114,4 +115,13 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             AND s.id = :id
             """)
     void setDealer(@Param("id") UUID id, @Param("dealer") boolean dealer);
+
+    @Query("""
+            SELECT count(s)
+            FROM PlayerSession s
+            WHERE s.pokerTable.id = :tableId
+            AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
+            AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
+            """)
+    int countConnectedPlayersByTableId(@Param("tableId") UUID tableId);
 }

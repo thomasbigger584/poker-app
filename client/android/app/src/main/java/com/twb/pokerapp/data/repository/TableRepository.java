@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.twb.pokerapp.data.model.dto.table.AvailableTableDTO;
 import com.twb.pokerapp.data.model.dto.table.CreateTableDTO;
 import com.twb.pokerapp.data.model.dto.table.TableDTO;
 import com.twb.pokerapp.data.retrofit.api.TableApi;
@@ -19,18 +20,18 @@ import retrofit2.Response;
 public class TableRepository extends BaseRepository {
     private static final String TAG = TableRepository.class.getSimpleName();
     private final TableApi api;
-    private final MutableLiveData<List<TableDTO>> getTablesLiveData = new MutableLiveData<>();
+    private final MutableLiveData<List<AvailableTableDTO>> getTablesLiveData = new MutableLiveData<>();
     private final MutableLiveData<TableDTO> createdTableLiveData = new MutableLiveData<>();
 
     public TableRepository(TableApi api) {
         this.api = api;
     }
 
-    public LiveData<List<TableDTO>> getTables() {
+    public LiveData<List<AvailableTableDTO>> getAvailableTables() {
         Map<String, Integer> queryParams = new HashMap<>();
-        api.getTables(queryParams).enqueue(new Callback<>() {
+        api.getAvailableTables(queryParams).enqueue(new Callback<>() {
             @Override
-            public void onResponse(@NonNull Call<List<TableDTO>> call, @NonNull Response<List<TableDTO>> response) {
+            public void onResponse(@NonNull Call<List<AvailableTableDTO>> call, @NonNull Response<List<AvailableTableDTO>> response) {
                 if (response.isSuccessful()) {
                     getTablesLiveData.setValue(response.body());
                 } else {
@@ -39,7 +40,7 @@ public class TableRepository extends BaseRepository {
             }
 
             @Override
-            public void onFailure(@NonNull Call<List<TableDTO>> call, @NonNull Throwable throwable) {
+            public void onFailure(@NonNull Call<List<AvailableTableDTO>> call, @NonNull Throwable throwable) {
                 errorLiveData.setValue(throwable);
             }
         });

@@ -1,8 +1,8 @@
 package com.twb.pokerapp.service.game.thread.impl;
 
 import com.twb.pokerapp.domain.enumeration.GameType;
-import com.twb.pokerapp.dto.pokertable.CreateTableDTO;
-import com.twb.pokerapp.dto.pokertable.TableDTO;
+import com.twb.pokerapp.dto.table.CreateTableDTO;
+import com.twb.pokerapp.dto.table.TableDTO;
 import com.twb.pokerapp.testutils.game.GameLatches;
 import com.twb.pokerapp.testutils.game.GameRunner;
 import com.twb.pokerapp.testutils.game.GameRunnerParams;

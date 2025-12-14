@@ -3,7 +3,7 @@ package com.twb.pokerapp.dto.playersession;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.domain.enumeration.SessionState;
 import com.twb.pokerapp.dto.appuser.AppUserDTO;
-import com.twb.pokerapp.dto.pokertable.TableDTO;
+import com.twb.pokerapp.dto.table.TableDTO;
 import lombok.Data;
 
 import java.util.UUID;

@@ -1,4 +1,4 @@
-package com.twb.pokerapp.dto.pokertable;
+package com.twb.pokerapp.dto.table;
 
 import com.twb.pokerapp.domain.enumeration.GameType;
 import jakarta.validation.constraints.NotBlank;

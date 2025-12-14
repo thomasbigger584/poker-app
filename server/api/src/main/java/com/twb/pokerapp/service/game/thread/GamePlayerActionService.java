@@ -7,10 +7,12 @@ import com.twb.pokerapp.service.BettingRoundService;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Optional;
 
+@Slf4j
 public abstract class GamePlayerActionService {
 
     @Autowired
@@ -26,6 +28,10 @@ public abstract class GamePlayerActionService {
     private MessageDispatcher dispatcher;
 
     public void playerAction(PlayerSession playerSession, GameThread gameThread, CreatePlayerActionDTO createDto) {
+        log.info("***************************************************************");
+        log.info("GameThread.playerAction");
+        log.info("playerSession = {}, createDto = {}", playerSession, createDto);
+        log.info("***************************************************************");
         var pokerTable = playerSession.getPokerTable();
         if (pokerTable == null) {
             gameLogService.sendLogMessage(playerSession, "Table is null for player session: " + playerSession);

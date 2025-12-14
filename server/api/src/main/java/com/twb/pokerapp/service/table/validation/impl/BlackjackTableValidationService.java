@@ -1,6 +1,6 @@
 package com.twb.pokerapp.service.table.validation.impl;
 
-import com.twb.pokerapp.dto.pokertable.CreateTableDTO;
+import com.twb.pokerapp.dto.table.CreateTableDTO;
 import com.twb.pokerapp.service.table.validation.TableValidationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

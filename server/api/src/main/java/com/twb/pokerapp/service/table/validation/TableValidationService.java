@@ -1,6 +1,6 @@
 package com.twb.pokerapp.service.table.validation;
 
-import com.twb.pokerapp.dto.pokertable.CreateTableDTO;
+import com.twb.pokerapp.dto.table.CreateTableDTO;
 
 public abstract class TableValidationService {
 

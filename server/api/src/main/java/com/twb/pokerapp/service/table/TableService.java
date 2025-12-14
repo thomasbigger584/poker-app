@@ -3,9 +3,10 @@ package com.twb.pokerapp.service.table;
 import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.domain.enumeration.GameType;
 import com.twb.pokerapp.domain.enumeration.RoundState;
-import com.twb.pokerapp.dto.pokertable.CreateTableDTO;
-import com.twb.pokerapp.dto.pokertable.TableDTO;
+import com.twb.pokerapp.dto.table.AvailableTableDTO;
+import com.twb.pokerapp.dto.table.CreateTableDTO;
 import com.twb.pokerapp.mapper.TableMapper;
+import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.RoundRepository;
 import com.twb.pokerapp.repository.TableRepository;
 import jakarta.annotation.PostConstruct;
@@ -15,6 +16,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.function.Function;
 
 @Component
 @Transactional
@@ -26,6 +29,7 @@ public class TableService {
     private final TableMapper mapper;
 
     private final RoundRepository roundRepository;
+    private final PlayerSessionRepository playerSessionRepository;
 
     @PostConstruct
     public void init() {
@@ -65,8 +69,13 @@ public class TableService {
     }
 
     @Transactional(readOnly = true)
-    public Page<TableDTO> getAll(Pageable pageable) {
+    public Page<AvailableTableDTO> getAllAvailable(Pageable pageable) {
         var page = repository.findAll(pageable);
-        return page.map(mapper::modelToDto);
+        return page.map(table -> {
+            var availableTableDTO = new AvailableTableDTO();
+            availableTableDTO.setTable(mapper.modelToDto(table));
+            availableTableDTO.setPlayersConnected(playerSessionRepository.countConnectedPlayersByTableId(table.getId()));
+            return availableTableDTO;
+        });
     }
 }

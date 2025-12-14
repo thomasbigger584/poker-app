@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.twb.pokerapp.R;
+import com.twb.pokerapp.data.model.dto.table.AvailableTableDTO;
 import com.twb.pokerapp.data.model.dto.table.TableDTO;
 
 import java.util.ArrayList;
@@ -18,7 +19,7 @@ import java.util.Locale;
 
 public class TableListAdapter extends RecyclerView.Adapter<TableListAdapter.ViewHolder> {
     private final TableClickListener clickListener;
-    private final List<TableDTO> dataset = new ArrayList<>();
+    private final List<AvailableTableDTO> dataset = new ArrayList<>();
 
     public TableListAdapter(TableClickListener clickListener) {
         this.clickListener = clickListener;
@@ -34,8 +35,8 @@ public class TableListAdapter extends RecyclerView.Adapter<TableListAdapter.View
 
             int position = viewHolder.getAdapterPosition();
             if (position != RecyclerView.NO_POSITION) {
-                TableDTO table = dataset.get(position);
-                clickListener.onTableClicked(table);
+                AvailableTableDTO availableTable = dataset.get(position);
+                clickListener.onTableClicked(availableTable.getTable());
             }
         });
 
@@ -57,7 +58,7 @@ public class TableListAdapter extends RecyclerView.Adapter<TableListAdapter.View
         return dataset.get(position).hashCode();
     }
 
-    public void setData(List<TableDTO> list) {
+    public void setData(List<AvailableTableDTO> list) {
         dataset.clear();
         dataset.addAll(list);
         notifyDataSetChanged();
@@ -81,10 +82,11 @@ public class TableListAdapter extends RecyclerView.Adapter<TableListAdapter.View
             connectButton = itemView.findViewById(R.id.connectButton);
         }
 
-        public void bind(TableDTO table) {
+        public void bind(AvailableTableDTO availableTable) {
+            var table = availableTable.getTable();
             nameTextView.setText(table.getName());
             gameTypeTextView.setText(table.getGameType());
-            playersTextView.setText(String.format(Locale.getDefault(), "-/%d", table.getMaxPlayers()));
+            playersTextView.setText(String.format(Locale.getDefault(), "%d/%d", availableTable.getPlayersConnected(), table.getMaxPlayers()));
         }
     }
 }
