@@ -1,7 +1,6 @@
 package com.twb.pokerapp.service.game.thread.impl.texas;
 
 import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.domain.Round;
 import com.twb.pokerapp.repository.CardRepository;
 import com.twb.pokerapp.repository.HandRepository;
