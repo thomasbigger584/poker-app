@@ -29,7 +29,7 @@ public abstract class GamePlayerActionService {
 
     public void playerAction(PlayerSession playerSession, GameThread gameThread, CreatePlayerActionDTO createDto) {
         log.info("***************************************************************");
-        log.info("GameThread.playerAction");
+        log.info("GamePlayerActionService.playerAction");
         log.info("playerSession = {}, createDto = {}", playerSession, createDto);
         log.info("***************************************************************");
         var pokerTable = playerSession.getPokerTable();
