@@ -4,6 +4,6 @@ import com.twb.pokerapp.dto.playeraction.PlayerActionDTO;
 import lombok.Data;
 
 @Data
-public class PlayerActionEventDTO {
+public class PlayerActionedDTO {
     private PlayerActionDTO action;
 }

@@ -9,7 +9,11 @@ import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.UUID;
 
 @Component
 @Transactional
@@ -38,5 +42,11 @@ public class PlayerActionService {
         playerAction = repository.saveAndFlush(playerAction);
 
         return playerAction;
+    }
+
+    // todo: check does this need to be requires_new
+    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
+    public List<PlayerAction> refreshPlayerActionsNotFolded(UUID bettingRoundId) {
+        return repository.findPlayerActionsNotFolded(bettingRoundId);
     }
 }

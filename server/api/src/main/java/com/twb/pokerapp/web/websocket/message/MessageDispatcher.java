@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.PokerTable;
+import com.twb.pokerapp.service.game.thread.GameThreadParams;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,10 @@ public class MessageDispatcher {
     public void send(PlayerSession playerSession, ServerMessageDTO message) {
         var username = playerSession.getUser().getUsername();
         send(username, message);
+    }
+
+    public void send(GameThreadParams params, ServerMessageDTO message) {
+        send(params.getTableId(), message);
     }
 
     public void send(UUID tableId, ServerMessageDTO message) {

@@ -1,11 +1,17 @@
 package com.twb.pokerapp.service.game.thread;
 
 import com.twb.pokerapp.domain.BettingRound;
+import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.repository.BettingRoundRepository;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
+import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 public abstract class GamePlayerActionService {
 
@@ -16,8 +22,12 @@ public abstract class GamePlayerActionService {
     private GameLogService gameLogService;
 
     @Autowired
+    private ServerMessageFactory messageFactory;
+
+    @Autowired
     private MessageDispatcher dispatcher;
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void playerAction(PlayerSession playerSession, GameThread gameThread, CreatePlayerActionDTO createDto) {
         var pokerTable = playerSession.getPokerTable();
         if (pokerTable == null) {
@@ -25,23 +35,23 @@ public abstract class GamePlayerActionService {
             return;
         }
         var tableId = pokerTable.getId();
-        var bettingRoundOpt = bettingRoundRepository.findLatestInProgress(tableId);
+        var bettingRoundOpt = bettingRoundRepository.findCurrentByRoundId(tableId);
         if (bettingRoundOpt.isEmpty()) {
             gameLogService.sendLogMessage(playerSession, "Latest Betting Round not found for Table ID: " + tableId);
             return;
         }
         var bettingRound = bettingRoundOpt.get();
-
         if (createDto.getAmount() == null) {
             createDto.setAmount(0d);
         }
+        var playerActionOpt = onPlayerAction(playerSession, bettingRound, gameThread, createDto);
+        if (playerActionOpt.isPresent()) {
+            var playerAction = playerActionOpt.get();
 
-        var actioned = onPlayerAction(playerSession, bettingRound, gameThread, createDto);
-        if (actioned) {
-            // todo send PLAYER_ACTIONED message
+            dispatcher.send(tableId, messageFactory.playerActioned(playerAction));
             gameThread.onPostPlayerAction(createDto);
         }
     }
 
-    protected abstract boolean onPlayerAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread, CreatePlayerActionDTO createDto);
+    protected abstract Optional<PlayerAction> onPlayerAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread, CreatePlayerActionDTO createDto);
 }

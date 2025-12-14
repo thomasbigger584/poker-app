@@ -75,6 +75,12 @@ public class ServerMessageFactory {
         return ServerMessageDTO.create(ServerMessageType.PLAYER_TURN, payload);
     }
 
+    public ServerMessageDTO playerActioned(PlayerAction playerAction) {
+        var payload = new PlayerActionedDTO();
+        payload.setAction(playerActionMapper.modelToDto(playerAction));
+        return ServerMessageDTO.create(ServerMessageType.PLAYER_ACTIONED, payload);
+    }
+
     public ServerMessageDTO roundFinished() {
         var payload = new RoundFinishedDTO();
         return ServerMessageDTO.create(ServerMessageType.ROUND_FINISHED, payload);
@@ -84,9 +90,6 @@ public class ServerMessageFactory {
         var payload = new GameFinishedDTO();
         return ServerMessageDTO.create(ServerMessageType.GAME_FINISHED, payload);
     }
-
-    // TODO: add more ...
-
 
     public ServerMessageDTO logMessage(String message) {
         var payload = new LogMessageDTO();

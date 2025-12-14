@@ -54,6 +54,12 @@ public class BettingRoundService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
+    public BettingRound refreshCurrentBettingRound(UUID roundId) {
+        return repository.findCurrentByRoundId(roundId)
+                .orElseThrow(() -> new IllegalStateException("BettingRound not found for current"));
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
     public BettingRound refreshBettingRound(UUID bettingRoundId) {
         return repository.findById(bettingRoundId)
                 .orElseThrow(() -> new IllegalStateException("BettingRound not found after update"));

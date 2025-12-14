@@ -13,6 +13,7 @@ import com.twb.pokerapp.repository.PlayerActionRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.RoundRepository;
 import com.twb.pokerapp.service.BettingRoundService;
+import com.twb.pokerapp.service.PlayerActionService;
 import com.twb.pokerapp.service.RoundService;
 import com.twb.pokerapp.service.game.thread.GameLogService;
 import com.twb.pokerapp.service.game.thread.GameThread;
@@ -23,8 +24,6 @@ import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,28 +43,20 @@ public class TexasBettingRoundService {
     private final MessageDispatcher dispatcher;
     private final ServerMessageFactory messageFactory;
     private final TexasPlayerActionService texasPlayerActionService;
+    private final PlayerActionService playerActionService;
     private final BettingRoundService bettingRoundService;
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void runBettingRound(GameThreadParams params, GameThread gameThread) {
-        var roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
-        if (roundOpt.isEmpty()) {
-            throw new IllegalStateException("Round not found");
-        }
-        var round = roundOpt.get();
-        var bettingRoundOpt = bettingRoundRepository.findLatestInProgress(params.getTableId());
-        if (bettingRoundOpt.isEmpty()) {
-            throw new IllegalStateException("Latest Betting Round not found for Table ID: " + params.getTableId());
-        }
-        var bettingRound = bettingRoundOpt.get();
-
+        var round = getCurrentRound(params);
+        var bettingRound = bettingRoundService
+                .refreshCurrentBettingRound(round.getId());
         do {
             int playerIndex = 0;
             while (true) {
                 var activePlayers = playerSessionRepository
                         .findActivePlayersByTableId(params.getTableId(), round.getId());
                 if (activePlayers.isEmpty()) {
-                    gameLogService.sendLogMessage(params.getTableId(), "No Active Players found");
+                    gameLogService.sendErrorMessage(params.getTableId(), "No Active Players found");
                     throw new GameInterruptedException("No Active Players found");
                 }
                 if (activePlayers.size() == 1) {
@@ -82,8 +73,8 @@ public class TexasBettingRoundService {
                 var amountToCall = 0d;
                 var nextActions = ActionType.getDefaultActions();
 
-                var prevPlayerActions = playerActionRepository
-                        .findPlayerActionsNotFolded(bettingRound.getId());
+                var prevPlayerActions = playerActionService
+                        .refreshPlayerActionsNotFolded(bettingRound.getId());
 
                 PlayerAction previousPlayerAction = null;
                 if (!prevPlayerActions.isEmpty()) {
@@ -96,7 +87,7 @@ public class TexasBettingRoundService {
 
                 gameThread.checkRoundInterrupted();
 
-                dispatcher.send(params.getTableId(), messageFactory.playerTurn(currentPlayer, previousPlayerAction, bettingRound, nextActions, amountToCall));
+                dispatcher.send(params, messageFactory.playerTurn(currentPlayer, previousPlayerAction, bettingRound, nextActions, amountToCall));
                 waitPlayerTurn(params, gameThread, currentPlayer);
 
                 bettingRound = bettingRoundService.refreshBettingRound(bettingRound.getId());
@@ -109,6 +100,14 @@ public class TexasBettingRoundService {
 
         round = roundService.updatePot(round, bettingRound);
         log.info("Round pot for after betting updated to {}", round.getPot());
+    }
+
+    private Round getCurrentRound(GameThreadParams params) {
+        var roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
+        if (roundOpt.isEmpty()) {
+            throw new IllegalStateException("Current Round not found for Table ID: " + params.getTableId());
+        }
+        return roundOpt.get();
     }
 
     private boolean areAllPlayersPaidUp(GameThreadParams params, Round round, BettingRound bettingRound) {

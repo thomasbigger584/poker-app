@@ -40,8 +40,7 @@ public class GameLogService {
         dispatcher.send(table, messageFactory.errorMessage(message));
     }
 
-    public void sendErrorMessage(PlayerSession playerSession, String message) {
-        String username = playerSession.getUser().getUsername();
-        dispatcher.send(username, messageFactory.errorMessage(message));
+    public void sendErrorMessage(UUID tableId, String message) {
+        dispatcher.send(tableId, messageFactory.errorMessage(message));
     }
 }

@@ -97,7 +97,7 @@ public enum ServerMessageType {
             case DEAL_INIT -> DealPlayerCardDTO.class;
             case DEAL_COMMUNITY -> DealCommunityCardDTO.class;
             case PLAYER_TURN -> PlayerTurnDTO.class;
-            case PLAYER_ACTIONED -> PlayerActionEventDTO.class;
+            case PLAYER_ACTIONED -> PlayerActionedDTO.class;
 
             //todo: add more
 
