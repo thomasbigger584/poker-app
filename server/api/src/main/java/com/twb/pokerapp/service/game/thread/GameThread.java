@@ -243,7 +243,8 @@ public abstract class GameThread extends BaseGameThread {
         }
         var roundOpt = roundRepository.findCurrentByTableId(table.getId());
         if (roundOpt.isEmpty()) {
-            throw new IllegalStateException("Count not get round as round not found");
+            gameLogService.sendErrorMessage(table, "Could not get round as round not found");
+            return;
         }
         var round = roundOpt.get();
         var activePlayers = playerSessionRepository

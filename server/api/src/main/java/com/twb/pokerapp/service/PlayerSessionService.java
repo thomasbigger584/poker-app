@@ -63,6 +63,9 @@ public class PlayerSessionService {
 
     public void disconnectUser(PlayerSession playerSession) {
         var fundsLeftOver = playerSession.getFunds();
+        if (fundsLeftOver == null) {
+            fundsLeftOver = 0d;
+        }
         var user = playerSession.getUser();
         user.setTotalFunds(user.getTotalFunds() + fundsLeftOver);
         userRepository.saveAndFlush(user);

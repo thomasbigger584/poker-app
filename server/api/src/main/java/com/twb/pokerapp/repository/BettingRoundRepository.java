@@ -15,6 +15,14 @@ public interface BettingRoundRepository extends JpaRepository<BettingRound, UUID
     @Query("""
             SELECT b
             FROM BettingRound b
+            WHERE b.round.pokerTable.id = :tableId
+            AND b.state = com.twb.pokerapp.domain.enumeration.BettingRoundState.IN_PROGRESS
+            """)
+    Optional<BettingRound> findCurrentByTableId(@Param("tableId") UUID tableId);
+
+    @Query("""
+            SELECT b
+            FROM BettingRound b
             WHERE b.round.id = :roundId
             AND b.state = com.twb.pokerapp.domain.enumeration.BettingRoundState.IN_PROGRESS
             """)

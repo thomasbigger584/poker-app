@@ -35,7 +35,7 @@ public abstract class GamePlayerActionService {
             return;
         }
         var tableId = pokerTable.getId();
-        var bettingRoundOpt = bettingRoundRepository.findCurrentByRoundId(tableId);
+        var bettingRoundOpt = bettingRoundRepository.findCurrentByTableId(tableId);
         if (bettingRoundOpt.isEmpty()) {
             gameLogService.sendLogMessage(playerSession, "Latest Betting Round not found for Table ID: " + tableId);
             return;
