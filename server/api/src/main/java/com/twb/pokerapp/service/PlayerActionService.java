@@ -16,13 +16,13 @@ import java.util.List;
 import java.util.UUID;
 
 @Component
-@Transactional
 @RequiredArgsConstructor
 public class PlayerActionService {
     private final PlayerSessionRepository playerSessionRepository;
     private final PlayerActionRepository repository;
     private final PlayerActionMapper mapper;
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public PlayerAction create(PlayerSession playerSession,
                                BettingRound bettingRound,
                                CreatePlayerActionDTO createDto) {

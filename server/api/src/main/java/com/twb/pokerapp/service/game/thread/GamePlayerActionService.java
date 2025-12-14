@@ -8,8 +8,6 @@ import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -27,7 +25,6 @@ public abstract class GamePlayerActionService {
     @Autowired
     private MessageDispatcher dispatcher;
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void playerAction(PlayerSession playerSession, GameThread gameThread, CreatePlayerActionDTO createDto) {
         var pokerTable = playerSession.getPokerTable();
         if (pokerTable == null) {
