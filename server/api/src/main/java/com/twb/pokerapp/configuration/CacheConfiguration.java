@@ -29,7 +29,7 @@ public class CacheConfiguration {
 
     @Bean
     public CacheManager cacheManager(CaffeineCache idempotencyCache) {
-        SimpleCacheManager cacheManager = new SimpleCacheManager();
+        var cacheManager = new SimpleCacheManager();
         cacheManager.setCaches(Collections.singletonList(idempotencyCache));
         return cacheManager;
     }

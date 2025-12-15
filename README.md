@@ -129,7 +129,7 @@ You can run the complete test suite using the provided Maven wrapper.
 
 ### Running Blackbox Tests (IntelliJ)
 
-When running integration tests like `TexasHoldemGameIT` directly within IntelliJ IDEA:
+When running integration tests like `TexasGameIT` directly within IntelliJ IDEA:
 
 1.  **Prerequisite:** Ensure Docker is running.
 2.  **Maven Goal:** Configure your test run configuration to execute the `process-test-resources` Maven goal before the test runs. This copies necessary configuration files (like the Keycloak realm) into the test classpath.

@@ -109,9 +109,14 @@ public class PokerTableGameService {
                 return;
             }
             var playerSession = playerSessionOpt.get();
+            if (playerSession.getConnectionType() == ConnectionType.LISTENER) {
+                log.error("Player {} is a listener on table", playerSession.getId());
+                return;
+            }
 
             var playerTurnLatch = gameThread.getPlayerTurnLatch();
-            if (!username.equals(playerTurnLatch.playerSession().getUser().getUsername())) {
+            if (playerTurnLatch == null
+                    || !username.equals(playerTurnLatch.playerSession().getUser().getUsername())) {
                 log.error("Not waiting for {} to play on table {}", username, tableId);
                 return;
             }
@@ -150,10 +155,10 @@ public class PokerTableGameService {
 
             if (roundOpt.isPresent()) {
                 var playerActionService = table.getGameType().getPlayerActionService(context);
-                var createActionDto = new CreatePlayerActionDTO();
-                createActionDto.setAction(ActionType.FOLD);
+                var action = new CreatePlayerActionDTO();
+                action.setAction(ActionType.FOLD);
 
-                playerActionService.playerAction(playerSession, gameThread, createActionDto);
+                playerActionService.playerAction(playerSession, gameThread, action);
             }
 
             playerSessionService.disconnectUser(playerSession);

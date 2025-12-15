@@ -8,7 +8,7 @@ import com.twb.pokerapp.testutils.game.GameRunner;
 import com.twb.pokerapp.testutils.game.GameRunnerParams;
 import com.twb.pokerapp.testutils.game.turn.TurnHandler;
 import com.twb.pokerapp.testutils.game.turn.impl.FirstActionTurnHandler;
-import com.twb.pokerapp.testutils.game.turn.impl.IdepodentTurnHandler;
+import com.twb.pokerapp.testutils.game.turn.impl.IdempodentTurnHandler;
 import com.twb.pokerapp.testutils.game.turn.impl.InvalidActionTurnHandler;
 import com.twb.pokerapp.testutils.game.turn.impl.OptimisticTurnHandler;
 import com.twb.pokerapp.testutils.testcontainers.BaseTestContainersIT;
@@ -154,7 +154,7 @@ class TexasGameIT extends BaseTestContainersIT {
         // given
         var turnHandlers = TurnHandler.of(
                 new OptimisticTurnHandler(),
-                new IdepodentTurnHandler()
+                new IdempodentTurnHandler()
         );
 
         // when

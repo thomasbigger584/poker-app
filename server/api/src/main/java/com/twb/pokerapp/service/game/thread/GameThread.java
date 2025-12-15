@@ -241,13 +241,9 @@ public abstract class GameThread extends BaseGameThread {
     public void onPostPlayerAction(CreatePlayerActionDTO createActionDto) {
         if (playerTurnLatch != null) {
             playerTurnLatch.countDown();
+            playerTurnLatch = null;
         }
-        var roundOpt = roundRepository.findCurrentByTableId(table.getId());
-        if (roundOpt.isEmpty()) {
-            gameLogService.sendErrorMessage(table, "Could not get round as round not found");
-            return;
-        }
-        var round = roundOpt.get();
+        var round = roundService.getRoundByTable(table.getId());
         var activePlayers = playerSessionRepository
                 .findActivePlayersByTableId_Lock(table.getId(), round.getId());
         if (activePlayers.size() < 2) {

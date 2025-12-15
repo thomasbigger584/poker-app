@@ -16,9 +16,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.auth.AuthService;
-import com.twb.pokerapp.data.model.dto.bettinground.BettingRoundDTO;
-import com.twb.pokerapp.data.model.dto.playeraction.PlayerActionDTO;
-import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.data.model.dto.table.TableDTO;
 import com.twb.pokerapp.data.model.enumeration.ActionType;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerActionedDTO;
@@ -33,6 +30,7 @@ import com.twb.pokerapp.ui.dialog.game.BetRaiseGameDialog;
 import com.twb.pokerapp.ui.dialog.DialogHelper;
 import com.twb.pokerapp.ui.dialog.FinishActivityOnClickListener;
 
+import java.util.ArrayList;
 import java.util.Locale;
 
 import javax.inject.Inject;
@@ -62,7 +60,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     private PlayerTurnDTO currentPlayerTurn;
 
     public static void startActivity(Activity activity, TableDTO table, String connectionType, Double buyInAmount) {
-        Intent intent = new Intent(activity, TexasGameActivity.class);
+        var intent = new Intent(activity, TexasGameActivity.class);
         intent.putExtras(table.toBundle());
         intent.putExtra(KEY_CONNECTION_TYPE, connectionType);
         intent.putExtra(KEY_BUY_IN_AMOUNT, buyInAmount);
@@ -77,19 +75,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Intent intent = getIntent();
-        if (intent == null) {
-            Toast.makeText(this, "Intent is null", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        Bundle extras = intent.getExtras();
-        if (extras == null) {
-            Toast.makeText(this, "Bundle extras is null", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        table = TableDTO.fromBundle(extras);
-        connectionType = intent.getStringExtra(KEY_CONNECTION_TYPE);
-        buyInAmount = intent.getDoubleExtra(KEY_BUY_IN_AMOUNT, 0d);
+        if (!initIncomingData()) return;
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
@@ -99,8 +85,8 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         tableController = new TableController(this);
         controlsController = new ControlsController(this);
 
-        RecyclerView chatBoxRecyclerView = findViewById(R.id.chatBoxRecyclerView);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        var chatBoxRecyclerView = (RecyclerView) findViewById(R.id.chatBoxRecyclerView);
+        var layoutManager = new LinearLayoutManager(this);
         layoutManager.setStackFromEnd(true);
         chatBoxRecyclerView.setLayoutManager(layoutManager);
 
@@ -111,25 +97,25 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         viewModel.errors.observe(this, throwable -> {
             if (throwable == null) return;
             DialogHelper.dismiss(loadingSpinner);
-            AlertModalDialog alertModalDialog = AlertModalDialog
+            var alertModalDialog = AlertModalDialog
                     .newInstance(AlertModalDialog.AlertModalType.ERROR, throwable.getMessage(), null);
             alertModalDialog.show(getSupportFragmentManager(), MODAL_TAG);
             chatBoxAdapter.add(throwable.getMessage());
         });
         viewModel.closedConnection.observe(this, aVoid -> {
             dismissDialogs();
-            String message = "Lost connection with server";
-            AlertModalDialog alertModalDialog = AlertModalDialog
+            var message = "Lost connection with server";
+            var alertModalDialog = AlertModalDialog
                     .newInstance(AlertModalDialog.AlertModalType.ERROR, message, new FinishActivityOnClickListener(this));
             alertModalDialog.show(getSupportFragmentManager(), MODAL_TAG);
             chatBoxAdapter.add(message);
         });
         viewModel.playerSubscribed.observe(this, playerSubscribed -> {
-            String currentUsername = authService.getCurrentUser();
-            PlayerSessionDTO currentPlayerSession =
+            var currentUsername = authService.getCurrentUser();
+            var currentPlayerSession =
                     playerSubscribed.getCurrentPlayerSession(currentUsername);
             tableController.connectCurrentPlayer(currentPlayerSession);
-            for (PlayerSessionDTO playerSession : playerSubscribed.getPlayerSessions()) {
+            for (var playerSession : playerSubscribed.getPlayerSessions()) {
                 if (!playerSession.getUser().getUsername().equals(currentUsername)) {
                     tableController.connectOtherPlayer(playerSession);
                 }
@@ -138,7 +124,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             dismissDialogs();
         });
         viewModel.playerConnected.observe(this, playerConnected -> {
-            PlayerSessionDTO playerSession = playerConnected.getPlayerSession();
+            var playerSession = playerConnected.getPlayerSession();
             if (!authService.isCurrentUser(playerSession.getUser())) {
                 tableController.connectOtherPlayer(playerSession);
                 chatBoxAdapter.add("Connected: " + playerSession.getUser().getUsername());
@@ -152,7 +138,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             dismissDialogs();
             tableController.hidePlayerTurns();
             controlsController.hide();
-            PlayerSessionDTO playerSession = dealPlayerCard.getPlayerSession();
+            var playerSession = dealPlayerCard.getPlayerSession();
             if (authService.isCurrentUser(playerSession.getUser())) {
                 tableController.dealCurrentPlayerCard(dealPlayerCard);
             } else {
@@ -160,7 +146,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             }
         });
         viewModel.playerTurn.observe(this, playerTurn -> {
-            PlayerSessionDTO playerSession = playerTurn.getPlayerSession();
+            var playerSession = playerTurn.getPlayerSession();
             tableController.updatePlayerTurn(playerSession);
             if (authService.isCurrentUser(playerSession.getUser())) {
                 controlsController.show(playerTurn.getNextActions());
@@ -192,8 +178,8 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             tableController.reset(roundFinished);
         });
         viewModel.gameFinished.observe(this, gameFinished -> {
-            FinishActivityOnClickListener clickListener = new FinishActivityOnClickListener(this);
-            AlertModalDialog alertModalDialog = AlertModalDialog
+            var clickListener = new FinishActivityOnClickListener(this);
+            var alertModalDialog = AlertModalDialog
                     .newInstance(AlertModalDialog.AlertModalType.INFO, "Game Finished", clickListener);
             alertModalDialog.show(getSupportFragmentManager(), MODAL_TAG);
             chatBoxAdapter.add("Game Finished");
@@ -212,9 +198,9 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             Toast.makeText(this, "Invalid PlayerAction Request", Toast.LENGTH_SHORT).show();
         });
         viewModel.playerDisconnected.observe(this, playerDisconnected -> {
-            String username = playerDisconnected.getUsername();
+            var username = playerDisconnected.getUsername();
             chatBoxAdapter.add("Disconnected: " + username);
-            String current = authService.getCurrentUser();
+            var current = authService.getCurrentUser();
             if (username.equals(current)) {
                 finish();
             } else {
@@ -222,6 +208,8 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             }
         });
     }
+
+
 
     @Override
     protected void onAuthorized() {
@@ -254,7 +242,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
 
     public void onBetClick(View view) {
         dismissDialogs();
-        double minimumBet = 10d;
+        var minimumBet = 10d;
         betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.BET, buyInAmount, minimumBet, this);
         betRaisePokerGameDialog.show(getSupportFragmentManager(), "bet_dialog");
     }
@@ -265,7 +253,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
 
     public void onRaiseClick(View view) {
         dismissDialogs();
-        double minimumBet = getRaiseMinimumBet();
+        var minimumBet = getRaiseMinimumBet();
         betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.RAISE, buyInAmount, minimumBet, this);
         betRaisePokerGameDialog.show(getSupportFragmentManager(), "raise_dialog");
     }
@@ -285,9 +273,26 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
      * ****************************************************************************
      */
 
+    private boolean initIncomingData() {
+        var intent = getIntent();
+        if (intent == null) {
+            Toast.makeText(this, "Intent is null", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        var extras = intent.getExtras();
+        if (extras == null) {
+            Toast.makeText(this, "Bundle extras is null", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        table = TableDTO.fromBundle(extras);
+        connectionType = intent.getStringExtra(KEY_CONNECTION_TYPE);
+        buyInAmount = intent.getDoubleExtra(KEY_BUY_IN_AMOUNT, 0d);
+        return true;
+    }
+
     private double getRaiseMinimumBet() {
         if (currentPlayerTurn != null) {
-            Double amountToCall = currentPlayerTurn.getAmountToCall();
+            var amountToCall = currentPlayerTurn.getAmountToCall();
             if (amountToCall != null) {
                 return amountToCall + 0.01;
             }
@@ -296,28 +301,32 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     }
 
     private String getPlayerActionedMessage(PlayerActionedDTO playerActioned) {
-        PlayerActionDTO playerAction = playerActioned.getAction();
-        String thirdPerson = playerAction.getPlayerSession().getUser().getUsername();
-        if (authService.isCurrentUser(playerAction.getPlayerSession().getUser())) {
-            thirdPerson = "You ";
+        var playerAction = playerActioned.getAction();
+        var user = playerAction.getPlayerSession().getUser();
+        var stringBuilderList = new ArrayList<String>();
+        if (authService.isCurrentUser(user)) {
+            stringBuilderList.add("You");
+        } else {
+            stringBuilderList.add(user.getUsername());
         }
-        String message = String.format("%s %s", thirdPerson, playerAction.getActionType().toLowerCase());
-        Double amount = playerAction.getAmount();
-        if (amount != null && amount > 0) {
-            message += " with " + playerAction.getAmount();
+        stringBuilderList.add(playerAction.getActionType().toLowerCase());
+        var amount = playerAction.getAmount();
+        if (amount != null && amount > 0d) {
+            stringBuilderList.add("with");
+            stringBuilderList.add(String.format(Locale.getDefault(), "%.2f", playerAction.getAmount()));
         }
-        BettingRoundDTO bettingRound = playerAction.getBettingRound();
-        Double bettingRoundPot = bettingRound.getPot();
+        var bettingRound = playerAction.getBettingRound();
+        var bettingRoundPot = bettingRound.getPot();
         if (bettingRoundPot != null && bettingRoundPot > 0) {
-            message += String.format(Locale.getDefault(), " (betting round: %.2f)", bettingRoundPot);
+            stringBuilderList.add(String.format(Locale.getDefault(), "(%.2f)", bettingRoundPot));
         }
-        return message;
+        return String.join(" ", stringBuilderList);
     }
 
     private void handleErrorMessage(String message) {
         DialogHelper.dismiss(loadingSpinner);
-        FinishActivityOnClickListener clickListener = new FinishActivityOnClickListener(this);
-        AlertModalDialog alertModalDialog = AlertModalDialog
+        var clickListener = new FinishActivityOnClickListener(this);
+        var alertModalDialog = AlertModalDialog
                 .newInstance(AlertModalDialog.AlertModalType.ERROR, message, clickListener);
         alertModalDialog.show(getSupportFragmentManager(), MODAL_TAG);
         chatBoxAdapter.add(message);

@@ -8,10 +8,7 @@ import org.springframework.messaging.simp.stomp.StompHeaders;
 
 import java.util.Arrays;
 
-import static com.twb.pokerapp.service.game.thread.util.SleepUtil.sleepInMs;
-
-public class IdepodentTurnHandler implements TurnHandler {
-
+public class IdempodentTurnHandler implements TurnHandler {
 
     @Override
     public void handle(AbstractTestUser user, StompHeaders headers, PlayerTurnDTO playerTurn) {
@@ -22,8 +19,6 @@ public class IdepodentTurnHandler implements TurnHandler {
                     createActionDto.setAction(action);
                     createActionDto.setAmount(playerTurn.getAmountToCall());
                     user.sendPlayerAction(createActionDto);
-
-                    sleepInMs(100L);
                     user.sendPlayerAction(createActionDto);
                 });
     }
