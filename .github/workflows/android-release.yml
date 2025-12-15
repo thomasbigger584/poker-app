@@ -77,7 +77,7 @@ jobs:
           FILTER_PATH="client/android"
           END_SHA="HEAD"
           CURRENT_RELEASE_TAG="${{ steps.release_meta.outputs.release_tag }}"
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 --exclude="$CURRENT_RELEASE_TAG" HEAD^ 2>/dev/null || echo "not_found")
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 --exclude="$CURRENT_RELEASE_TAG" ${END_SHA}^ 2>/dev/null || echo "not_found")
           
           if [ "$PREVIOUS_TAG" = "not_found" ]; then
             LOG_RANGE="--root"
@@ -86,7 +86,7 @@ jobs:
           else
             LOG_RANGE="$PREVIOUS_TAG..$END_SHA"
             MAX_COUNT=""
-            LOG_RANGE_INFO="\`$PREVIOUS_TAG\`...`$END_SHA`"
+            LOG_RANGE_INFO="\`$PREVIOUS_TAG\`...\`$END_SHA\`"
           fi
 
           # 1. git log: gets hash and subject, filtered by path and range.
