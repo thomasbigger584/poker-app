@@ -35,77 +35,77 @@ public class TableController {
     }
 
     public void connectCurrentPlayer(PlayerSessionDTO playerSession) {
-        int playerPosition = playerSession.getPosition();
+        var playerPosition = playerSession.getPosition();
 
         positionCardPairs.clear();
 
         int index = 0;
-        for (int thisPosition = playerPosition; thisPosition <= TABLE_SIZE; thisPosition++, index++) {
+        for (var thisPosition = playerPosition; thisPosition <= TABLE_SIZE; thisPosition++, index++) {
             positionCardPairs.put(thisPosition, cardPairLayouts[index]);
         }
-        for (int thisPosition = 1; thisPosition < playerPosition; thisPosition++, index++) {
+        for (var thisPosition = 1; thisPosition < playerPosition; thisPosition++, index++) {
             positionCardPairs.put(thisPosition, cardPairLayouts[index]);
         }
         connectPlayer(playerSession, cardPairLayouts[0]);
     }
 
     public void connectOtherPlayer(PlayerSessionDTO playerSession) {
-        CardPairLayout cardPairLayout = getCardPairLayout(playerSession.getPosition());
+        var cardPairLayout = getCardPairLayout(playerSession.getPosition());
         connectPlayer(playerSession, cardPairLayout);
     }
 
     private void connectPlayer(PlayerSessionDTO playerSession, CardPairLayout cardPairLayout) {
         cardPairLayout.updateDetails(playerSession);
-        Boolean dealer = playerSession.getDealer();
+        var dealer = playerSession.getDealer();
         cardPairLayout.updateDealerChip(dealer != null && dealer);
     }
 
     public void updateDetails(PlayerSessionDTO playerSession) {
-        CardPairLayout cardPairLayout = getCardPairLayout(playerSession.getPosition());
+        var cardPairLayout = getCardPairLayout(playerSession.getPosition());
         cardPairLayout.updateDetails(playerSession);
     }
 
     public void disconnectOtherPlayer(String username) {
-        CardPairLayout cardPairLayout = findCardPairLayout(username);
+        var cardPairLayout = findCardPairLayout(username);
         if (cardPairLayout != null) {
             cardPairLayout.deleteDetails();
         }
     }
 
     public void dealerDetermined(PlayerSessionDTO playerSession) {
-        for (Map.Entry<Integer, CardPairLayout> posCardPairEntry : positionCardPairs.entrySet()) {
-            Integer position = posCardPairEntry.getKey();
-            CardPairLayout cardPairLayout = posCardPairEntry.getValue();
+        for (var posCardPairEntry : positionCardPairs.entrySet()) {
+            var position = posCardPairEntry.getKey();
+            var cardPairLayout = posCardPairEntry.getValue();
             cardPairLayout.updateDealerChip(position.equals(playerSession.getPosition()));
         }
     }
 
     public void updatePlayerTurn(PlayerSessionDTO playerSession) {
-        for (Map.Entry<Integer, CardPairLayout> posCardPairEntry : positionCardPairs.entrySet()) {
-            Integer position = posCardPairEntry.getKey();
-            CardPairLayout cardPairLayout = posCardPairEntry.getValue();
+        for (var posCardPairEntry : positionCardPairs.entrySet()) {
+            var position = posCardPairEntry.getKey();
+            var cardPairLayout = posCardPairEntry.getValue();
             cardPairLayout.updateTurnPlayer(position.equals(playerSession.getPosition()));
         }
     }
 
     public void hidePlayerTurns() {
-        for (Map.Entry<Integer, CardPairLayout> posCardPairEntry : positionCardPairs.entrySet()) {
-            CardPairLayout cardPairLayout = posCardPairEntry.getValue();
+        for (var posCardPairEntry : positionCardPairs.entrySet()) {
+            var cardPairLayout = posCardPairEntry.getValue();
             cardPairLayout.updateTurnPlayer(false);
         }
     }
 
     public void dealCurrentPlayerCard(DealPlayerCardDTO dealPlayerCard) {
-        PlayerSessionDTO playerSession = dealPlayerCard.getPlayerSession();
-        CardPairLayout cardPairLayout = getCardPairLayout(playerSession.getPosition());
+        var playerSession = dealPlayerCard.getPlayerSession();
+        var cardPairLayout = getCardPairLayout(playerSession.getPosition());
         if (playerSession.getUser().getUsername().equals(cardPairLayout.getUsername())) {
             cardPairLayout.updateCardImageView(dealPlayerCard.getCard());
         }
     }
 
     public void dealOtherPlayerCard(DealPlayerCardDTO dealPlayerCard) {
-        PlayerSessionDTO playerSession = dealPlayerCard.getPlayerSession();
-        CardPairLayout cardPairLayout = getCardPairLayout(playerSession.getPosition());
+        var playerSession = dealPlayerCard.getPlayerSession();
+        var cardPairLayout = getCardPairLayout(playerSession.getPosition());
         if (playerSession.getUser().getUsername().equals(cardPairLayout.getUsername())) {
             cardPairLayout.updateCardImageView();
         }
@@ -118,7 +118,7 @@ public class TableController {
     public void reset(RoundFinishedDTO roundFinished) {
         hidePlayerTurns();
         communityCardLayout.reset();
-        for (CardPairLayout cardPairLayout : cardPairLayouts) {
+        for (var cardPairLayout : cardPairLayouts) {
             cardPairLayout.reset();
         }
     }
@@ -127,7 +127,7 @@ public class TableController {
 
     @Nullable
     private CardPairLayout findCardPairLayout(String username) {
-        for (CardPairLayout cardPairLayout : cardPairLayouts) {
+        for (var cardPairLayout : cardPairLayouts) {
             if (username.equals(cardPairLayout.getUsername())) {
                 return cardPairLayout;
             }
@@ -140,7 +140,7 @@ public class TableController {
         if (!positionCardPairs.containsKey(position)) {
             throw new RuntimeException("Position is not part of the table for dealing: " + position);
         }
-        CardPairLayout cardPairLayout = positionCardPairs.get(position);
+        var cardPairLayout = positionCardPairs.get(position);
         if (cardPairLayout == null) {
             throw new RuntimeException("Card pair layout is null for position: " + position);
         }

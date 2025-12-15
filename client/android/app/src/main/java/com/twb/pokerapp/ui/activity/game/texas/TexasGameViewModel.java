@@ -139,7 +139,7 @@ public class TexasGameViewModel extends ViewModel
     }
 
     public void sendChatMessage(String message) {
-        SendChatMessageDTO dto = new SendChatMessageDTO();
+        var dto = new SendChatMessageDTO();
         dto.setMessage(message);
         webSocketClient.sendChatMessage(tableId, dto, this);
     }
@@ -149,7 +149,7 @@ public class TexasGameViewModel extends ViewModel
     }
 
     public void onPlayerAction(ActionType actionType, Double amount) {
-        SendPlayerActionDTO dto = new SendPlayerActionDTO();
+        var dto = new SendPlayerActionDTO();
         dto.setAction(actionType.name());
         dto.setAmount(amount);
         webSocketClient.sendPlayerAction(tableId, dto, this);

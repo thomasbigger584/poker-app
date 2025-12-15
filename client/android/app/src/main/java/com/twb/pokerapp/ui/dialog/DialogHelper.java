@@ -18,16 +18,16 @@ public class DialogHelper {
     }
 
     public static AlertDialog createLoadingSpinner(Activity activity) {
-        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(activity);
-        View alertView = activity.getLayoutInflater().inflate(R.layout.loading_dialog_spinner, null);
+        var dialogBuilder = new AlertDialog.Builder(activity);
+        var alertView = activity.getLayoutInflater().inflate(R.layout.loading_dialog_spinner, null);
 
-        ProgressBar progressBar = alertView.findViewById(R.id.loadingSpinner);
+        var progressBar = (ProgressBar) alertView.findViewById(R.id.loadingSpinner);
         progressBar.setIndeterminate(true);
         dialogBuilder.setView(alertView);
         dialogBuilder.setCancelable(false);
 
-        AlertDialog alertDialog = dialogBuilder.create();
-        Window window = alertDialog.getWindow();
+        var alertDialog = dialogBuilder.create();
+        var window = alertDialog.getWindow();
         if (window != null) {
             window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
@@ -48,7 +48,7 @@ public class DialogHelper {
     }
 
     public static AlertDialog createMessageDialog(Activity activity) {
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(activity);
+        var alertDialogBuilder = new AlertDialog.Builder(activity);
         alertDialogBuilder.setCancelable(true);
         alertDialogBuilder.setTitle("Message");
         alertDialogBuilder.setMessage("This is a message dialog");

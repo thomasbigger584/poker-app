@@ -114,13 +114,13 @@ public final class ConnectionBuilderForTesting implements ConnectionBuilder {
         Preconditions.checkNotNull(uri, "url must not be null");
         Preconditions.checkArgument(HTTP.equals(uri.getScheme()) || HTTPS.equals(uri.getScheme()),
                 "scheme or uri must be http or https");
-        HttpURLConnection conn = (HttpURLConnection) new URL(uri.toString()).openConnection();
+        var conn = (HttpURLConnection) new URL(uri.toString()).openConnection();
         conn.setConnectTimeout(CONNECTION_TIMEOUT_MS);
         conn.setReadTimeout(READ_TIMEOUT_MS);
         conn.setInstanceFollowRedirects(false);
 
         if (conn instanceof HttpsURLConnection && TRUSTING_CONTEXT != null) {
-            HttpsURLConnection httpsConn = (HttpsURLConnection) conn;
+            var httpsConn = (HttpsURLConnection) conn;
             httpsConn.setSSLSocketFactory(TRUSTING_CONTEXT.getSocketFactory());
             httpsConn.setHostnameVerifier(ANY_HOSTNAME_VERIFIER);
         }

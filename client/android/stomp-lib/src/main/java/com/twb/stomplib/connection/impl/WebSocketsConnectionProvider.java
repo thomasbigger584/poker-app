@@ -66,9 +66,9 @@ public class WebSocketsConnectionProvider extends AbstractConnectionProvider {
             public void onWebsocketHandshakeReceivedAsClient(WebSocket conn, ClientHandshake request, @NonNull ServerHandshake response) throws InvalidDataException {
                 Log.d(TAG, "onWebsocketHandshakeReceivedAsClient with response: " + response.getHttpStatus() + " " + response.getHttpStatusMessage());
                 mServerHandshakeHeaders = new TreeMap<>();
-                Iterator<String> keys = response.iterateHttpFields();
+                var keys = response.iterateHttpFields();
                 while (keys.hasNext()) {
-                    String key = keys.next();
+                    var key = keys.next();
                     mServerHandshakeHeaders.put(key, response.getFieldValue(key));
                 }
             }
@@ -76,7 +76,7 @@ public class WebSocketsConnectionProvider extends AbstractConnectionProvider {
             @Override
             public void onOpen(@NonNull ServerHandshake handshakeData) {
                 Log.d(TAG, "onOpen with handshakeData: " + handshakeData.getHttpStatus() + " " + handshakeData.getHttpStatusMessage());
-                LifecycleEvent openEvent = new LifecycleEvent(LifecycleEvent.Type.OPENED);
+                var openEvent = new LifecycleEvent(LifecycleEvent.Type.OPENED);
                 openEvent.setHandshakeResponseHeaders(mServerHandshakeHeaders);
                 emitLifecycleEvent(openEvent);
             }
@@ -106,9 +106,9 @@ public class WebSocketsConnectionProvider extends AbstractConnectionProvider {
 
         if (mUri.startsWith("wss")) {
             try {
-                SSLContext sc = SSLContext.getInstance("TLS");
+                var sc = SSLContext.getInstance("TLS");
                 sc.init(null, null, null);
-                SSLSocketFactory factory = sc.getSocketFactory();
+                var factory = sc.getSocketFactory();
                 mWebSocketClient.setSocket(factory.createSocket());
             } catch (Exception e) {
                 e.printStackTrace();

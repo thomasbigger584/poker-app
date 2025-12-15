@@ -49,7 +49,7 @@ public class TableCreateActivity extends BaseAuthActivity {
         viewModel.errors.observe(this, throwable -> {
             if (throwable == null) return;
             DialogHelper.dismiss(loadingSpinner);
-            AlertModalDialog alertModalDialog = AlertModalDialog
+            var alertModalDialog = AlertModalDialog
                     .newInstance(AlertModalDialog.AlertModalType.ERROR, throwable.getMessage(), null);
             alertModalDialog.show(getSupportFragmentManager(), MODAL_TAG);
         });
@@ -87,20 +87,20 @@ public class TableCreateActivity extends BaseAuthActivity {
     }
 
     public void onCreateTableClick(View view) {
-        CreateTableDTO createTableDTO = new CreateTableDTO();
-        String tableName = tableNameEditText.getText().toString().trim();
+        var createTableDTO = new CreateTableDTO();
+        var tableName = tableNameEditText.getText().toString().trim();
         if (tableName.isBlank()) {
             Toast.makeText(this, "Please enter a table name", Toast.LENGTH_SHORT).show();
             return;
         }
         createTableDTO.setName(tableName);
 
-        int gameTypeSelectedPosition = gameTypeSpinner.getSelectedItemPosition();
-        String[] gameTypesArray = getResources().getStringArray(R.array.game_types_array);
-        String gameType = gameTypesArray[gameTypeSelectedPosition];
+        var gameTypeSelectedPosition = gameTypeSpinner.getSelectedItemPosition();
+        var gameTypesArray = getResources().getStringArray(R.array.game_types_array);
+        var gameType = gameTypesArray[gameTypeSelectedPosition];
         createTableDTO.setGameType(gameType);
 
-        String minPlayersString = minPlayersEditText.getText().toString().trim();
+        var minPlayersString = minPlayersEditText.getText().toString().trim();
         if (minPlayersString.isBlank()) {
             Toast.makeText(this, "Please enter a minimum number of players", Toast.LENGTH_SHORT).show();
             return;
@@ -111,7 +111,7 @@ public class TableCreateActivity extends BaseAuthActivity {
             Toast.makeText(this, "Please enter a valid minimum number of players", Toast.LENGTH_SHORT).show();
             return;
         }
-        String maxPlayersString = maxPlayersEditText.getText().toString().trim();
+        var maxPlayersString = maxPlayersEditText.getText().toString().trim();
         if (maxPlayersString.isBlank()) {
             Toast.makeText(this, "Please enter a maximum number of players", Toast.LENGTH_SHORT).show();
             return;
@@ -122,7 +122,7 @@ public class TableCreateActivity extends BaseAuthActivity {
             Toast.makeText(this, "Please enter a valid maximum number of players", Toast.LENGTH_SHORT).show();
             return;
         }
-        String minBuyInString = minBuyInEditText.getText().toString().trim();
+        var minBuyInString = minBuyInEditText.getText().toString().trim();
         if (minBuyInString.isBlank()) {
             Toast.makeText(this, "Please enter a minimum buy-in amount", Toast.LENGTH_SHORT).show();
             return;
@@ -133,7 +133,7 @@ public class TableCreateActivity extends BaseAuthActivity {
             Toast.makeText(this, "Please enter a valid minimum buy-in amount", Toast.LENGTH_SHORT).show();
             return;
         }
-        String maxBuyInString = maxBuyInEditText.getText().toString().trim();
+        var maxBuyInString = maxBuyInEditText.getText().toString().trim();
         if (maxBuyInString.isBlank()) {
             Toast.makeText(this, "Please enter a maximum buy-in amount", Toast.LENGTH_SHORT).show();
             return;
@@ -159,14 +159,14 @@ public class TableCreateActivity extends BaseAuthActivity {
     }
 
     private void setupToolbar() {
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        var toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setDisplayShowHomeEnabled(true);
 
-            Drawable upArrow = ContextCompat.getDrawable(this, androidx.appcompat.R.drawable.abc_ic_ab_back_material);
+            var upArrow = ContextCompat.getDrawable(this, androidx.appcompat.R.drawable.abc_ic_ab_back_material);
             if (upArrow != null) {
                 upArrow.setColorFilter(ContextCompat.getColor(this, android.R.color.white), PorterDuff.Mode.SRC_ATOP);
                 getSupportActionBar().setHomeAsUpIndicator(upArrow);

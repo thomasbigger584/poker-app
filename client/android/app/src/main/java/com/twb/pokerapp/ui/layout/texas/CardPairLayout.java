@@ -51,7 +51,7 @@ public class CardPairLayout extends FrameLayout {
     }
 
     public void updateCardImageView(CardDTO card) {
-        int cardDrawResId = CardDrawableUtil.getDrawable(getContext(), card);
+        var cardDrawResId = CardDrawableUtil.getDrawable(getContext(), card);
         updateCardImageView(cardDrawResId);
     }
 
@@ -74,7 +74,7 @@ public class CardPairLayout extends FrameLayout {
     }
 
     public void updateDetails(PlayerSessionDTO playerSession) {
-        AppUserDTO user = playerSession.getUser();
+        var user = playerSession.getUser();
         displayNameTextView.setText(user.getUsername());
         if (playerSession.getFunds() != null) {
             fundsTextView.setText(String.format(Locale.getDefault(), "%.2f", playerSession.getFunds()));
@@ -88,7 +88,7 @@ public class CardPairLayout extends FrameLayout {
     }
 
     public void updateDealerChip(boolean dealer) {
-        final int visibility = (dealer) ? VISIBLE : GONE;
+        var visibility = (dealer) ? VISIBLE : GONE;
         dealerChipLayout.setVisibility(visibility);
     }
 
@@ -101,7 +101,7 @@ public class CardPairLayout extends FrameLayout {
     }
 
     public void fold() {
-        for (ImageView cardImageView : cardImageViews) {
+        for (var cardImageView : cardImageViews) {
             cardImageView.setVisibility(INVISIBLE);
         }
     }

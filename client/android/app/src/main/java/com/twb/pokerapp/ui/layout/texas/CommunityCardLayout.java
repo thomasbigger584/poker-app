@@ -33,7 +33,7 @@ public class CommunityCardLayout extends FrameLayout {
     }
 
     private void init() {
-        View inflatedView = inflate(getContext(), R.layout.community_cards, this);
+        var inflatedView = inflate(getContext(), R.layout.community_cards, this);
         community1CardLayout = inflatedView.findViewById(R.id.community1CardLayout);
         community2CardLayout = inflatedView.findViewById(R.id.community2CardLayout);
         community3CardLayout = inflatedView.findViewById(R.id.community3CardLayout);

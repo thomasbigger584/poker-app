@@ -26,14 +26,14 @@ public class ChatBoxRecyclerAdapter extends RecyclerView.Adapter<ChatBoxRecycler
     @NonNull
     @Override
     public ChatBoxViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View chatBoxItemLayout = LayoutInflater.from(parent.getContext()).
+        var chatBoxItemLayout = LayoutInflater.from(parent.getContext()).
                 inflate(R.layout.chat_box_list_item, parent, false);
         return new ChatBoxViewHolder(chatBoxItemLayout);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ChatBoxViewHolder holder, int position) {
-        String item = items.get(position);
+        var item = items.get(position);
         holder.chatBoxItemTextView.setText(item);
     }
 
@@ -46,7 +46,7 @@ public class ChatBoxRecyclerAdapter extends RecyclerView.Adapter<ChatBoxRecycler
         if (item == null) {
             return;
         }
-        int positionStart = items.size() + 1;
+        var positionStart = items.size() + 1;
         items.add(item);
         notifyItemRangeInserted(positionStart, items.size());
         layoutManager.scrollToPosition(items.size() - 1);

@@ -13,16 +13,16 @@ public class RabbitPathMatcher implements PathMatcher {
      */
     @Override
     public boolean matches(String path, StompMessage msg) {
-        String dest = msg.findHeader(StompHeader.DESTINATION);
+        var dest = msg.findHeader(StompHeader.DESTINATION);
         if (dest == null) return false;
 
         // for example string "lorem.ipsum.*.sit":
 
         // split it up into ["lorem", "ipsum", "*", "sit"]
-        String[] split = path.split("\\.");
-        ArrayList<String> transformed = new ArrayList<>();
+        var split = path.split("\\.");
+        var transformed = new ArrayList<String>();
         // check for wildcards and replace with corresponding regex
-        for (String s : split) {
+        for (var s : split) {
             switch (s) {
                 case "*":
                     transformed.add("[^.]+");
@@ -38,12 +38,12 @@ public class RabbitPathMatcher implements PathMatcher {
             }
         }
         // at this point, 'transformed' looks like ["lorem", "ipsum", "[^.]+", "sit"]
-        StringBuilder sb = new StringBuilder();
-        for (String s : transformed) {
+        var sb = new StringBuilder();
+        for (var s : transformed) {
             if (sb.length() > 0) sb.append("\\.");
             sb.append(s);
         }
-        String join = sb.toString();
+        var join = sb.toString();
         // join = "lorem\.ipsum\.[^.]+\.sit"
 
         return dest.matches(join);

@@ -18,9 +18,9 @@ public abstract class BaseGameDialog extends DialogFragment {
     @Override
     public void onStart() {
         super.onStart();
-        Window window = getDialog().getWindow();
+        var window = getDialog().getWindow();
         if (window != null) {
-            WindowManager.LayoutParams windowParams = window.getAttributes();
+            var windowParams = window.getAttributes();
             windowParams.dimAmount = DIM_AMOUNT;
             windowParams.flags |= WindowManager.LayoutParams.FLAG_DIM_BEHIND;
             window.setAttributes(windowParams);
@@ -49,7 +49,7 @@ public abstract class BaseGameDialog extends DialogFragment {
     @Override
     public void show(FragmentManager manager, String tag) {
         try {
-            FragmentTransaction ft = manager.beginTransaction();
+            var ft = manager.beginTransaction();
             ft.add(this, tag);
             ft.commit();
         } catch (IllegalStateException e) {

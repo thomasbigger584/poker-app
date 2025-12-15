@@ -117,7 +117,7 @@ public final class LoginActivity extends AppCompatActivity {
     }
 
     public void onWebsiteClick(View view) {
-        CustomTabsIntent intent = new CustomTabsIntent.Builder().build();
+        var intent = new CustomTabsIntent.Builder().build();
         intent.launchUrl(this, Uri.parse("http://poker-app.taila8b6c7.ts.net"));
     }
 
@@ -196,15 +196,13 @@ public final class LoginActivity extends AppCompatActivity {
      */
     @WorkerThread
     private void initializeClient() {
-
         if (authConfiguration.getClientId() != null) {
             clientId.set(authConfiguration.getClientId());
             runOnUiThread(this::initializeAuthRequest);
             return;
         }
 
-        RegistrationResponse lastResponse =
-                authStateManager.getCurrent().getLastRegistrationResponse();
+        var lastResponse = authStateManager.getCurrent().getLastRegistrationResponse();
 
         if (lastResponse != null) {
             clientId.set(lastResponse.clientId);
@@ -212,7 +210,7 @@ public final class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        RegistrationRequest registrationRequest = new RegistrationRequest.Builder(
+        var registrationRequest = new RegistrationRequest.Builder(
                 authStateManager.getCurrent().getAuthorizationServiceConfiguration(),
                 Collections.singletonList(authConfiguration.getRedirectUri()))
                 .setTokenEndpointAuthenticationMethod(ClientSecretBasic.NAME)
@@ -244,19 +242,19 @@ public final class LoginActivity extends AppCompatActivity {
             Log.w(TAG, "Interrupted while waiting for auth intent");
         }
 
-        final Intent completionIntent = new Intent(this, AUTH_COMPLETED_ACTIVITY);
-        final Intent cancelIntent = new Intent(this, LoginActivity.class);
+        var completionIntent = new Intent(this, AUTH_COMPLETED_ACTIVITY);
+        var cancelIntent = new Intent(this, LoginActivity.class);
         cancelIntent.putExtra(EXTRA_FAILED, true);
         cancelIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
-        int flags = 0;
+        var flags = 0;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             flags |= PendingIntent.FLAG_MUTABLE;
         }
 
-        PendingIntent completedIntent = PendingIntent
+        var completedIntent = PendingIntent
                 .getActivity(this, 0, completionIntent, flags);
-        PendingIntent canceledIntent = PendingIntent
+        var canceledIntent = PendingIntent
                 .getActivity(this, 0, cancelIntent, flags);
 
         authService.performAuthorizationRequest(
@@ -275,7 +273,7 @@ public final class LoginActivity extends AppCompatActivity {
 
     private AuthorizationService createAuthorizationService() {
         Log.i(TAG, "Creating authorization service");
-        AppAuthConfiguration.Builder builder = new AppAuthConfiguration.Builder();
+        var builder = new AppAuthConfiguration.Builder();
         builder.setBrowserMatcher(AnyBrowserMatcher.INSTANCE);
         builder.setConnectionBuilder(authConfiguration.getConnectionBuilder());
         builder.setSkipIssuerHttpsCheck(!authConfiguration.isHttpsRequired());
@@ -313,8 +311,7 @@ public final class LoginActivity extends AppCompatActivity {
         }
         executor.execute(() -> {
             Log.i(TAG, "Warming up browser instance for auth request");
-            CustomTabsIntent.Builder intentBuilder =
-                    authService.createCustomTabsIntentBuilder(authRequest.get().toUri());
+            var intentBuilder = authService.createCustomTabsIntentBuilder(authRequest.get().toUri());
             intentBuilder.setDefaultColorSchemeParams(new CustomTabColorSchemeParams.Builder()
                     .setToolbarColor(ContextCompat.getColor(this, R.color.colorPrimary))
                     .build());

@@ -20,7 +20,7 @@ public class ControlsController {
     private final ProgressBar secondsLeftProgressBar;
 
     public ControlsController(Activity activity) {
-        LinearLayout controlsLinearLayout = activity.findViewById(R.id.controlsLinearLayout);
+        var controlsLinearLayout = activity.findViewById(R.id.controlsLinearLayout);
         checkButton = controlsLinearLayout.findViewById(R.id.checkButton);
         callButton = controlsLinearLayout.findViewById(R.id.callButton);
         betButton = controlsLinearLayout.findViewById(R.id.betButton);
@@ -31,7 +31,7 @@ public class ControlsController {
     }
 
     public void show(List<String> actions) {
-        for (String action : actions) {
+        for (var action : actions) {
             switch (action) {
                 case "CHECK":
                     setVisible(checkButton);

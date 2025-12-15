@@ -21,11 +21,11 @@ public class AlertModalDialog extends DialogFragment {
 
     public static AlertModalDialog newInstance(
             AlertModalType alertModalType, String subtitle, OnAlertClickListener listener) {
-        AlertModalDialog fragment = new AlertModalDialog();
+        var fragment = new AlertModalDialog();
         fragment.setListener(listener);
         fragment.setStyle(DialogFragment.STYLE_NO_TITLE, 0);
         fragment.setCancelable(false);
-        Bundle bundle = new Bundle();
+        var bundle = new Bundle();
         bundle.putSerializable(KEY_ALERT_MODAL_TYPE, alertModalType);
         bundle.putString(KEY_ALERT_SUBTITLE, subtitle);
         fragment.setArguments(bundle);
@@ -39,23 +39,23 @@ public class AlertModalDialog extends DialogFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        Bundle args = getArguments();
+        var args = getArguments();
         if (args == null) {
             return null;
         }
-        View inflatedView = inflater.inflate(R.layout.fragment_alert_dialog, container, false);
+        var inflatedView = inflater.inflate(R.layout.fragment_alert_dialog, container, false);
 
-        AlertModalType alertModalType = (AlertModalType) args.getSerializable(KEY_ALERT_MODAL_TYPE);
+        var alertModalType = (AlertModalType) args.getSerializable(KEY_ALERT_MODAL_TYPE);
 
         if (alertModalType == null) {
             alertModalType = AlertModalType.INFO;
         }
 
-        ImageView iconImageView = inflatedView.findViewById(R.id.iconImageView);
-        TextView titleTextView = inflatedView.findViewById(R.id.titleTextView);
+        var iconImageView = (ImageView) inflatedView.findViewById(R.id.iconImageView);
+        var titleTextView = (TextView) inflatedView.findViewById(R.id.titleTextView);
 
-        String successButtonClickText = getString(R.string.confirm);
-        boolean shouldShowCancelButton = false;
+        var successButtonClickText = getString(R.string.confirm);
+        var shouldShowCancelButton = false;
 
         switch (alertModalType) {
             case WARNING: {
@@ -90,12 +90,12 @@ public class AlertModalDialog extends DialogFragment {
             }
         }
 
-        String subtitle = args.getString(KEY_ALERT_SUBTITLE);
+        var subtitle = args.getString(KEY_ALERT_SUBTITLE);
         subtitle = capitalize(subtitle);
-        TextView subtitleTextView = inflatedView.findViewById(R.id.subtitleTextView);
+        var subtitleTextView = (TextView) inflatedView.findViewById(R.id.subtitleTextView);
         subtitleTextView.setText(subtitle);
 
-        Button cancelButton = inflatedView.findViewById(R.id.cancelButton);
+        var cancelButton = inflatedView.findViewById(R.id.cancelButton);
         if (shouldShowCancelButton) {
             cancelButton.setVisibility(View.VISIBLE);
             cancelButton.setOnClickListener(v -> {
@@ -108,7 +108,7 @@ public class AlertModalDialog extends DialogFragment {
             cancelButton.setVisibility(View.GONE);
         }
 
-        Button successButton = inflatedView.findViewById(R.id.successButton);
+        var successButton = (Button) inflatedView.findViewById(R.id.successButton);
         successButton.setText(successButtonClickText);
         successButton.setOnClickListener(v -> {
             if (listener != null) {

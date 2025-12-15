@@ -38,10 +38,10 @@ public class TableListActivity extends BaseAuthActivity implements TableListAdap
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        var toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        RecyclerView recyclerView = findViewById(R.id.recyclerView);
+        var recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
@@ -57,7 +57,7 @@ public class TableListActivity extends BaseAuthActivity implements TableListAdap
         viewModel.errors.observe(this, throwable -> {
             if (throwable == null) return;
             swipeRefreshLayout.setRefreshing(false);
-            AlertModalDialog alertModalDialog = AlertModalDialog
+            var alertModalDialog = AlertModalDialog
                     .newInstance(AlertModalDialog.AlertModalType.ERROR, throwable.getMessage(), new AlertModalDialog.OnAlertClickListener() {
                         @Override
                         public void onSuccessClick() {
@@ -95,7 +95,7 @@ public class TableListActivity extends BaseAuthActivity implements TableListAdap
 
     @Override
     public void onTableClicked(TableDTO table) {
-        Intent intent = new Intent(this, TableConnectActivity.class);
+        var intent = new Intent(this, TableConnectActivity.class);
         intent.putExtras(table.toBundle());
         startActivity(intent);
     }
@@ -110,7 +110,7 @@ public class TableListActivity extends BaseAuthActivity implements TableListAdap
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.action_create_table) {
-            Intent intent = new Intent(this, TableCreateActivity.class);
+            var intent = new Intent(this, TableCreateActivity.class);
             startActivity(intent);
             return true;
         }

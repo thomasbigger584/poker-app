@@ -24,14 +24,14 @@ public class CardLayout extends FrameLayout {
     }
 
     private void init() {
-        View inflatedView = inflate(getContext(), R.layout.card, this);
+        var inflatedView = inflate(getContext(), R.layout.card, this);
         cardImageView = inflatedView.findViewById(R.id.cardImageView);
         reset();
     }
 
     public void update(CardDTO card) {
         post(() -> {
-            int cardDrawResId = CardDrawableUtil.getDrawable(getContext(), card);
+            var cardDrawResId = CardDrawableUtil.getDrawable(getContext(), card);
             cardImageView.setImageResource(cardDrawResId);
             cardImageView.setVisibility(VISIBLE);
         });

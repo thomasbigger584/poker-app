@@ -86,7 +86,7 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
         if (savedInstanceState != null) {
             try {
                 if (savedInstanceState.containsKey(KEY_USER_INFO)) {
-                    String userInfo = savedInstanceState.getString(KEY_USER_INFO);
+                    var userInfo = savedInstanceState.getString(KEY_USER_INFO);
                     if (userInfo != null) {
                         userInfoJson.set(new JSONObject(userInfo));
                     }
@@ -114,8 +114,8 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
 
         // the stored AuthState is incomplete, so check if we are currently receiving the result of
         // the authorization flow from the browser.
-        AuthorizationResponse response = AuthorizationResponse.fromIntent(getIntent());
-        AuthorizationException ex = AuthorizationException.fromIntent(getIntent());
+        var response = AuthorizationResponse.fromIntent(getIntent());
+        var ex = AuthorizationException.fromIntent(getIntent());
 
         if (response != null || ex != null) {
             authStateManager.updateAfterAuthorization(response, ex);
@@ -200,11 +200,10 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
 
     @MainThread
     protected void endSession() {
-        AuthState currentState = authStateManager.getCurrent();
-        AuthorizationServiceConfiguration config =
-                currentState.getAuthorizationServiceConfiguration();
+        var currentState = authStateManager.getCurrent();
+        var config = currentState.getAuthorizationServiceConfiguration();
         if (config != null && config.endSessionEndpoint != null) {
-            Intent endSessionIntent = authService.getEndSessionRequestIntent(
+            var endSessionIntent = authService.getEndSessionRequestIntent(
                     new EndSessionRequest.Builder(config)
                             .setIdTokenHint(currentState.getIdToken())
                             .setPostLogoutRedirectUri(authConfiguration.getEndSessionRedirectUri())
@@ -219,17 +218,17 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
     private void signOut() {
         // discard the authorization and token state, but retain the configuration and
         // dynamic client registration (if applicable), to save from retrieving them again.
-        AuthState currentState = authStateManager.getCurrent();
-        AuthorizationServiceConfiguration config = currentState.getAuthorizationServiceConfiguration();
+        var currentState = authStateManager.getCurrent();
+        var config = currentState.getAuthorizationServiceConfiguration();
         if (config != null) {
-            AuthState clearedState = new AuthState(config);
+            var clearedState = new AuthState(config);
             if (currentState.getLastRegistrationResponse() != null) {
                 clearedState.update(currentState.getLastRegistrationResponse());
             }
             authStateManager.replace(clearedState);
         }
 
-        Intent mainIntent = new Intent(this, LoginActivity.class);
+        var mainIntent = new Intent(this, LoginActivity.class);
         mainIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(mainIntent);
         finish();

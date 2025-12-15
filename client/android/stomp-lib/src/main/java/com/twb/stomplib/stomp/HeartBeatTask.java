@@ -99,7 +99,7 @@ public class HeartBeatTask {
     private void heartBeatHandshake(final String heartBeatHeader) {
         if (heartBeatHeader != null) {
             // The heart-beat header is OPTIONAL
-            final String[] heartbeats = heartBeatHeader.split(",");
+            var heartbeats = heartBeatHeader.split(",");
             if (clientHeartbeatNew > 0) {
                 //there will be heart-beats every MAX(<cx>,<sy>) milliseconds
                 clientHeartbeat = Math.max(clientHeartbeatNew, Integer.parseInt(heartbeats[1]));
@@ -129,7 +129,7 @@ public class HeartBeatTask {
 
     private void scheduleServerHeartBeatCheck() {
         if (serverHeartbeat > 0 && scheduler != null) {
-            final long now = System.currentTimeMillis();
+            var now = System.currentTimeMillis();
             Log.d(TAG, "Scheduling server heart-beat to be checked in " + serverHeartbeat + " ms and now is '" + now + "'");
             //add some slack on the check
             serverCheckHeartBeatTask = scheduler.scheduleDirect(() ->
@@ -139,9 +139,9 @@ public class HeartBeatTask {
 
     private void checkServerHeartBeat() {
         if (serverHeartbeat > 0) {
-            final long now = System.currentTimeMillis();
+            var now = System.currentTimeMillis();
             //use a forgiving boundary as some heart beats can be delayed or lost.
-            final long boundary = now - (3 * serverHeartbeat);
+            var boundary = now - (3 * serverHeartbeat);
             //we need to check because the task could failed to abort
             if (lastServerHeartBeat < boundary) {
                 Log.d(TAG, "It's a sad day ;( Server didn't send heart-beat on time. Last received at '" + lastServerHeartBeat + "' and now is '" + now + "'");

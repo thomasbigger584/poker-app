@@ -28,12 +28,11 @@ public class TableListAdapter extends RecyclerView.Adapter<TableListAdapter.View
     @NonNull
     @Override
     public TableListAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        TableListAdapter.ViewHolder viewHolder = new TableListAdapter.ViewHolder(LayoutInflater.from(parent.getContext())
+        var viewHolder = new TableListAdapter.ViewHolder(LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.table_list_item, parent, false));
 
         viewHolder.connectButton.setOnClickListener(view -> {
-
-            int position = viewHolder.getAdapterPosition();
+            var position = viewHolder.getAdapterPosition();
             if (position != RecyclerView.NO_POSITION) {
                 AvailableTableDTO availableTable = dataset.get(position);
                 clickListener.onTableClicked(availableTable.getTable());

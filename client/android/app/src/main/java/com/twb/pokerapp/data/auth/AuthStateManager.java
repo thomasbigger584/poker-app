@@ -59,7 +59,7 @@ public class AuthStateManager {
         if (currentAuthState.get() != null) {
             return currentAuthState.get();
         }
-        AuthState state = readState();
+        var state = readState();
         if (currentAuthState.compareAndSet(null, state)) {
             return state;
         } else {
@@ -79,7 +79,7 @@ public class AuthStateManager {
     @NonNull
     public AuthState updateAfterAuthorization(@Nullable AuthorizationResponse response,
                                               @Nullable AuthorizationException ex) {
-        AuthState current = getCurrent();
+        var current = getCurrent();
         current.update(response, ex);
         return replace(current);
     }
@@ -88,7 +88,7 @@ public class AuthStateManager {
     @NonNull
     public AuthState updateAfterTokenResponse(@Nullable TokenResponse response,
                                               @Nullable AuthorizationException ex) {
-        AuthState current = getCurrent();
+        var current = getCurrent();
         current.update(response, ex);
         return replace(current);
     }
@@ -97,7 +97,7 @@ public class AuthStateManager {
     @NonNull
     public AuthState updateAfterRegistration(RegistrationResponse response,
                                              AuthorizationException ex) {
-        AuthState current = getCurrent();
+        var current = getCurrent();
         if (ex != null) {
             return current;
         }
@@ -110,7 +110,7 @@ public class AuthStateManager {
     private AuthState readState() {
         prefsLock.lock();
         try {
-            String currentState = prefs.getString(KEY_STATE, null);
+            var currentState = prefs.getString(KEY_STATE, null);
             if (currentState == null) {
                 return new AuthState();
             }
@@ -130,7 +130,7 @@ public class AuthStateManager {
     private void writeState(@Nullable AuthState state) {
         prefsLock.lock();
         try {
-            SharedPreferences.Editor editor = prefs.edit();
+            var editor = prefs.edit();
             if (state == null) {
                 editor.remove(KEY_STATE);
             } else {

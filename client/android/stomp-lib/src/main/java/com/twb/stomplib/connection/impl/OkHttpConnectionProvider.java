@@ -44,8 +44,7 @@ public class OkHttpConnectionProvider extends AbstractConnectionProvider {
 
     @Override
     protected void createWebSocketConnection() {
-        Request.Builder requestBuilder = new Request.Builder()
-                .url(mUri);
+        var requestBuilder = new Request.Builder().url(mUri);
 
         addConnectionHeadersToBuilder(requestBuilder, mConnectHttpHeaders);
 
@@ -53,9 +52,8 @@ public class OkHttpConnectionProvider extends AbstractConnectionProvider {
                 new WebSocketListener() {
                     @Override
                     public void onOpen(@NotNull WebSocket webSocket, @NotNull Response response) {
-                        LifecycleEvent openEvent = new LifecycleEvent(LifecycleEvent.Type.OPENED);
-
-                        TreeMap<String, String> headersAsMap = headersAsMap(response);
+                        var openEvent = new LifecycleEvent(LifecycleEvent.Type.OPENED);
+                        var headersAsMap = headersAsMap(response);
 
                         openEvent.setHandshakeResponseHeaders(headersAsMap);
                         emitLifecycleEvent(openEvent);
@@ -107,16 +105,16 @@ public class OkHttpConnectionProvider extends AbstractConnectionProvider {
 
     @NotNull
     private TreeMap<String, String> headersAsMap(@NotNull Response response) {
-        TreeMap<String, String> headersAsMap = new TreeMap<>();
-        Headers headers = response.headers();
-        for (String key : headers.names()) {
+        var headersAsMap = new TreeMap<String, String>();
+        var headers = response.headers();
+        for (var key : headers.names()) {
             headersAsMap.put(key, headers.get(key));
         }
         return headersAsMap;
     }
 
     private void addConnectionHeadersToBuilder(@NotNull Request.Builder requestBuilder, @NotNull Map<String, String> mConnectHttpHeaders) {
-        for (Map.Entry<String, String> headerEntry : mConnectHttpHeaders.entrySet()) {
+        for (var headerEntry : mConnectHttpHeaders.entrySet()) {
             requestBuilder.addHeader(headerEntry.getKey(), headerEntry.getValue());
         }
     }

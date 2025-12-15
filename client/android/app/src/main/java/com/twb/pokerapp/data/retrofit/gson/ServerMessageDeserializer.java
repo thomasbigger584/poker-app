@@ -24,15 +24,15 @@ public class ServerMessageDeserializer implements JsonDeserializer<ServerMessage
     public ServerMessageDTO<?> deserialize(JsonElement json, Type typeOfT,
                                            JsonDeserializationContext context) throws JsonParseException {
 
-        JsonObject jsonObject = json.getAsJsonObject();
-        ServerMessageType messageType = getServerMessageType(jsonObject);
-        Class<?> payloadClass = messageType.getPayloadClass();
-        long timestamp = getTimestamp(jsonObject);
+        var jsonObject = json.getAsJsonObject();
+        var messageType = getServerMessageType(jsonObject);
+        var payloadClass = messageType.getPayloadClass();
+        var timestamp = getTimestamp(jsonObject);
 
-        ServerMessageDTO<?> serverMessageDto = new ServerMessageDTO<>(messageType, jsonObject, timestamp);
+        var serverMessageDto = new ServerMessageDTO<>(messageType, jsonObject, timestamp);
 
         if (jsonObject.has(PAYLOAD_KEY)) {
-            JsonObject payloadString = jsonObject.get(PAYLOAD_KEY).getAsJsonObject();
+            var payloadString = jsonObject.get(PAYLOAD_KEY).getAsJsonObject();
             serverMessageDto.setPayload(context.deserialize(payloadString, payloadClass));
         }
 
@@ -54,7 +54,7 @@ public class ServerMessageDeserializer implements JsonDeserializer<ServerMessage
             throw new IllegalStateException("Expecting Server Message to contain key "
                     + SERVER_MESSAGE_TYPE_KEY + " in response");
         }
-        String messageTypeString = jsonObject.get(SERVER_MESSAGE_TYPE_KEY).getAsString();
+        var messageTypeString = jsonObject.get(SERVER_MESSAGE_TYPE_KEY).getAsString();
         try {
             return ServerMessageType.valueOf(messageTypeString);
         } catch (IllegalArgumentException ex) {

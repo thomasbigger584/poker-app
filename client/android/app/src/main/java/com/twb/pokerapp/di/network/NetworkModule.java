@@ -92,7 +92,7 @@ public class NetworkModule {
     @Provides
     @Singleton
     public Gson gson() {
-        GsonBuilder gsonBuilder = new GsonBuilder();
+        var gsonBuilder = new GsonBuilder();
         gsonBuilder.registerTypeAdapter(Date.class, (JsonDeserializer<Date>) (json, typeOfT, context) -> {
             //todo: verify this works with dates which get returned
             return new Date((long) (json.getAsJsonPrimitive().getAsDouble() * 1000));
@@ -105,8 +105,7 @@ public class NetworkModule {
     @Provides
     @Singleton
     public HttpLoggingInterceptor loggingInterceptor() {
-        HttpLoggingInterceptor loggingInterceptor =
-                new HttpLoggingInterceptor(message -> Log.i(NetworkModule.class.getSimpleName(), message));
+        var loggingInterceptor = new HttpLoggingInterceptor(message -> Log.i(NetworkModule.class.getSimpleName(), message));
         loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
         return loggingInterceptor;
     }
@@ -120,7 +119,7 @@ public class NetworkModule {
     @Provides
     @Singleton
     public Cache cache(@ApplicationContext Context context) {
-        File file = new File(context.getCacheDir(), OKHTTP_CACHE_FILE);
+        var file = new File(context.getCacheDir(), OKHTTP_CACHE_FILE);
         return new Cache(file, MAX_CACHE_SIZE);
     }
 }

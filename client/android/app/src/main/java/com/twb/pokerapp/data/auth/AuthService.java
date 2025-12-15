@@ -36,7 +36,7 @@ public class AuthService {
     }
 
     public String getCurrentUser() {
-        JWT jwt = getJwt();
+        var jwt = getJwt();
         return jwt.getClaim(USERNAME_CLAIM).asString();
     }
 
@@ -50,11 +50,11 @@ public class AuthService {
 
     @WorkerThread // blocks until a new token is retrieved
     public String getAccessTokenWithRefresh() {
-        JWT jwt = getJwt();
+        var jwt = getJwt();
         if (jwt.isExpired(TOKEN_EXPIRY_LEEWAY_SECONDS)) {
-            CountDownLatch latch = new CountDownLatch(1);
-            AuthState currentAuthState = authStateManager.getCurrent();
-            TokenRequest tokenRefreshRequest = currentAuthState.createTokenRefreshRequest();
+            var latch = new CountDownLatch(1);
+            var currentAuthState = authStateManager.getCurrent();
+            var tokenRefreshRequest = currentAuthState.createTokenRefreshRequest();
             performTokenRequest(tokenRefreshRequest, (response, ex) -> {
                 authStateManager.updateAfterTokenResponse(response, ex);
                 latch.countDown();
@@ -84,7 +84,7 @@ public class AuthService {
 
     @NonNull
     private JWT getJwt() {
-        AuthState currentAuthState = authStateManager.getCurrent();
+        var currentAuthState = authStateManager.getCurrent();
         if (currentAuthState.getAccessToken() == null) {
             throw new RuntimeException("Cannot get access token as it is null");
         }

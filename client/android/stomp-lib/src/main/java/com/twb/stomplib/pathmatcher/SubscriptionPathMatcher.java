@@ -15,9 +15,9 @@ public class SubscriptionPathMatcher implements PathMatcher {
     @Override
     public boolean matches(String path, StompMessage msg) {
         // Compare subscription
-        String pathSubscription = stompClient.getTopicId(path);
+        var pathSubscription = stompClient.getTopicId(path);
         if (pathSubscription == null) return false;
-        String subscription = msg.findHeader(StompHeader.SUBSCRIPTION);
+        var subscription = msg.findHeader(StompHeader.SUBSCRIPTION);
         return pathSubscription.equals(subscription);
     }
 }

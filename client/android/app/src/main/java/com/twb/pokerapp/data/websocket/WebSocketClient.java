@@ -63,14 +63,14 @@ public class WebSocketClient {
         if (stompClient != null && stompClient.isConnected()) {
             return;
         }
-        String accessToken = authService.getAccessToken();
+        var accessToken = authService.getAccessToken();
         if (accessToken == null) {
             throw new RuntimeException("Cannot connect to websocket as access token is null");
         }
-        String websocketUrl = PROTOCOL + BuildConfig.API_BASE_URL + WEBSOCKET_ENDPOINT;
+        var websocketUrl = PROTOCOL + BuildConfig.API_BASE_URL + WEBSOCKET_ENDPOINT;
         stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, websocketUrl);
 
-        List<StompHeader> headers = new ArrayList<>();
+       var headers = new ArrayList<StompHeader>();
         headers.add(new StompHeader(AUTHORIZATION_HEADER, BEARER_PREFIX + accessToken));
         headers.add(new StompHeader(CONNECTION_TYPE_HEADER, connectionType));
         headers.add(new StompHeader(BUY_IN_AMOUNT_HEADER, String.format(Locale.getDefault(), "%.2f", buyInAmount)));
@@ -117,8 +117,8 @@ public class WebSocketClient {
                     listener.onSubscribeError(throwable);
                 }));
 
-        String currentUser = authService.getCurrentUser();
-        String notificationTopic = String.format(Locale.getDefault(), NOTIFICATIONS_TOPIC, currentUser);
+        var currentUser = authService.getCurrentUser();
+        var notificationTopic = String.format(Locale.getDefault(), NOTIFICATIONS_TOPIC, currentUser);
         compositeDisposable.add(stompClient.topic(notificationTopic)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -154,14 +154,14 @@ public class WebSocketClient {
     // ***************************************************************
 
     public void sendChatMessage(UUID tableId, SendChatMessageDTO dto, SendListener listener) {
-        String destination = String.format(SEND_ENDPOINT_PREFIX + SEND_CHAT_MESSAGE, tableId);
-        String message = gson.toJson(dto);
+        var destination = String.format(SEND_ENDPOINT_PREFIX + SEND_CHAT_MESSAGE, tableId);
+        var message = gson.toJson(dto);
         sendMessage(destination, message, listener);
     }
 
     public void sendPlayerAction(UUID tableId, SendPlayerActionDTO dto, SendListener listener) {
-        String destination = String.format(SEND_ENDPOINT_PREFIX + SEND_PLAYER_ACTION, tableId);
-        String message = gson.toJson(dto);
+        var destination = String.format(SEND_ENDPOINT_PREFIX + SEND_PLAYER_ACTION, tableId);
+        var message = gson.toJson(dto);
         sendMessage(destination, message, listener);
     }
 

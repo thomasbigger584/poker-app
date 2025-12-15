@@ -15,15 +15,15 @@ public class CardDrawableUtil {
     //required to dynamically get card from drawables
     @SuppressLint("DiscouragedApi")
     public static int getDrawable(Context context, CardDTO card) {
-        String cardDrawRes = getDrawable(card);
-        Resources resources = context.getResources();
+        var cardDrawRes = getDrawable(card);
+        var resources = context.getResources();
         return resources.getIdentifier(cardDrawRes, DEF_TYPE, context.getPackageName());
     }
 
     private static String getDrawable(CardDTO card) {
-        char suitChar = card.getSuitChar();
-        char rankChar = card.getRankChar();
-        String drawableName = String.valueOf(suitChar) + rankChar;
+        var suitChar = card.getSuitChar();
+        var rankChar = card.getRankChar();
+        var drawableName = String.valueOf(suitChar) + rankChar;
         return drawableName.toLowerCase();
     }
 }

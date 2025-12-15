@@ -20,8 +20,8 @@ public class AuthInterceptor implements Interceptor {
 
     @Override
     public Response intercept(Chain chain) throws IOException {
-        Request.Builder builder = chain.request().newBuilder();
-        String accessToken = authService.getAccessTokenWithRefresh();
+        var builder = chain.request().newBuilder();
+        var accessToken = authService.getAccessTokenWithRefresh();
         builder.addHeader(AUTHORIZATION_HEADER, BEARER_PREFIX + accessToken);
         return chain.proceed(builder.build());
     }

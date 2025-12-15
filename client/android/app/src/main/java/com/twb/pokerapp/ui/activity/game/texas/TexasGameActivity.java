@@ -209,8 +209,6 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         });
     }
 
-
-
     @Override
     protected void onAuthorized() {
         viewModel.connect(table.getId(), connectionType, buyInAmount);

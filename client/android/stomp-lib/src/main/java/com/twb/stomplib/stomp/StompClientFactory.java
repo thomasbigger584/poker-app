@@ -22,12 +22,12 @@ public class StompClientFactory {
 
 
     public static StompClient createClient(String url, String accessToken) {
-        OkHttpClient httpClient = buildHttpClient(accessToken);
+        var httpClient = buildHttpClient(accessToken);
 
-        Map<String, String> headers = new HashMap<>();
+        var headers = new HashMap<String, String>();
         headers.put(AUTHORIZATION_HEADER, BEARER_PREFIX + accessToken);
 
-        ConnectionProvider provider = new OkHttpConnectionProvider(url, headers, httpClient);
+        var provider = new OkHttpConnectionProvider(url, headers, httpClient);
         return new StompClient(provider);
     }
 
@@ -49,7 +49,7 @@ public class StompClientFactory {
         @NotNull
         @Override
         public Response intercept(@NotNull Chain chain) throws IOException {
-            Request.Builder builder = chain.request().newBuilder();
+            var builder = chain.request().newBuilder();
 
             Log.i(TAG, "websocket intercept: token: " + accessToken);
             builder.addHeader(AUTHORIZATION_HEADER, BEARER_PREFIX + accessToken);

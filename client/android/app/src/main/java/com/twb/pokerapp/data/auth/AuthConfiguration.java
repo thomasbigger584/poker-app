@@ -84,7 +84,7 @@ public final class AuthConfiguration {
      * Indicates whether the configuration has changed from the last known valid state.
      */
     public boolean hasConfigurationChanged() {
-        String lastHash = getLastKnownConfigHash();
+        var lastHash = getLastKnownConfigHash();
         return !configHash.equals(lastHash);
     }
 
@@ -177,9 +177,9 @@ public final class AuthConfiguration {
     }
 
     private void readConfiguration() throws InvalidConfigurationException {
-        BufferedSource configSource =
+        var configSource =
                 Okio.buffer(Okio.source(resources.openRawResource(R.raw.auth_config)));
-        Buffer configData = new Buffer();
+        var configData = new Buffer();
         try {
             configSource.readAll(configData);
             configJson = new JSONObject(configData.readString(StandardCharsets.UTF_8));
@@ -223,7 +223,7 @@ public final class AuthConfiguration {
 
     @Nullable
     String getConfigString(String propName) {
-        String value = configJson.optString(propName);
+        var value = configJson.optString(propName);
 
         value = value.trim();
         if (TextUtils.isEmpty(value)) {
@@ -236,7 +236,7 @@ public final class AuthConfiguration {
     @NonNull
     private String getRequiredConfigString(String propName)
             throws InvalidConfigurationException {
-        String value = getConfigString(propName);
+        var value = getConfigString(propName);
         if (value == null) {
             throw new InvalidConfigurationException(
                     propName + " is required but not specified in the configuration");
@@ -248,7 +248,7 @@ public final class AuthConfiguration {
     @NonNull
     Uri getRequiredConfigUri(String propName)
             throws InvalidConfigurationException {
-        String uriStr = getRequiredConfigString(propName);
+        var uriStr = getRequiredConfigString(propName);
         Uri uri;
         try {
             uri = Uri.parse(uriStr);
@@ -278,8 +278,8 @@ public final class AuthConfiguration {
 
     Uri getRequiredConfigWebUri(String propName)
             throws InvalidConfigurationException {
-        Uri uri = getRequiredConfigUri(propName);
-        String scheme = uri.getScheme();
+        var uri = getRequiredConfigUri(propName);
+        var scheme = uri.getScheme();
         if (TextUtils.isEmpty(scheme) || !("http".equals(scheme) || "https".equals(scheme))) {
             throw new InvalidConfigurationException(
                     propName + " must have an http or https scheme");
@@ -291,7 +291,7 @@ public final class AuthConfiguration {
     private boolean isRedirectUriRegistered() {
         // ensure that the redirect URI declared in the configuration is handled by some activity
         // in the app, by querying the package manager speculatively
-        Intent redirectIntent = new Intent();
+        var redirectIntent = new Intent();
         redirectIntent.setPackage(context.getPackageName());
         redirectIntent.setAction(Intent.ACTION_VIEW);
         redirectIntent.addCategory(Intent.CATEGORY_BROWSABLE);

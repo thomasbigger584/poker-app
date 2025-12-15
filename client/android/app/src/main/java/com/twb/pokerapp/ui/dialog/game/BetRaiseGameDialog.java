@@ -29,13 +29,13 @@ public class BetRaiseGameDialog extends BaseGameDialog {
     public static BetRaiseGameDialog newInstance(ActionType type,
                                                  double playerCurrentFunds, double minimumBet,
                                                  BetRaiseClickListener listener) {
-        BetRaiseGameDialog fragment = new BetRaiseGameDialog();
+        var fragment = new BetRaiseGameDialog();
         fragment.betRaiseListener = listener;
         fragment.type = type;
         fragment.minimumBet = minimumBet;
         fragment.playerCurrentFunds = playerCurrentFunds;
         fragment.setStyle(DialogFragment.STYLE_NO_TITLE, 0);
-        Bundle bundle = new Bundle();
+        var bundle = new Bundle();
         fragment.setArguments(bundle);
         return fragment;
     }
@@ -53,7 +53,7 @@ public class BetRaiseGameDialog extends BaseGameDialog {
             }
         });
 
-        Button successButton = inflatedView.findViewById(R.id.successButton);
+        var successButton = inflatedView.findViewById(R.id.successButton);
         successButton.setOnClickListener(v -> {
             if (betRaiseListener != null) {
                 betRaiseListener.onBetSelected(type, amountSelected);
@@ -82,17 +82,17 @@ public class BetRaiseGameDialog extends BaseGameDialog {
     }
 
     private void setSeekBar(double amount) {
-        double seekbarAmount = amount * 100;
+        var seekbarAmount = amount * 100;
         betRaiseSeekBar.setMax((int) seekbarAmount);
 
-        double thisMinimumBet = minimumBet * 100;
+        var thisMinimumBet = minimumBet * 100;
         betRaiseSeekBar.setProgress((int) thisMinimumBet);
 
         setTitleTextView(thisMinimumBet / 100);
     }
 
     private double round(double amount) {
-        String amountStr = String.format(Locale.getDefault(), "%.2f", amount);
+        var amountStr = String.format(Locale.getDefault(), "%.2f", amount);
         return Double.parseDouble(amountStr);
     }
 

@@ -108,7 +108,7 @@ public class StompClient {
                 .subscribe(lifecycleEvent -> {
                     switch (lifecycleEvent.getType()) {
                         case OPENED:
-                            List<StompHeader> headers = new ArrayList<>();
+                            var headers = new ArrayList<StompHeader>();
                             headers.add(new StompHeader(StompHeader.VERSION, SUPPORTED_VERSIONS));
                             headers.add(new StompHeader(StompHeader.HEART_BEAT,
                                     heartBeatTask.getClientHeartbeat() + "," + heartBeatTask.getServerHeartbeat()));
@@ -172,8 +172,8 @@ public class StompClient {
     }
 
     public Completable send(@NonNull StompMessage stompMessage) {
-        Completable completable = connectionProvider.send(stompMessage.compile(legacyWhitespace));
-        CompletableSource connectionComplete = getConnectionStream()
+        var completable = connectionProvider.send(stompMessage.compile(legacyWhitespace));
+        var connectionComplete = getConnectionStream()
                 .filter(isConnected -> isConnected)
                 .firstElement().ignoreElement();
         return completable
@@ -182,8 +182,8 @@ public class StompClient {
 
     @SuppressLint("CheckResult")
     private void sendHeartBeat(@NonNull String pingMessage) {
-        Completable completable = connectionProvider.send(pingMessage);
-        CompletableSource connectionComplete = getConnectionStream()
+        var completable = connectionProvider.send(pingMessage);
+        var connectionComplete = getConnectionStream()
                 .filter(isConnected -> isConnected)
                 .firstElement().ignoreElement();
         completable.startWith(connectionComplete)
@@ -251,7 +251,7 @@ public class StompClient {
     }
 
     private Completable subscribePath(String destinationPath, @Nullable List<StompHeader> headerList) {
-        String topicId = UUID.randomUUID().toString();
+        var topicId = UUID.randomUUID().toString();
 
         if (topics == null) topics = new ConcurrentHashMap<>();
 
@@ -262,7 +262,7 @@ public class StompClient {
         }
 
         topics.put(destinationPath, topicId);
-        List<StompHeader> headers = new ArrayList<>();
+        var headers = new ArrayList<StompHeader>();
         headers.add(new StompHeader(StompHeader.ID, topicId));
         headers.add(new StompHeader(StompHeader.DESTINATION, destinationPath));
         headers.add(new StompHeader(StompHeader.ACK, DEFAULT_ACK));
@@ -276,7 +276,7 @@ public class StompClient {
     private Completable unsubscribePath(String dest) {
         streamMap.remove(dest);
 
-        String topicId = topics.get(dest);
+        var topicId = topics.get(dest);
 
         if (topicId == null) {
             return Completable.complete();

@@ -11,7 +11,7 @@ public class PlayerSubscribedDTO {
     private List<PlayerSessionDTO> playerSessions = new ArrayList<>();
 
     public PlayerSessionDTO getCurrentPlayerSession(String username) {
-        for (PlayerSessionDTO playerSession : playerSessions) {
+        for (var playerSession : playerSessions) {
             if (username.equals(playerSession.getUser().getUsername())) {
                 return playerSession;
             }

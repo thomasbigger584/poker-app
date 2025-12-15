@@ -28,7 +28,7 @@ public class TableRepository extends BaseRepository {
     }
 
     public LiveData<List<AvailableTableDTO>> getAvailableTables() {
-        Map<String, Integer> queryParams = new HashMap<>();
+        var queryParams = new HashMap<String, Integer>();
         api.getAvailableTables(queryParams).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<List<AvailableTableDTO>> call, @NonNull Response<List<AvailableTableDTO>> response) {
