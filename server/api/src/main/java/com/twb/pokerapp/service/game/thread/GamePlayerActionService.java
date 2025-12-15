@@ -3,7 +3,9 @@ package com.twb.pokerapp.service.game.thread;
 import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
+import com.twb.pokerapp.domain.Round;
 import com.twb.pokerapp.service.BettingRoundService;
+import com.twb.pokerapp.service.RoundService;
 import com.twb.pokerapp.service.idepetency.IdempotencyService;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
@@ -17,10 +19,16 @@ import java.util.Optional;
 public abstract class GamePlayerActionService {
 
     @Autowired
+    private RoundService roundService;
+
+    @Autowired
     private BettingRoundService bettingRoundService;
 
     @Autowired
     private GameLogService gameLogService;
+
+    @Autowired
+    private IdempotencyService idempotencyService;
 
     @Autowired
     private ServerMessageFactory messageFactory;
@@ -28,37 +36,43 @@ public abstract class GamePlayerActionService {
     @Autowired
     private MessageDispatcher dispatcher;
 
-    @Autowired
-    private IdempotencyService idempotencyService;
-
     public void playerAction(PlayerSession playerSession, GameThread gameThread, CreatePlayerActionDTO createDto) {
         log.info("***************************************************************");
         log.info("GamePlayerActionService.playerAction");
         log.info("playerSession = {}, createDto = {}", playerSession, createDto);
         log.info("***************************************************************");
-        var pokerTable = playerSession.getPokerTable();
-        if (pokerTable == null) {
+
+        var table = playerSession.getPokerTable();
+        if (table == null) {
             gameLogService.sendLogMessage(playerSession, "Table is null for player session: " + playerSession.getId());
             return;
         }
-        var tableId = pokerTable.getId();
-        var bettingRound = bettingRoundService.getTableBettingRound(tableId);
+        var round = roundService.getRoundByTable(table.getId());
+        if (checkIdempotency(playerSession, round, createDto)) return;
+
+        var bettingRound = bettingRoundService.getTableBettingRound(table.getId());
+
         if (createDto.getAmount() == null) {
             createDto.setAmount(0d);
         }
-        var bettingRoundId = bettingRound.getId();
-        if (idempotencyService.isActionIdempotent(playerSession.getId(), bettingRoundId, createDto.getAction())) {
-            gameLogService.sendLogMessage(playerSession, "Player already made action in this round recently");
-            return;
-        }
+
         var playerActionOpt = onPlayerAction(playerSession, bettingRound, gameThread, createDto);
+
         if (playerActionOpt.isPresent()) {
-            if (idempotencyService.recordAction(playerSession.getId(), bettingRoundId, createDto.getAction())) {
-                var playerAction = playerActionOpt.get();
-                dispatcher.send(tableId, messageFactory.playerActioned(playerAction));
-            }
+            var playerAction = playerActionOpt.get();
+
+            dispatcher.send(table, messageFactory.playerActioned(playerAction));
             gameThread.onPostPlayerAction(createDto);
         }
+    }
+
+    private boolean checkIdempotency(PlayerSession playerSession, Round round, CreatePlayerActionDTO createDto) {
+        if (idempotencyService.isActionIdempotent(playerSession.getId(), round.getId(), createDto.getAction())) {
+            gameLogService.sendLogMessage(playerSession, "Player already made action in this round recently");
+            return true;
+        }
+        idempotencyService.recordAction(playerSession.getId(), round.getId(), createDto.getAction());
+        return false;
     }
 
     protected abstract Optional<PlayerAction> onPlayerAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread, CreatePlayerActionDTO createDto);

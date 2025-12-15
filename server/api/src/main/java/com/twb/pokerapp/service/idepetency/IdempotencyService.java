@@ -14,12 +14,12 @@ public class IdempotencyService {
     public static final String PLAYER_ACTION_KEY_GEN = "playerActionKeyGenerator";
 
     @Cacheable(value = IDEMPOTENCY_ACTION_CACHE_NAME, keyGenerator = PLAYER_ACTION_KEY_GEN)
-    public boolean isActionIdempotent(UUID playerSessionId, UUID bettingRoundId, ActionType actionType) {
+    public boolean isActionIdempotent(UUID playerSessionId, UUID roundId, ActionType actionType) {
         return false;
     }
 
     @CachePut(value = IDEMPOTENCY_ACTION_CACHE_NAME, keyGenerator = PLAYER_ACTION_KEY_GEN)
-    public boolean recordAction(UUID playerSessionId, UUID bettingRoundId, ActionType actionType) {
+    public boolean recordAction(UUID playerSessionId, UUID roundId, ActionType actionType) {
         return true;
     }
 }

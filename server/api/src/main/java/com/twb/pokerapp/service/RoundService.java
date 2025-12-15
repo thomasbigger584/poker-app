@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Component
 @Transactional
 @RequiredArgsConstructor
@@ -37,6 +39,12 @@ public class RoundService {
         round = repository.saveAndFlush(round);
 
         return round;
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
+    public Round getRoundByTable(UUID tableId) {
+        return repository.findCurrentByTableId(tableId)
+                .orElseThrow(() -> new IllegalStateException("Round not found for table"));
     }
 
     public void setRoundState(Round round, RoundState roundState) {
