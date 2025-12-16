@@ -13,4 +13,5 @@ public class PlayerTurnDTO {
     private BettingRoundDTO bettingRound;
     private ActionType[] nextActions;
     private Double amountToCall;
+    private Long playerTurnWaitMs;
 }

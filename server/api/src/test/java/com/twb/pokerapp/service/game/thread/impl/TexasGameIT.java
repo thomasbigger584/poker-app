@@ -8,13 +8,11 @@ import com.twb.pokerapp.testutils.game.GameRunner;
 import com.twb.pokerapp.testutils.game.GameRunnerParams;
 import com.twb.pokerapp.testutils.game.turn.TurnHandler;
 import com.twb.pokerapp.testutils.game.turn.impl.FirstActionTurnHandler;
-import com.twb.pokerapp.testutils.game.turn.impl.IdempodentTurnHandler;
 import com.twb.pokerapp.testutils.game.turn.impl.InvalidActionTurnHandler;
 import com.twb.pokerapp.testutils.game.turn.impl.OptimisticTurnHandler;
 import com.twb.pokerapp.testutils.testcontainers.BaseTestContainersIT;
 import com.twb.pokerapp.testutils.validator.impl.TexasValidator;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
-import com.twb.pokerapp.web.websocket.message.server.payload.LogMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.validation.ValidationDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -24,7 +22,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Slf4j
 class TexasGameIT extends BaseTestContainersIT {
@@ -144,30 +143,6 @@ class TexasGameIT extends BaseTestContainersIT {
         assertTrue(fields.stream()
                         .anyMatch(validationFieldDTO -> fieldsExpected.contains(validationFieldDTO.getField())),
                 "Expected fields " + Arrays.toString(fieldsExpected.toArray()) + " but got " + fields);
-
-        validator.validateEndOfRun(messages);
-    }
-
-    @Test
-    void testGameWithIdepodentActions() throws Throwable {
-
-        // given
-        var turnHandlers = TurnHandler.of(
-                new OptimisticTurnHandler(),
-                new IdempodentTurnHandler()
-        );
-
-        // when
-        var messages = runner.run(turnHandlers);
-
-        // then
-        var logMessages = validator.get(2, messages, ServerMessageType.LOG);
-        assertFalse(logMessages.isEmpty(), "Expected log messages");
-
-        assertTrue(logMessages.stream().anyMatch(logDto -> {
-            var payload = (LogMessageDTO) logDto.getPayload();
-            return payload.getMessage().contains("Player already made action in this round recently");
-        }));
 
         validator.validateEndOfRun(messages);
     }

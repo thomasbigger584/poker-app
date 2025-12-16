@@ -149,7 +149,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             var playerSession = playerTurn.getPlayerSession();
             tableController.updatePlayerTurn(playerSession);
             if (authService.isCurrentUser(playerSession.getUser())) {
-                controlsController.show(playerTurn.getNextActions());
+                controlsController.show(playerTurn);
                 currentPlayerTurn = playerTurn;
             } else {
                 controlsController.hide();
@@ -159,11 +159,12 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         viewModel.playerActioned.observe(this, playerActioned -> {
             dismissDialogs();
 
-            var playerSession =
-                    playerActioned.getAction().getPlayerSession();
+            var playerSession = playerActioned.getAction().getPlayerSession();
             tableController.updateDetails(playerSession);
 
+            tableController.hidePlayerTurns();
             controlsController.hide();
+
             chatBoxAdapter.add(getPlayerActionedMessage(playerActioned));
         });
         viewModel.dealCommunityCard.observe(this, dealCommunityCard -> {

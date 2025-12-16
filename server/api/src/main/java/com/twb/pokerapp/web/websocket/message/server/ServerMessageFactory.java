@@ -63,7 +63,8 @@ public class ServerMessageFactory {
                                        @Nullable PlayerAction prevPlayerAction,
                                        BettingRound bettingRound,
                                        ActionType[] nextActions,
-                                       Double amountToCall) {
+                                       Double amountToCall,
+                                       long playerTurnWaitMs) {
         var payload = new PlayerTurnDTO();
         payload.setPlayerSession(playerSessionMapper.modelToDto(playerSession));
         if (prevPlayerAction != null) {
@@ -72,6 +73,7 @@ public class ServerMessageFactory {
         payload.setBettingRound(bettingRoundMapper.modelToDto(bettingRound));
         payload.setNextActions(nextActions);
         payload.setAmountToCall(amountToCall);
+        payload.setPlayerTurnWaitMs(playerTurnWaitMs);
         return ServerMessageDTO.create(ServerMessageType.PLAYER_TURN, payload);
     }
 

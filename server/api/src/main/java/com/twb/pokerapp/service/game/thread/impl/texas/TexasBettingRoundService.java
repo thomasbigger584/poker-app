@@ -85,7 +85,8 @@ public class TexasBettingRoundService {
 
                 gameThread.checkRoundInterrupted();
 
-                dispatcher.send(params, messageFactory.playerTurn(currentPlayer, previousPlayerAction, bettingRound, nextActions, amountToCall));
+                dispatcher.send(params, messageFactory.playerTurn(currentPlayer, previousPlayerAction,
+                                bettingRound, nextActions, amountToCall, params.getPlayerTurnWaitMs()));
                 waitPlayerTurn(params, gameThread, currentPlayer);
 
                 bettingRound = bettingRoundService.getBettingRound(bettingRound.getId());

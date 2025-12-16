@@ -1,14 +1,17 @@
 package com.twb.pokerapp.ui.activity.game.texas.controller;
 
+import static com.twb.pokerapp.ui.util.ViewUtil.setGone;
+import static com.twb.pokerapp.ui.util.ViewUtil.setInvisible;
+import static com.twb.pokerapp.ui.util.ViewUtil.setVisible;
+
+import android.animation.ValueAnimator;
 import android.app.Activity;
-import android.view.View;
+import android.view.animation.LinearInterpolator;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 
 import com.twb.pokerapp.R;
-
-import java.util.List;
+import com.twb.pokerapp.data.websocket.message.server.payload.PlayerTurnDTO;
 
 public class ControlsController {
     private static final String TAG = ControlsController.class.getSimpleName();
@@ -30,8 +33,8 @@ public class ControlsController {
         secondsLeftProgressBar = activity.findViewById(R.id.secondsLeftProgressBar);
     }
 
-    public void show(List<String> actions) {
-        for (var action : actions) {
+    public void show(PlayerTurnDTO playerTurn) {
+        for (var action : playerTurn.getNextActions()) {
             switch (action) {
                 case "CHECK":
                     setVisible(checkButton);
@@ -50,7 +53,22 @@ public class ControlsController {
                     break;
             }
         }
-        secondsLeftProgressBar.setVisibility(View.VISIBLE);
+        startSecondsLeftProgressBar(playerTurn);
+    }
+
+    private void startSecondsLeftProgressBar(PlayerTurnDTO playerTurn) {
+        var max = 100;
+        secondsLeftProgressBar.setMax(max);
+        var animator = ValueAnimator.ofInt(max, 0);
+        var countdownTimeInMs = playerTurn.getPlayerTurnWaitMs() * 0.95;
+        animator.setDuration((long) countdownTimeInMs);
+        animator.setInterpolator(new LinearInterpolator());
+        animator.addUpdateListener(animation -> {
+            var progress = (int) animation.getAnimatedValue();
+            secondsLeftProgressBar.setProgress(progress);
+        });
+        animator.start();
+        setVisible(secondsLeftProgressBar);
     }
 
     public void hide() {
@@ -60,23 +78,5 @@ public class ControlsController {
         setGone(raiseButton);
         setGone(foldButton);
         setInvisible(secondsLeftProgressBar);
-    }
-
-    private void setInvisible(View view) {
-        if (view.getVisibility() != View.INVISIBLE) {
-            view.setVisibility(View.INVISIBLE);
-        }
-    }
-
-    private void setGone(View view) {
-        if (view.getVisibility() != View.GONE) {
-            view.setVisibility(View.GONE);
-        }
-    }
-
-    private void setVisible(View view) {
-        if (view.getVisibility() != View.VISIBLE) {
-            view.setVisibility(View.VISIBLE);
-        }
     }
 }

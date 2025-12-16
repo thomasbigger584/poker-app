@@ -15,6 +15,7 @@ public class PlayerTurnDTO {
     private BettingRoundDTO bettingRound;
     private List<String> nextActions = new ArrayList<>();
     private Double amountToCall;
+    private Long playerTurnWaitMs;
 
     public PlayerSessionDTO getPlayerSession() {
         return playerSession;
@@ -56,6 +57,14 @@ public class PlayerTurnDTO {
         this.amountToCall = amountToCall;
     }
 
+    public Long getPlayerTurnWaitMs() {
+        return playerTurnWaitMs;
+    }
+
+    public void setPlayerTurnWaitMs(Long playerTurnWaitMs) {
+        this.playerTurnWaitMs = playerTurnWaitMs;
+    }
+
     @NonNull
     @Override
     public String toString() {
@@ -65,6 +74,7 @@ public class PlayerTurnDTO {
                 ", bettingRound=" + bettingRound +
                 ", actions=" + nextActions +
                 ", amountToCall=" + amountToCall +
+                ", playerTurnWaitMs=" + playerTurnWaitMs +
                 '}';
     }
 }
