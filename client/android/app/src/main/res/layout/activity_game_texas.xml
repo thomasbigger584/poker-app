@@ -30,56 +30,22 @@
         android:paddingTop="4dp"
         android:paddingEnd="12dp"
         android:paddingBottom="4dp"
-        android:text="$83.24"
+        android:text="$00.00"
         android:textColor="#FFFFFF"
         android:textSize="16sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/communityCardContainer"
+        app:layout_constraintBottom_toTopOf="@+id/communityCardLayout"
         app:layout_constraintEnd_toEndOf="@+id/tableVisual"
         app:layout_constraintStart_toStartOf="@+id/tableVisual" />
 
-    <LinearLayout
-        android:id="@+id/communityCardContainer"
+    <com.twb.pokerapp.ui.layout.texas.CommunityCardLayout
+        android:id="@+id/communityCardLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_community_outline"
-        android:orientation="horizontal"
-        android:padding="8dp"
         app:layout_constraintBottom_toBottomOf="@+id/tableVisual"
         app:layout_constraintEnd_toEndOf="@+id/tableVisual"
         app:layout_constraintStart_toStartOf="@+id/tableVisual"
-        app:layout_constraintTop_toTopOf="@+id/tableVisual">
-
-        <View
-            android:layout_width="40dp"
-            android:layout_height="56dp"
-            android:layout_margin="2dp"
-            android:background="#FFFFFF" />
-
-        <View
-            android:layout_width="40dp"
-            android:layout_height="56dp"
-            android:layout_margin="2dp"
-            android:background="#FFFFFF" />
-
-        <View
-            android:layout_width="40dp"
-            android:layout_height="56dp"
-            android:layout_margin="2dp"
-            android:background="#FFFFFF" />
-
-        <View
-            android:layout_width="40dp"
-            android:layout_height="56dp"
-            android:layout_margin="2dp"
-            android:background="#FFFFFF" />
-
-        <View
-            android:layout_width="40dp"
-            android:layout_height="56dp"
-            android:layout_margin="2dp"
-            android:background="#FFFFFF" />
-    </LinearLayout>
+        app:layout_constraintTop_toTopOf="@+id/tableVisual" />
 
     <com.twb.pokerapp.ui.layout.texas.CardPairLayout
         android:id="@+id/tablePlayer2CardPairLayout"
@@ -89,9 +55,8 @@
         android:layout_marginTop="10dp"
         app:layout_constraintStart_toStartOf="@+id/tableVisual"
         app:layout_constraintTop_toTopOf="@+id/tableVisual"
-        app:layout_scale="0.75"
-        app:textsize_scale="0.65" />
-
+        app:layout_scale="0.8"
+        app:textsize_scale="0.7" />
 
     <com.twb.pokerapp.ui.layout.texas.CardPairLayout
         android:id="@+id/tablePlayer3CardPairLayout"
@@ -101,8 +66,8 @@
         app:layout_constraintEnd_toEndOf="@+id/tableVisual"
         app:layout_constraintStart_toStartOf="@+id/tableVisual"
         app:layout_constraintTop_toTopOf="@+id/tableVisual"
-        app:layout_scale="0.75"
-        app:textsize_scale="0.65" />
+        app:layout_scale="0.8"
+        app:textsize_scale="0.7" />
 
     <com.twb.pokerapp.ui.layout.texas.CardPairLayout
         android:id="@+id/tablePlayer4CardPairLayout"
@@ -112,8 +77,8 @@
         android:layout_marginEnd="80dp"
         app:layout_constraintEnd_toEndOf="@+id/tableVisual"
         app:layout_constraintTop_toTopOf="@+id/tableVisual"
-        app:layout_scale="0.75"
-        app:textsize_scale="0.65" />
+        app:layout_scale="0.8"
+        app:textsize_scale="0.7" />
 
     <com.twb.pokerapp.ui.layout.texas.CardPairLayout
         android:id="@+id/tablePlayer5CardPairLayout"
@@ -123,8 +88,8 @@
         app:layout_constraintBottom_toBottomOf="@+id/tableVisual"
         app:layout_constraintEnd_toEndOf="@+id/tableVisual"
         app:layout_constraintTop_toTopOf="@+id/tableVisual"
-        app:layout_scale="0.75"
-        app:textsize_scale="0.65" />
+        app:layout_scale="0.8"
+        app:textsize_scale="0.7" />
 
     <com.twb.pokerapp.ui.layout.texas.CardPairLayout
         android:id="@+id/tablePlayer1CardPairLayout"
@@ -134,8 +99,8 @@
         app:layout_constraintBottom_toBottomOf="@+id/tableVisual"
         app:layout_constraintStart_toStartOf="@+id/tableVisual"
         app:layout_constraintTop_toTopOf="@+id/tableVisual"
-        app:layout_scale="0.75"
-        app:textsize_scale="0.65" />
+        app:layout_scale="0.8"
+        app:textsize_scale="0.7" />
 
     <com.twb.pokerapp.ui.layout.texas.CardPairLayout
         android:id="@+id/playerCardPairLayout"
@@ -151,13 +116,14 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/chatBoxRecyclerView"
         android:layout_width="0dp"
-        android:layout_height="110dp"
+        android:layout_height="120dp"
         android:layout_margin="16dp"
         android:background="#33000000"
+        android:scrollbarSize="4dp"
+        android:scrollbarThumbVertical="@drawable/scrollbar_thumb"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/playerCardPairLayout"
         app:layout_constraintStart_toStartOf="parent" />
-
 
     <LinearLayout
         android:id="@+id/actionButtonsContainer"

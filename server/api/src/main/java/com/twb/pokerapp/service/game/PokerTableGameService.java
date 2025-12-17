@@ -70,19 +70,15 @@ public class PokerTableGameService {
             }
 
             var playerSessionOpt = playerSessionRepository.findByTableIdAndUsername(tableId, username);
-            if (playerSessionOpt.isPresent()) {
-                var message = "User %s already connected to table %s".formatted(username, tableId);
-                throw new RuntimeException(message);
+            if (playerSessionOpt.isEmpty()) {
+                if (connectionType == ConnectionType.PLAYER) {
+                    threadManager.createIfNotExist(table);
+                }
+                var connectedPlayerSession = playerSessionService.connectUserToRound(appUser, connectionType, table, buyInAmount);
+                dispatcher.send(tableId, messageFactory.playerConnected(connectedPlayerSession));
             }
 
-            if (connectionType == ConnectionType.PLAYER) {
-                threadManager.createIfNotExist(table);
-            }
-
-            var connectedPlayerSession = playerSessionService.connectUserToRound(appUser, connectionType, table, buyInAmount);
             var allPlayerSessions = playerSessionService.getByTableId(tableId);
-
-            dispatcher.send(tableId, messageFactory.playerConnected(connectedPlayerSession));
             return messageFactory.playerSubscribed(allPlayerSessions);
         });
     }

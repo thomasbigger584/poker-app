@@ -6,6 +6,8 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
+import androidx.annotation.DrawableRes;
+
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.model.dto.card.CardDTO;
 import com.twb.pokerapp.ui.util.CardDrawableUtil;

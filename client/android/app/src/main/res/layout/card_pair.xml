@@ -66,7 +66,7 @@
             android:id="@+id/displayNameTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="user1"
+            android:text="--"
             android:textColor="#DDD"
             android:textSize="12sp" />
 
@@ -74,7 +74,7 @@
             android:id="@+id/fundsTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="$1,000.00"
+            android:text="--"
             android:textColor="#FFF"
             android:textSize="14sp"
             android:textStyle="bold" />

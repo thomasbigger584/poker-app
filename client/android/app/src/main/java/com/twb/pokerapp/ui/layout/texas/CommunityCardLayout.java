@@ -5,12 +5,13 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.model.dto.card.CardDTO;
 import com.twb.pokerapp.ui.layout.CardLayout;
 
-public class CommunityCardLayout extends FrameLayout {
+public class CommunityCardLayout extends LinearLayout {
     private static final String FLOP_CARD_1 = "FLOP_CARD_1";
     private static final String FLOP_CARD_2 = "FLOP_CARD_2";
     private static final String FLOP_CARD_3 = "FLOP_CARD_3";
@@ -24,7 +25,6 @@ public class CommunityCardLayout extends FrameLayout {
 
     public CommunityCardLayout(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
-        init();
     }
 
     public CommunityCardLayout(Context context, AttributeSet attrs, int defStyleAttr) {
