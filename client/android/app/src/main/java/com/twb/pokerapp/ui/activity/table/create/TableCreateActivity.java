@@ -28,7 +28,6 @@ import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class TableCreateActivity extends BaseAuthActivity {
-    private static final String MODAL_TAG = "modal_alert";
     private TableCreateViewModel viewModel;
     private AlertDialog loadingSpinner;
     private EditText tableNameEditText;
@@ -51,7 +50,7 @@ public class TableCreateActivity extends BaseAuthActivity {
             DialogHelper.dismiss(loadingSpinner);
             var alertModalDialog = AlertModalDialog
                     .newInstance(AlertModalDialog.AlertModalType.ERROR, throwable.getMessage(), null);
-            alertModalDialog.show(getSupportFragmentManager(), MODAL_TAG);
+            alertModalDialog.show(getSupportFragmentManager(), "error_modal");
         });
         viewModel.createdTableLiveData.observe(this, tableDTO -> {
             if (tableDTO == null) {
