@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.twb.pokerapp.domain.enumeration.BettingRoundState.FINISHED;
@@ -55,21 +56,18 @@ public class BettingRoundService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
-    public BettingRound getTableBettingRound(UUID tableId) {
-        return repository.findCurrentByTableId(tableId)
-                .orElseThrow(() -> new IllegalStateException("BettingRound not found for table"));
+    public Optional<BettingRound> getTableBettingRound(UUID tableId) {
+        return repository.findCurrentByTableId(tableId);
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
-    public BettingRound getCurrentBettingRound(UUID roundId) {
-        return repository.findCurrentByRoundId(roundId)
-                .orElseThrow(() -> new IllegalStateException("BettingRound not found for current"));
+    public Optional<BettingRound> getCurrentBettingRound(UUID roundId) {
+        return repository.findCurrentByRoundId(roundId);
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
-    public BettingRound getBettingRound(UUID bettingRoundId) {
-        return repository.findById(bettingRoundId)
-                .orElseThrow(() -> new IllegalStateException("BettingRound not found after update"));
+    public Optional<BettingRound> getBettingRound(UUID bettingRoundId) {
+        return repository.findById(bettingRoundId);
     }
 
     public void setBettingRoundFinished(BettingRound bettingRound) {

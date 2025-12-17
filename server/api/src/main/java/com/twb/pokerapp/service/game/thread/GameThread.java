@@ -243,12 +243,18 @@ public abstract class GameThread extends BaseGameThread {
             playerTurnLatch.countDown();
             playerTurnLatch = null;
         }
-        var round = roundService.getRoundByTable(table.getId());
-        var activePlayers = playerSessionRepository
-                .findActivePlayersByTableId_Lock(table.getId(), round.getId());
-        if (activePlayers.size() < 2) {
-            // there is only 1 player left in a started game
+        var roundOpt = roundService.getRoundByTable(table.getId());
+        if (roundOpt.isEmpty()) {
+            // there is no round so ensure we can move to next one
             interruptRound.set(true);
+        } else {
+            var round = roundOpt.get();
+            var activePlayers = playerSessionRepository
+                    .findActivePlayersByTableId_Lock(table.getId(), round.getId());
+            if (activePlayers.size() < 2) {
+                // there is only 1 player left in a started game
+                interruptRound.set(true);
+            }
         }
     }
 

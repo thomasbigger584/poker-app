@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -42,9 +43,8 @@ public class RoundService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
-    public Round getRoundByTable(UUID tableId) {
-        return repository.findCurrentByTableId(tableId)
-                .orElseThrow(() -> new IllegalStateException("Round not found for table"));
+    public Optional<Round> getRoundByTable(UUID tableId) {
+        return repository.findCurrentByTableId(tableId);
     }
 
     public void setRoundState(Round round, RoundState roundState) {
