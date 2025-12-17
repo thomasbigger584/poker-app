@@ -1,63 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="4dp">
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/heroArea"
+    android:layout_width="110dp"
+    android:layout_height="120dp"
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
 
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+    <TextView
+        android:id="@+id/dealerChipLayout"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:background="@drawable/bg_circle_white"
+        android:elevation="4dp"
+        android:gravity="center"
+        android:text="D"
+        android:textColor="#000"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <LinearLayout
-            android:layout_width="100dp"
-            android:layout_height="80dp"
-            android:layout_marginBottom="-10dp"
-            android:gravity="center_horizontal"
-            android:orientation="horizontal">
+    <LinearLayout
+        android:id="@+id/heroCards"
+        android:layout_width="100dp"
+        android:layout_height="80dp"
+        android:layout_marginBottom="-10dp"
+        android:background="#22000000"
+        android:gravity="center_horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/heroInfo"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
 
-            <ImageView
-                android:id="@+id/leftCardImageView"
-                android:layout_width="40dp"
-                android:layout_height="wrap_content"
-                android:contentDescription="Left Card"
-                android:visibility="invisible" />
+        <ImageView
+            android:id="@+id/leftCardImageView"
+            android:layout_width="45dp"
+            android:layout_height="match_parent"
+            android:contentDescription="Left Card"
+            android:visibility="invisible" />
 
-            <ImageView
-                android:id="@+id/rightCardImageView"
-                android:layout_width="40dp"
-                android:layout_height="wrap_content"
-                android:contentDescription="Right Card"
-                android:visibility="invisible" />
-        </LinearLayout>
+        <ImageView
+            android:id="@+id/rightCardImageView"
+            android:layout_width="45dp"
+            android:layout_height="match_parent"
+            android:contentDescription="Right Card"
+            android:visibility="invisible" />
 
-        <include
-            android:id="@+id/dealerChipLayout"
-            layout="@layout/dealer_chip"
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/heroInfo"
+        android:layout_width="105dp"
+        android:layout_height="43dp"
+        android:background="@drawable/bg_player_pill"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="4dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <TextView
+            android:id="@+id/displayNameTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_gravity="right|bottom" />
-    </FrameLayout>
+            android:text="--"
+            android:textColor="#DDD"
+            android:textSize="12sp" />
 
-    <TextView
-        android:id="@+id/displayNameTextView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/colorPrimary"
-        android:gravity="center"
-        android:text="--"
-        android:textColor="@android:color/white"
-        android:textStyle="bold" />
+        <TextView
+            android:id="@+id/fundsTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--"
+            android:textColor="#FFF"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+    </LinearLayout>
 
-    <TextView
-        android:id="@+id/fundsTextView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/colorPrimary"
-        android:gravity="center"
-        android:text="--"
-        android:textColor="@android:color/white"
-        android:textStyle="bold" />
-
-</LinearLayout>
+</merge>

@@ -40,7 +40,6 @@ import dagger.hilt.android.AndroidEntryPoint;
 @AndroidEntryPoint
 public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameDialog.BetRaiseClickListener {
     private static final String TAG = TexasGameActivity.class.getSimpleName();
-    private static final String MODAL_TAG = "modal_alert";
     private static final String KEY_CONNECTION_TYPE = "CONNECTION_TYPE";
     private static final String KEY_BUY_IN_AMOUNT = "BUY_IN_AMOUNT";
 
@@ -99,7 +98,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             DialogHelper.dismiss(loadingSpinner);
             var alertModalDialog = AlertModalDialog
                     .newInstance(AlertModalDialog.AlertModalType.ERROR, throwable.getMessage(), null);
-            alertModalDialog.show(getSupportFragmentManager(), MODAL_TAG);
+            alertModalDialog.show(getSupportFragmentManager(), "error_modal");
             chatBoxAdapter.add(throwable.getMessage());
         });
         viewModel.closedConnection.observe(this, aVoid -> {
@@ -107,7 +106,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             var message = "Lost connection with server";
             var alertModalDialog = AlertModalDialog
                     .newInstance(AlertModalDialog.AlertModalType.ERROR, message, new FinishActivityOnClickListener(this));
-            alertModalDialog.show(getSupportFragmentManager(), MODAL_TAG);
+            alertModalDialog.show(getSupportFragmentManager(), "closed_connection_modal");
             chatBoxAdapter.add(message);
         });
         viewModel.playerSubscribed.observe(this, playerSubscribed -> {
@@ -182,7 +181,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             var clickListener = new FinishActivityOnClickListener(this);
             var alertModalDialog = AlertModalDialog
                     .newInstance(AlertModalDialog.AlertModalType.INFO, "Game Finished", clickListener);
-            alertModalDialog.show(getSupportFragmentManager(), MODAL_TAG);
+            alertModalDialog.show(getSupportFragmentManager(), "game_finished_modal");
             chatBoxAdapter.add("Game Finished");
         });
         viewModel.chatMessage.observe(this, chatMessage -> {
@@ -327,7 +326,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         var clickListener = new FinishActivityOnClickListener(this);
         var alertModalDialog = AlertModalDialog
                 .newInstance(AlertModalDialog.AlertModalType.ERROR, message, clickListener);
-        alertModalDialog.show(getSupportFragmentManager(), MODAL_TAG);
+        alertModalDialog.show(getSupportFragmentManager(), "error_modal");
         chatBoxAdapter.add(message);
     }
 

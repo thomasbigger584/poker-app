@@ -1,43 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:background="@drawable/community_border"
     android:orientation="horizontal"
-    android:padding="4dp">
+    android:padding="4dp"
+    tools:parentTag="android.widget.LinearLayout">
 
     <com.twb.pokerapp.ui.layout.CardLayout
         android:id="@+id/community1CardLayout"
         android:layout_width="70dp"
-        android:layout_height="100dp"
-        android:visibility="invisible" />
+        android:layout_height="100dp" />
 
     <com.twb.pokerapp.ui.layout.CardLayout
         android:id="@+id/community2CardLayout"
         android:layout_width="70dp"
         android:layout_height="100dp"
-        android:layout_marginLeft="8dp"
-        android:visibility="invisible" />
+        android:layout_marginLeft="8dp" />
 
     <com.twb.pokerapp.ui.layout.CardLayout
         android:id="@+id/community3CardLayout"
         android:layout_width="70dp"
         android:layout_height="100dp"
-        android:layout_marginLeft="8dp"
-        android:visibility="invisible" />
+        android:layout_marginLeft="8dp" />
 
     <com.twb.pokerapp.ui.layout.CardLayout
         android:id="@+id/community4CardLayout"
         android:layout_width="70dp"
         android:layout_height="100dp"
-        android:layout_marginLeft="8dp"
-        android:visibility="invisible" />
+        android:layout_marginLeft="8dp" />
 
     <com.twb.pokerapp.ui.layout.CardLayout
         android:id="@+id/community5CardLayout"
         android:layout_width="70dp"
         android:layout_height="100dp"
-        android:layout_marginLeft="8dp"
-        android:visibility="invisible" />
+        android:layout_marginLeft="8dp" />
 
-</LinearLayout>
+</merge>

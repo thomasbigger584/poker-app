@@ -26,6 +26,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -35,10 +36,8 @@ import java.util.concurrent.TimeUnit;
 public class TexasBettingRoundService {
     private final PlayerSessionRepository playerSessionRepository;
     private final PlayerActionRepository playerActionRepository;
-    private final RoundRepository roundRepository;
-    private final BettingRoundRepository bettingRoundRepository;
-    private final GameLogService gameLogService;
     private final RoundService roundService;
+    private final GameLogService gameLogService;
     private final MessageDispatcher dispatcher;
     private final ServerMessageFactory messageFactory;
     private final TexasPlayerActionService texasPlayerActionService;
@@ -46,9 +45,20 @@ public class TexasBettingRoundService {
     private final BettingRoundService bettingRoundService;
 
     public void runBettingRound(GameThreadParams params, GameThread gameThread) {
-        var round = getCurrentRound(params);
-        var bettingRound = bettingRoundService
-                .getCurrentBettingRound(round.getId());
+        var roundOpt = roundService.getRoundByTable(params.getTableId());
+        if (roundOpt.isEmpty()) {
+            var message = String.format("Round is empty for table %s at start of betting round", params.getTableId());
+            gameLogService.sendErrorMessage(params.getTableId(), message);
+            throw new GameInterruptedException(message);
+        }
+        var round = roundOpt.get();
+        var bettingRoundOpt = bettingRoundService.getCurrentBettingRound(round.getId());
+        if (bettingRoundOpt.isEmpty()) {
+            var message = String.format("Betting Round is empty for round %s at start of betting round", round.getId());
+            gameLogService.sendErrorMessage(params.getTableId(), message);
+            throw new GameInterruptedException(message);
+        }
+        var bettingRound = bettingRoundOpt.get();
         do {
             int playerIndex = 0;
             while (true) {
@@ -86,10 +96,16 @@ public class TexasBettingRoundService {
                 gameThread.checkRoundInterrupted();
 
                 dispatcher.send(params, messageFactory.playerTurn(currentPlayer, previousPlayerAction,
-                                bettingRound, nextActions, amountToCall, params.getPlayerTurnWaitMs()));
+                        bettingRound, nextActions, amountToCall, params.getPlayerTurnWaitMs()));
                 waitPlayerTurn(params, gameThread, currentPlayer);
 
-                bettingRound = bettingRoundService.getBettingRound(bettingRound.getId());
+
+                bettingRoundOpt = bettingRoundService.getBettingRound(bettingRound.getId());
+                if (bettingRoundOpt.isEmpty()) {
+                    log.warn("Betting Round is empty for round {} after player turn, shouldn't happen as we've just fetched for it", round.getId());
+                    return;
+                }
+                bettingRound = bettingRoundOpt.get();
 
                 playerIndex++;
             }
@@ -99,15 +115,6 @@ public class TexasBettingRoundService {
 
         round = roundService.updatePot(round, bettingRound);
         log.info("Round pot for after betting updated to {}", round.getPot());
-    }
-
-    private Round getCurrentRound(GameThreadParams params) {
-        var roundOpt = roundRepository
-                .findCurrentByTableId(params.getTableId());
-        if (roundOpt.isEmpty()) {
-            throw new IllegalStateException("Current Round not found for Table ID: " + params.getTableId());
-        }
-        return roundOpt.get();
     }
 
     private boolean areAllPlayersPaidUp(GameThreadParams params, Round round, BettingRound bettingRound) {

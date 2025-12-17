@@ -24,7 +24,6 @@ import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class TableListActivity extends BaseAuthActivity implements TableListAdapter.TableClickListener {
-    private static final String MODAL_TAG = "modal_alert";
     private SwipeRefreshLayout swipeRefreshLayout;
     private TableListViewModel viewModel;
     private TableListAdapter adapter;

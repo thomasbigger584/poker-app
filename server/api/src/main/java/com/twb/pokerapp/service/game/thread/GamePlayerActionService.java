@@ -47,10 +47,19 @@ public abstract class GamePlayerActionService {
             gameLogService.sendLogMessage(playerSession, "Table is null for player session: " + playerSession.getId());
             return;
         }
-        var round = roundService.getRoundByTable(table.getId());
+        var roundOpt = roundService.getRoundByTable(table.getId());
+        if (roundOpt.isEmpty()) {
+            gameLogService.sendLogMessage(playerSession, "Round is null for table: " + table.getId());
+            return;
+        }
+        var round = roundOpt.get();
         if (checkIdempotency(playerSession, round, createDto)) return;
-
-        var bettingRound = bettingRoundService.getTableBettingRound(table.getId());
+        var bettingRoundOpt = bettingRoundService.getTableBettingRound(table.getId());
+        if (bettingRoundOpt.isEmpty()) {
+            gameLogService.sendLogMessage(playerSession, "Betting Round is null for table: " + table.getId());
+            return;
+        }
+        var bettingRound = bettingRoundOpt.get();
 
         if (createDto.getAmount() == null) {
             createDto.setAmount(0d);
