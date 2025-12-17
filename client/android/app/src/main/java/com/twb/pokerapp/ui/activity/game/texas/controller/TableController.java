@@ -22,7 +22,7 @@ public class TableController {
     private final CardPairLayout[] cardPairLayouts = new CardPairLayout[TABLE_SIZE];
     private final Map<Integer, CardPairLayout> positionCardPairs = new HashMap<>();
 
-    private final CommunityCardLayout communityCardLayout;
+//    private final CommunityCardLayout communityCardLayout;
 
     public TableController(Activity activity) {
         cardPairLayouts[0] = activity.findViewById(R.id.playerCardPairLayout);
@@ -31,7 +31,7 @@ public class TableController {
         cardPairLayouts[3] = activity.findViewById(R.id.tablePlayer3CardPairLayout);
         cardPairLayouts[4] = activity.findViewById(R.id.tablePlayer4CardPairLayout);
         cardPairLayouts[5] = activity.findViewById(R.id.tablePlayer5CardPairLayout);
-        communityCardLayout = activity.findViewById(R.id.communityCardLayout);
+//        communityCardLayout = activity.findViewById(R.id.communityCardLayout);
     }
 
     public void connectCurrentPlayer(PlayerSessionDTO playerSession) {
@@ -112,12 +112,12 @@ public class TableController {
     }
 
     public void dealCommunityCard(DealCommunityCardDTO dealCommunityCard) {
-        communityCardLayout.dealCard(dealCommunityCard.getCard());
+//        communityCardLayout.dealCard(dealCommunityCard.getCard());
     }
 
     public void reset(RoundFinishedDTO roundFinished) {
         hidePlayerTurns();
-        communityCardLayout.reset();
+//        communityCardLayout.reset();
         for (var cardPairLayout : cardPairLayouts) {
             cardPairLayout.reset();
         }

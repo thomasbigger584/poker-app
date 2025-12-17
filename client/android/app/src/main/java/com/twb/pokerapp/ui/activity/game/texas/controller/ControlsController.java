@@ -23,12 +23,12 @@ public class ControlsController {
     private final ProgressBar secondsLeftProgressBar;
 
     public ControlsController(Activity activity) {
-        var controlsLinearLayout = activity.findViewById(R.id.controlsLinearLayout);
-        checkButton = controlsLinearLayout.findViewById(R.id.checkButton);
-        callButton = controlsLinearLayout.findViewById(R.id.callButton);
-        betButton = controlsLinearLayout.findViewById(R.id.betButton);
-        raiseButton = controlsLinearLayout.findViewById(R.id.raiseButton);
-        foldButton = controlsLinearLayout.findViewById(R.id.foldButton);
+        var actionButtonsContainer = activity.findViewById(R.id.actionButtonsContainer);
+        checkButton = actionButtonsContainer.findViewById(R.id.checkButton);
+        callButton = actionButtonsContainer.findViewById(R.id.callButton);
+        betButton = actionButtonsContainer.findViewById(R.id.betButton);
+        raiseButton = actionButtonsContainer.findViewById(R.id.raiseButton);
+        foldButton = actionButtonsContainer.findViewById(R.id.foldButton);
 
         secondsLeftProgressBar = activity.findViewById(R.id.secondsLeftProgressBar);
     }

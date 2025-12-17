@@ -36,7 +36,8 @@ public class TexasEvaluationService {
     public void evaluate(GameThreadParams params) {
         var roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
         if (roundOpt.isEmpty()) {
-            throw new IllegalStateException("Round not found for table: " + params.getTableId());
+            gameLogService.sendLogMessage(params.getTableId(), "Round not found for table: " + params.getTableId());
+            return;
         }
         var round = roundOpt.get();
 
