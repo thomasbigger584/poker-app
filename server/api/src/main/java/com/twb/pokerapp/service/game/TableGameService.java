@@ -26,7 +26,7 @@ import java.util.UUID;
 @Component
 @Transactional
 @RequiredArgsConstructor
-public class PokerTableGameService {
+public class TableGameService {
     private final UserRepository userRepository;
     private final TableRepository tableRepository;
     private final PlayerSessionRepository playerSessionRepository;

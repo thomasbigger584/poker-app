@@ -9,6 +9,7 @@ import org.springframework.messaging.simp.stomp.StompHeaders;
 
 import java.util.Arrays;
 
+// Will Bet or Call when it can. It will not check or fold
 public class OptimisticTurnHandler implements TurnHandler {
     private static final double DEFAULT_BET_AMOUNT = 10d;
 

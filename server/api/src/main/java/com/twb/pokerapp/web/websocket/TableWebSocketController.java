@@ -1,7 +1,7 @@
 package com.twb.pokerapp.web.websocket;
 
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
-import com.twb.pokerapp.service.game.PokerTableGameService;
+import com.twb.pokerapp.service.game.TableGameService;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.client.CreateChatMessageDTO;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
@@ -36,12 +36,10 @@ public class TableWebSocketController {
 
     private static final String TABLE_ID = "tableId";
 
-    private static final String HEADER_BUYIN_AMOUNT = "X-BuyIn-Amount";
-
     private final SessionService sessionService;
     private final ServerMessageFactory messageFactory;
     private final MessageDispatcher dispatcher;
-    private final PokerTableGameService pokerTableGameService;
+    private final TableGameService tableGameService;
 
     @SubscribeMapping(TOPIC)
     public ServerMessageDTO sendPlayerSubscribed(Principal principal, StompHeaderAccessor headerAccessor, @DestinationVariable(TABLE_ID) UUID tableId) {
@@ -53,7 +51,7 @@ public class TableWebSocketController {
         log.info(">>>> sendPlayerSubscribed - Table: {}, User: {}, Connection: {}, BuyIn: {}", tableId, principal.getName(), connectionType, buyInAmount);
         ServerMessageDTO message;
         try {
-            message = pokerTableGameService.onUserConnected(tableId, connectionType, principal.getName(), buyInAmount);
+            message = tableGameService.onUserConnected(tableId, connectionType, principal.getName(), buyInAmount);
             log.info("<<<< sendPlayerSubscribed - " + message);
         } catch (Exception exception) {
             message = messageFactory.errorMessage(exception.getMessage());
@@ -72,14 +70,14 @@ public class TableWebSocketController {
     @MessageMapping(INBOUND_MESSAGE_PREFIX + SEND_PLAYER_ACTION)
     @SendTo(SERVER_MESSAGE_TOPIC)
     public void sendPlayerAction(Principal principal, @DestinationVariable(TABLE_ID) UUID tableId, @Payload @Valid CreatePlayerActionDTO action) {
-        pokerTableGameService.onPlayerAction(tableId, principal.getName(), action);
+        tableGameService.onPlayerAction(tableId, principal.getName(), action);
     }
 
     // not returning here as called from multiple places
     @MessageMapping(INBOUND_MESSAGE_PREFIX + SEND_DISCONNECT_PLAYER)
     public void sendDisconnectPlayer(Principal principal, @DestinationVariable(TABLE_ID) UUID tableId) {
         log.info(">>>> sendDisconnectPlayer - Poker Table: {} - User: {}", tableId, principal.getName());
-        pokerTableGameService.onUserDisconnected(tableId, principal.getName());
+        tableGameService.onUserDisconnected(tableId, principal.getName());
     }
 
     // *****************************************************************************************

@@ -44,12 +44,13 @@ public class ViewUtil {
             }
             view.setLayoutParams(layoutParams);
         }
-        if (textScale != 1f)
+        if (textScale != 1f) {
             if (view instanceof TextView) {
                 var textView = (TextView) view;
                 float textSizeInPx = textView.getTextSize();
                 textView.setTextSize(COMPLEX_UNIT_PX, textSizeInPx * textScale);
             }
+        }
         if (view instanceof ViewGroup) {
             var viewGroup = (ViewGroup) view;
             for (int i = 0; i < viewGroup.getChildCount(); i++) {

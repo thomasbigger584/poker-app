@@ -4,15 +4,14 @@ import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.Card;
 import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.mapper.BettingRoundMapper;
 import com.twb.pokerapp.mapper.CardMapper;
 import com.twb.pokerapp.mapper.PlayerActionMapper;
 import com.twb.pokerapp.mapper.PlayerSessionMapper;
+import com.twb.pokerapp.service.game.thread.impl.texas.dto.NextActionsDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.*;
 import com.twb.pokerapp.web.websocket.message.server.payload.validation.ValidationDTO;
-import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,19 +59,14 @@ public class ServerMessageFactory {
     }
 
     public ServerMessageDTO playerTurn(PlayerSession playerSession,
-                                       @Nullable PlayerAction prevPlayerAction,
                                        BettingRound bettingRound,
-                                       ActionType[] nextActions,
-                                       Double amountToCall,
+                                       NextActionsDTO nextActions,
                                        long playerTurnWaitMs) {
         var payload = new PlayerTurnDTO();
         payload.setPlayerSession(playerSessionMapper.modelToDto(playerSession));
-        if (prevPlayerAction != null) {
-            payload.setPrevPlayerAction(playerActionMapper.modelToDto(prevPlayerAction));
-        }
         payload.setBettingRound(bettingRoundMapper.modelToDto(bettingRound));
-        payload.setNextActions(nextActions);
-        payload.setAmountToCall(amountToCall);
+        payload.setNextActions(nextActions.nextActions());
+        payload.setAmountToCall(nextActions.amountToCall());
         payload.setPlayerTurnWaitMs(playerTurnWaitMs);
         return ServerMessageDTO.create(ServerMessageType.PLAYER_TURN, payload);
     }

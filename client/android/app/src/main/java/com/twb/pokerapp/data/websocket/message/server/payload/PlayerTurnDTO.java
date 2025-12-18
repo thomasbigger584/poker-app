@@ -3,7 +3,6 @@ package com.twb.pokerapp.data.websocket.message.server.payload;
 import androidx.annotation.NonNull;
 
 import com.twb.pokerapp.data.model.dto.bettinground.BettingRoundDTO;
-import com.twb.pokerapp.data.model.dto.playeraction.PlayerActionDTO;
 import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
 
 import java.util.ArrayList;
@@ -11,7 +10,6 @@ import java.util.List;
 
 public class PlayerTurnDTO {
     private PlayerSessionDTO playerSession;
-    private PlayerActionDTO prevPlayerAction;
     private BettingRoundDTO bettingRound;
     private List<String> nextActions = new ArrayList<>();
     private Double amountToCall;
@@ -23,14 +21,6 @@ public class PlayerTurnDTO {
 
     public void setPlayerSession(PlayerSessionDTO playerSession) {
         this.playerSession = playerSession;
-    }
-
-    public PlayerActionDTO getPrevPlayerAction() {
-        return prevPlayerAction;
-    }
-
-    public void setPrevPlayerAction(PlayerActionDTO prevPlayerAction) {
-        this.prevPlayerAction = prevPlayerAction;
     }
 
     public BettingRoundDTO getBettingRound() {
@@ -70,7 +60,6 @@ public class PlayerTurnDTO {
     public String toString() {
         return "PlayerTurnDTO{" +
                 "playerSession=" + playerSession +
-                ", prevPlayerAction=" + prevPlayerAction +
                 ", bettingRound=" + bettingRound +
                 ", actions=" + nextActions +
                 ", amountToCall=" + amountToCall +

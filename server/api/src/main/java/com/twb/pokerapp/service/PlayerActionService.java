@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -53,5 +54,10 @@ public class PlayerActionService {
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
     public List<PlayerAction> getPlayerActionsNotFolded(UUID bettingRoundId) {
         return repository.findPlayerActionsNotFolded(bettingRoundId);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
+    public Optional<PlayerAction> getLatestByBettingRoundAndPlayer(UUID bettingRoundId, UUID playerSessionId) {
+        return repository.findByBettingRoundAndPlayer(bettingRoundId, playerSessionId);
     }
 }

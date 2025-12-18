@@ -3,20 +3,16 @@ package com.twb.pokerapp.service.game.thread.impl.texas;
 import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.domain.Round;
 import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.exception.game.GameInterruptedException;
 import com.twb.pokerapp.exception.game.RoundInterruptedException;
-import com.twb.pokerapp.repository.BettingRoundRepository;
-import com.twb.pokerapp.repository.PlayerActionRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
-import com.twb.pokerapp.repository.RoundRepository;
 import com.twb.pokerapp.service.BettingRoundService;
 import com.twb.pokerapp.service.PlayerActionService;
 import com.twb.pokerapp.service.RoundService;
-import com.twb.pokerapp.service.game.thread.GameLogService;
 import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
+import com.twb.pokerapp.service.game.thread.impl.texas.dto.NextActionsDTO;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
@@ -24,8 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -35,127 +30,138 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class TexasBettingRoundService {
     private final PlayerSessionRepository playerSessionRepository;
-    private final PlayerActionRepository playerActionRepository;
     private final RoundService roundService;
-    private final GameLogService gameLogService;
     private final MessageDispatcher dispatcher;
     private final ServerMessageFactory messageFactory;
     private final TexasPlayerActionService texasPlayerActionService;
     private final PlayerActionService playerActionService;
     private final BettingRoundService bettingRoundService;
 
+    // Using Last Aggressor Logic Approach
     public void runBettingRound(GameThreadParams params, GameThread gameThread) {
         var roundOpt = roundService.getRoundByTable(params.getTableId());
         if (roundOpt.isEmpty()) {
-            var message = String.format("Round is empty for table %s at start of betting round", params.getTableId());
-            gameLogService.sendErrorMessage(params.getTableId(), message);
-            throw new GameInterruptedException(message);
+            throw new GameInterruptedException("Round is empty for table " + params.getTableId());
         }
         var round = roundOpt.get();
+
         var bettingRoundOpt = bettingRoundService.getCurrentBettingRound(round.getId());
         if (bettingRoundOpt.isEmpty()) {
-            var message = String.format("Betting Round is empty for round %s at start of betting round", round.getId());
-            gameLogService.sendErrorMessage(params.getTableId(), message);
-            throw new GameInterruptedException(message);
+            throw new GameInterruptedException("Betting Round is empty for round " + round.getId());
         }
         var bettingRound = bettingRoundOpt.get();
-        do {
-            int playerIndex = 0;
-            while (true) {
-                var activePlayers = playerSessionRepository
-                        .findActivePlayersByTableId(params.getTableId(), round.getId());
-                if (activePlayers.isEmpty()) {
-                    gameLogService.sendErrorMessage(params.getTableId(), "No Active Players found");
-                    throw new GameInterruptedException("No Active Players found");
-                }
-                if (activePlayers.size() == 1) {
-                    throw new RoundInterruptedException("Only one active player in betting round, so skipping");
-                }
 
-                if (playerIndex >= activePlayers.size()) {
-                    break;
-                }
-
-                var currentPlayer = activePlayers.get(playerIndex);
-
-                var amountToCall = 0d;
-                var nextActions = ActionType.getDefaultActions();
-
-                var prevPlayerActions = playerActionService
-                        .refreshPlayerActionsNotFolded(bettingRound.getId());
-
-                PlayerAction previousPlayerAction = null;
-                if (!prevPlayerActions.isEmpty()) {
-                    previousPlayerAction = prevPlayerActions.getFirst();
-                    var previousPlayerActionType = previousPlayerAction.getActionType();
-
-                    nextActions = ActionType.getNextActions(previousPlayerActionType);
-                    amountToCall = previousPlayerActionType.getAmountToCall(previousPlayerAction.getAmount());
-                }
-
-                gameThread.checkRoundInterrupted();
-
-                dispatcher.send(params, messageFactory.playerTurn(currentPlayer, previousPlayerAction,
-                        bettingRound, nextActions, amountToCall, params.getPlayerTurnWaitMs()));
-                waitPlayerTurn(params, gameThread, currentPlayer);
-
-
-                bettingRoundOpt = bettingRoundService.getBettingRound(bettingRound.getId());
-                if (bettingRoundOpt.isEmpty()) {
-                    log.warn("Betting Round is empty for round {} after player turn, shouldn't happen as we've just fetched for it", round.getId());
-                    return;
-                }
-                bettingRound = bettingRoundOpt.get();
-
-                playerIndex++;
-            }
-        } while (!areAllPlayersPaidUp(params, round, bettingRound));
-
-        bettingRoundService.setBettingRoundFinished(bettingRound);
-
-        round = roundService.updatePot(round, bettingRound);
-        log.info("Round pot for after betting updated to {}", round.getPot());
-    }
-
-    private boolean areAllPlayersPaidUp(GameThreadParams params, Round round, BettingRound bettingRound) {
+        //todo: does this need to be a new transaction with a service like the rest of them
         var activePlayers = playerSessionRepository
                 .findActivePlayersByTableId(params.getTableId(), round.getId());
-        if (activePlayers.size() <= 1) {
-            return true;
+
+        if (activePlayers.isEmpty()) {
+            throw new GameInterruptedException("No Active Players found");
+        }
+        if (activePlayers.size() == 1) {
+            throw new RoundInterruptedException("Only one active player, skipping betting round");
         }
 
-        var contributions = getPlayerContributions(bettingRound);
+        var playerIndex = 0;
+        var startIndex = 0;
+        UUID lastAggressorId = null;
+        var isFirstPass = true;
 
-        var highestContribution = 0d;
-        for (PlayerSession player : activePlayers) {
-            var contribution = contributions.getOrDefault(player.getId(), 0d);
-            if (contribution > highestContribution) {
-                highestContribution = contribution;
+        // Betting Loop
+        while (true) {
+            // Re-fetch players only if necessary to handle folds dynamically,
+            // but for index stability, it is often safer to keep the list and check 'isActive'
+            // inside the loop. For this implementation, we assume activePlayers list
+            // stays valid for indexing, but we check if they folded via DB/Status if needed.
+
+            // Safety check for index wrapping
+            if (playerIndex >= activePlayers.size()) {
+                playerIndex = 0;
+            }
+
+            var currentPlayer = activePlayers.get(playerIndex);
+
+            // --- TERMINATION CHECKS ---
+
+            // Condition A: We reached the Last Aggressor again.
+            // This means everyone else has had a chance to call/fold, and we are back to the person who bet/raised.
+            // They do not act again unless someone else re-raised (which would have updated lastAggressorId).
+            if (currentPlayer.getId().equals(lastAggressorId)) {
+                log.info("Returned to last aggressor {}, betting round finished.", currentPlayer.getId());
+                break;
+            }
+
+            // If we have circled back to the start and no one has bet (lastAggressorId is null).
+            if (lastAggressorId == null && !isFirstPass && playerIndex == startIndex) {
+                log.info("Checked around, betting round finished.");
+                break;
+            }
+
+            // --- TURN LOGIC ---
+            var latestPlayerAction = awaitPlayerTurnAction(params, gameThread, currentPlayer, bettingRound);
+
+            // --- POST ACTION PROCESSING ---
+            if (latestPlayerAction.isPresent()) {
+                var actionJustTaken = latestPlayerAction.get();
+                var type = actionJustTaken.getActionType();
+
+                if (type == ActionType.BET || type == ActionType.RAISE) {
+                    lastAggressorId = currentPlayer.getId();
+                }
+            }
+            bettingRoundOpt = bettingRoundService.getBettingRound(bettingRound.getId());
+            if (bettingRoundOpt.isPresent()) {
+                bettingRound = bettingRoundOpt.get();
+            }
+
+            // todo: send betting round updated event
+
+
+            playerIndex++;
+            if (playerIndex >= activePlayers.size()) {
+                playerIndex = 0;
+                isFirstPass = false;
+            }
+
+            if (checkIfOnlyOnePlayerActive(params, round.getId())) {
+                break;
             }
         }
 
-        if (highestContribution == 0) {
-            return true; // Everyone has checked
-        }
+        bettingRoundService.setBettingRoundFinished(bettingRound);
+        round = roundService.updatePot(round, bettingRound);
 
-        for (var player : activePlayers) {
-            if (contributions.getOrDefault(player.getId(), 0.0) < highestContribution) {
-                return false; // At least one player has not matched the highest bet
-            }
-        }
-        return true; // All active players have matched the highest bet
+        log.info("Round pot after betting updated to {}", round.getPot());
     }
 
-    private Map<UUID, Double> getPlayerContributions(BettingRound bettingRound) {
-        // Note: This relies on a repository method that fetches actions for the round, ordered by time.
-        // If a player calls and then re-raises, we assume the amount on the action is the new total for the round.
-        var actions = playerActionRepository
-                .findPlayerActionsForContributions(bettingRound.getId());
-        var contributions = new HashMap<UUID, Double>();
-        for (var action : actions) {
-            contributions.put(action.getPlayerSession().getId(), action.getAmount());
+    private Optional<PlayerAction> awaitPlayerTurnAction(GameThreadParams params, GameThread gameThread, PlayerSession currentPlayer, BettingRound bettingRound) {
+        var prevPlayerActions = playerActionService.refreshPlayerActionsNotFolded(bettingRound.getId());
+        var nextActions = getNextActions(prevPlayerActions);
+
+        dispatcher.send(params, messageFactory.playerTurn(currentPlayer, bettingRound, nextActions, params.getPlayerTurnWaitMs()));
+        waitPlayerTurn(params, gameThread, currentPlayer);
+
+        // ASYNC HERE
+
+        return playerActionService.getLatestByBettingRoundAndPlayer(bettingRound.getId(), currentPlayer.getId());
+    }
+
+    private NextActionsDTO getNextActions( List<PlayerAction> prevPlayerActions) {
+        var amountToCall = 0d;
+        var nextActions = ActionType.getDefaultActions();
+        PlayerAction previousPlayerAction = null;
+        if (!prevPlayerActions.isEmpty()) {
+            previousPlayerAction = prevPlayerActions.getFirst();
+            var previousPlayerActionType = previousPlayerAction.getActionType();
+            nextActions = ActionType.getNextActions(previousPlayerActionType);
+            amountToCall = previousPlayerActionType.getAmountToCall(previousPlayerAction.getAmount());
         }
-        return contributions;
+        return new NextActionsDTO(amountToCall, nextActions, previousPlayerAction);
+    }
+
+    private boolean checkIfOnlyOnePlayerActive(GameThreadParams params, UUID roundId) {
+        var active = playerSessionRepository.findActivePlayersByTableId(params.getTableId(), roundId);
+        return active.size() <= 1;
     }
 
     private void waitPlayerTurn(GameThreadParams params, GameThread gameThread, PlayerSession playerSession) {
