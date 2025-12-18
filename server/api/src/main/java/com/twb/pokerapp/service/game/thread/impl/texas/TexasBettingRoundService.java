@@ -147,17 +147,18 @@ public class TexasBettingRoundService {
         return playerActionService.getLatestByBettingRoundAndPlayer(bettingRound.getId(), currentPlayer.getId());
     }
 
-    private NextActionsDTO getNextActions( List<PlayerAction> prevPlayerActions) {
+    private NextActionsDTO getNextActions(List<PlayerAction> prevPlayerActions) {
         var amountToCall = 0d;
         var nextActions = ActionType.getDefaultActions();
-        PlayerAction previousPlayerAction = null;
+
         if (!prevPlayerActions.isEmpty()) {
-            previousPlayerAction = prevPlayerActions.getFirst();
+            var previousPlayerAction = prevPlayerActions.getFirst();
             var previousPlayerActionType = previousPlayerAction.getActionType();
+
             nextActions = ActionType.getNextActions(previousPlayerActionType);
             amountToCall = previousPlayerActionType.getAmountToCall(previousPlayerAction.getAmount());
         }
-        return new NextActionsDTO(amountToCall, nextActions, previousPlayerAction);
+        return new NextActionsDTO(amountToCall, nextActions);
     }
 
     private boolean checkIfOnlyOnePlayerActive(GameThreadParams params, UUID roundId) {

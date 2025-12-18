@@ -60,13 +60,13 @@ public class ServerMessageFactory {
 
     public ServerMessageDTO playerTurn(PlayerSession playerSession,
                                        BettingRound bettingRound,
-                                       NextActionsDTO nextActions,
+                                       NextActionsDTO nextActionsDto,
                                        long playerTurnWaitMs) {
         var payload = new PlayerTurnDTO();
         payload.setPlayerSession(playerSessionMapper.modelToDto(playerSession));
         payload.setBettingRound(bettingRoundMapper.modelToDto(bettingRound));
-        payload.setNextActions(nextActions.nextActions());
-        payload.setAmountToCall(nextActions.amountToCall());
+        payload.setNextActions(nextActionsDto.nextActions());
+        payload.setAmountToCall(nextActionsDto.amountToCall());
         payload.setPlayerTurnWaitMs(playerTurnWaitMs);
         return ServerMessageDTO.create(ServerMessageType.PLAYER_TURN, payload);
     }
