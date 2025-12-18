@@ -70,8 +70,8 @@ public class BettingRoundService {
         return repository.findById(bettingRoundId);
     }
 
-    public void setBettingRoundFinished(BettingRound bettingRound) {
+    public BettingRound setBettingRoundFinished(BettingRound bettingRound) {
         bettingRound.setState(FINISHED);
-        repository.saveAndFlush(bettingRound);
+        return repository.saveAndFlush(bettingRound);
     }
 }

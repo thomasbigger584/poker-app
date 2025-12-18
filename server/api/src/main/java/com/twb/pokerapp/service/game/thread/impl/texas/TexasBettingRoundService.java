@@ -3,6 +3,7 @@ package com.twb.pokerapp.service.game.thread.impl.texas;
 import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
+import com.twb.pokerapp.domain.Round;
 import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.exception.game.GameInterruptedException;
 import com.twb.pokerapp.exception.game.RoundInterruptedException;
@@ -37,7 +38,6 @@ public class TexasBettingRoundService {
     private final PlayerActionService playerActionService;
     private final BettingRoundService bettingRoundService;
 
-    // Using Last Aggressor Logic Approach
     public void runBettingRound(GameThreadParams params, GameThread gameThread) {
         var roundOpt = roundService.getRoundByTable(params.getTableId());
         if (roundOpt.isEmpty()) {
@@ -69,6 +69,8 @@ public class TexasBettingRoundService {
 
         // Betting Loop
         while (true) {
+
+            // TODO: check what happens with folds, we may need to gracefully handle this inside the loop
             // Re-fetch players only if necessary to handle folds dynamically,
             // but for index stability, it is often safer to keep the list and check 'isActive'
             // inside the loop. For this implementation, we assume activePlayers list
@@ -82,22 +84,19 @@ public class TexasBettingRoundService {
             var currentPlayer = activePlayers.get(playerIndex);
 
             // --- TERMINATION CHECKS ---
-
-            // Condition A: We reached the Last Aggressor again.
             // This means everyone else has had a chance to call/fold, and we are back to the person who bet/raised.
             // They do not act again unless someone else re-raised (which would have updated lastAggressorId).
             if (currentPlayer.getId().equals(lastAggressorId)) {
                 log.info("Returned to last aggressor {}, betting round finished.", currentPlayer.getId());
                 break;
             }
-
             // If we have circled back to the start and no one has bet (lastAggressorId is null).
             if (lastAggressorId == null && !isFirstPass && playerIndex == startIndex) {
                 log.info("Checked around, betting round finished.");
                 break;
             }
 
-            // --- TURN LOGIC ---
+            // -- PLAYER TURN --
             var latestPlayerAction = awaitPlayerTurnAction(params, gameThread, currentPlayer, bettingRound);
 
             // --- POST ACTION PROCESSING ---
@@ -115,8 +114,11 @@ public class TexasBettingRoundService {
                 bettingRound = bettingRoundOpt.get();
             }
 
-            // todo: send betting round updated event
+            round = roundService.updatePot(round, bettingRound);
+            log.info("Round pot after betting updated to {}", round.getPot());
 
+            var roundUpdatedMessage = messageFactory.bettingRoundUpdated(round, bettingRound);
+            dispatcher.send(params, roundUpdatedMessage);
 
             playerIndex++;
             if (playerIndex >= activePlayers.size()) {
@@ -124,15 +126,15 @@ public class TexasBettingRoundService {
                 isFirstPass = false;
             }
 
-            if (checkIfOnlyOnePlayerActive(params, round.getId())) {
+            if (checkIfOnlyOnePlayerActive(params, round)) {
                 break;
             }
         }
 
-        bettingRoundService.setBettingRoundFinished(bettingRound);
-        round = roundService.updatePot(round, bettingRound);
+        bettingRound = bettingRoundService.setBettingRoundFinished(bettingRound);
 
-        log.info("Round pot after betting updated to {}", round.getPot());
+        var roundUpdatedMessage = messageFactory.bettingRoundUpdated(round, bettingRound);
+        dispatcher.send(params, roundUpdatedMessage);
     }
 
     private Optional<PlayerAction> awaitPlayerTurnAction(GameThreadParams params, GameThread gameThread, PlayerSession currentPlayer, BettingRound bettingRound) {
@@ -141,8 +143,6 @@ public class TexasBettingRoundService {
 
         dispatcher.send(params, messageFactory.playerTurn(currentPlayer, bettingRound, nextActions, params.getPlayerTurnWaitMs()));
         waitPlayerTurn(params, gameThread, currentPlayer);
-
-        // ASYNC HERE
 
         return playerActionService.getLatestByBettingRoundAndPlayer(bettingRound.getId(), currentPlayer.getId());
     }
@@ -161,8 +161,8 @@ public class TexasBettingRoundService {
         return new NextActionsDTO(amountToCall, nextActions);
     }
 
-    private boolean checkIfOnlyOnePlayerActive(GameThreadParams params, UUID roundId) {
-        var active = playerSessionRepository.findActivePlayersByTableId(params.getTableId(), roundId);
+    private boolean checkIfOnlyOnePlayerActive(GameThreadParams params, Round round) {
+        var active = playerSessionRepository.findActivePlayersByTableId(params.getTableId(), round.getId());
         return active.size() <= 1;
     }
 
