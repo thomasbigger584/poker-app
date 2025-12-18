@@ -51,7 +51,7 @@ public class TexasBettingRoundService {
         }
         var bettingRound = bettingRoundOpt.get();
 
-        //todo: does this need to be a new transaction with a service like the rest of them
+        //todo: does this need to be a new transaction with a service like the rest of them?
         var activePlayers = playerSessionRepository
                 .findActivePlayersByTableId(params.getTableId(), round.getId());
 
@@ -109,6 +109,7 @@ public class TexasBettingRoundService {
                     lastAggressorId = currentPlayer.getId();
                 }
             }
+
             bettingRoundOpt = bettingRoundService.getBettingRound(bettingRound.getId());
             if (bettingRoundOpt.isPresent()) {
                 bettingRound = bettingRoundOpt.get();
