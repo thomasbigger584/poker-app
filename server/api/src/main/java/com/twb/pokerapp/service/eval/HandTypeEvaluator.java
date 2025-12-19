@@ -280,7 +280,7 @@ public class HandTypeEvaluator {
      */
     private boolean isPair(HandAnalysis analysis) {
         return analysis.hasMinimumCards(TWO_CARDS_NEEDED) &&
-                analysis.getCounts().get(0) >= TWO_CARDS_NEEDED;
+                analysis.getCounts().getFirst() >= TWO_CARDS_NEEDED;
     }
 
     /**

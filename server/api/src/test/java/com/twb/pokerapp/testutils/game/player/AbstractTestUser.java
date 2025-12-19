@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
-public abstract class AbstractTestUser implements StompSessionHandler, StompFrameHandler {
+public abstract class AbstractTestUser implements StompSessionHandler, StompFrameHandler, AutoCloseable {
     private static final String CONNECTION_URL = "ws://localhost:8081/looping";
     private static final String GAME_TOPIC_SUFFIX = "/topic/loops.%s";
     private static final String NOTIFICATION_TOPIC_SUFFIX = "/user/%s/notifications";
@@ -42,8 +42,6 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String HEADER_CONNECTION_TYPE = "X-Connection-Type";
     private static final String HEADER_BUYIN_AMOUNT = "X-BuyIn-Amount";
-    private static final TaskScheduler TASK_SCHEDULER =
-            new ConcurrentTaskScheduler(Executors.newSingleThreadScheduledExecutor());
     @Getter
     protected final TestUserParams params;
     private final Keycloak keycloak;
@@ -156,6 +154,14 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         handleMessage(headers, message);
     }
 
+    @Override
+    public void close() {
+        disconnect();
+        if (client.isRunning()) {
+            client.stop();
+        }
+    }
+
     // ***************************************************************
     // Send Methods
     // ***************************************************************
@@ -184,7 +190,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
         var sockJsClient = new SockJsClient(transports);
         var stompClient = new WebSocketStompClient(sockJsClient);
-        stompClient.setTaskScheduler(TASK_SCHEDULER);
+        stompClient.setTaskScheduler(new ConcurrentTaskScheduler(Executors.newSingleThreadScheduledExecutor()));
         stompClient.setMessageConverter(new ServerMessageConverter());
         return stompClient;
     }
@@ -197,7 +203,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         log.info(">>>> [{}] sending {}", params.getUsername(), dto);
         var receiptable = session.send(destination, dto);
         receiptable.addReceiptTask(() -> log.info("Receipt received for user {} destination {} and payload {}", params.getUsername(), destination, dto));
-        receiptable.addReceiptLostTask(() -> log.info("Failed to receive receipt for user {} destination {} and payload {}", params.getUsername(), destination, dto));
+        receiptable.addReceiptLostTask(() -> log.warn("Failed to receive receipt for user {} destination {} and payload {}", params.getUsername(), destination, dto));
     }
 
     // ***************************************************************

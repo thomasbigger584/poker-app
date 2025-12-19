@@ -166,6 +166,9 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
 
             chatBoxAdapter.add(getPlayerActionedMessage(playerActioned));
         });
+        viewModel.bettingRoundUpdated.observe(this, bettingRoundUpdated -> {
+            tableController.updateBettingRound(bettingRoundUpdated);
+        });
         viewModel.dealCommunityCard.observe(this, dealCommunityCard -> {
             dismissDialogs();
             controlsController.hide();

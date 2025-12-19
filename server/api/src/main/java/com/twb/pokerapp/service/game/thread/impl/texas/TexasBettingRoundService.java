@@ -39,28 +39,9 @@ public class TexasBettingRoundService {
     private final BettingRoundService bettingRoundService;
 
     public void runBettingRound(GameThreadParams params, GameThread gameThread) {
-        var roundOpt = roundService.getRoundByTable(params.getTableId());
-        if (roundOpt.isEmpty()) {
-            throw new GameInterruptedException("Round is empty for table " + params.getTableId());
-        }
-        var round = roundOpt.get();
-
-        var bettingRoundOpt = bettingRoundService.getCurrentBettingRound(round.getId());
-        if (bettingRoundOpt.isEmpty()) {
-            throw new GameInterruptedException("Betting Round is empty for round " + round.getId());
-        }
-        var bettingRound = bettingRoundOpt.get();
-
-        //todo: does this need to be a new transaction with a service like the rest of them?
-        var activePlayers = playerSessionRepository
-                .findActivePlayersByTableId(params.getTableId(), round.getId());
-
-        if (activePlayers.isEmpty()) {
-            throw new GameInterruptedException("No Active Players found");
-        }
-        if (activePlayers.size() == 1) {
-            throw new RoundInterruptedException("Only one active player, skipping betting round");
-        }
+        var round = getRound(params);
+        var bettingRound = getBettingRound(round);
+        var activePlayers = getActivePlayers(params, round);
 
         var playerIndex = 0;
         var startIndex = 0;
@@ -76,9 +57,8 @@ public class TexasBettingRoundService {
             // inside the loop. For this implementation, we assume activePlayers list
             // stays valid for indexing, but we check if they folded via DB/Status if needed.
 
-            // Safety check for index wrapping
             if (playerIndex >= activePlayers.size()) {
-                playerIndex = 0;
+                playerIndex = 0; // wrap index
             }
 
             var currentPlayer = activePlayers.get(playerIndex);
@@ -96,29 +76,19 @@ public class TexasBettingRoundService {
                 break;
             }
 
-            // -- PLAYER TURN --
             var latestPlayerAction = awaitPlayerTurnAction(params, gameThread, currentPlayer, bettingRound);
 
-            // --- POST ACTION PROCESSING ---
             if (latestPlayerAction.isPresent()) {
                 var actionJustTaken = latestPlayerAction.get();
-                var type = actionJustTaken.getActionType();
-
-                if (type == ActionType.BET || type == ActionType.RAISE) {
-                    lastAggressorId = currentPlayer.getId();
-                }
+                lastAggressorId = getLastAggressorId(actionJustTaken, lastAggressorId, currentPlayer);
             }
 
-            bettingRoundOpt = bettingRoundService.getBettingRound(bettingRound.getId());
-            if (bettingRoundOpt.isPresent()) {
-                bettingRound = bettingRoundOpt.get();
-            }
+            bettingRound = getBettingRound(bettingRound);
 
             round = roundService.updatePot(round, bettingRound);
             log.info("Round pot after betting updated to {}", round.getPot());
 
-            var roundUpdatedMessage = messageFactory.bettingRoundUpdated(round, bettingRound);
-            dispatcher.send(params, roundUpdatedMessage);
+            dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound));
 
             playerIndex++;
             if (playerIndex >= activePlayers.size()) {
@@ -133,8 +103,44 @@ public class TexasBettingRoundService {
 
         bettingRound = bettingRoundService.setBettingRoundFinished(bettingRound);
 
-        var roundUpdatedMessage = messageFactory.bettingRoundUpdated(round, bettingRound);
-        dispatcher.send(params, roundUpdatedMessage);
+        dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound));
+    }
+
+    private Round getRound(GameThreadParams params) {
+        var roundOpt = roundService.getRoundByTable(params.getTableId());
+        if (roundOpt.isEmpty()) {
+            throw new GameInterruptedException("Round is empty for table " + params.getTableId());
+        }
+        return roundOpt.get();
+    }
+
+    private BettingRound getBettingRound(Round round) {
+        var bettingRoundOpt = bettingRoundService.getCurrentBettingRound(round.getId());
+        if (bettingRoundOpt.isEmpty()) {
+            throw new GameInterruptedException("Betting Round is empty for round " + round.getId());
+        }
+        return bettingRoundOpt.get();
+    }
+
+    private BettingRound getBettingRound(BettingRound bettingRound) {
+        var bettingRoundOpt = bettingRoundService.getBettingRound(bettingRound.getId());
+        if (bettingRoundOpt.isPresent()) {
+            bettingRound = bettingRoundOpt.get();
+        }
+        return bettingRound;
+    }
+
+    private List<PlayerSession> getActivePlayers(GameThreadParams params, Round round) {
+        //todo: does this need to be a new transaction with a service like the rest of them?
+        var activePlayers = playerSessionRepository
+                .findActivePlayersByTableId(params.getTableId(), round.getId());
+        if (activePlayers.isEmpty()) {
+            throw new GameInterruptedException("No Active Players found");
+        }
+        if (activePlayers.size() == 1) {
+            throw new RoundInterruptedException("Only one active player, skipping betting round");
+        }
+        return activePlayers;
     }
 
     private Optional<PlayerAction> awaitPlayerTurnAction(GameThreadParams params, GameThread gameThread, PlayerSession currentPlayer, BettingRound bettingRound) {
@@ -145,6 +151,15 @@ public class TexasBettingRoundService {
         waitPlayerTurn(params, gameThread, currentPlayer);
 
         return playerActionService.getLatestByBettingRoundAndPlayer(bettingRound.getId(), currentPlayer.getId());
+    }
+
+    private UUID getLastAggressorId(PlayerAction actionJustTaken, UUID lastAggressorId, PlayerSession currentPlayer) {
+        var type = actionJustTaken.getActionType();
+        // last aggressor is the current player if the current player has just bet or raised
+        if (type == ActionType.BET || type == ActionType.RAISE) {
+            lastAggressorId = currentPlayer.getId();
+        }
+        return lastAggressorId;
     }
 
     private NextActionsDTO getNextActions(List<PlayerAction> prevPlayerActions) {
@@ -177,7 +192,7 @@ public class TexasBettingRoundService {
                 texasPlayerActionService.playerAction(playerSession, gameThread, createActionDto);
             }
         } catch (InterruptedException e) {
-            throw new RuntimeException("Failed to wait for player turn latch", e);
+            throw new RoundInterruptedException("Failed to wait for player turn latch", e);
         }
     }
 }

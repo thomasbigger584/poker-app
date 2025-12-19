@@ -8,6 +8,7 @@ import androidx.annotation.Nullable;
 
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
+import com.twb.pokerapp.data.websocket.message.server.payload.BettingRoundUpdatedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.DealCommunityCardDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.DealPlayerCardDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.RoundFinishedDTO;
@@ -15,6 +16,7 @@ import com.twb.pokerapp.ui.layout.texas.CardPairLayout;
 import com.twb.pokerapp.ui.layout.texas.CommunityCardLayout;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class TableController {
@@ -116,6 +118,15 @@ public class TableController {
 
     public void dealCommunityCard(DealCommunityCardDTO dealCommunityCard) {
         communityCardLayout.dealCard(dealCommunityCard.getCard());
+    }
+
+    public void updateBettingRound(BettingRoundUpdatedDTO bettingRoundUpdated) {
+        var round = bettingRoundUpdated.getRound();
+        var pot = 0d;
+        if (round != null && round.getPot() != null) {
+            pot = round.getPot();
+        }
+        potSizeText.setText(String.format(Locale.getDefault(), "$%.2f", pot));
     }
 
     public void reset(RoundFinishedDTO roundFinished) {
