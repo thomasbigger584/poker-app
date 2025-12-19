@@ -51,7 +51,7 @@ public class TableGameService {
 
             if (connectionType == ConnectionType.PLAYER) {
                 if (buyInAmount < table.getMinBuyin() || buyInAmount > table.getMaxBuyin()) {
-                    var message = "Buy-In amount must be between %.2f and %.2f for table %s".formatted(table.getMinBuyin(), table.getMaxBuyin(), tableId);
+                    var message = "Buy-In amount must be between $%.2f and $%.2f for table %s".formatted(table.getMinBuyin(), table.getMaxBuyin(), tableId);
                     throw new RuntimeException(message);
                 }
             }
@@ -64,7 +64,7 @@ public class TableGameService {
             var appUser = userOpt.get();
             if (connectionType == ConnectionType.PLAYER) {
                 if (buyInAmount < appUser.getTotalFunds()) {
-                    var message = "User %s does not have enough total funds for Buy-In %.2f, has %.2f".formatted(username, buyInAmount, appUser.getTotalFunds());
+                    var message = "User %s does not have enough total funds for Buy-In $%.2f, has $%.2f".formatted(username, buyInAmount, appUser.getTotalFunds());
                     throw new RuntimeException(message);
                 }
             }
@@ -149,7 +149,7 @@ public class TableGameService {
 
             var roundOpt = roundRepository.findCurrentByTableId(tableId);
 
-            if (roundOpt.isPresent()) {
+            if (roundOpt.isPresent() && playerSession.getConnectionType() == ConnectionType.PLAYER) {
                 var playerActionService = table.getGameType().getPlayerActionService(context);
                 var action = new CreatePlayerActionDTO();
                 action.setAction(ActionType.FOLD);

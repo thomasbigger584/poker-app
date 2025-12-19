@@ -56,11 +56,11 @@ public class TexasPlayerActionService extends GamePlayerActionService {
 
     private Optional<PlayerAction> betAction(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
         if (createActionDto.getAmount() <= 0) {
-            gameLogService.sendLogMessage(playerSession, "Cannot bet %.2f as amount is less than or equal to zero".formatted(createActionDto.getAmount()));
+            gameLogService.sendLogMessage(playerSession, "Cannot bet $%.2f as amount is less than or equal to zero".formatted(createActionDto.getAmount()));
             return Optional.empty();
         }
         if (createActionDto.getAmount() > playerSession.getFunds()) {
-            gameLogService.sendLogMessage(playerSession, "Cannot bet as %.2f is more than current funds".formatted(createActionDto.getAmount()));
+            gameLogService.sendLogMessage(playerSession, "Cannot bet as $%.2f is more than current funds".formatted(createActionDto.getAmount()));
             return Optional.empty();
         }
         var lastPlayerActions = playerActionService.getPlayerActionsNotFolded(bettingRound.getId());
@@ -93,7 +93,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
         var amountToCall = lastPlayerActionType.getAmountToCall(lastPlayerAction.getAmount());
         createActionDto.setAmount(amountToCall);
         if (createActionDto.getAmount() > playerSession.getFunds()) {
-            gameLogService.sendLogMessage(playerSession, "Cannot call as %.2f is more than current funds".formatted(createActionDto.getAmount()));
+            gameLogService.sendLogMessage(playerSession, "Cannot call as $%.2f is more than current funds".formatted(createActionDto.getAmount()));
             return Optional.empty();
         }
         var action = playerActionService.create(playerSession, bettingRound, createActionDto);
@@ -115,12 +115,12 @@ public class TexasPlayerActionService extends GamePlayerActionService {
             return Optional.empty();
         }
         if (createActionDto.getAmount() > playerSession.getFunds()) {
-            gameLogService.sendLogMessage(playerSession, "Cannot raise as %.2f is more than current funds".formatted(createActionDto.getAmount()));
+            gameLogService.sendLogMessage(playerSession, "Cannot raise as $%.2f is more than current funds".formatted(createActionDto.getAmount()));
             return Optional.empty();
         }
         var amountToCall = lastPlayerActionType.getAmountToCall(lastPlayerAction.getAmount());
         if (createActionDto.getAmount() <= amountToCall) {
-            gameLogService.sendLogMessage(playerSession, "Cannot raise as %.2f is less than or equal to %.2f".formatted(createActionDto.getAmount(), amountToCall));
+            gameLogService.sendLogMessage(playerSession, "Cannot raise as $%.2f is less than or equal to $%.2f".formatted(createActionDto.getAmount(), amountToCall));
             return Optional.empty();
         }
         var action = playerActionService.create(playerSession, bettingRound, createActionDto);

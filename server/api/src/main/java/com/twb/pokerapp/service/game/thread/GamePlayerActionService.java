@@ -4,6 +4,7 @@ import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.Round;
+import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.service.BettingRoundService;
 import com.twb.pokerapp.service.RoundService;
 import com.twb.pokerapp.service.idepetency.IdempotencyService;
@@ -41,7 +42,10 @@ public abstract class GamePlayerActionService {
         log.info("GamePlayerActionService.playerAction");
         log.info("playerSession = {}, createDto = {}", playerSession, createDto);
         log.info("***************************************************************");
-
+        if (playerSession.getConnectionType() != ConnectionType.PLAYER) {
+            gameLogService.sendLogMessage(playerSession, "You attempted to make a player action but are not a player");
+            return;
+        }
         var table = playerSession.getPokerTable();
         if (table == null) {
             gameLogService.sendLogMessage(playerSession, "Table is null for player session: " + playerSession.getId());

@@ -1,6 +1,7 @@
 package com.twb.pokerapp.testutils.game.player;
 
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
+import com.twb.pokerapp.testutils.game.GameLatches;
 import com.twb.pokerapp.testutils.http.message.ServerMessageConverter;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
@@ -13,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
 import org.springframework.http.HttpHeaders;
 import org.springframework.messaging.simp.stomp.*;
-import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
@@ -107,21 +107,14 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
                                 StompHeaders headers, byte[] payload, Throwable exception) {
         log.error("Exception thrown during stomp session", exception);
         exceptionThrown.set(exception);
-        for (var index = 0; index < connectLatch.getCount(); index++) {
-            connectLatch.countDown();
-        }
-        params.getLatches().roundLatch().countDown();
-        params.getLatches().gameLatch().countDown();
+        countdownLatches();
     }
 
     @Override
     public void handleTransportError(StompSession session, Throwable exception) {
         log.error("Exception thrown after connect failure", exception);
         exceptionThrown.set(exception);
-        for (var index = 0; index < connectLatch.getCount(); index++) {
-            connectLatch.countDown();
-        }
-        params.getLatches().roundLatch().countDown();
+        countdownLatches();
     }
 
     @Override
@@ -135,20 +128,21 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
             log.error("Frame received but payload is null with headers {}", headers);
             return;
         }
-        if (connectLatch.getCount() > 0) {
-            connectLatch.countDown();
-        }
+        countdownLatch(connectLatch);
+
         var message = (ServerMessageDTO) payload;
         receivedMessages.add(message);
 
         if (message.getPayload() instanceof ErrorMessageDTO errorDto) {
             log.error("{} received error message: {}", params.getUsername(), errorDto.getMessage());
+            countdownLatches();
             return;
         } else if (message.getPayload() instanceof LogMessageDTO logDto) {
             log.info("{} received log message: {}", params.getUsername(), logDto.getMessage());
             return;
         } else if (message.getPayload() instanceof ValidationDTO validationDto) {
             log.info("{} received validation message: {}", params.getUsername(), validationDto.getFields());
+            countdownLatches();
             return;
         }
         handleMessage(headers, message);
@@ -168,6 +162,17 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
     public void sendPlayerAction(CreatePlayerActionDTO createDto) {
         send(SEND_PLAYER_ACTION.formatted(params.getTable().getId()), createDto);
+    }
+
+    protected void send(String destination, Object dto) {
+        if (session == null || !session.isConnected()) {
+            log.warn("Cannot send to destination {} for user {} as not connected", destination, params.getUsername());
+            return;
+        }
+        log.info(">>>> [{}] sending {}", params.getUsername(), dto);
+        var receiptable = session.send(destination, dto);
+        receiptable.addReceiptTask(() -> log.info("Receipt received for user {} destination {} and payload {}", params.getUsername(), destination, dto));
+        receiptable.addReceiptLostTask(() -> log.warn("Failed to receive receipt for user {} destination {} and payload {}", params.getUsername(), destination, dto));
     }
 
     // ***************************************************************
@@ -195,20 +200,18 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         return stompClient;
     }
 
-    protected void send(String destination, Object dto) {
-        if (session == null || !session.isConnected()) {
-            log.warn("Cannot send to destination {} for user {} as not connected", destination, params.getUsername());
-            return;
-        }
-        log.info(">>>> [{}] sending {}", params.getUsername(), dto);
-        var receiptable = session.send(destination, dto);
-        receiptable.addReceiptTask(() -> log.info("Receipt received for user {} destination {} and payload {}", params.getUsername(), destination, dto));
-        receiptable.addReceiptLostTask(() -> log.warn("Failed to receive receipt for user {} destination {} and payload {}", params.getUsername(), destination, dto));
+    private void countdownLatches() {
+        countdownLatch(connectLatch);
+        GameLatches latches = params.getLatches();
+        countdownLatch(latches.roundLatch());
+        countdownLatch(latches.gameLatch());
     }
 
-    // ***************************************************************
-    // Helper Methods
-    // ***************************************************************
+    private void countdownLatch(CountDownLatch latch) {
+        for (var index = 0; index < latch.getCount(); index++) {
+            latch.countDown();
+        }
+    }
 
     private String getAccessToken() {
         var tokenManager = keycloak.tokenManager();
