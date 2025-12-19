@@ -63,7 +63,7 @@ public class TableGameService {
             }
             var appUser = userOpt.get();
             if (connectionType == ConnectionType.PLAYER) {
-                if (buyInAmount < appUser.getTotalFunds()) {
+                if (buyInAmount > appUser.getTotalFunds()) {
                     var message = "User %s does not have enough total funds for Buy-In $%.2f, has $%.2f".formatted(username, buyInAmount, appUser.getTotalFunds());
                     throw new RuntimeException(message);
                 }

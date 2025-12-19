@@ -45,6 +45,19 @@ public class SqlClient implements AutoCloseable {
         transaction.commit();
     }
 
+    public void updateUsersTotalFunds(double totalFunds) {
+        var transaction = em.getTransaction();
+        transaction.begin();
+        em.createQuery("""
+                        UPDATE AppUser u
+                        SET u.totalFunds = :totalFunds
+                        """)
+                .setParameter("totalFunds", totalFunds)
+                .executeUpdate();
+
+        transaction.commit();
+    }
+
     // *****************************************************************************************
     // Get All
     // *****************************************************************************************
