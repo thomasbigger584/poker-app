@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -39,10 +40,8 @@ public class TexasBettingRoundService {
     private final BettingRoundService bettingRoundService;
 
     public void runBettingRound(GameThreadParams params, GameThread gameThread) {
-        var round = getRound(params);
-        var bettingRound = getBettingRound(round);
-        var activePlayers = getActivePlayers(params, round);
-
+        Round round;
+        BettingRound bettingRound;
         var playerIndex = 0;
         var startIndex = 0;
         UUID lastAggressorId = null;
@@ -50,6 +49,10 @@ public class TexasBettingRoundService {
 
         // Betting Loop
         while (true) {
+            round = getRound(params);
+            bettingRound = getBettingRound(round);
+
+            var activePlayers = getActivePlayers(params, round);
 
             // TODO: check what happens with folds, we may need to gracefully handle this inside the loop
             // Re-fetch players only if necessary to handle folds dynamically,
@@ -84,9 +87,7 @@ public class TexasBettingRoundService {
             }
 
             bettingRound = getBettingRound(bettingRound);
-
             round = roundService.updatePot(round, bettingRound);
-            log.info("Round pot after betting updated to {}", round.getPot());
 
             dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound));
 
@@ -102,7 +103,6 @@ public class TexasBettingRoundService {
         }
 
         bettingRound = bettingRoundService.setBettingRoundFinished(bettingRound);
-
         dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound));
     }
 

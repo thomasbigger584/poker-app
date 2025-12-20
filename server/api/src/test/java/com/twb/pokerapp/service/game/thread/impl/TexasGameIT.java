@@ -38,8 +38,9 @@ class TexasGameIT extends BaseTestContainersIT {
                 .validator(validator)
                 .buyinAmount(5_000d)
                 .build();
-        this.validator = new TexasValidator(params, sqlClient);
-        this.runner = new GameRunner(params);
+        validator = new TexasValidator(params, sqlClient);
+        runner = new GameRunner(params);
+
         sqlClient.updateUsersTotalFunds(params.getBuyinAmount());
     }
 
@@ -148,7 +149,6 @@ class TexasGameIT extends BaseTestContainersIT {
 
         validator.validateEndOfRun(messages);
     }
-
 
     // *****************************************************************************************
     // Helper Methods

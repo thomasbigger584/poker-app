@@ -18,8 +18,8 @@ import java.util.List;
 import java.util.UUID;
 
 @Component
+@Transactional
 @RequiredArgsConstructor
-@Transactional(propagation = Propagation.REQUIRES_NEW)
 public class PlayerSessionService {
     private final UserRepository userRepository;
     private final PlayerSessionRepository repository;

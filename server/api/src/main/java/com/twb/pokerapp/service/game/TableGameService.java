@@ -4,7 +4,6 @@ import com.antkorwin.xsync.XSync;
 import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
-import com.twb.pokerapp.repository.RoundRepository;
 import com.twb.pokerapp.repository.TableRepository;
 import com.twb.pokerapp.repository.UserRepository;
 import com.twb.pokerapp.service.PlayerSessionService;
@@ -15,7 +14,6 @@ import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,14 +22,12 @@ import java.util.UUID;
 
 @Slf4j
 @Component
-@Transactional
+//@Transactional
 @RequiredArgsConstructor
 public class TableGameService {
     private final UserRepository userRepository;
     private final TableRepository tableRepository;
     private final PlayerSessionRepository playerSessionRepository;
-    private final RoundRepository roundRepository;
-
     private final PlayerSessionService playerSessionService;
 
     private final GameThreadManager threadManager;
@@ -48,14 +44,12 @@ public class TableGameService {
                 throw new RuntimeException(message);
             }
             var table = tableOpt.get();
-
             if (connectionType == ConnectionType.PLAYER) {
                 if (buyInAmount < table.getMinBuyin() || buyInAmount > table.getMaxBuyin()) {
                     var message = "Buy-In amount must be between $%.2f and $%.2f for table %s".formatted(table.getMinBuyin(), table.getMaxBuyin(), tableId);
                     throw new RuntimeException(message);
                 }
             }
-
             var userOpt = userRepository.findByUsername(username);
             if (userOpt.isEmpty()) {
                 var message = "Failed to connect user %s to table %s as user not found".formatted(username, tableId);
@@ -68,8 +62,7 @@ public class TableGameService {
                     throw new RuntimeException(message);
                 }
             }
-
-            var playerSessionOpt = playerSessionRepository.findByTableIdAndUsername(tableId, username);
+            var playerSessionOpt = playerSessionRepository.findByTableIdAndUsername_Lock(tableId, username);
             if (playerSessionOpt.isEmpty()) {
                 if (connectionType == ConnectionType.PLAYER) {
                     threadManager.createIfNotExist(table);
@@ -77,7 +70,6 @@ public class TableGameService {
                 var connectedPlayerSession = playerSessionService.connectUserToRound(appUser, connectionType, table, buyInAmount);
                 dispatcher.send(tableId, messageFactory.playerConnected(connectedPlayerSession));
             }
-
             var allPlayerSessions = playerSessionService.getByTableId(tableId);
             return messageFactory.playerSubscribed(allPlayerSessions);
         });
@@ -91,15 +83,8 @@ public class TableGameService {
                 return;
             }
             var table = tableOpt.get();
-
-            var gameThreadOpt = threadManager.getIfExists(tableId);
-            if (gameThreadOpt.isEmpty()) {
-                log.error("No game thread exists for table {}", tableId);
-                return;
-            }
-            var gameThread = gameThreadOpt.get();
-            var playerSessionOpt = playerSessionRepository
-                    .findByTableIdAndUsername(tableId, username);
+            var playerSessionOpt =
+                    playerSessionRepository.findByTableIdAndUsername_Lock(tableId, username);
             if (playerSessionOpt.isEmpty()) {
                 log.error("No player {} found on table {}", username, tableId);
                 return;
@@ -109,16 +94,19 @@ public class TableGameService {
                 log.error("Player {} is a listener on table", playerSession.getId());
                 return;
             }
-
+            var gameThreadOpt = threadManager.getIfExists(tableId);
+            if (gameThreadOpt.isEmpty()) {
+                log.error("No game thread exists for table {}", tableId);
+                return;
+            }
+            var gameThread = gameThreadOpt.get();
             var playerTurnLatch = gameThread.getPlayerTurnLatch();
             if (playerTurnLatch == null
                     || !username.equals(playerTurnLatch.playerSession().getUser().getUsername())) {
                 log.error("Not waiting for {} to play on table {}", username, tableId);
                 return;
             }
-
-            var gameType = table.getGameType();
-            var playerActionService = gameType.getPlayerActionService(context);
+            var playerActionService = table.getGameType().getPlayerActionService(context);
             playerActionService.playerAction(playerSession, gameThread, action);
         });
     }
@@ -131,6 +119,16 @@ public class TableGameService {
                 return;
             }
             var table = tableOpt.get();
+            var playerSessionOpt =
+                    playerSessionRepository.findByTableIdAndUsername_Lock(tableId, username);
+            if (playerSessionOpt.isEmpty()) {
+                log.error("No player {} found on table {}", username, tableId);
+                return;
+            }
+            var playerSession = playerSessionOpt.get();
+            playerSessionService.disconnectUser(playerSession);
+
+            dispatcher.send(tableId,  messageFactory.playerDisconnected(username));
 
             var threadOpt = threadManager.getIfExists(tableId);
             if (threadOpt.isEmpty()) {
@@ -138,35 +136,14 @@ public class TableGameService {
                 return;
             }
             var gameThread = threadOpt.get();
-
-            var playerSessionOpt =
-                    playerSessionRepository.findByTableIdAndUsername(tableId, username);
-            if (playerSessionOpt.isEmpty()) {
-                log.error("No player {} found on table {}", username, tableId);
-                return;
-            }
-            var playerSession = playerSessionOpt.get();
-
-            var roundOpt = roundRepository.findCurrentByTableId(tableId);
-
-            if (roundOpt.isPresent() && playerSession.getConnectionType() == ConnectionType.PLAYER) {
+            if (playerSession.getConnectionType() == ConnectionType.PLAYER) {
                 var playerActionService = table.getGameType().getPlayerActionService(context);
                 var action = new CreatePlayerActionDTO();
                 action.setAction(ActionType.FOLD);
-
                 playerActionService.playerAction(playerSession, gameThread, action);
             }
-
-            playerSessionService.disconnectUser(playerSession);
-
             var playerSessions =
                     playerSessionRepository.findConnectedPlayersByTableId_Lock(tableId);
-            if (CollectionUtils.isEmpty(playerSessions)) {
-                gameThread.stopGame();
-            }
-            var message = messageFactory.playerDisconnected(username);
-            dispatcher.send(tableId, message);
-
             if (playerSessions.size() < 2) {
                 gameThread.stopGame();
             }

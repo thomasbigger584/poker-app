@@ -29,16 +29,17 @@ public class TestGameListenerUser extends AbstractTestUser {
         }
 
         var payload = message.getPayload();
+        var latches = params.getLatches();
 
         // stopping game after a certain number of rounds
         if (payload instanceof RoundFinishedDTO dto) {
             var thisRoundCount = roundCountAtomicInteger.incrementAndGet();
             if (thisRoundCount == numOfRounds) {
-                params.getLatches().roundLatch().countDown();
+               latches.roundLatch().countDown();
             }
             // stopping tests when all players disconnect to cover full lifecycle
         } else if (payload instanceof GameFinishedDTO dto) {
-            params.getLatches().gameLatch().countDown();
+            countdownLatch(latches.gameLatch());
         }
     }
 

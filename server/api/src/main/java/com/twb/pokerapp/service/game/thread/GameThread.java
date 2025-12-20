@@ -274,6 +274,7 @@ public abstract class GameThread extends BaseGameThread {
             if (endLatch.getCount() > 0) {
                 endLatch.countDown();
             }
+            gameInProgress.set(false);
             throw new GameInterruptedException("Game is interrupted");
         }
     }

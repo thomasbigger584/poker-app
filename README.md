@@ -82,7 +82,7 @@ Follow these instructions to get the project running on your local machine for d
 
 ### Prerequisites
 
--   [Docker](https://www.docker.com/get-started) and Docker Compose
+-   [Docker](https://www.docker.com/get-started) and Docker Compose with buildx plugin and BuildKit enabled
 -   [Java 21](https://www.oracle.com/java/technologies/downloads/) or newer
 -   [Android Studio](https://developer.android.com/studio) (for the client)
 -   A [Tailscale](https://tailscale.com/download) account and an Auth Key
