@@ -43,29 +43,19 @@ public class TableGameService {
     private final TransactionTemplate transactionTemplate;
 
     public ServerMessageDTO onUserConnected(UUID tableId, ConnectionType connectionType, String username, Double buyInAmount) {
-        return mutex.evaluate(tableId, () -> {
-            var tableOpt = tableRepository.findById(tableId);
-            if (tableOpt.isEmpty()) {
-                var message = "Failed to connect user %s to table %s as table not found".formatted(username, tableId);
-                throw new RuntimeException(message);
-            }
-            var table = tableOpt.get();
+        return mutex.evaluate(tableId, () -> transactionTemplate.execute(status -> {
+            var table = getThrowPlayerErrorLog(tableRepository.findById(tableId), "No table found for Table ID: " + tableId);
             if (connectionType == ConnectionType.PLAYER) {
                 if (buyInAmount < table.getMinBuyin() || buyInAmount > table.getMaxBuyin()) {
                     var message = "Buy-In amount must be between $%.2f and $%.2f for table %s".formatted(table.getMinBuyin(), table.getMaxBuyin(), tableId);
-                    throw new RuntimeException(message);
+                    throw new GamePlayerErrorLogException(message);
                 }
             }
-            var userOpt = userRepository.findByUsername(username);
-            if (userOpt.isEmpty()) {
-                var message = "Failed to connect user %s to table %s as user not found".formatted(username, tableId);
-                throw new RuntimeException(message);
-            }
-            var appUser = userOpt.get();
+            var user = getThrowPlayerErrorLog(userRepository.findByUsername(username), "Failed to connect user %s to table %s as user not found".formatted(username, tableId));
             if (connectionType == ConnectionType.PLAYER) {
-                if (buyInAmount > appUser.getTotalFunds()) {
-                    var message = "User %s does not have enough total funds for Buy-In $%.2f, has $%.2f".formatted(username, buyInAmount, appUser.getTotalFunds());
-                    throw new RuntimeException(message);
+                if (buyInAmount > user.getTotalFunds()) {
+                    var message = "User %s does not have enough total funds for Buy-In $%.2f, has $%.2f".formatted(username, buyInAmount, user.getTotalFunds());
+                    throw new GamePlayerErrorLogException(message);
                 }
             }
             var playerSessionOpt = playerSessionRepository.findByTableIdAndUsername(tableId, username);
@@ -73,19 +63,19 @@ public class TableGameService {
                 if (connectionType == ConnectionType.PLAYER) {
                     threadManager.createIfNotExist(table);
                 }
-                var connectedPlayerSession = playerSessionService.connectUserToRound(tableId, appUser.getId(), connectionType, buyInAmount);
-                dispatcher.send(tableId, messageFactory.playerConnected(connectedPlayerSession));
+                var playerSession = playerSessionService.connectUserToRound(table, user, connectionType, buyInAmount);
+                dispatcher.send(tableId, messageFactory.playerConnected(playerSession));
             }
             var allPlayerSessions = playerSessionService.getByTableId(tableId);
             return messageFactory.playerSubscribed(allPlayerSessions);
-        });
+        }));
     }
 
     public void onPlayerAction(UUID tableId, String username, CreatePlayerActionDTO action) {
         mutex.execute(tableId, () -> transactionTemplate.executeWithoutResult(status -> {
             try {
                 var table = getThrowPlayerErrorLog(tableRepository.findById(tableId), "No table found for Table ID: " + tableId);
-                var playerSession = getThrowPlayerErrorLog(playerSessionRepository.findByTableIdAndUsername(tableId, username), "No player %s found on table %s".formatted(username, tableId));
+                var playerSession = getThrowPlayerErrorLog(playerSessionRepository.findByTableIdAndUsername(tableId, username), "Your session is not found on table %s".formatted(tableId));
                 if (playerSession.getConnectionType() == ConnectionType.LISTENER) {
                     throw new GamePlayerLogException(playerSession, "You are a listener on table, cannot perform actions");
                 }
@@ -112,21 +102,11 @@ public class TableGameService {
     }
 
     public void onUserDisconnected(UUID tableId, String username) {
-        mutex.execute(tableId, () -> {
-            var tableOpt = tableRepository.findById(tableId);
-            if (tableOpt.isEmpty()) {
-                log.error("No table found for ID {}", tableId);
-                return;
-            }
-            var table = tableOpt.get();
-            var playerSessionOpt =
-                    playerSessionRepository.findByTableIdAndUsername(tableId, username);
-            if (playerSessionOpt.isEmpty()) {
-                log.error("No player {} found on table {}", username, tableId);
-                return;
-            }
-            var playerSession = playerSessionOpt.get();
-            playerSessionService.disconnectUser(playerSession.getId());
+        mutex.execute(tableId, () -> transactionTemplate.executeWithoutResult(status -> {
+            var table = getThrowPlayerErrorLog(tableRepository.findById(tableId), "No table found for Table ID: " + tableId);
+            var playerSession = getThrowPlayerErrorLog(playerSessionRepository.findByTableIdAndUsername(tableId, username), "Your session is not found on table %s".formatted(tableId));
+
+            playerSessionService.disconnectUser(playerSession);
 
             dispatcher.send(tableId, messageFactory.playerDisconnected(username));
 
@@ -136,17 +116,18 @@ public class TableGameService {
                 return;
             }
             var gameThread = threadOpt.get();
+
             if (playerSession.getConnectionType() == ConnectionType.PLAYER) {
                 var playerActionService = table.getGameType().getPlayerActionService(context);
                 var action = new CreatePlayerActionDTO();
                 action.setAction(ActionType.FOLD);
                 playerActionService.playerAction(playerSession, gameThread, action);
             }
-            var playerSessions =
-                    playerSessionRepository.findConnectedPlayersByTableId(tableId);
+
+            var playerSessions = playerSessionRepository.findConnectedPlayersByTableId(tableId);
             if (playerSessions.size() < 2) {
                 gameThread.stopGame();
             }
-        });
+        }));
     }
 }

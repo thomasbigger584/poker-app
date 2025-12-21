@@ -44,20 +44,14 @@ public class TableWebSocketController {
     @SubscribeMapping(TOPIC)
     public ServerMessageDTO sendPlayerSubscribed(Principal principal, StompHeaderAccessor headerAccessor, @DestinationVariable(TABLE_ID) UUID tableId) {
         sessionService.putPokerTableId(headerAccessor, tableId);
-
         var connectionType = getConnectionType(headerAccessor);
         var buyInAmount = getBuyInAmount(headerAccessor);
-
         log.info(">>>> sendPlayerSubscribed - Table: {}, User: {}, Connection: {}, BuyIn: {}", tableId, principal.getName(), connectionType, buyInAmount);
-        ServerMessageDTO message;
         try {
-            message = tableGameService.onUserConnected(tableId, connectionType, principal.getName(), buyInAmount);
-            log.info("<<<< sendPlayerSubscribed - " + message);
-        } catch (Exception exception) {
-            message = messageFactory.errorMessage(exception.getMessage());
-            log.info("<<<< sendPlayerSubscribed FAILED - " + message);
+            return tableGameService.onUserConnected(tableId, connectionType, principal.getName(), buyInAmount);
+        } catch (Exception e) {
+            return messageFactory.errorMessage(e.getMessage());
         }
-        return message;
     }
 
     @MessageMapping(INBOUND_MESSAGE_PREFIX + SEND_CHAT_MESSAGE)
