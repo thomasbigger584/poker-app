@@ -25,7 +25,7 @@ import static com.twb.pokerapp.service.game.thread.util.SleepUtil.sleepInMs;
 
 @Slf4j
 @RequiredArgsConstructor
-public abstract class GameThread extends BaseGameThread {
+public abstract class GameThread extends BaseGameThread implements Thread.UncaughtExceptionHandler {
     // *****************************************************************************************
     // Constants
     // *****************************************************************************************
@@ -88,12 +88,13 @@ public abstract class GameThread extends BaseGameThread {
                 gameLogService.sendErrorMessage(table, e.getMessage());
             }
         }
+        stopGame();
     }
 
     private void initializeThread() {
         setName(params.getTableId().toString());
         setPriority(Thread.MAX_PRIORITY);
-        setDaemon(true);
+        setDefaultUncaughtExceptionHandler(this);
         interruptGame.set(false);
         gameInProgress.set(true);
         roundInProgress.set(false);
@@ -298,11 +299,23 @@ public abstract class GameThread extends BaseGameThread {
     @CallerThread
     public void stopGame() {
         interruptGame.set(true);
+        gameInProgress.set(false);
         try {
             params.getEndLatch().await();
         } catch (InterruptedException e) {
             log.error("Failed to wait for game end latch", e);
         }
+    }
+
+    // ***************************************************************
+    // Lifecycle Methods
+    // ***************************************************************
+
+    @Override
+    public void uncaughtException(Thread thread, Throwable throwable) {
+        finishRound();
+        finishGame();
+        stopGame();
     }
 
     // ***************************************************************

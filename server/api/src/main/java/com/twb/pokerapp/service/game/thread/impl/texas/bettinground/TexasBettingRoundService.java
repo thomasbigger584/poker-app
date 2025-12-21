@@ -18,10 +18,10 @@ public class TexasBettingRoundService {
         var lastAggressorService = context.getBean(LastAggressorService.class, params, gameThread);
         while (true) {
             try {
-                lastAggressorService
-                        .onPrePlayerTurn()
-                        .onWaitPlayerTurn()
-                        .onPostPlayerTurn();
+                lastAggressorService.prePlayerTurn();
+                gameThread.checkRoundInterrupted();
+                lastAggressorService.waitPlayerTurn();
+                lastAggressorService.postPlayerTurn();
             } catch (LastAggressorBreakException e) {
                 log.info("Breaking Betting loop Last Aggressor: {}", e.getMessage());
                 break;

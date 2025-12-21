@@ -89,7 +89,7 @@ public class LastAggressorService {
         this.gameThread = gameThread;
     }
 
-    public LastAggressorService onPrePlayerTurn() {
+    public void prePlayerTurn() {
         readTx.executeWithoutResult(status -> {
             round = getThrowGameInterrupted(roundRepository.findCurrentByTableId(params.getTableId()), "Round is empty for table");
             bettingRound = getThrowGameInterrupted(bettingRoundRepository.findCurrentByRoundId(round.getId()), "Betting Round is empty for round");
@@ -121,16 +121,14 @@ public class LastAggressorService {
             var prevPlayerActions = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId());
             nextActions = getNextActions(prevPlayerActions);
         });
-        return this;
     }
 
-    public LastAggressorService onWaitPlayerTurn() {
+    public void waitPlayerTurn() {
         dispatcher.send(params, messageFactory.playerTurn(currentPlayer, bettingRound, nextActions, params.getPlayerTurnWaitMs()));
         waitPlayerTurn(params, gameThread, currentPlayer);
-        return this;
     }
 
-    public void onPostPlayerTurn() {
+    public void postPlayerTurn() {
         writeTx.executeWithoutResult(status -> {
             var latestPlayerActionOpt = playerActionRepository
                     .findByBettingRoundAndPlayer(bettingRound.getId(), currentPlayer.getId());
