@@ -11,14 +11,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
-
 @Slf4j
 @RequiredArgsConstructor
 @Component("blackJackPlayerActionService")
 public class BlackjackPlayerActionService extends GamePlayerActionService {
     @Override
-    public Optional<PlayerAction> onPlayerAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread, CreatePlayerActionDTO createDto) {
+    public PlayerAction onPlayerAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread, CreatePlayerActionDTO createDto) {
         throw new NotImplementedException("Blackjack player actions not implemented yet");
     }
 }

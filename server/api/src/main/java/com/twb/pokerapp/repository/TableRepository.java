@@ -14,13 +14,4 @@ import java.util.UUID;
 
 @Repository
 public interface TableRepository extends JpaRepository<PokerTable, UUID> {
-
-    @Query("""
-            SELECT t
-            FROM PokerTable t
-            WHERE t.id = :tableId
-            """)
-    @Transactional
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    Optional<PokerTable> findById_Lock(@Param("tableId") UUID tableId);
 }

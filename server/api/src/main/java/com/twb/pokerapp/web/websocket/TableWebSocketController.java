@@ -45,8 +45,8 @@ public class TableWebSocketController {
     public ServerMessageDTO sendPlayerSubscribed(Principal principal, StompHeaderAccessor headerAccessor, @DestinationVariable(TABLE_ID) UUID tableId) {
         sessionService.putPokerTableId(headerAccessor, tableId);
 
-        ConnectionType connectionType = getConnectionType(headerAccessor);
-        Double buyInAmount = getBuyInAmount(headerAccessor);
+        var connectionType = getConnectionType(headerAccessor);
+        var buyInAmount = getBuyInAmount(headerAccessor);
 
         log.info(">>>> sendPlayerSubscribed - Table: {}, User: {}, Connection: {}, BuyIn: {}", tableId, principal.getName(), connectionType, buyInAmount);
         ServerMessageDTO message;

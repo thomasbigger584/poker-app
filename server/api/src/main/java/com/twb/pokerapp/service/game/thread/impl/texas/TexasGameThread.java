@@ -54,7 +54,7 @@ public class TexasGameThread extends GameThread {
 
     private void initDeal() {
         var activePlayers = playerSessionRepository
-                .findActivePlayersByTableId_Lock(table.getId(), roundId);
+                .findActivePlayersByTableId(table.getId(), roundId);
 
         for (var cardType : CardType.PLAYER_CARDS) {
             for (var playerSession : activePlayers) {

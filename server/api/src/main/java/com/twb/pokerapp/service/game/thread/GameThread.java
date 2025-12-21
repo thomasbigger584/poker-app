@@ -98,7 +98,7 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     private void initializeTable() {
-        var tableOpt = tableRepository.findById_Lock(params.getTableId());
+        var tableOpt = tableRepository.findById(params.getTableId());
         if (tableOpt.isEmpty()) {
             throw new GameInterruptedException("No table found cannot start game");
         }
@@ -116,7 +116,7 @@ public abstract class GameThread extends BaseGameThread {
         do {
             checkGameInterrupted();
             playerSessions = playerSessionRepository
-                    .findConnectedPlayersByTableId_Lock(params.getTableId());
+                    .findConnectedPlayersByTableId(params.getTableId());
             if (playerSessions.size() >= minPlayerCount) {
                 return;
             }
@@ -137,7 +137,7 @@ public abstract class GameThread extends BaseGameThread {
                 throw new GameInterruptedException("Cannot start an existing new round not in the WAITING_FOR_PLAYERS state");
             }
         } else {
-            var tableOpt = tableRepository.findById_Lock(params.getTableId());
+            var tableOpt = tableRepository.findById(params.getTableId());
             if (tableOpt.isEmpty()) {
                 throw new GameInterruptedException("Cannot start as table doesn't exist");
             }
@@ -250,7 +250,7 @@ public abstract class GameThread extends BaseGameThread {
         } else {
             var round = roundOpt.get();
             var activePlayers = playerSessionRepository
-                    .findActivePlayersByTableId_Lock(table.getId(), round.getId());
+                    .findActivePlayersByTableId(table.getId(), round.getId());
             if (activePlayers.size() < 2) {
                 // there is only 1 player left in a started game
                 interruptRound.set(true);
@@ -260,7 +260,8 @@ public abstract class GameThread extends BaseGameThread {
 
     private void finishCurrentBettingRound() {
         var bettingRoundOpt = bettingRoundRepository.findCurrentByRoundId(roundId);
-        bettingRoundOpt.ifPresent(bettingRound -> bettingRoundService.setBettingRoundFinished(bettingRound));
+        bettingRoundOpt.ifPresent(bettingRound ->
+                bettingRoundService.setBettingRoundFinished(bettingRound.getId()));
     }
 
     private void saveRoundState(RoundState roundState) {

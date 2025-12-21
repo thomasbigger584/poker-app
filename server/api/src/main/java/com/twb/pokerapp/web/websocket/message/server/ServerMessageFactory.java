@@ -14,7 +14,6 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class ServerMessageFactory {
     private final PlayerSessionMapper playerSessionMapper;
     private final PlayerActionMapper playerActionMapper;

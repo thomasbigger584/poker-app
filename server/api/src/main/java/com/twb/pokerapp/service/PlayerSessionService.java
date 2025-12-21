@@ -6,78 +6,103 @@ import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.domain.enumeration.SessionState;
 import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
+import com.twb.pokerapp.exception.NotFoundException;
 import com.twb.pokerapp.mapper.PlayerSessionMapper;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
+import com.twb.pokerapp.repository.TableRepository;
 import com.twb.pokerapp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.TransactionManager;
+import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 @Component
-@Transactional
 @RequiredArgsConstructor
 public class PlayerSessionService {
+    private final TableRepository tableRepository;
     private final UserRepository userRepository;
     private final PlayerSessionRepository repository;
     private final PlayerSessionMapper mapper;
+    private final TransactionTemplate transaction;
 
-    public PlayerSessionDTO connectUserToRound(AppUser user,
+    public PlayerSessionDTO connectUserToRound(UUID tableId, UUID userId,
                                                ConnectionType connectionType,
-                                               PokerTable table,
                                                Double buyInAmount) {
-        var tableId = table.getId();
-        var username = user.getUsername();
+        return transaction.execute(status -> {
+            var tableOpt = tableRepository.findById(tableId);
+            if (tableOpt.isEmpty()) {
+                throw new NotFoundException("Table not found");
+            }
+            var table = tableOpt.get();
 
-        var sessionOpt = repository
-                .findByTableIdAndUsername(tableId, username);
+            var userOpt = userRepository.findById(userId);
+            if (userOpt.isEmpty()) {
+                throw new NotFoundException("User not found: " + userId);
+            }
+            var user = userOpt.get();
 
-        PlayerSession session;
-        if (sessionOpt.isPresent()) {
-            session = sessionOpt.get();
-        } else {
-            session = new PlayerSession();
-            session.setPokerTable(table);
-        }
+            var sessionOpt = repository.findByTableIdAndUsername(tableId, user.getUsername());
+            PlayerSession session;
+            if (sessionOpt.isPresent()) {
+                session = sessionOpt.get();
+            } else {
+                session = new PlayerSession();
+                session.setPokerTable(table);
+            }
 
-        session.setConnectionType(connectionType);
-        session.setSessionState(SessionState.CONNECTED);
+            session.setConnectionType(connectionType);
+            session.setSessionState(SessionState.CONNECTED);
 
-        if (connectionType == ConnectionType.PLAYER) {
-            var position = getSessionTablePosition(table);
-            session.setPosition(position);
-            session.setFunds(buyInAmount);
+            if (connectionType == ConnectionType.PLAYER) {
+                var position = getSessionTablePosition(table);
+                session.setPosition(position);
+                session.setFunds(buyInAmount);
 
-            user.setTotalFunds(user.getTotalFunds() - buyInAmount);
-        }
+                user.setTotalFunds(user.getTotalFunds() - buyInAmount);
+            }
 
-        user = userRepository.saveAndFlush(user);
-        session.setUser(user);
+            user = userRepository.saveAndFlush(user);
+            session.setUser(user);
 
-        session = repository.saveAndFlush(session);
-        return mapper.modelToDto(session);
+            session = repository.saveAndFlush(session);
+            return mapper.modelToDto(session);
+        });
     }
 
-    public void disconnectUser(PlayerSession playerSession) {
-        var fundsLeftOver = playerSession.getFunds();
-        if (fundsLeftOver == null) {
-            fundsLeftOver = 0d;
-        }
-        var user = playerSession.getUser();
-        user.setTotalFunds(user.getTotalFunds() + fundsLeftOver);
-        userRepository.saveAndFlush(user);
+    public void disconnectUser(UUID playerSessionId) {
+        transaction.executeWithoutResult(status -> {
+            var playerSessionOpt = repository.findById(playerSessionId);
+            if (playerSessionOpt.isEmpty()) {
+                throw new NotFoundException("Player session not found");
+            }
+            var playerSession = playerSessionOpt.get();
 
-        playerSession.setUser(user);
-        playerSession.setDealer(null);
-        playerSession.setFunds(null);
-        playerSession.setPokerTable(null);
-        playerSession.setConnectionType(null);
-        playerSession.setSessionState(SessionState.DISCONNECTED);
+            var fundsLeftOver = playerSession.getFunds();
+            if (fundsLeftOver == null) {
+                fundsLeftOver = 0d;
+            }
+            var user = playerSession.getUser();
+            user.setTotalFunds(user.getTotalFunds() + fundsLeftOver);
+            user = userRepository.saveAndFlush(user);
 
-        repository.saveAndFlush(playerSession);
+            playerSession.setUser(user);
+            playerSession.setDealer(null);
+            playerSession.setFunds(null);
+            playerSession.setPokerTable(null);
+            playerSession.setConnectionType(null);
+            playerSession.setSessionState(SessionState.DISCONNECTED);
+
+            repository.saveAndFlush(playerSession);
+        });
     }
 
     private int getSessionTablePosition(PokerTable table) {

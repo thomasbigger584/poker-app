@@ -3,10 +3,13 @@ package com.twb.pokerapp.service.game;
 import com.antkorwin.xsync.XSync;
 import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
+import com.twb.pokerapp.exception.game.GamePlayerErrorLogException;
+import com.twb.pokerapp.exception.game.GamePlayerLogException;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.TableRepository;
 import com.twb.pokerapp.repository.UserRepository;
 import com.twb.pokerapp.service.PlayerSessionService;
+import com.twb.pokerapp.service.game.thread.GameLogService;
 import com.twb.pokerapp.service.game.thread.GameThreadManager;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
@@ -16,13 +19,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.UUID;
 
+import static com.twb.pokerapp.repository.RepositoryUtil.getThrowPlayerErrorLog;
+
 @Slf4j
 @Component
-//@Transactional
 @RequiredArgsConstructor
 public class TableGameService {
     private final UserRepository userRepository;
@@ -32,9 +36,11 @@ public class TableGameService {
 
     private final GameThreadManager threadManager;
     private final ServerMessageFactory messageFactory;
+    private final GameLogService gameLogService;
     private final MessageDispatcher dispatcher;
     private final XSync<UUID> mutex;
     private final ApplicationContext context;
+    private final TransactionTemplate transactionTemplate;
 
     public ServerMessageDTO onUserConnected(UUID tableId, ConnectionType connectionType, String username, Double buyInAmount) {
         return mutex.evaluate(tableId, () -> {
@@ -62,12 +68,12 @@ public class TableGameService {
                     throw new RuntimeException(message);
                 }
             }
-            var playerSessionOpt = playerSessionRepository.findByTableIdAndUsername_Lock(tableId, username);
+            var playerSessionOpt = playerSessionRepository.findByTableIdAndUsername(tableId, username);
             if (playerSessionOpt.isEmpty()) {
                 if (connectionType == ConnectionType.PLAYER) {
                     threadManager.createIfNotExist(table);
                 }
-                var connectedPlayerSession = playerSessionService.connectUserToRound(appUser, connectionType, table, buyInAmount);
+                var connectedPlayerSession = playerSessionService.connectUserToRound(tableId, appUser.getId(), connectionType, buyInAmount);
                 dispatcher.send(tableId, messageFactory.playerConnected(connectedPlayerSession));
             }
             var allPlayerSessions = playerSessionService.getByTableId(tableId);
@@ -76,39 +82,33 @@ public class TableGameService {
     }
 
     public void onPlayerAction(UUID tableId, String username, CreatePlayerActionDTO action) {
-        mutex.execute(tableId, () -> {
-            var tableOpt = tableRepository.findById(tableId);
-            if (tableOpt.isEmpty()) {
-                log.error("No table {} found for id", tableId);
-                return;
+        mutex.execute(tableId, () -> transactionTemplate.executeWithoutResult(status -> {
+            try {
+                var table = getThrowPlayerErrorLog(tableRepository.findById(tableId), "No table found for Table ID: " + tableId);
+                var playerSession = getThrowPlayerErrorLog(playerSessionRepository.findByTableIdAndUsername(tableId, username), "No player %s found on table %s".formatted(username, tableId));
+                if (playerSession.getConnectionType() == ConnectionType.LISTENER) {
+                    throw new GamePlayerLogException(playerSession, "You are a listener on table, cannot perform actions");
+                }
+                var gameThread = getThrowPlayerErrorLog(threadManager.getIfExists(tableId), playerSession, "No game thread exists for table %s".formatted(tableId));
+                var playerTurnLatch = gameThread.getPlayerTurnLatch();
+                if (playerTurnLatch == null || !username.equals(playerTurnLatch.playerSession().getUser().getUsername())) {
+                    throw new GamePlayerLogException(playerSession, "Not waiting for you to play on table");
+                }
+                var playerActionService = table.getGameType().getPlayerActionService(context);
+                playerActionService.playerAction(playerSession, gameThread, action);
+            } catch (GamePlayerLogException e) {
+                gameLogService.sendLogMessage(e.getPlayerSession(), e.getMessage());
+            } catch (GamePlayerErrorLogException e) {
+                if (e.getPlayerSession() == null) {
+                    gameLogService.sendErrorMessage(username, e.getMessage());
+                } else {
+                    gameLogService.sendErrorMessage(e.getPlayerSession(), e.getMessage());
+                }
+            } catch (Exception e) {
+                gameLogService.sendErrorMessage(username, e.getMessage());
+                throw e;
             }
-            var table = tableOpt.get();
-            var playerSessionOpt =
-                    playerSessionRepository.findByTableIdAndUsername_Lock(tableId, username);
-            if (playerSessionOpt.isEmpty()) {
-                log.error("No player {} found on table {}", username, tableId);
-                return;
-            }
-            var playerSession = playerSessionOpt.get();
-            if (playerSession.getConnectionType() == ConnectionType.LISTENER) {
-                log.error("Player {} is a listener on table", playerSession.getId());
-                return;
-            }
-            var gameThreadOpt = threadManager.getIfExists(tableId);
-            if (gameThreadOpt.isEmpty()) {
-                log.error("No game thread exists for table {}", tableId);
-                return;
-            }
-            var gameThread = gameThreadOpt.get();
-            var playerTurnLatch = gameThread.getPlayerTurnLatch();
-            if (playerTurnLatch == null
-                    || !username.equals(playerTurnLatch.playerSession().getUser().getUsername())) {
-                log.error("Not waiting for {} to play on table {}", username, tableId);
-                return;
-            }
-            var playerActionService = table.getGameType().getPlayerActionService(context);
-            playerActionService.playerAction(playerSession, gameThread, action);
-        });
+        }));
     }
 
     public void onUserDisconnected(UUID tableId, String username) {
@@ -120,15 +120,15 @@ public class TableGameService {
             }
             var table = tableOpt.get();
             var playerSessionOpt =
-                    playerSessionRepository.findByTableIdAndUsername_Lock(tableId, username);
+                    playerSessionRepository.findByTableIdAndUsername(tableId, username);
             if (playerSessionOpt.isEmpty()) {
                 log.error("No player {} found on table {}", username, tableId);
                 return;
             }
             var playerSession = playerSessionOpt.get();
-            playerSessionService.disconnectUser(playerSession);
+            playerSessionService.disconnectUser(playerSession.getId());
 
-            dispatcher.send(tableId,  messageFactory.playerDisconnected(username));
+            dispatcher.send(tableId, messageFactory.playerDisconnected(username));
 
             var threadOpt = threadManager.getIfExists(tableId);
             if (threadOpt.isEmpty()) {
@@ -143,7 +143,7 @@ public class TableGameService {
                 playerActionService.playerAction(playerSession, gameThread, action);
             }
             var playerSessions =
-                    playerSessionRepository.findConnectedPlayersByTableId_Lock(tableId);
+                    playerSessionRepository.findConnectedPlayersByTableId(tableId);
             if (playerSessions.size() < 2) {
                 gameThread.stopGame();
             }

@@ -12,10 +12,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
 @Component
 @RequiredArgsConstructor
 public class PlayerActionService {
@@ -23,15 +19,13 @@ public class PlayerActionService {
     private final PlayerActionRepository repository;
     private final PlayerActionMapper mapper;
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public PlayerAction create(PlayerSession playerSession,
-                               BettingRound bettingRound,
-                               CreatePlayerActionDTO createDto) {
+    @Transactional(propagation = Propagation.MANDATORY)
+    public PlayerAction create(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createDto) {
 
         var amount = createDto.getAmount();
         if (amount != null && amount > 0d) {
-            playerSession.setFunds(playerSession.getFunds() - createDto.getAmount());
-            playerSession = playerSessionRepository.saveAndFlush(playerSession);
+            playerSession.setFunds(playerSession.getFunds() - amount);
+            playerSession = playerSessionRepository.save(playerSession);
         }
 
         var playerAction = new PlayerAction();
@@ -40,24 +34,8 @@ public class PlayerActionService {
         playerAction.setActionType(createDto.getAction());
         playerAction.setAmount(createDto.getAmount());
 
-        playerAction = repository.saveAndFlush(playerAction);
+        playerAction = repository.save(playerAction);
 
         return playerAction;
-    }
-
-    // todo: check does this need to be requires_new
-    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
-    public List<PlayerAction> refreshPlayerActionsNotFolded(UUID bettingRoundId) {
-        return repository.findPlayerActionsNotFolded(bettingRoundId);
-    }
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
-    public List<PlayerAction> getPlayerActionsNotFolded(UUID bettingRoundId) {
-        return repository.findPlayerActionsNotFolded(bettingRoundId);
-    }
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
-    public Optional<PlayerAction> getLatestByBettingRoundAndPlayer(UUID bettingRoundId, UUID playerSessionId) {
-        return repository.findByBettingRoundAndPlayer(bettingRoundId, playerSessionId);
     }
 }
