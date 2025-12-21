@@ -32,7 +32,7 @@ public class TexasEvaluationService {
     private final WinnerService winnerService;
     private final GameLogService gameLogService;
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void evaluate(GameThreadParams params) {
         var roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
         if (roundOpt.isEmpty()) {

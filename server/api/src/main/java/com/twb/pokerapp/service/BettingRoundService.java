@@ -26,7 +26,7 @@ public class BettingRoundService {
     private final BettingRoundRepository repository;
     private final BettingRoundMapper mapper;
 
-    @Transactional(propagation = Propagation.MANDATORY)
+    @Transactional
     public BettingRound create(UUID tableId, BettingRoundType state) {
         if (state == null) {
             throw new IllegalStateException("Could not create betting round as betting round state is null");

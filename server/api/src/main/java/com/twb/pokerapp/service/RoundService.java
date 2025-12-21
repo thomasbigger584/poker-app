@@ -43,11 +43,11 @@ public class RoundService {
         return round;
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
     public Optional<Round> getRoundByTable(UUID tableId) {
         return repository.findCurrentByTableId(tableId);
     }
 
+    @Transactional(propagation = Propagation.MANDATORY)
     public void setRoundState(Round round, RoundState roundState) {
         round.setRoundState(roundState);
         repository.saveAndFlush(round);
