@@ -93,6 +93,7 @@ public abstract class GameThread extends BaseGameThread {
     private void initializeThread() {
         setName(params.getTableId().toString());
         setPriority(Thread.MAX_PRIORITY);
+        setDaemon(true);
         interruptGame.set(false);
         gameInProgress.set(true);
         roundInProgress.set(false);
@@ -138,7 +139,7 @@ public abstract class GameThread extends BaseGameThread {
                 throw new GameInterruptedException("Cannot start an existing new round not in the WAITING_FOR_PLAYERS state");
             }
         } else {
-            transaction.getWriteTx().executeWithoutResult(status -> {
+            writeTx.executeWithoutResult(status -> {
                 var tableOpt = tableRepository.findById(params.getTableId());
                 if (tableOpt.isEmpty()) {
                     throw new GameInterruptedException("Cannot start as table doesn't exist");
@@ -203,7 +204,7 @@ public abstract class GameThread extends BaseGameThread {
 
     private void finishRound() {
         if (roundInProgress.get()) {
-            transaction.getWriteTx().executeWithoutResult(status -> {
+            writeTx.executeWithoutResult(status -> {
                 var bettingRoundOpt = bettingRoundRepository.findCurrentByRoundId(roundId);
                 bettingRoundOpt.ifPresent(bettingRound ->
                         bettingRoundService.setBettingRoundFinished(bettingRound));
@@ -249,7 +250,7 @@ public abstract class GameThread extends BaseGameThread {
 
     @CallerThread
     public void onPostPlayerAction(CreatePlayerActionDTO createActionDto) {
-        transaction.getReadTx().executeWithoutResult(state -> {
+        readTx.executeWithoutResult(state -> {
             if (playerTurnLatch != null) {
                 playerTurnLatch.countDown();
                 playerTurnLatch = null;
@@ -270,7 +271,7 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     private void saveRoundState(RoundState roundState) {
-        transaction.getWriteTx().executeWithoutResult(transactionStatus -> {
+        writeTx.executeWithoutResult(transactionStatus -> {
             var roundOpt = roundRepository.findById(roundId);
             roundOpt.ifPresent(round -> roundService.setRoundState(round, roundState));
         });

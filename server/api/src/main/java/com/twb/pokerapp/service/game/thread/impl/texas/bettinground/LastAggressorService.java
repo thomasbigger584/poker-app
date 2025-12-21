@@ -1,6 +1,5 @@
 package com.twb.pokerapp.service.game.thread.impl.texas.bettinground;
 
-import com.twb.pokerapp.config.TransactionConfiguration;
 import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
@@ -23,15 +22,15 @@ import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 import static com.twb.pokerapp.repository.RepositoryUtil.getThrowGameInterrupted;
 
@@ -40,7 +39,11 @@ import static com.twb.pokerapp.repository.RepositoryUtil.getThrowGameInterrupted
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class LastAggressorService {
     @Autowired
-    private TransactionConfiguration transaction;
+    private TransactionTemplate writeTx;
+
+    @Autowired
+    @Qualifier("readTx")
+    private TransactionTemplate readTx;
 
     @Autowired
     private RoundRepository roundRepository;
@@ -87,7 +90,7 @@ public class LastAggressorService {
     }
 
     public LastAggressorService onPrePlayerTurn() {
-        transaction.getReadTx().executeWithoutResult(status -> {
+        readTx.executeWithoutResult(status -> {
             round = getThrowGameInterrupted(roundRepository.findCurrentByTableId(params.getTableId()), "Round is empty for table");
             bettingRound = getThrowGameInterrupted(bettingRoundRepository.findCurrentByRoundId(round.getId()), "Betting Round is empty for round");
 
@@ -128,7 +131,7 @@ public class LastAggressorService {
     }
 
     public void onPostPlayerTurn() {
-        transaction.getWriteTx().executeWithoutResult(status -> {
+        writeTx.executeWithoutResult(status -> {
             var latestPlayerActionOpt = playerActionRepository
                     .findByBettingRoundAndPlayer(bettingRound.getId(), currentPlayer.getId());
 
@@ -141,7 +144,7 @@ public class LastAggressorService {
             dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound));
         });
         playerIndex++;
-        transaction.getReadTx().executeWithoutResult(status -> {
+        readTx.executeWithoutResult(status -> {
             var activePlayers = getActivePlayers(params, round);
             if (playerIndex >= activePlayers.size()) {
                 playerIndex = 0;
@@ -154,7 +157,7 @@ public class LastAggressorService {
     }
 
     public void finishBettingRound() {
-        transaction.getWriteTx().executeWithoutResult(status -> {
+        writeTx.executeWithoutResult(status -> {
             bettingRound = bettingRoundService.setBettingRoundFinished(bettingRound);
             dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound));
         });
@@ -194,7 +197,7 @@ public class LastAggressorService {
             if (!await) {
                 var createActionDto = new CreatePlayerActionDTO();
                 createActionDto.setAction(ActionType.FOLD);
-                transaction.getWriteTx().executeWithoutResult(status -> {
+                writeTx.executeWithoutResult(status -> {
                     var playerSessionManaged = getThrowGameInterrupted(playerSessionRepository.findById(playerSession.getId()), "Player Session not found");
                     texasPlayerActionService.playerAction(playerSessionManaged, gameThread, createActionDto);
                 });
