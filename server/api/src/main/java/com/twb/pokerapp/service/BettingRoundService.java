@@ -10,10 +10,8 @@ import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.UUID;
 
@@ -27,40 +25,31 @@ public class BettingRoundService {
     private final RoundRepository roundRepository;
     private final BettingRoundRepository repository;
     private final BettingRoundMapper mapper;
-    private final TransactionTemplate transaction;
 
+    @Transactional(propagation = Propagation.MANDATORY)
     public BettingRound create(UUID tableId, BettingRoundType state) {
         if (state == null) {
             throw new IllegalStateException("Could not create betting round as betting round state is null");
         }
-        return transaction.execute(
-                status -> {
-            var roundOpt = roundRepository.findCurrentByTableId(tableId);
-            if (roundOpt.isEmpty()) {
-                throw new NotFoundException("Could not create betting round as round not found");
-            }
-            var bettingRound = new BettingRound();
-            bettingRound.setRound(roundOpt.get());
-            bettingRound.setType(state);
-            bettingRound.setState(IN_PROGRESS);
-            bettingRound.setPot(0d);
+        var roundOpt = roundRepository.findCurrentByTableId(tableId);
+        if (roundOpt.isEmpty()) {
+            throw new NotFoundException("Could not create betting round as round not found");
+        }
+        var bettingRound = new BettingRound();
+        bettingRound.setRound(roundOpt.get());
+        bettingRound.setType(state);
+        bettingRound.setState(IN_PROGRESS);
+        bettingRound.setPot(0d);
 
-            bettingRound = repository.save(bettingRound);
+        bettingRound = repository.save(bettingRound);
 
-            return bettingRound;
-        });
+        return bettingRound;
     }
 
-    public BettingRound setBettingRoundFinished(UUID bettingRoundId) {
-        return transaction.execute(status -> {
-            var bettingRoundOpt = repository.findById(bettingRoundId);
-            if (bettingRoundOpt.isEmpty()) {
-                throw new NotFoundException("Betting round not found");
-            }
-            var bettingRound = bettingRoundOpt.get();
-            bettingRound.setState(FINISHED);
-            return repository.saveAndFlush(bettingRound);
-        });
+    @Transactional(propagation = Propagation.MANDATORY)
+    public BettingRound setBettingRoundFinished(BettingRound bettingRound) {
+        bettingRound.setState(FINISHED);
+        return repository.saveAndFlush(bettingRound);
     }
 
     @Transactional(propagation = Propagation.MANDATORY)

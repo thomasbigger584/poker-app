@@ -8,7 +8,6 @@ import com.twb.pokerapp.web.websocket.message.server.payload.*;
 import com.twb.pokerapp.web.websocket.message.server.payload.validation.ValidationDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 

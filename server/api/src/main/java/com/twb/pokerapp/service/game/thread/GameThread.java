@@ -115,8 +115,7 @@ public abstract class GameThread extends BaseGameThread {
         List<PlayerSession> playerSessions;
         do {
             checkGameInterrupted();
-            playerSessions = playerSessionRepository
-                    .findConnectedPlayersByTableId(params.getTableId());
+            playerSessions = playerSessionRepository.findConnectedPlayersByTableId(params.getTableId());
             if (playerSessions.size() >= minPlayerCount) {
                 return;
             }
@@ -129,7 +128,7 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     private void createNewRound() {
-        var roundOpt = roundRepository.findCurrentByTableId_Lock(params.getTableId());
+        var roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
         if (roundOpt.isPresent()) {
             var round = roundOpt.get();
             this.roundId = round.getId();
@@ -158,8 +157,7 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     protected List<PlayerSession> getPlayerSessionsNotZero() {
-        var playerSessions = playerSessionRepository
-                .findConnectedPlayersByTableId_Lock(params.getTableId());
+        var playerSessions = playerSessionRepository.findConnectedPlayersByTableId(params.getTableId());
         if (CollectionUtils.isEmpty(playerSessions)) {
             throw new GameInterruptedException(NO_MORE_PLAYERS_CONNECTED);
         }
@@ -196,7 +194,7 @@ public abstract class GameThread extends BaseGameThread {
 
     private void initBettingRound(RoundState roundState) {
         var bettingRoundTypeOpt = roundState.getBettingRoundType();
-        bettingRoundTypeOpt.ifPresent(bettingRoundType -> bettingRoundService.create(table, bettingRoundType));
+        bettingRoundTypeOpt.ifPresent(bettingRoundType -> bettingRoundService.create(params.getTableId(), bettingRoundType));
     }
 
     private void finishRound() {
@@ -243,14 +241,14 @@ public abstract class GameThread extends BaseGameThread {
             playerTurnLatch.countDown();
             playerTurnLatch = null;
         }
-        var roundOpt = roundService.getRoundByTable(table.getId());
+        var roundOpt = roundService.getRoundByTable(params.getTableId());
         if (roundOpt.isEmpty()) {
             // there is no round so ensure we can move to next one
             interruptRound.set(true);
         } else {
             var round = roundOpt.get();
             var activePlayers = playerSessionRepository
-                    .findActivePlayersByTableId(table.getId(), round.getId());
+                    .findActivePlayersByTableId(params.getTableId(), round.getId());
             if (activePlayers.size() < 2) {
                 // there is only 1 player left in a started game
                 interruptRound.set(true);
@@ -261,7 +259,7 @@ public abstract class GameThread extends BaseGameThread {
     private void finishCurrentBettingRound() {
         var bettingRoundOpt = bettingRoundRepository.findCurrentByRoundId(roundId);
         bettingRoundOpt.ifPresent(bettingRound ->
-                bettingRoundService.setBettingRoundFinished(bettingRound.getId()));
+                bettingRoundService.setBettingRoundFinished(bettingRound));
     }
 
     private void saveRoundState(RoundState roundState) {

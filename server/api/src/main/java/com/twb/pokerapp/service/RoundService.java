@@ -21,6 +21,7 @@ public class RoundService {
     private final RoundRepository repository;
     private final RoundMapper mapper;
 
+    @Transactional(propagation = Propagation.MANDATORY)
     public Round create(PokerTable table) {
         var round = new Round();
         round.setRoundState(RoundState.WAITING_FOR_PLAYERS);
@@ -32,7 +33,7 @@ public class RoundService {
         return round;
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.MANDATORY)
     public Round updatePot(Round round, BettingRound bettingRound) {
         var newPot = round.getPot() + bettingRound.getPot();
         round.setPot(newPot);

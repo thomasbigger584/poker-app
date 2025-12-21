@@ -40,10 +40,10 @@ public class TableGameService {
     private final MessageDispatcher dispatcher;
     private final XSync<UUID> mutex;
     private final ApplicationContext context;
-    private final TransactionTemplate transactionTemplate;
+    private final TransactionTemplate transaction;
 
     public ServerMessageDTO onUserConnected(UUID tableId, ConnectionType connectionType, String username, Double buyInAmount) {
-        return mutex.evaluate(tableId, () -> transactionTemplate.execute(status -> {
+        return mutex.evaluate(tableId, () -> transaction.execute(status -> {
             var table = getThrowPlayerErrorLog(tableRepository.findById(tableId), "No table found for Table ID: " + tableId);
             if (connectionType == ConnectionType.PLAYER) {
                 if (buyInAmount < table.getMinBuyin() || buyInAmount > table.getMaxBuyin()) {
@@ -72,7 +72,7 @@ public class TableGameService {
     }
 
     public void onPlayerAction(UUID tableId, String username, CreatePlayerActionDTO action) {
-        mutex.execute(tableId, () -> transactionTemplate.executeWithoutResult(status -> {
+        mutex.execute(tableId, () -> transaction.executeWithoutResult(status -> {
             try {
                 var table = getThrowPlayerErrorLog(tableRepository.findById(tableId), "No table found for Table ID: " + tableId);
                 var playerSession = getThrowPlayerErrorLog(playerSessionRepository.findByTableIdAndUsername(tableId, username), "Your session is not found on table %s".formatted(tableId));
@@ -102,7 +102,7 @@ public class TableGameService {
     }
 
     public void onUserDisconnected(UUID tableId, String username) {
-        mutex.execute(tableId, () -> transactionTemplate.executeWithoutResult(status -> {
+        mutex.execute(tableId, () -> transaction.executeWithoutResult(status -> {
             var table = getThrowPlayerErrorLog(tableRepository.findById(tableId), "No table found for Table ID: " + tableId);
             var playerSession = getThrowPlayerErrorLog(playerSessionRepository.findByTableIdAndUsername(tableId, username), "Your session is not found on table %s".formatted(tableId));
 
