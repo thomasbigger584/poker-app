@@ -20,7 +20,7 @@ public class CardService {
 
     public Card createPlayerCard(Hand hand, Card card) {
         card.setHand(hand);
-        card = repository.saveAndFlush(card);
+        card = repository.save(card);
         return card;
     }
 
@@ -29,9 +29,8 @@ public class CardService {
         if (roundOpt.isEmpty()) {
             throw new IllegalStateException("Round not found");
         }
-        var round = roundOpt.get();
-        card.setRound(round);
-        card = repository.saveAndFlush(card);
+        card.setRound(roundOpt.get());
+        card = repository.save(card);
         return card;
     }
 }

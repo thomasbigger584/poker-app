@@ -27,9 +27,7 @@ public class RoundService {
         round.setRoundState(RoundState.WAITING_FOR_PLAYERS);
         round.setPokerTable(table);
         round.setPot(0d);
-
-        round = repository.saveAndFlush(round);
-
+        round = repository.save(round);
         return round;
     }
 
@@ -37,19 +35,13 @@ public class RoundService {
     public Round updatePot(Round round, BettingRound bettingRound) {
         var newPot = round.getPot() + bettingRound.getPot();
         round.setPot(newPot);
-
-        round = repository.saveAndFlush(round);
-
+        round = repository.save(round);
         return round;
-    }
-
-    public Optional<Round> getRoundByTable(UUID tableId) {
-        return repository.findCurrentByTableId(tableId);
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
     public void setRoundState(Round round, RoundState roundState) {
         round.setRoundState(roundState);
-        repository.saveAndFlush(round);
+        repository.save(round);
     }
 }

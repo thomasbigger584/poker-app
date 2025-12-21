@@ -49,7 +49,7 @@ public class BettingRoundService {
     @Transactional(propagation = Propagation.MANDATORY)
     public BettingRound setBettingRoundFinished(BettingRound bettingRound) {
         bettingRound.setState(FINISHED);
-        return repository.saveAndFlush(bettingRound);
+        return repository.save(bettingRound);
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
