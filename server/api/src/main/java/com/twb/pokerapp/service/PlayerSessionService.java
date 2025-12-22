@@ -8,6 +8,7 @@ import com.twb.pokerapp.domain.enumeration.SessionState;
 import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.mapper.PlayerSessionMapper;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
+import com.twb.pokerapp.repository.TableRepository;
 import com.twb.pokerapp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -19,22 +20,18 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
-@Transactional(propagation = Propagation.REQUIRES_NEW)
 public class PlayerSessionService {
+    private final TableRepository tableRepository;
     private final UserRepository userRepository;
     private final PlayerSessionRepository repository;
     private final PlayerSessionMapper mapper;
 
-    public PlayerSessionDTO connectUserToRound(AppUser user,
+    @Transactional(propagation = Propagation.MANDATORY)
+    public PlayerSessionDTO connectUserToRound(PokerTable table, AppUser user,
                                                ConnectionType connectionType,
-                                               PokerTable table,
                                                Double buyInAmount) {
-        var tableId = table.getId();
-        var username = user.getUsername();
-
         var sessionOpt = repository
-                .findByTableIdAndUsername(tableId, username);
-
+                .findByTableIdAndUsername(table.getId(), user.getUsername());
         PlayerSession session;
         if (sessionOpt.isPresent()) {
             session = sessionOpt.get();
@@ -54,13 +51,14 @@ public class PlayerSessionService {
             user.setTotalFunds(user.getTotalFunds() - buyInAmount);
         }
 
-        user = userRepository.saveAndFlush(user);
+        user = userRepository.save(user);
         session.setUser(user);
 
-        session = repository.saveAndFlush(session);
+        session = repository.save(session);
         return mapper.modelToDto(session);
     }
 
+    @Transactional(propagation = Propagation.MANDATORY)
     public void disconnectUser(PlayerSession playerSession) {
         var fundsLeftOver = playerSession.getFunds();
         if (fundsLeftOver == null) {
@@ -68,7 +66,7 @@ public class PlayerSessionService {
         }
         var user = playerSession.getUser();
         user.setTotalFunds(user.getTotalFunds() + fundsLeftOver);
-        userRepository.saveAndFlush(user);
+        user = userRepository.save(user);
 
         playerSession.setUser(user);
         playerSession.setDealer(null);
@@ -77,7 +75,7 @@ public class PlayerSessionService {
         playerSession.setConnectionType(null);
         playerSession.setSessionState(SessionState.DISCONNECTED);
 
-        repository.saveAndFlush(playerSession);
+        repository.save(playerSession);
     }
 
     private int getSessionTablePosition(PokerTable table) {

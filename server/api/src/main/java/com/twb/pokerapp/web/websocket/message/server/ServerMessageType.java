@@ -45,7 +45,10 @@ public enum ServerMessageType {
      */
     PLAYER_ACTIONED,
 
-    // todo: add more
+    /*
+     * Used to notify all players of when the betting round and round pots get updated
+     */
+    BETTING_ROUND_UPDATED,
 
     /*
      * Used to notify the client that the round has finished
@@ -98,6 +101,7 @@ public enum ServerMessageType {
             case DEAL_COMMUNITY -> DealCommunityCardDTO.class;
             case PLAYER_TURN -> PlayerTurnDTO.class;
             case PLAYER_ACTIONED -> PlayerActionedDTO.class;
+            case BETTING_ROUND_UPDATED -> BettingRoundUpdatedDTO.class;
 
             case ROUND_FINISHED -> RoundFinishedDTO.class;
             case GAME_FINISHED -> GameFinishedDTO.class;

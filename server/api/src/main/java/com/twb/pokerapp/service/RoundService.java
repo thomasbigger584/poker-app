@@ -11,9 +11,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
-import java.util.UUID;
-
 @Component
 @Transactional
 @RequiredArgsConstructor
@@ -21,34 +18,27 @@ public class RoundService {
     private final RoundRepository repository;
     private final RoundMapper mapper;
 
+    @Transactional(propagation = Propagation.MANDATORY)
     public Round create(PokerTable table) {
         var round = new Round();
         round.setRoundState(RoundState.WAITING_FOR_PLAYERS);
         round.setPokerTable(table);
         round.setPot(0d);
-
-        round = repository.saveAndFlush(round);
-
+        round = repository.save(round);
         return round;
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.MANDATORY)
     public Round updatePot(Round round, BettingRound bettingRound) {
         var newPot = round.getPot() + bettingRound.getPot();
         round.setPot(newPot);
-
-        round = repository.saveAndFlush(round);
-
+        round = repository.save(round);
         return round;
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
-    public Optional<Round> getRoundByTable(UUID tableId) {
-        return repository.findCurrentByTableId(tableId);
-    }
-
+    @Transactional(propagation = Propagation.MANDATORY)
     public void setRoundState(Round round, RoundState roundState) {
         round.setRoundState(roundState);
-        repository.saveAndFlush(round);
+        repository.save(round);
     }
 }

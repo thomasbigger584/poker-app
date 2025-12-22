@@ -9,11 +9,12 @@ import lombok.Data;
 @Data
 @Builder
 public class GameRunnerParams {
-    private KeycloakClients keycloakClients;
-    private int numberOfRounds;
-    private GameLatches latches;
-    private TableDTO table;
+    private final KeycloakClients keycloakClients;
+    private final int numberOfRounds;
+    private final GameLatches latches;
+    private final TableDTO table;
     private final Validator validator;
+    private final double buyinAmount;
 }
 
 

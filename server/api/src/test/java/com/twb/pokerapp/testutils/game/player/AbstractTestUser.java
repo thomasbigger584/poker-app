@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
 import org.springframework.http.HttpHeaders;
 import org.springframework.messaging.simp.stomp.*;
-import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
@@ -42,8 +41,6 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String HEADER_CONNECTION_TYPE = "X-Connection-Type";
     private static final String HEADER_BUYIN_AMOUNT = "X-BuyIn-Amount";
-    private static final TaskScheduler TASK_SCHEDULER =
-            new ConcurrentTaskScheduler(Executors.newSingleThreadScheduledExecutor());
     @Getter
     protected final TestUserParams params;
     private final Keycloak keycloak;
@@ -102,6 +99,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         session.subscribe(GAME_TOPIC_SUFFIX.formatted(params.getTable().getId()), this);
         session.subscribe(NOTIFICATION_TOPIC_SUFFIX.formatted(params.getUsername()), this);
         this.session = session;
+        countdownLatch(connectLatch);
     }
 
     @Override
@@ -109,21 +107,14 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
                                 StompHeaders headers, byte[] payload, Throwable exception) {
         log.error("Exception thrown during stomp session", exception);
         exceptionThrown.set(exception);
-        for (var index = 0; index < connectLatch.getCount(); index++) {
-            connectLatch.countDown();
-        }
-        params.getLatches().roundLatch().countDown();
-        params.getLatches().gameLatch().countDown();
+        countdownLatches();
     }
 
     @Override
     public void handleTransportError(StompSession session, Throwable exception) {
         log.error("Exception thrown after connect failure", exception);
         exceptionThrown.set(exception);
-        for (var index = 0; index < connectLatch.getCount(); index++) {
-            connectLatch.countDown();
-        }
-        params.getLatches().roundLatch().countDown();
+        countdownLatches();
     }
 
     @Override
@@ -136,9 +127,6 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         if (payload == null) {
             log.error("Frame received but payload is null with headers {}", headers);
             return;
-        }
-        if (connectLatch.getCount() > 0) {
-            connectLatch.countDown();
         }
         var message = (ServerMessageDTO) payload;
         receivedMessages.add(message);
@@ -156,12 +144,31 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         handleMessage(headers, message);
     }
 
+//    @Override
+//    public void close() {
+//        disconnect();
+//        if (client.isRunning()) {
+//            client.stop();
+//        }
+//    }
+
     // ***************************************************************
     // Send Methods
     // ***************************************************************
 
     public void sendPlayerAction(CreatePlayerActionDTO createDto) {
         send(SEND_PLAYER_ACTION.formatted(params.getTable().getId()), createDto);
+    }
+
+    protected void send(String destination, Object dto) {
+        if (session == null || !session.isConnected()) {
+            log.warn("Cannot send to destination {} for user {} as not connected", destination, params.getUsername());
+            return;
+        }
+        log.info(">>>> [{}] sending {}", params.getUsername(), dto);
+        var receiptable = session.send(destination, dto);
+        receiptable.addReceiptTask(() -> log.info("Receipt received for user {} destination {} and payload {}", params.getUsername(), destination, dto));
+        receiptable.addReceiptLostTask(() -> log.warn("Failed to receive receipt for user {} destination {} and payload {}", params.getUsername(), destination, dto));
     }
 
     // ***************************************************************
@@ -184,25 +191,23 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
         var sockJsClient = new SockJsClient(transports);
         var stompClient = new WebSocketStompClient(sockJsClient);
-        stompClient.setTaskScheduler(TASK_SCHEDULER);
+        stompClient.setTaskScheduler(new ConcurrentTaskScheduler(Executors.newSingleThreadScheduledExecutor()));
         stompClient.setMessageConverter(new ServerMessageConverter());
         return stompClient;
     }
 
-    protected void send(String destination, Object dto) {
-        if (session == null || !session.isConnected()) {
-            log.warn("Cannot send to destination {} for user {} as not connected", destination, params.getUsername());
-            return;
-        }
-        log.info(">>>> [{}] sending {}", params.getUsername(), dto);
-        var receiptable = session.send(destination, dto);
-        receiptable.addReceiptTask(() -> log.info("Receipt received for user {} destination {} and payload {}", params.getUsername(), destination, dto));
-        receiptable.addReceiptLostTask(() -> log.info("Failed to receive receipt for user {} destination {} and payload {}", params.getUsername(), destination, dto));
+    private void countdownLatches() {
+        countdownLatch(connectLatch);
+        var latches = params.getLatches();
+        countdownLatch(latches.roundLatch());
+        countdownLatch(latches.gameLatch());
     }
 
-    // ***************************************************************
-    // Helper Methods
-    // ***************************************************************
+    protected void countdownLatch(CountDownLatch latch) {
+        for (var index = 0; index < latch.getCount(); index++) {
+            latch.countDown();
+        }
+    }
 
     private String getAccessToken() {
         var tokenManager = keycloak.tokenManager();

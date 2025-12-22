@@ -7,17 +7,11 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface PlayerActionRepository extends JpaRepository<PlayerAction, UUID> {
-
-    @Query("""
-            SELECT SUM(a.amount)
-            FROM PlayerAction a
-            WHERE a.bettingRound.id = :bettingRoundId
-            """)
-    double sumAmounts(@Param("bettingRoundId") UUID bettingRoundId);
 
     @Query("""
             SELECT a
@@ -32,8 +26,13 @@ public interface PlayerActionRepository extends JpaRepository<PlayerAction, UUID
             SELECT a
             FROM PlayerAction a
             WHERE a.bettingRound.id = :bettingRoundId
-            AND a.actionType <> com.twb.pokerapp.domain.enumeration.ActionType.FOLD
-            ORDER BY a.createdDateTime ASC
+            AND a.playerSession.id = :playerSessionId
+            AND a.createdDateTime = (
+                SELECT MAX(a2.createdDateTime)
+                FROM PlayerAction a2
+                WHERE a2.bettingRound.id = :bettingRoundId
+                AND a2.playerSession.id = :playerSessionId
+            )
             """)
-    List<PlayerAction> findPlayerActionsForContributions(@Param("bettingRoundId") UUID bettingRoundId);
+    Optional<PlayerAction> findByBettingRoundAndPlayer(@Param("bettingRoundId") UUID bettingRoundId, @Param("playerSessionId") UUID playerSessionId);
 }

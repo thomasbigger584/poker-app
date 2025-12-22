@@ -11,6 +11,8 @@ import com.twb.pokerapp.service.RoundService;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * Abstract base class for game threads.
@@ -57,4 +59,11 @@ public abstract class BaseGameThread extends Thread {
 
     @Autowired
     protected CardService cardService;
+
+    @Autowired
+    protected TransactionTemplate writeTx;
+
+    @Autowired
+    @Qualifier("readTx")
+    protected TransactionTemplate readTx;
 }

@@ -7,6 +7,7 @@ import java.util.UUID;
 public class RoundDTO {
     private UUID id;
     private String roundState;
+    private Double pot;
 
     public UUID getId() {
         return id;
@@ -24,12 +25,21 @@ public class RoundDTO {
         this.roundState = roundState;
     }
 
+    public Double getPot() {
+        return pot;
+    }
+
+    public void setPot(Double pot) {
+        this.pot = pot;
+    }
+
     @NonNull
     @Override
     public String toString() {
         return "RoundDTO{" +
                 "id=" + id +
                 ", roundState='" + roundState + '\'' +
+                ", pot=" + pot +
                 '}';
     }
 }

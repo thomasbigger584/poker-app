@@ -1,5 +1,6 @@
 package com.twb.pokerapp.data.websocket.message.server.enumeration;
 
+import com.twb.pokerapp.data.websocket.message.server.payload.BettingRoundUpdatedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.ChatMessageDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.DealCommunityCardDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.DealPlayerCardDTO;
@@ -57,7 +58,10 @@ public enum ServerMessageType {
      */
     PLAYER_ACTIONED,
 
-    // todo: add more
+    /*
+     * Used to notify all players of when the betting round and round pots get updated
+     */
+    BETTING_ROUND_UPDATED,
 
     /*
      * Used to notify the client that the round has finished
@@ -117,6 +121,8 @@ public enum ServerMessageType {
                 return PlayerTurnDTO.class;
             case PLAYER_ACTIONED:
                 return PlayerActionedDTO.class;
+            case BETTING_ROUND_UPDATED:
+                return BettingRoundUpdatedDTO.class;
 
             case ROUND_FINISHED:
                 return RoundFinishedDTO.class;

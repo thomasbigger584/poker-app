@@ -19,11 +19,12 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.twb.pokerapp.repository.RepositoryUtil.getThrowGameInterrupted;
 import static com.twb.pokerapp.service.game.thread.util.SleepUtil.sleepInMs;
 
 @Slf4j
 @RequiredArgsConstructor
-public abstract class GameThread extends BaseGameThread {
+public abstract class GameThread extends BaseGameThread implements Thread.UncaughtExceptionHandler {
     // *****************************************************************************************
     // Constants
     // *****************************************************************************************
@@ -82,15 +83,13 @@ public abstract class GameThread extends BaseGameThread {
             log.error(e.getMessage(), e);
             finishRound();
             finishGame();
-            if (e instanceof GameInterruptedException) {
-                gameLogService.sendErrorMessage(table, e.getMessage());
-            }
         }
     }
 
     private void initializeThread() {
         setName(params.getTableId().toString());
         setPriority(Thread.MAX_PRIORITY);
+        setDefaultUncaughtExceptionHandler(this);
         interruptGame.set(false);
         gameInProgress.set(true);
         roundInProgress.set(false);
@@ -98,11 +97,7 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     private void initializeTable() {
-        var tableOpt = tableRepository.findById_Lock(params.getTableId());
-        if (tableOpt.isEmpty()) {
-            throw new GameInterruptedException("No table found cannot start game");
-        }
-        table = tableOpt.get();
+        table = getThrowGameInterrupted(tableRepository.findById(params.getTableId()), "No table found cannot start game");
     }
 
     private void waitForMinimumPlayersToJoin() {
@@ -115,8 +110,7 @@ public abstract class GameThread extends BaseGameThread {
         List<PlayerSession> playerSessions;
         do {
             checkGameInterrupted();
-            playerSessions = playerSessionRepository
-                    .findConnectedPlayersByTableId_Lock(params.getTableId());
+            playerSessions = playerSessionRepository.findConnectedPlayersByTableId(params.getTableId());
             if (playerSessions.size() >= minPlayerCount) {
                 return;
             }
@@ -129,7 +123,7 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     private void createNewRound() {
-        var roundOpt = roundRepository.findCurrentByTableId_Lock(params.getTableId());
+        var roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
         if (roundOpt.isPresent()) {
             var round = roundOpt.get();
             this.roundId = round.getId();
@@ -137,11 +131,13 @@ public abstract class GameThread extends BaseGameThread {
                 throw new GameInterruptedException("Cannot start an existing new round not in the WAITING_FOR_PLAYERS state");
             }
         } else {
-            var tableOpt = tableRepository.findById_Lock(params.getTableId());
-            if (tableOpt.isEmpty()) {
-                throw new GameInterruptedException("Cannot start as table doesn't exist");
-            }
-            this.roundId = roundService.create(table).getId();
+            writeTx.executeWithoutResult(status -> {
+                var tableOpt = tableRepository.findById(params.getTableId());
+                if (tableOpt.isEmpty()) {
+                    throw new GameInterruptedException("Cannot start as table doesn't exist");
+                }
+                this.roundId = roundService.create(tableOpt.get()).getId();
+            });
         }
         gameLogService.sendLogMessage(table, "New Round...");
         sleepInMs(params.getRoundStartWaitMs());
@@ -158,8 +154,7 @@ public abstract class GameThread extends BaseGameThread {
     }
 
     protected List<PlayerSession> getPlayerSessionsNotZero() {
-        var playerSessions = playerSessionRepository
-                .findConnectedPlayersByTableId_Lock(params.getTableId());
+        var playerSessions = playerSessionRepository.findConnectedPlayersByTableId(params.getTableId());
         if (CollectionUtils.isEmpty(playerSessions)) {
             throw new GameInterruptedException(NO_MORE_PLAYERS_CONNECTED);
         }
@@ -196,14 +191,22 @@ public abstract class GameThread extends BaseGameThread {
 
     private void initBettingRound(RoundState roundState) {
         var bettingRoundTypeOpt = roundState.getBettingRoundType();
-        bettingRoundTypeOpt.ifPresent(bettingRoundType -> bettingRoundService.create(table, bettingRoundType));
+        bettingRoundTypeOpt.ifPresent(bettingRoundType -> bettingRoundService.create(params.getTableId(), bettingRoundType));
     }
 
     private void finishRound() {
         if (roundInProgress.get()) {
-            finishCurrentBettingRound();
-            saveRoundState(RoundState.FINISHED);
-            dispatcher.send(table, messageFactory.roundFinished());
+            writeTx.executeWithoutResult(status -> {
+                var bettingRoundOpt = bettingRoundRepository.findCurrentByRoundId(roundId);
+                bettingRoundOpt.ifPresent(bettingRound ->
+                        bettingRoundService.setBettingRoundFinished(bettingRound));
+
+                var roundOpt = roundRepository.findById(roundId);
+                roundOpt.ifPresent(round ->
+                        roundService.setRoundState(round, RoundState.FINISHED));
+
+                dispatcher.send(table, messageFactory.roundFinished());
+            });
         }
         roundInProgress.set(false);
         sleepInMs(params.getRoundEndWaitMs());
@@ -239,39 +242,37 @@ public abstract class GameThread extends BaseGameThread {
 
     @CallerThread
     public void onPostPlayerAction(CreatePlayerActionDTO createActionDto) {
-        if (playerTurnLatch != null) {
-            playerTurnLatch.countDown();
-            playerTurnLatch = null;
-        }
-        var roundOpt = roundService.getRoundByTable(table.getId());
-        if (roundOpt.isEmpty()) {
-            // there is no round so ensure we can move to next one
-            interruptRound.set(true);
-        } else {
-            var round = roundOpt.get();
-            var activePlayers = playerSessionRepository
-                    .findActivePlayersByTableId_Lock(table.getId(), round.getId());
-            if (activePlayers.size() < 2) {
-                // there is only 1 player left in a started game
-                interruptRound.set(true);
+        readTx.executeWithoutResult(state -> {
+            if (playerTurnLatch != null) {
+                playerTurnLatch.countDown();
+                playerTurnLatch = null;
             }
-        }
-    }
-
-    private void finishCurrentBettingRound() {
-        var bettingRoundOpt = bettingRoundRepository.findCurrentByRoundId(roundId);
-        bettingRoundOpt.ifPresent(bettingRound -> bettingRoundService.setBettingRoundFinished(bettingRound));
+            var roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
+            if (roundOpt.isEmpty()) {
+                // there is no round so ensure we can move to next one
+                interruptRound.set(true);
+            } else {
+                var round = roundOpt.get();
+                var activePlayers = playerSessionRepository.findActivePlayersByTableId(params.getTableId(), round.getId());
+                if (activePlayers.size() < 2) {
+                    // there is only 1 player left in a started game
+                    interruptRound.set(true);
+                }
+            }
+        });
     }
 
     private void saveRoundState(RoundState roundState) {
-        var roundOpt = roundRepository.findById(roundId);
-        roundOpt.ifPresent(round -> roundService.setRoundState(round, roundState));
+        writeTx.executeWithoutResult(transactionStatus -> {
+            var roundOpt = roundRepository.findById(roundId);
+            roundOpt.ifPresent(round -> roundService.setRoundState(round, roundState));
+        });
     }
 
     private void checkGameInterrupted() {
         if (interruptGame.get() || Thread.interrupted()) {
             var endLatch = params.getEndLatch();
-            if (endLatch.getCount() > 0) {
+            for (var index = 0; index < endLatch.getCount(); index++) {
                 endLatch.countDown();
             }
             throw new GameInterruptedException("Game is interrupted");
@@ -293,6 +294,17 @@ public abstract class GameThread extends BaseGameThread {
         } catch (InterruptedException e) {
             log.error("Failed to wait for game end latch", e);
         }
+    }
+
+    // ***************************************************************
+    // Lifecycle Methods
+    // ***************************************************************
+
+    @Override
+    public void uncaughtException(Thread thread, Throwable throwable) {
+        finishRound();
+        finishGame();
+        stopGame();
     }
 
     // ***************************************************************

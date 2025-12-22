@@ -5,6 +5,7 @@ import com.twb.pokerapp.domain.enumeration.CardType;
 import com.twb.pokerapp.domain.enumeration.RoundState;
 import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
+import com.twb.pokerapp.service.game.thread.impl.texas.bettinground.TexasBettingRoundService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -54,7 +55,7 @@ public class TexasGameThread extends GameThread {
 
     private void initDeal() {
         var activePlayers = playerSessionRepository
-                .findActivePlayersByTableId_Lock(table.getId(), roundId);
+                .findActivePlayersByTableId(table.getId(), roundId);
 
         for (var cardType : CardType.PLAYER_CARDS) {
             for (var playerSession : activePlayers) {

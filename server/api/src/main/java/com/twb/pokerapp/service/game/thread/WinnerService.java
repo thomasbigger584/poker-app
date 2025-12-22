@@ -25,7 +25,7 @@ public class WinnerService {
         var username = playerSession.getUser().getUsername();
         var handTypeStr = winningPlayerHandDTO.getHandType().getValue();
 
-        gameLogService.sendLogMessage(params.getTableId(), "%s wins round with a %s winning %.2f".formatted(username, handTypeStr, round.getPot()));
+        gameLogService.sendLogMessage(params.getTableId(), "%s wins round with a %s winning $%.2f".formatted(username, handTypeStr, round.getPot()));
     }
 
     private void handleMultiplePlayerWin(GameThreadParams params, Round round, List<EvalPlayerHandDTO> winners) {
@@ -33,7 +33,7 @@ public class WinnerService {
         var handTypeStr = winners.getFirst().getHandType().getValue();
         var splitPot = round.getPot() / winners.size();
 
-        gameLogService.sendLogMessage(params.getTableId(), "%s draws round with a %s winning %.2f each".formatted(winnerNames, handTypeStr, splitPot));
+        gameLogService.sendLogMessage(params.getTableId(), "%s draws round with a %s winning $%.2f each".formatted(winnerNames, handTypeStr, splitPot));
     }
 
     private String getReadableWinners(List<EvalPlayerHandDTO> winners) {

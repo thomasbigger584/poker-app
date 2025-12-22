@@ -10,6 +10,7 @@ import com.twb.pokerapp.data.websocket.WebSocketClient;
 import com.twb.pokerapp.data.websocket.message.client.SendChatMessageDTO;
 import com.twb.pokerapp.data.websocket.message.client.SendPlayerActionDTO;
 import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
+import com.twb.pokerapp.data.websocket.message.server.payload.BettingRoundUpdatedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.ChatMessageDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.DealCommunityCardDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.DealPlayerCardDTO;
@@ -47,6 +48,7 @@ public class TexasGameViewModel extends ViewModel
     public MutableLiveData<DealCommunityCardDTO> dealCommunityCard = new MutableLiveData<>();
     public MutableLiveData<PlayerTurnDTO> playerTurn = new MutableLiveData<>();
     public MutableLiveData<PlayerActionedDTO> playerActioned = new MutableLiveData<>();
+    public MutableLiveData<BettingRoundUpdatedDTO> bettingRoundUpdated = new MutableLiveData<>();
     public MutableLiveData<RoundFinishedDTO> roundFinished = new MutableLiveData<>();
     public MutableLiveData<GameFinishedDTO> gameFinished = new MutableLiveData<>();
     public MutableLiveData<ChatMessageDTO> chatMessage = new MutableLiveData<>();
@@ -108,7 +110,10 @@ public class TexasGameViewModel extends ViewModel
                 playerActioned.setValue((PlayerActionedDTO) message.getPayload());
                 break;
             }
-
+            case BETTING_ROUND_UPDATED: {
+                bettingRoundUpdated.setValue((BettingRoundUpdatedDTO) message.getPayload());
+                break;
+            }
             case ROUND_FINISHED: {
                 roundFinished.setValue((RoundFinishedDTO) message.getPayload());
                 break;

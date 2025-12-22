@@ -13,7 +13,6 @@ import com.twb.pokerapp.service.game.thread.GameThreadParams;
 import com.twb.pokerapp.service.game.thread.WinnerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
@@ -32,7 +31,7 @@ public class TexasEvaluationService {
     private final WinnerService winnerService;
     private final GameLogService gameLogService;
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void evaluate(GameThreadParams params) {
         var roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
         if (roundOpt.isEmpty()) {
@@ -58,7 +57,7 @@ public class TexasEvaluationService {
 
         var winnerUsername = winner.getUser().getUsername();
 
-        gameLogService.sendLogMessage(params.getTableId(), "%s wins round with %.2f".formatted(winnerUsername, round.getPot()));
+        gameLogService.sendLogMessage(params.getTableId(), "%s wins round with $%.2f".formatted(winnerUsername, round.getPot()));
     }
 
     private void evaluateMultiPlayersStanding(GameThreadParams params, Round round, List<PlayerSession> activePlayers) {
