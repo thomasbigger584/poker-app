@@ -1,12 +1,10 @@
 package com.twb.pokerapp.testutils.game.player;
 
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
-import com.twb.pokerapp.testutils.game.GameLatches;
 import com.twb.pokerapp.testutils.http.message.ServerMessageConverter;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.ErrorMessageDTO;
-import com.twb.pokerapp.web.websocket.message.server.payload.GameFinishedDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.LogMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.validation.ValidationDTO;
 import jakarta.validation.constraints.NotNull;
@@ -33,8 +31,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-
-import static com.twb.pokerapp.service.game.thread.util.SleepUtil.sleepInMs;
 
 @Slf4j
 public abstract class AbstractTestUser implements StompSessionHandler, StompFrameHandler, AutoCloseable {

@@ -35,7 +35,7 @@ public class TestGameListenerUser extends AbstractTestUser {
         if (payload instanceof RoundFinishedDTO dto) {
             var thisRoundCount = roundCountAtomicInteger.incrementAndGet();
             if (thisRoundCount == numOfRounds) {
-               latches.roundLatch().countDown();
+                latches.roundLatch().countDown();
             }
             // stopping tests when all players disconnect to cover full lifecycle
         } else if (payload instanceof GameFinishedDTO dto) {

@@ -30,13 +30,13 @@ public class AppStatsService {
     public void logAppStats() {
         int activeThreads = threadManager.getActiveThreadCount();
         int connectedUsers = userRegistry.getUserCount();
-        int connectedPlayers = playerSessionRepository.countConnectedPlayers(ConnectionType.PLAYER);
-        int connectedListeners = playerSessionRepository.countConnectedPlayers(ConnectionType.LISTENER);
+        int connectedPlayers = playerSessionRepository.countConnected(ConnectionType.PLAYER);
+        int connectedListeners = playerSessionRepository.countConnected(ConnectionType.LISTENER);
         long tableCount = tableRepository.count();
         long roundCount = roundRepository.count();
         long bettingRoundCount = bettingRoundRepository.count();
 
-        log.info("App Stats: Active Threads: {}, Users: {}, Players: {}, Listeners: {}, Tables: {}, Rounds: {}, BettingRounds: {}",
+        log.info("Active Threads: {}, Users: {}, Players: {}, Listeners: {}, Tables: {}, Rounds: {}, BettingRounds: {}",
                 activeThreads, connectedUsers, connectedPlayers, connectedListeners, tableCount, roundCount, bettingRoundCount);
     }
 }

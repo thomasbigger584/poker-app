@@ -2,7 +2,6 @@ package com.twb.pokerapp.service;
 
 import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.enumeration.BettingRoundType;
-import com.twb.pokerapp.exception.NotFoundException;
 import com.twb.pokerapp.mapper.BettingRoundMapper;
 import com.twb.pokerapp.repository.BettingRoundRepository;
 import com.twb.pokerapp.repository.RoundRepository;
@@ -17,6 +16,7 @@ import java.util.UUID;
 
 import static com.twb.pokerapp.domain.enumeration.BettingRoundState.FINISHED;
 import static com.twb.pokerapp.domain.enumeration.BettingRoundState.IN_PROGRESS;
+import static com.twb.pokerapp.repository.RepositoryUtil.getThrowGameInterrupted;
 
 @Slf4j
 @Component
@@ -31,12 +31,9 @@ public class BettingRoundService {
         if (state == null) {
             throw new IllegalStateException("Could not create betting round as betting round state is null");
         }
-        var roundOpt = roundRepository.findCurrentByTableId(tableId);
-        if (roundOpt.isEmpty()) {
-            throw new NotFoundException("Could not create betting round as round not found");
-        }
+        var round = getThrowGameInterrupted(roundRepository.findCurrentByTableId(tableId), "Round Not Found");
         var bettingRound = new BettingRound();
-        bettingRound.setRound(roundOpt.get());
+        bettingRound.setRound(round);
         bettingRound.setType(state);
         bettingRound.setState(IN_PROGRESS);
         bettingRound.setPot(0d);

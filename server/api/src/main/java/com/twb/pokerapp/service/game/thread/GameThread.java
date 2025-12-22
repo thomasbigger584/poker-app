@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.twb.pokerapp.repository.RepositoryUtil.getThrowGameInterrupted;
 import static com.twb.pokerapp.service.game.thread.util.SleepUtil.sleepInMs;
 
 @Slf4j
@@ -96,11 +97,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     }
 
     private void initializeTable() {
-        var tableOpt = tableRepository.findById(params.getTableId());
-        if (tableOpt.isEmpty()) {
-            throw new GameInterruptedException("No table found cannot start game");
-        }
-        table = tableOpt.get();
+        table = getThrowGameInterrupted(tableRepository.findById(params.getTableId()), "No table found cannot start game");
     }
 
     private void waitForMinimumPlayersToJoin() {
@@ -139,7 +136,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                 if (tableOpt.isEmpty()) {
                     throw new GameInterruptedException("Cannot start as table doesn't exist");
                 }
-                this.roundId = roundService.create(table).getId();
+                this.roundId = roundService.create(tableOpt.get()).getId();
             });
         }
         gameLogService.sendLogMessage(table, "New Round...");

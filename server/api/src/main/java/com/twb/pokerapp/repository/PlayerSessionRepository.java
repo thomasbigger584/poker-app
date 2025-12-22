@@ -96,5 +96,5 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             WHERE s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
             AND s.connectionType = :connectionType
             """)
-    int countConnectedPlayers(@Param("connectionType") ConnectionType connectionType);
+    int countConnected(@Param("connectionType") ConnectionType connectionType);
 }
