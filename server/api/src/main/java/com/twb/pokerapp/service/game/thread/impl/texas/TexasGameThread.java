@@ -37,7 +37,7 @@ public class TexasGameThread extends GameThread {
 
     @Override
     protected void onInitRound() {
-        determineNextDealer();
+        dealerService.determineNextDealer(params);
     }
 
     @Override
@@ -66,12 +66,12 @@ public class TexasGameThread extends GameThread {
     }
 
     private void dealPlayerCard(CardType cardType, PlayerSession playerSession) {
-        var card = getCard();
-        card.setCardType(cardType);
-
-        handService.addPlayerCard(table, playerSession, card);
-        dispatcher.send(table, messageFactory.initDeal(playerSession, card));
-
+        writeTx.executeWithoutResult(status -> {
+            var card = getCard();
+            card.setCardType(cardType);
+            handService.addPlayerCard(table, playerSession, card);
+            dispatcher.send(table, messageFactory.initDeal(playerSession, card));
+        });
         sleepInMs(params.getDealWaitMs());
     }
 
@@ -83,23 +83,17 @@ public class TexasGameThread extends GameThread {
     }
 
     private void dealCommunityCard(CardType cardType) {
-        var card = getCard();
-        card.setCardType(cardType);
-
-        cardService.createCommunityCard(table, card);
-        dispatcher.send(table, messageFactory.communityCardDeal(card));
-
+        writeTx.executeWithoutResult(status -> {
+            var card = getCard();
+            card.setCardType(cardType);
+            cardService.createCommunityCard(table, card);
+            dispatcher.send(table, messageFactory.communityCardDeal(card));
+        });
         sleepInMs(params.getDealWaitMs());
     }
 
     @Override
     protected RoundState getNextRoundState(RoundState roundState) {
         return roundState.nextTexasState();
-    }
-
-    private void determineNextDealer() {
-        var playerSessions = getPlayerSessionsNotZero();
-        var currentDealer = dealerService.nextDealerReorder(params.getTableId(), playerSessions);
-        dispatcher.send(table, messageFactory.dealerDetermined(currentDealer));
     }
 }

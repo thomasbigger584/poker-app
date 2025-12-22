@@ -13,7 +13,7 @@ import com.twb.pokerapp.service.game.thread.GameThreadParams;
 import com.twb.pokerapp.service.game.thread.WinnerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +23,7 @@ import static com.twb.pokerapp.service.game.thread.util.SleepUtil.sleepInMs;
 @Component
 @RequiredArgsConstructor
 public class TexasEvaluationService {
+    private final TransactionTemplate writeTx;
     private final RoundRepository roundRepository;
     private final PlayerSessionRepository playerSessionRepository;
     private final HandRepository handRepository;
@@ -31,23 +32,23 @@ public class TexasEvaluationService {
     private final WinnerService winnerService;
     private final GameLogService gameLogService;
 
-    @Transactional
     public void evaluate(GameThreadParams params) {
-        var roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
-        if (roundOpt.isEmpty()) {
-            gameLogService.sendLogMessage(params.getTableId(), "Round not found for table: " + params.getTableId());
-            return;
-        }
-        var round = roundOpt.get();
-
-        var activePlayers = playerSessionRepository
-                .findActivePlayersByTableId(params.getTableId(), round.getId());
-        if (activePlayers.size() == 1) {
-            var winner = activePlayers.getFirst();
-            evaluateLastPlayerStanding(params, winner, round);
-        } else {
-            evaluateMultiPlayersStanding(params, round, activePlayers);
-        }
+        writeTx.executeWithoutResult(status -> {
+            var roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
+            if (roundOpt.isEmpty()) {
+                gameLogService.sendLogMessage(params.getTableId(), "Round not found for table: " + params.getTableId());
+                return;
+            }
+            var round = roundOpt.get();
+            var activePlayers = playerSessionRepository
+                    .findActivePlayersByTableId(params.getTableId(), round.getId());
+            if (activePlayers.size() == 1) {
+                var winner = activePlayers.getFirst();
+                evaluateLastPlayerStanding(params, winner, round);
+            } else {
+                evaluateMultiPlayersStanding(params, round, activePlayers);
+            }
+        });
         sleepInMs(params.getEvalWaitMs());
     }
 

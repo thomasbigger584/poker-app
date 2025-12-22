@@ -6,6 +6,8 @@ import com.twb.pokerapp.repository.HandRepository;
 import com.twb.pokerapp.service.eval.dto.EvalPlayerHandDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -19,13 +21,13 @@ public class HandEvaluator {
     private final HandTypeEvaluator handTypeEvaluator;
     private final HandRepository handRepository;
 
+    @Transactional(propagation = Propagation.MANDATORY)
     public List<EvalPlayerHandDTO> evaluate(Round round, List<EvalPlayerHandDTO> playerHandList) {
         evaluateRankAndHandType(playerHandList);
         setWinners(playerHandList);
         savePlayerHandEvaluation(round, playerHandList);
         return getWinners(playerHandList);
     }
-
 
     private void evaluateRankAndHandType(List<EvalPlayerHandDTO> playerHandList) {
         for (var playerHand : playerHandList) {
@@ -57,7 +59,7 @@ public class HandEvaluator {
                         savingHands.add(hand);
                     });
         }
-        handRepository.saveAllAndFlush(savingHands);
+        handRepository.saveAll(savingHands);
     }
 
     private List<EvalPlayerHandDTO> getWinners(List<EvalPlayerHandDTO> playerHandList) {

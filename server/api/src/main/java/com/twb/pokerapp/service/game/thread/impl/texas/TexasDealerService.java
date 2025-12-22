@@ -1,8 +1,13 @@
 package com.twb.pokerapp.service.game.thread.impl.texas;
 
 import com.twb.pokerapp.domain.PlayerSession;
+import com.twb.pokerapp.exception.game.GameInterruptedException;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
+import com.twb.pokerapp.service.game.thread.GameThreadParams;
+import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
+import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,13 +18,24 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
-@Transactional
 @RequiredArgsConstructor
 public class TexasDealerService {
     private static final SecureRandom RANDOM = new SecureRandom();
     private final PlayerSessionRepository playerSessionRepository;
+    private final ServerMessageFactory messageFactory;
+    private final MessageDispatcher dispatcher;
 
-    public PlayerSession nextDealerReorder(UUID tableId, List<PlayerSession> playerSessions) {
+    @Transactional
+    public void determineNextDealer(GameThreadParams params) {
+        var playerSessions = playerSessionRepository.findConnectedPlayersByTableId(params.getTableId());
+        if (CollectionUtils.isEmpty(playerSessions)) {
+            throw new GameInterruptedException("No Players Connected");
+        }
+        var currentDealer = nextDealerReorder(params.getTableId(), playerSessions);
+        dispatcher.send(params, messageFactory.dealerDetermined(currentDealer));
+    }
+
+    private PlayerSession nextDealerReorder(UUID tableId, List<PlayerSession> playerSessions) {
         var nextDealer = getNextDealer(playerSessions);
         setNextDealer(tableId, nextDealer);
         return nextDealer;
@@ -44,8 +60,7 @@ public class TexasDealerService {
         for (var index = 0; index < numPlayers; index++) {
             var thisPlayerSession = playerSessions.get(index);
 
-            if (thisPlayerSession.getPosition()
-                    .equals(currentDealer.getPosition())) {
+            if (thisPlayerSession.getPosition().equals(currentDealer.getPosition())) {
                 var nextIndex = index + 1;
                 if (nextIndex >= numPlayers) {
                     nextIndex = 0;
@@ -56,11 +71,6 @@ public class TexasDealerService {
         throw new RuntimeException("Failed to get next dealer");
     }
 
-    private List<PlayerSession> dealerReorder(List<PlayerSession> playerSessions) {
-        var dealerIndex = getDealerIndex(playerSessions);
-        return sortDealerLast(playerSessions, dealerIndex);
-    }
-
     private Optional<DealerWithIndexDTO> getCurrentDealerWithIndex(List<PlayerSession> playerSessions) {
         for (var index = 0; index < playerSessions.size(); index++) {
             var playerSession = playerSessions.get(index);
@@ -69,25 +79,6 @@ public class TexasDealerService {
             }
         }
         return Optional.empty();
-    }
-
-    public PlayerSession getCurrentDealer(List<PlayerSession> playerSessions) {
-        for (var playerSession : playerSessions) {
-            if (Boolean.TRUE.equals(playerSession.getDealer())) {
-                return playerSession;
-            }
-        }
-        throw new RuntimeException("No Dealer Found in player sessions (getCurrentDealer)");
-    }
-
-    private int getDealerIndex(List<PlayerSession> playerSessions) {
-        for (var index = 0; index < playerSessions.size(); index++) {
-            var playerSession = playerSessions.get(index);
-            if (Boolean.TRUE.equals(playerSession.getDealer())) {
-                return index;
-            }
-        }
-        throw new RuntimeException("No Dealer Found in player sessions (getDealerIndex)");
     }
 
     private List<PlayerSession> sortDealerLast(List<PlayerSession> playerSessions, int dealerIndex) {

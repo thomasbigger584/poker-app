@@ -9,10 +9,10 @@ import com.twb.pokerapp.repository.HandRepository;
 import com.twb.pokerapp.repository.RoundRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
-@Transactional
 @RequiredArgsConstructor
 public class HandService {
     private final RoundRepository roundRepository;
@@ -21,6 +21,7 @@ public class HandService {
 
     private final CardService cardService;
 
+    @Transactional(propagation = Propagation.MANDATORY)
     public void addPlayerCard(PokerTable table, PlayerSession playerSession, Card card) {
         var roundOpt = roundRepository.findCurrentByTableId(table.getId());
         if (roundOpt.isEmpty()) {

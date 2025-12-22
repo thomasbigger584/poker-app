@@ -30,7 +30,6 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     // *****************************************************************************************
     private static final int MESSAGE_POLL_DIVISOR = 5;
     private static final int MINIMUM_PLAYERS_CONNECTED = 1;
-    private static final String NO_MORE_PLAYERS_CONNECTED = "No more players connected";
 
     // *****************************************************************************************
     // Constructor Fields
@@ -97,7 +96,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     }
 
     private void initializeTable() {
-        table = getThrowGameInterrupted(tableRepository.findById(params.getTableId()), "No table found cannot start game");
+        this.table = getThrowGameInterrupted(tableRepository.findById(params.getTableId()), "No table found cannot start game");
     }
 
     private void waitForMinimumPlayersToJoin() {
@@ -132,11 +131,8 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
             }
         } else {
             writeTx.executeWithoutResult(status -> {
-                var tableOpt = tableRepository.findById(params.getTableId());
-                if (tableOpt.isEmpty()) {
-                    throw new GameInterruptedException("Cannot start as table doesn't exist");
-                }
-                this.roundId = roundService.create(tableOpt.get()).getId();
+                var table = getThrowGameInterrupted(tableRepository.findById(params.getTableId()), "Cannot start as table doesn't exist");
+                this.roundId = roundService.create(table).getId();
             });
         }
         gameLogService.sendLogMessage(table, "New Round...");
@@ -149,16 +145,11 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     }
 
     private boolean isPlayersJoined(int count) {
-        var playerSessions = getPlayerSessionsNotZero();
-        return playerSessions.size() >= count;
-    }
-
-    protected List<PlayerSession> getPlayerSessionsNotZero() {
         var playerSessions = playerSessionRepository.findConnectedPlayersByTableId(params.getTableId());
         if (CollectionUtils.isEmpty(playerSessions)) {
-            throw new GameInterruptedException(NO_MORE_PLAYERS_CONNECTED);
+            throw new GameInterruptedException("No more players connected");
         }
-        return playerSessions;
+        return playerSessions.size() >= count;
     }
 
     private void initRound() {
@@ -302,6 +293,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
 
     @Override
     public void uncaughtException(Thread thread, Throwable throwable) {
+        log.error("Exception thrown in thread", throwable);
         finishRound();
         finishGame();
         stopGame();
