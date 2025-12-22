@@ -103,6 +103,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         session.subscribe(GAME_TOPIC_SUFFIX.formatted(params.getTable().getId()), this);
         session.subscribe(NOTIFICATION_TOPIC_SUFFIX.formatted(params.getUsername()), this);
         this.session = session;
+        countdownLatch(connectLatch);
     }
 
     @Override
@@ -131,8 +132,6 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
             log.error("Frame received but payload is null with headers {}", headers);
             return;
         }
-        countdownLatch(connectLatch);
-
         var message = (ServerMessageDTO) payload;
         receivedMessages.add(message);
 

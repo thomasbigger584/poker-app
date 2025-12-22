@@ -23,16 +23,15 @@ public class GameRunner {
     }
 
     private PlayersServerMessages run(List<AbstractTestUser> players) throws Exception {
-        try (var listener = connectListener()) {
+        var listener = connectListener();
+        try {
             connectPlayers(players);
 
-            var latches = params.getLatches();
-
-            latches.roundLatch().await();
+            params.getLatches().roundLatch().await();
 
             disconnectPlayers(players);
 
-            latches.gameLatch().await();
+            params.getLatches().gameLatch().await();
 
             listener.disconnect();
 
@@ -42,6 +41,7 @@ public class GameRunner {
             return messages.getByNumberOfRounds(params.getNumberOfRounds());
         } finally {
             closePlayers(players);
+            listener.close();
         }
     }
 
