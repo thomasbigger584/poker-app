@@ -138,14 +138,12 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
         if (message.getPayload() instanceof ErrorMessageDTO errorDto) {
             log.error("{} received error message: {}", params.getUsername(), errorDto.getMessage());
-            countdownLatches();
             return;
         } else if (message.getPayload() instanceof LogMessageDTO logDto) {
             log.info("{} received log message: {}", params.getUsername(), logDto.getMessage());
             return;
         } else if (message.getPayload() instanceof ValidationDTO validationDto) {
             log.info("{} received validation message: {}", params.getUsername(), validationDto.getFields());
-            countdownLatches();
             return;
         }
         handleMessage(headers, message);

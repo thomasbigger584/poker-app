@@ -26,11 +26,13 @@ public class GameRunner {
         try (var listener = connectListener()) {
             connectPlayers(players);
 
-            params.getLatches().roundLatch().await();
+            var latches = params.getLatches();
+
+            latches.roundLatch().await();
 
             disconnectPlayers(players);
 
-            params.getLatches().gameLatch().await();
+            latches.gameLatch().await();
 
             listener.disconnect();
 

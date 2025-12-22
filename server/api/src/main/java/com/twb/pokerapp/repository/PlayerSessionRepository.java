@@ -1,6 +1,7 @@
 package com.twb.pokerapp.repository;
 
 import com.twb.pokerapp.domain.PlayerSession;
+import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -88,4 +89,12 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
             """)
     int countConnectedPlayersByTableId(@Param("tableId") UUID tableId);
+
+    @Query("""
+            SELECT count(s)
+            FROM PlayerSession s
+            WHERE s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
+            AND s.connectionType = :connectionType
+            """)
+    int countConnectedPlayers(@Param("connectionType") ConnectionType connectionType);
 }

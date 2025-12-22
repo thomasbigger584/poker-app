@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 @Component
 @RequiredArgsConstructor
 public class GameThreadManager {
-    private static final Map<UUID, GameThread> POKER_GAME_RUNNABLE_MAP = new ConcurrentHashMap<>();
+    private static final Map<UUID, GameThread> GAME_THREAD_MAP = new ConcurrentHashMap<>();
     private static final int GAME_START_TIMEOUT_IN_SECS = 10;
     private final XSync<UUID> mutex;
     private final ApplicationContext context;
@@ -45,7 +45,7 @@ public class GameThreadManager {
                 if (!params.getStartLatch().await(GAME_START_TIMEOUT_IN_SECS, TimeUnit.SECONDS)) {
                     throw new RuntimeException("Failed to wait for game to start");
                 }
-                POKER_GAME_RUNNABLE_MAP.put(table.getId(), thread);
+                GAME_THREAD_MAP.put(table.getId(), thread);
                 return thread;
             } catch (InterruptedException e) {
                 throw new RuntimeException("Exception thrown while waiting for game to start", e);
@@ -63,7 +63,7 @@ public class GameThreadManager {
         return mutex.evaluate(tableId, () -> {
             var threadOpt = getIfExists(tableId);
             if (threadOpt.isPresent()) {
-                POKER_GAME_RUNNABLE_MAP.remove(tableId);
+                GAME_THREAD_MAP.remove(tableId);
                 return true;
             }
             return false;
@@ -123,11 +123,20 @@ public class GameThreadManager {
      */
     public Optional<GameThread> getIfExists(UUID tableId) {
         return mutex.evaluate(tableId, () -> {
-            if (!POKER_GAME_RUNNABLE_MAP.containsKey(tableId)) {
+            if (!GAME_THREAD_MAP.containsKey(tableId)) {
                 log.warn("Poker Table {} doesn't have a game thread running.", tableId);
                 return Optional.empty();
             }
-            return Optional.of(POKER_GAME_RUNNABLE_MAP.get(tableId));
+            return Optional.of(GAME_THREAD_MAP.get(tableId));
         });
+    }
+
+    /**
+     * Retrieves the number of active game threads.
+     *
+     * @return the number of active game threads
+     */
+    public int getActiveThreadCount() {
+        return GAME_THREAD_MAP.size();
     }
 }

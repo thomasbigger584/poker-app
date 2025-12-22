@@ -14,12 +14,10 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.transaction.TransactionStatus;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 
 import static com.twb.pokerapp.service.game.thread.util.SleepUtil.sleepInMs;
 
@@ -84,11 +82,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
             log.error(e.getMessage(), e);
             finishRound();
             finishGame();
-            if (e instanceof GameInterruptedException) {
-                gameLogService.sendErrorMessage(table, e.getMessage());
-            }
         }
-        stopGame();
     }
 
     private void initializeThread() {
@@ -281,10 +275,9 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     private void checkGameInterrupted() {
         if (interruptGame.get() || Thread.interrupted()) {
             var endLatch = params.getEndLatch();
-            if (endLatch.getCount() > 0) {
+            for (var index = 0; index < endLatch.getCount(); index++) {
                 endLatch.countDown();
             }
-            gameInProgress.set(false);
             throw new GameInterruptedException("Game is interrupted");
         }
     }
@@ -299,7 +292,6 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     @CallerThread
     public void stopGame() {
         interruptGame.set(true);
-        gameInProgress.set(false);
         try {
             params.getEndLatch().await();
         } catch (InterruptedException e) {
