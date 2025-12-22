@@ -1,4 +1,4 @@
-package com.twb.pokerapp.config;
+package com.twb.pokerapp.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

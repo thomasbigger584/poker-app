@@ -24,25 +24,20 @@ public class GameRunner {
 
     private PlayersServerMessages run(List<AbstractTestUser> players) throws Exception {
         var listener = connectListener();
-        try {
-            connectPlayers(players);
+        connectPlayers(players);
 
-            params.getLatches().roundLatch().await();
+        params.getLatches().roundLatch().await();
 
-            disconnectPlayers(players);
+        disconnectPlayers(players);
 
-            params.getLatches().gameLatch().await();
+        params.getLatches().gameLatch().await();
 
-            listener.disconnect();
+        listener.disconnect();
 
-            throwExceptionIfOccurred(players);
+        throwExceptionIfOccurred(players);
 
-            var messages = new PlayersServerMessages(listener, players);
-            return messages.getByNumberOfRounds(params.getNumberOfRounds());
-        } finally {
-            closePlayers(players);
-            listener.close();
-        }
+        var messages = new PlayersServerMessages(listener, players);
+        return messages.getByNumberOfRounds(params.getNumberOfRounds());
     }
 
     // ***************************************************************
@@ -72,12 +67,6 @@ public class GameRunner {
     private void disconnectPlayers(List<AbstractTestUser> players) {
         for (var player : players) {
             player.disconnect();
-        }
-    }
-
-    private void closePlayers(List<AbstractTestUser> players) {
-        for (var player : players) {
-            player.close();
         }
     }
 

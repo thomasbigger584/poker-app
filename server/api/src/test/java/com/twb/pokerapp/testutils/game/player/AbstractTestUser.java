@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
-public abstract class AbstractTestUser implements StompSessionHandler, StompFrameHandler, AutoCloseable {
+public abstract class AbstractTestUser implements StompSessionHandler, StompFrameHandler {
     private static final String CONNECTION_URL = "ws://localhost:8081/looping";
     private static final String GAME_TOPIC_SUFFIX = "/topic/loops.%s";
     private static final String NOTIFICATION_TOPIC_SUFFIX = "/user/%s/notifications";
@@ -144,13 +144,13 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         handleMessage(headers, message);
     }
 
-    @Override
-    public void close() {
-        disconnect();
-        if (client.isRunning()) {
-            client.stop();
-        }
-    }
+//    @Override
+//    public void close() {
+//        disconnect();
+//        if (client.isRunning()) {
+//            client.stop();
+//        }
+//    }
 
     // ***************************************************************
     // Send Methods
