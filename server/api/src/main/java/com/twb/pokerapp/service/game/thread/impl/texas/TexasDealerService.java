@@ -68,7 +68,7 @@ public class TexasDealerService {
                 return playerSessions.get(nextIndex);
             }
         }
-        throw new RuntimeException("Failed to get next dealer");
+        throw new GameInterruptedException("Failed to get next dealer");
     }
 
     private Optional<DealerWithIndexDTO> getCurrentDealerWithIndex(List<PlayerSession> playerSessions) {

@@ -62,8 +62,7 @@ public class TexasEvaluationService {
     }
 
     private void evaluateMultiPlayersStanding(GameThreadParams params, Round round, List<PlayerSession> activePlayers) {
-        var communityCards = cardRepository
-                .findCommunityCardsForRound(round.getId());
+        var communityCards = cardRepository.findCommunityCardsForRound(round.getId());
 
         var playerHandsList = new ArrayList<EvalPlayerHandDTO>();
         for (PlayerSession potentialWinner : activePlayers) {

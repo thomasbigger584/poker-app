@@ -14,6 +14,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -232,25 +234,24 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     }
 
     @CallerThread
+    @Transactional(propagation = Propagation.MANDATORY)
     public void onPostPlayerAction(CreatePlayerActionDTO createActionDto) {
-        readTx.executeWithoutResult(state -> {
-            if (playerTurnLatch != null) {
-                playerTurnLatch.countDown();
-                playerTurnLatch = null;
-            }
-            var roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
-            if (roundOpt.isEmpty()) {
-                // there is no round so ensure we can move to next one
+        if (playerTurnLatch != null) {
+            playerTurnLatch.countDown();
+            playerTurnLatch = null;
+        }
+        var roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
+        if (roundOpt.isEmpty()) {
+            // there is no round so ensure we can move to next one
+            interruptRound.set(true);
+        } else {
+            var round = roundOpt.get();
+            var activePlayers = playerSessionRepository.findActivePlayersByTableId(params.getTableId(), round.getId());
+            if (activePlayers.size() < 2) {
+                // there is only 1 player left in a started game
                 interruptRound.set(true);
-            } else {
-                var round = roundOpt.get();
-                var activePlayers = playerSessionRepository.findActivePlayersByTableId(params.getTableId(), round.getId());
-                if (activePlayers.size() < 2) {
-                    // there is only 1 player left in a started game
-                    interruptRound.set(true);
-                }
             }
-        });
+        }
     }
 
     private void saveRoundState(RoundState roundState) {
