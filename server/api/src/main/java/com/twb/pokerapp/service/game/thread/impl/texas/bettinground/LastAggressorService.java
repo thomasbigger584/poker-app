@@ -132,15 +132,13 @@ public class LastAggressorService {
         writeTx.executeWithoutResult(status -> {
             var latestPlayerActionOpt = playerActionRepository
                     .findByBettingRoundAndPlayer(bettingRound.getId(), currentPlayer.getId());
-
             latestPlayerActionOpt.ifPresent(actionJustTaken ->
                     lastAggressorId = getLastAggressorId(actionJustTaken, lastAggressorId, currentPlayer));
 
             bettingRound = getBettingRound(bettingRound);
             round = roundService.updatePot(round, bettingRound);
-
-            dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound));
         });
+        dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound));
         playerIndex++;
         readTx.executeWithoutResult(status -> {
             var activePlayers = getActivePlayers(params, round);
@@ -157,8 +155,8 @@ public class LastAggressorService {
     public void finishBettingRound() {
         writeTx.executeWithoutResult(status -> {
             bettingRound = bettingRoundService.setBettingRoundFinished(bettingRound);
-            dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound));
         });
+        dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound));
     }
 
     private List<PlayerSession> getActivePlayers(GameThreadParams params, Round round) {
@@ -193,16 +191,20 @@ public class LastAggressorService {
         try {
             var await = latch.await(params.getPlayerTurnWaitMs(), TimeUnit.MILLISECONDS);
             if (!await) {
-                var createActionDto = new CreatePlayerActionDTO();
-                createActionDto.setAction(ActionType.FOLD);
-                writeTx.executeWithoutResult(status -> {
-                    var playerSessionManaged = getThrowGameInterrupted(playerSessionRepository.findById(playerSession.getId()), "Player Session not found");
-                    texasPlayerActionService.playerAction(playerSessionManaged, gameThread, createActionDto);
-                });
+                onPlayerTurnWaited(gameThread, playerSession);
             }
         } catch (InterruptedException e) {
             throw new RoundInterruptedException("Failed to wait for player turn latch", e);
         }
+    }
+
+    private void onPlayerTurnWaited(GameThread gameThread, PlayerSession playerSession) {
+        var createActionDto = new CreatePlayerActionDTO();
+        createActionDto.setAction(ActionType.FOLD);
+        writeTx.executeWithoutResult(status -> {
+            var playerSessionManaged = getThrowGameInterrupted(playerSessionRepository.findById(playerSession.getId()), "Player Session not found");
+            texasPlayerActionService.playerAction(playerSessionManaged, gameThread, createActionDto);
+        });
     }
 
     private UUID getLastAggressorId(PlayerAction actionJustTaken, UUID lastAggressorId, PlayerSession currentPlayer) {
@@ -213,7 +215,6 @@ public class LastAggressorService {
         }
         return lastAggressorId;
     }
-
 
     private BettingRound getBettingRound(BettingRound bettingRound) {
         var bettingRoundOpt = bettingRoundRepository.findById(bettingRound.getId());

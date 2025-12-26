@@ -22,7 +22,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.twb.pokerapp.repository.RepositoryUtil.getThrowGameInterrupted;
-import static com.twb.pokerapp.service.game.thread.util.SleepUtil.sleepInMs;
+import static com.twb.pokerapp.util.SleepUtil.sleepInMs;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -133,7 +133,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
             }
         } else {
             writeTx.executeWithoutResult(status -> {
-                var table = getThrowGameInterrupted(tableRepository.findById(params.getTableId()), "Cannot start as table doesn't exist");
+                this.table = getThrowGameInterrupted(tableRepository.findById(params.getTableId()), "Cannot start as table doesn't exist");
                 this.roundId = roundService.create(table).getId();
             });
         }
@@ -197,9 +197,8 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                 var roundOpt = roundRepository.findById(roundId);
                 roundOpt.ifPresent(round ->
                         roundService.setRoundState(round, RoundState.FINISHED));
-
-                dispatcher.send(table, messageFactory.roundFinished());
             });
+            dispatcher.send(table, messageFactory.roundFinished());
         }
         roundInProgress.set(false);
         sleepInMs(params.getRoundEndWaitMs());
@@ -236,10 +235,6 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     @CallerThread
     @Transactional(propagation = Propagation.MANDATORY)
     public void onPostPlayerAction(CreatePlayerActionDTO createActionDto) {
-        if (playerTurnLatch != null) {
-            playerTurnLatch.countDown();
-            playerTurnLatch = null;
-        }
         var roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
         if (roundOpt.isEmpty()) {
             // there is no round so ensure we can move to next one
@@ -251,6 +246,10 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                 // there is only 1 player left in a started game
                 interruptRound.set(true);
             }
+        }
+        if (playerTurnLatch != null) {
+            playerTurnLatch.countDown();
+            playerTurnLatch = null;
         }
     }
 

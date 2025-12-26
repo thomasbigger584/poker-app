@@ -2,6 +2,7 @@ package com.twb.pokerapp.service.eval;
 
 import com.twb.pokerapp.domain.Card;
 import com.twb.pokerapp.domain.enumeration.HandType;
+import com.twb.pokerapp.service.game.eval.HandTypeEvaluator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;

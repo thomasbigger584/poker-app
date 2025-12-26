@@ -6,8 +6,8 @@ import com.twb.pokerapp.repository.CardRepository;
 import com.twb.pokerapp.repository.HandRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.RoundRepository;
-import com.twb.pokerapp.service.eval.HandEvaluator;
-import com.twb.pokerapp.service.eval.dto.EvalPlayerHandDTO;
+import com.twb.pokerapp.service.game.eval.HandEvaluator;
+import com.twb.pokerapp.service.game.eval.dto.EvalPlayerHandDTO;
 import com.twb.pokerapp.service.game.thread.GameLogService;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
 import com.twb.pokerapp.service.game.thread.WinnerService;
@@ -18,7 +18,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.twb.pokerapp.service.game.thread.util.SleepUtil.sleepInMs;
+import static com.twb.pokerapp.util.SleepUtil.sleepInMs;
+import static com.twb.pokerapp.util.TransactionUtil.afterCommit;
 
 @Component
 @RequiredArgsConstructor
@@ -58,7 +59,7 @@ public class TexasEvaluationService {
 
         var winnerUsername = winner.getUser().getUsername();
 
-        gameLogService.sendLogMessage(params.getTableId(), "%s wins round with $%.2f".formatted(winnerUsername, round.getPot()));
+        afterCommit(() -> gameLogService.sendLogMessage(params.getTableId(), "%s wins round with $%.2f".formatted(winnerUsername, round.getPot())));
     }
 
     private void evaluateMultiPlayersStanding(GameThreadParams params, Round round, List<PlayerSession> activePlayers) {

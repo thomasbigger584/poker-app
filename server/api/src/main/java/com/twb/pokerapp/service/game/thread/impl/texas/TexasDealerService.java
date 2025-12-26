@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.twb.pokerapp.util.TransactionUtil.afterCommit;
+
 @Component
 @RequiredArgsConstructor
 public class TexasDealerService {
@@ -32,7 +34,7 @@ public class TexasDealerService {
             throw new GameInterruptedException("No Players Connected");
         }
         var currentDealer = nextDealerReorder(params.getTableId(), playerSessions);
-        dispatcher.send(params, messageFactory.dealerDetermined(currentDealer));
+        afterCommit(() -> dispatcher.send(params, messageFactory.dealerDetermined(currentDealer)));
     }
 
     private PlayerSession nextDealerReorder(UUID tableId, List<PlayerSession> playerSessions) {

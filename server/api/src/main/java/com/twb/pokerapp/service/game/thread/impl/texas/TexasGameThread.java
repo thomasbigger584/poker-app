@@ -12,7 +12,7 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import static com.twb.pokerapp.service.game.thread.util.SleepUtil.sleepInMs;
+import static com.twb.pokerapp.util.SleepUtil.sleepInMs;
 
 @Slf4j
 @Component
@@ -27,9 +27,6 @@ public class TexasGameThread extends GameThread {
 
     @Autowired
     private TexasBettingRoundService texasBettingRoundService;
-
-    @Autowired
-    private TexasPlayerActionService texasPlayerActionService;
 
     public TexasGameThread(GameThreadParams params) {
         super(params);
@@ -66,12 +63,13 @@ public class TexasGameThread extends GameThread {
     }
 
     private void dealPlayerCard(CardType cardType, PlayerSession playerSession) {
-        writeTx.executeWithoutResult(status -> {
+        var playerCard = writeTx.execute(status -> {
             var card = getCard();
             card.setCardType(cardType);
             handService.addPlayerCard(table, playerSession, card);
-            dispatcher.send(table, messageFactory.initDeal(playerSession, card));
+            return card;
         });
+        dispatcher.send(table, messageFactory.initDeal(playerSession, playerCard));
         sleepInMs(params.getDealWaitMs());
     }
 
@@ -83,12 +81,13 @@ public class TexasGameThread extends GameThread {
     }
 
     private void dealCommunityCard(CardType cardType) {
-        writeTx.executeWithoutResult(status -> {
+        var communityCard = writeTx.execute(status -> {
             var card = getCard();
             card.setCardType(cardType);
             cardService.createCommunityCard(table, card);
-            dispatcher.send(table, messageFactory.communityCardDeal(card));
+            return card;
         });
+        dispatcher.send(table, messageFactory.communityCardDeal(communityCard));
         sleepInMs(params.getDealWaitMs());
     }
 

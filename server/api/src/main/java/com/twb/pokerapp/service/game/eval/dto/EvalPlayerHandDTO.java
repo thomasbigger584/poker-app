@@ -1,4 +1,4 @@
-package com.twb.pokerapp.service.eval.dto;
+package com.twb.pokerapp.service.game.eval.dto;
 
 import com.twb.pokerapp.domain.Card;
 import com.twb.pokerapp.domain.PlayerSession;

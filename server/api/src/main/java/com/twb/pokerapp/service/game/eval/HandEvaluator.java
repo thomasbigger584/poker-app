@@ -1,9 +1,9 @@
-package com.twb.pokerapp.service.eval;
+package com.twb.pokerapp.service.game.eval;
 
 import com.twb.pokerapp.domain.Hand;
 import com.twb.pokerapp.domain.Round;
 import com.twb.pokerapp.repository.HandRepository;
-import com.twb.pokerapp.service.eval.dto.EvalPlayerHandDTO;
+import com.twb.pokerapp.service.game.eval.dto.EvalPlayerHandDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;

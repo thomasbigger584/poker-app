@@ -1,4 +1,4 @@
-package com.twb.pokerapp.service.eval;
+package com.twb.pokerapp.service.game.eval;
 
 import com.twb.pokerapp.domain.Card;
 import org.springframework.stereotype.Component;
