@@ -1,8 +1,7 @@
-package com.twb.pokerapp.service.eval;
+package com.twb.pokerapp.service.game.eval;
 
 import com.twb.pokerapp.domain.Card;
 import com.twb.pokerapp.domain.enumeration.HandType;
-import com.twb.pokerapp.service.game.eval.HandTypeEvaluator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -12,7 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static com.twb.pokerapp.service.eval.HandFixture.*;
+import static com.twb.pokerapp.service.game.eval.HandFixture.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class HandTypeEvaluatorTest {

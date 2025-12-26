@@ -20,8 +20,6 @@ services:
       KC_HOSTNAME: http://poker-app.taila8b6c7.ts.net/auth
       KC_PROXY_HEADERS: xforwarded
       KC_HTTP_RELATIVE_PATH: /auth
-#      KC_HOSTNAME_STRICT: false
-
       KC_HOSTNAME_DEBUG: true
       KC_HTTP_ENABLED: true
       KC_HEALTH_ENABLED: true
