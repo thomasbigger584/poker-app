@@ -24,6 +24,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.util.UUID;
 
 import static com.twb.pokerapp.repository.RepositoryUtil.getThrowPlayerErrorLog;
+import static com.twb.pokerapp.util.TransactionUtil.afterCommit;
 
 @Slf4j
 @Component
@@ -103,12 +104,22 @@ public class TableGameService {
 
     public void onUserDisconnected(UUID tableId, String username) {
         mutex.execute(tableId, () -> transaction.executeWithoutResult(status -> {
-            var table = getThrowPlayerErrorLog(tableRepository.findById(tableId), "No table found for Table ID: " + tableId);
-            var playerSession = getThrowPlayerErrorLog(playerSessionRepository.findByTableIdAndUsername(tableId, username), "Your session is not found on table %s".formatted(tableId));
+            var tableOpt = tableRepository.findById(tableId);
+            if (tableOpt.isEmpty()) {
+                log.warn("No table found for table: {}", tableId);
+                return;
+            }
+            var table = tableOpt.get();
+            var playerSessionOpt = playerSessionRepository.findByTableIdAndUsername(tableId, username);
+            if (playerSessionOpt.isEmpty()) {
+                log.warn("No session found for user {} on table {}", username, tableId);
+                return;
+            }
+            var playerSession = playerSessionOpt.get();
 
             playerSessionService.disconnectUser(playerSession);
 
-            dispatcher.send(tableId, messageFactory.playerDisconnected(username));
+            afterCommit(() -> dispatcher.send(tableId, messageFactory.playerDisconnected(username)));
 
             var threadOpt = threadManager.getIfExists(tableId);
             if (threadOpt.isEmpty()) {

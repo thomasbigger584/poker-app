@@ -154,7 +154,9 @@ public class LastAggressorService {
 
     public void finishBettingRound() {
         writeTx.executeWithoutResult(status -> {
-            bettingRound = bettingRoundService.setBettingRoundFinished(bettingRound);
+            var bettingRoundOpt = bettingRoundRepository.findById(bettingRound.getId());
+            bettingRoundOpt.ifPresent(bettingRound ->
+                    this.bettingRound = bettingRoundService.setBettingRoundFinished(bettingRound));
         });
         dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound));
     }
@@ -179,7 +181,7 @@ public class LastAggressorService {
             var previousPlayerAction = prevPlayerActions.getFirst();
             var previousPlayerActionType = previousPlayerAction.getActionType();
 
-            nextActions = ActionType.getNextActions(previousPlayerActionType);
+            nextActions = previousPlayerActionType.getNextActions();
             amountToCall = previousPlayerActionType.getAmountToCall(previousPlayerAction.getAmount());
         }
         return new NextActionsDTO(amountToCall, nextActions);

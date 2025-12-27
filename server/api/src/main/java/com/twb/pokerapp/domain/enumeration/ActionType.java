@@ -7,18 +7,11 @@ public enum ActionType {
     RAISE,
     FOLD;
 
-    public static ActionType[] getNextActions(ActionType actionType) {
-        if (actionType == null) {
-            return getDefaultActions();
-        }
-        return actionType.getNextActions();
-    }
-
     public static ActionType[] getDefaultActions() {
         return CHECK.getNextActions();
     }
 
-    private ActionType[] getNextActions() {
+    public ActionType[] getNextActions() {
         return switch (this) {
             case CHECK: {
                 yield new ActionType[]{CHECK, BET};

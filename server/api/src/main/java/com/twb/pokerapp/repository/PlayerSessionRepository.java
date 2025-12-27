@@ -3,7 +3,6 @@ package com.twb.pokerapp.repository;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -60,26 +59,6 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             ORDER BY s.position ASC
             """)
     List<PlayerSession> findActivePlayersByTableId(@Param("tableId") UUID tableId, @Param("roundId") UUID roundId);
-
-    @Modifying(flushAutomatically = true)
-    @Query("""
-            UPDATE PlayerSession s
-            SET s.dealer = false
-            WHERE s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
-            AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
-            AND s.pokerTable.id = :tableId
-            """)
-    void resetDealerForTableId(@Param("tableId") UUID tableId);
-
-    @Modifying(flushAutomatically = true)
-    @Query("""
-            UPDATE PlayerSession s
-            SET s.dealer = :dealer
-            WHERE s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
-            AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
-            AND s.id = :id
-            """)
-    void setDealer(@Param("id") UUID id, @Param("dealer") boolean dealer);
 
     @Query("""
             SELECT count(s)

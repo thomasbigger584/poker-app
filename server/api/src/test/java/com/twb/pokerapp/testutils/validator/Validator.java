@@ -1,5 +1,6 @@
 package com.twb.pokerapp.testutils.validator;
 
+import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.enumeration.CardType;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.domain.enumeration.SessionState;
@@ -13,10 +14,13 @@ import com.twb.pokerapp.testutils.sql.SqlClient;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
 import com.twb.pokerapp.web.websocket.message.server.payload.PlayerConnectedDTO;
+import com.twb.pokerapp.web.websocket.message.server.payload.PlayerDisconnectedDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.PlayerSubscribedDTO;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import static com.twb.pokerapp.testutils.fixture.HandFixture.findCard;
 import static org.junit.jupiter.api.Assertions.*;
@@ -37,6 +41,8 @@ public abstract class Validator {
         assertPlayersSubscribed(listenerMessages);
 
         onValidateEndOfRun(messages);
+
+        assertPlayersDisconnect();
     }
 
     private void assertPlayersConnected(List<ServerMessageDTO> listenerMessages) {
@@ -72,6 +78,33 @@ public abstract class Validator {
             }
         });
     }
+
+    private void assertPlayersDisconnect() {
+        var playerSessions = sqlClient.getPlayerSessions();
+        assertEquals(3, playerSessions.size());
+
+        var listenerPlayerSessionList = playerSessions.stream()
+                .filter(playerSession -> playerSession.getUser().getUsername().equals("viewer1")).toList();
+        assertEquals(1, listenerPlayerSessionList.size());
+        assertPlayerDisconnect(listenerPlayerSessionList.getFirst());
+
+        var playerPlayerSessionList = playerSessions.stream()
+                .filter(playerSession -> playerSession.getUser().getUsername().startsWith("user")).toList();
+        assertEquals(2, playerPlayerSessionList.size());
+        playerPlayerSessionList.forEach(this::assertPlayerDisconnect);
+    }
+
+    private void assertPlayerDisconnect(PlayerSession playerSession) {
+        assertNull(playerSession.getDealer());
+        assertNull(playerSession.getFunds());
+        assertNull(playerSession.getPokerTable());
+        assertNull(playerSession.getConnectionType());
+        assertEquals(SessionState.DISCONNECTED, playerSession.getSessionState());
+    }
+
+    // ***************************************************************
+    // Common Entity Assertions
+    // ***************************************************************
 
     protected void assertCard(CardDTO cardDto, CardType cardType) {
         var foundCardFromDeck = findCard(cardDto.getRankType(), cardDto.getSuitType());

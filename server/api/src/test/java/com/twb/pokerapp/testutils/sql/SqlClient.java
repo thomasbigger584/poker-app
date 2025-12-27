@@ -63,6 +63,10 @@ public class SqlClient implements AutoCloseable {
     // Get All
     // *****************************************************************************************
 
+    public List<PlayerSession> getPlayerSessions() {
+        return getAll(PlayerSession.class);
+    }
+
     public List<PokerTable> getPokerTables() {
         return getAll(PokerTable.class);
     }

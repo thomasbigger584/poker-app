@@ -20,6 +20,7 @@ import java.util.Optional;
 
 import static com.twb.pokerapp.repository.RepositoryUtil.getThrowPlayerErrorLog;
 import static com.twb.pokerapp.repository.RepositoryUtil.getThrowPlayerLog;
+import static com.twb.pokerapp.util.TransactionUtil.afterCommit;
 
 @Slf4j
 public abstract class GamePlayerActionService {
@@ -45,15 +46,14 @@ public abstract class GamePlayerActionService {
 
         var table = getThrowPlayerErrorLog(Optional.ofNullable(playerSession.getPokerTable()), playerSession, "Table Not Found");
         var round = getThrowPlayerLog(roundRepository.findCurrentByTableId(table.getId()), playerSession, "Round Not Found");
-
         checkIdempotency(playerSession, round, createDto);
-
         var bettingRound = getThrowPlayerLog(bettingRoundRepository.findCurrentByTableId(table.getId()), playerSession, "Betting Round Not Found");
 
         var playerAction = onPlayerAction(playerSession, bettingRound, gameThread, createDto);
 
-        dispatcher.send(table, messageFactory.playerActioned(playerAction));
         gameThread.onPostPlayerAction(createDto);
+
+        afterCommit(() -> dispatcher.send(table, messageFactory.playerActioned(playerAction)));
     }
 
     private void checkIdempotency(PlayerSession playerSession, Round round, CreatePlayerActionDTO createDto) {
