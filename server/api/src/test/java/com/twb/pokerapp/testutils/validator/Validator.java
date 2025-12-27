@@ -15,6 +15,7 @@ import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
 import com.twb.pokerapp.web.websocket.message.server.payload.PlayerConnectedDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.PlayerSubscribedDTO;
+import com.twb.pokerapp.web.websocket.message.server.payload.validation.ValidationDTO;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -33,13 +34,29 @@ public abstract class Validator {
     }
 
     public void validateEndOfRun(PlayersServerMessages messages) {
+        validateEndOfRunConnections(messages);
+        onValidateEndOfRun(messages);
+    }
+
+    public void validateEndOfRunConnections(PlayersServerMessages messages) {
         var listenerMessages = messages.getListenerMessages();
         assertPlayersConnected(listenerMessages);
         assertPlayersSubscribed(listenerMessages);
-
-        onValidateEndOfRun(messages);
-
         assertPlayersDisconnect();
+    }
+
+    public void validateInvalidAction(PlayersServerMessages messages) {
+        var validationMessages = get(2, messages, ServerMessageType.VALIDATION);
+        assertEquals(1, validationMessages.size());
+        var validationMessage = validationMessages.getFirst();
+        var validationDto = (ValidationDTO) validationMessage.getPayload();
+        var fields = validationDto.getFields();
+
+        var fieldsExpected = List.of("action", "amount");
+        assertEquals(fieldsExpected.size(), fields.size());
+
+        assertTrue(fields.stream().anyMatch(validationFieldDto ->
+                fieldsExpected.contains(validationFieldDto.getField())));
     }
 
     private void assertPlayersConnected(List<ServerMessageDTO> listenerMessages) {
