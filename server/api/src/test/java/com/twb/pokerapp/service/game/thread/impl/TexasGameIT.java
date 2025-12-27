@@ -49,7 +49,7 @@ class TexasGameIT extends BaseTestContainersIT {
         var messages = runner.run(turnHandlers);
 
         // then
-        validator.validateEndOfRun(messages);
+        validator.validateEndOfRunConnections(messages);
     }
 
     @Test
