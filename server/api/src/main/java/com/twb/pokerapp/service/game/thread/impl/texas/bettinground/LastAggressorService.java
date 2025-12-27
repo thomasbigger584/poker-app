@@ -33,6 +33,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static com.twb.pokerapp.repository.RepositoryUtil.getThrowGameInterrupted;
+import static com.twb.pokerapp.util.TransactionUtil.afterCommit;
 
 @Slf4j
 @Component
@@ -83,8 +84,7 @@ public class LastAggressorService {
     private PlayerSession currentPlayer = null;
     private NextActionsDTO nextActions = null;
 
-    public LastAggressorService(GameThreadParams params,
-                                GameThread gameThread) {
+    public LastAggressorService(GameThreadParams params, GameThread gameThread) {
         this.params = params;
         this.gameThread = gameThread;
     }
@@ -130,15 +130,14 @@ public class LastAggressorService {
 
     public void postPlayerTurn() {
         writeTx.executeWithoutResult(status -> {
-            var latestPlayerActionOpt = playerActionRepository
-                    .findByBettingRoundAndPlayer(bettingRound.getId(), currentPlayer.getId());
-            latestPlayerActionOpt.ifPresent(actionJustTaken ->
-                    lastAggressorId = getLastAggressorId(actionJustTaken, lastAggressorId, currentPlayer));
-
-            bettingRound = getBettingRound(bettingRound);
-            round = roundService.updatePot(round, bettingRound);
+            var latestPlayerActionOpt = playerActionRepository.findByBettingRoundAndPlayer(bettingRound.getId(), currentPlayer.getId());
+            latestPlayerActionOpt.ifPresent(actionJustTaken -> {
+                lastAggressorId = getLastAggressorId(actionJustTaken, lastAggressorId, currentPlayer);
+                bettingRound = getBettingRound(bettingRound);
+                round = roundService.updatePot(round, actionJustTaken);
+                afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound)));
+            });
         });
-        dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound));
         playerIndex++;
         readTx.executeWithoutResult(status -> {
             var activePlayers = getActivePlayers(params, round);
@@ -155,15 +154,15 @@ public class LastAggressorService {
     public void finishBettingRound() {
         writeTx.executeWithoutResult(status -> {
             var bettingRoundOpt = bettingRoundRepository.findById(bettingRound.getId());
-            bettingRoundOpt.ifPresent(bettingRound ->
-                    this.bettingRound = bettingRoundService.setBettingRoundFinished(bettingRound));
+            bettingRoundOpt.ifPresent(bettingRound -> {
+                this.bettingRound = bettingRoundService.setBettingRoundFinished(bettingRound);
+                afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound)));
+            });
         });
-        dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound));
     }
 
     private List<PlayerSession> getActivePlayers(GameThreadParams params, Round round) {
-        var activePlayers = playerSessionRepository
-                .findActivePlayersByTableId(params.getTableId(), round.getId());
+        var activePlayers = playerSessionRepository.findActivePlayersByTableId(params.getTableId(), round.getId());
         if (activePlayers.isEmpty()) {
             throw new GameInterruptedException("No Active Players found");
         }
