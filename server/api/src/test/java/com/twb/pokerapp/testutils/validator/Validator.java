@@ -14,13 +14,10 @@ import com.twb.pokerapp.testutils.sql.SqlClient;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
 import com.twb.pokerapp.web.websocket.message.server.payload.PlayerConnectedDTO;
-import com.twb.pokerapp.web.websocket.message.server.payload.PlayerDisconnectedDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.PlayerSubscribedDTO;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 import static com.twb.pokerapp.testutils.fixture.HandFixture.findCard;
 import static org.junit.jupiter.api.Assertions.*;
