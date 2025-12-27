@@ -1,13 +1,17 @@
 package com.twb.pokerapp.testutils.validator.impl;
 
-import com.twb.pokerapp.domain.enumeration.SessionState;
+import com.twb.pokerapp.domain.enumeration.CardType;
+import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.testutils.game.GameRunnerParams;
 import com.twb.pokerapp.testutils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.testutils.sql.SqlClient;
 import com.twb.pokerapp.testutils.validator.Validator;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
+import com.twb.pokerapp.web.websocket.message.server.payload.DealPlayerCardDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.DealerDeterminedDTO;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -27,26 +31,39 @@ public class TexasValidator extends Validator {
     @Override
     protected void onValidateEndOfRun(PlayersServerMessages messages) {
         var listenerMessages = messages.getListenerMessages();
+        assertDealerDetermined(listenerMessages);
+        assertDealInit(listenerMessages);
 
-        listenerMessages.stream()
-                .filter(message -> message.getType() == ServerMessageType.DEALER_DETERMINED)
-                .forEach(message -> {
-                    var payload = (DealerDeterminedDTO) message.getPayload();
+    }
 
-                    // PlayerSession Assertions
-                    var playerSessionDto = payload.getPlayerSession();
-                    assertEquals(SessionState.CONNECTED, playerSessionDto.getSessionState(), "PlayerSession state should be CONNECTED");
-//                    assertTrue(playerSessionDto.getDealer(), "PlayerSession should be marked as dealer");
+    private void assertDealerDetermined(List<ServerMessageDTO> listenerMessages) {
+        var messages = get(listenerMessages, ServerMessageType.DEALER_DETERMINED);
+        assertEquals(1, messages.size());
+        messages.forEach(message -> {
+            var payload = (DealerDeterminedDTO) message.getPayload();
 
-                    var playerSessionId = playerSessionDto.getId();
-                    var playerSessionOpt = sqlClient.getPlayerSession(playerSessionId);
-                    assertTrue(playerSessionOpt.isPresent(), "PlayerSession not found for ID");
-                    var playerSession = playerSessionOpt.get();
-                    assertEquals(playerSessionId, playerSession.getId(), "PlayerSession IDs do not match");
-                    assertTrue(playerSessionDto.getPosition() > 0, "PlayerSession positions are not greater than 0");
-                    assertEquals(playerSessionDto.getPosition(), playerSession.getPosition(), "PlayerSession positions do not match");
-                });
+            var playerSessionDto = payload.getPlayerSession();
+            assertTrue(playerSessionDto.getDealer());
+            assertEquals(ConnectionType.PLAYER, playerSessionDto.getConnectionType());
+            assertPlayerSession(playerSessionDto);
+        });
+    }
 
+    private void assertDealInit(List<ServerMessageDTO> listenerMessages) {
+        var messages = get(listenerMessages, ServerMessageType.DEAL_INIT);
+        var noCardsDealt = 2 * 2;
 
+        assertEquals(noCardsDealt, messages.size());
+
+        for (var index = 1; index <= noCardsDealt; index++) {
+            var message = messages.get(index - 1);
+            var payload = (DealPlayerCardDTO) message.getPayload();
+
+            assertPlayerSession(payload.getPlayerSession());
+
+            var cardDto = payload.getCard();
+            var cardType = index <= (noCardsDealt / 2) ? CardType.PLAYER_CARD_1 : CardType.PLAYER_CARD_2;
+            assertCard(cardDto, cardType);
+        }
     }
 }

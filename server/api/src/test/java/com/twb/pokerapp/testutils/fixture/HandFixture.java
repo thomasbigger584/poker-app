@@ -1,4 +1,4 @@
-package com.twb.pokerapp.service.game.eval;
+package com.twb.pokerapp.testutils.fixture;
 
 import com.twb.pokerapp.domain.Card;
 import com.twb.pokerapp.domain.enumeration.RankType;
@@ -275,7 +275,7 @@ public class HandFixture {
         );
     }
 
-    private static Card findCard(RankType rankType, SuitType suitType) {
+    public static Card findCard(RankType rankType, SuitType suitType) {
         var key = rankType.toString() + suitType.toString();
         Card card = DECK_MAP.get(key);
         if (card == null) {

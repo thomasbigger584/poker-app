@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static com.twb.pokerapp.service.game.eval.HandFixture.*;
+import static com.twb.pokerapp.testutils.fixture.HandFixture.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class HandTypeEvaluatorTest {

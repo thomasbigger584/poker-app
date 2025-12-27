@@ -1,6 +1,12 @@
 package com.twb.pokerapp.testutils.validator;
 
+import com.twb.pokerapp.domain.enumeration.CardType;
+import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.domain.enumeration.SessionState;
+import com.twb.pokerapp.dto.appuser.AppUserDTO;
+import com.twb.pokerapp.dto.card.CardDTO;
+import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
+import com.twb.pokerapp.dto.table.TableDTO;
 import com.twb.pokerapp.testutils.game.GameRunnerParams;
 import com.twb.pokerapp.testutils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.testutils.sql.SqlClient;
@@ -12,8 +18,8 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static com.twb.pokerapp.testutils.fixture.HandFixture.findCard;
+import static org.junit.jupiter.api.Assertions.*;
 
 @RequiredArgsConstructor
 public abstract class Validator {
@@ -34,58 +40,99 @@ public abstract class Validator {
     }
 
     private void assertPlayersConnected(List<ServerMessageDTO> listenerMessages) {
-        var playerConnectedMessages = get(listenerMessages, ServerMessageType.PLAYER_CONNECTED);
-        assertEquals(2, playerConnectedMessages.size());
-
-        playerConnectedMessages.forEach(message -> {
+        var messages = get(listenerMessages, ServerMessageType.PLAYER_CONNECTED);
+        assertEquals(2, messages.size());
+        messages.forEach(message -> {
             var payload = (PlayerConnectedDTO) message.getPayload();
 
-            // PlayerSession Assertions
             var playerSessionDto = payload.getPlayerSession();
-            assertEquals(SessionState.CONNECTED, playerSessionDto.getSessionState(), "PlayerSession state should be CONNECTED");
+            assertPlayerSession(playerSessionDto);
 
-            var playerSessionId = playerSessionDto.getId();
-            var playerSessionOpt = sqlClient.getPlayerSession(playerSessionId);
-            assertTrue(playerSessionOpt.isPresent(), "PlayerSession not found for ID");
-            var playerSession = playerSessionOpt.get();
-            assertEquals(playerSessionId, playerSession.getId(), "PlayerSession IDs do not match");
-            assertTrue(playerSessionDto.getPosition() > 0, "PlayerSession positions are not greater than 0");
-            assertEquals(playerSessionDto.getPosition(), playerSession.getPosition(), "PlayerSession positions do not match");
-
-            // AppUser Assertions
-            var appUserDto = playerSessionDto.getUser();
-            var appUserId = appUserDto.getId();
-            var appUserOpt = sqlClient.getAppUser(appUserId);
-            assertTrue(appUserOpt.isPresent(), "AppUser not found for ID");
-            var appUser = appUserOpt.get();
-            assertEquals(appUserId, appUser.getId(), "AppUser ids do not match");
-            assertEquals(appUserDto.getUsername(), appUser.getUsername(), "AppUser usernames do not match");
-            assertEquals(appUserDto.getFirstName(), appUser.getFirstName(), "AppUser first names do not match");
-            assertEquals(appUserDto.getLastName(), appUser.getLastName(), "AppUser last names do not match");
-            assertEquals(appUserDto.getEmail(), appUser.getEmail(), "AppUser emails do not match");
-            assertEquals(appUserDto.isEmailVerified(), appUser.isEmailVerified(), "AppUser emailVerified do not match");
-            assertEquals(appUserDto.isEnabled(), appUser.isEnabled(), "AppUser enabled do not match");
-            assertTrue(appUser.isEnabled(), "AppUser enabled is not true");
-
-            // PokerTable Assertions
             var tableDto = playerSessionDto.getPokerTable();
-            var tableId = tableDto.getId();
-            var tableOpt = sqlClient.getPokerTable(tableId);
-            assertTrue(tableOpt.isPresent(), "PokerTable not found for ID");
-            var table = tableOpt.get();
-            assertEquals(tableId, table.getId(), "PokerTable ids do not match");
-            assertEquals(tableDto.getName(), table.getName(), "PokerTable names do not match");
-            assertEquals(tableDto.getGameType(), table.getGameType(), "PokerTable gameTypes do not match");
+            assertTable(tableDto);
         });
     }
 
     private void assertPlayersSubscribed(List<ServerMessageDTO> listenerMessages) {
-        listenerMessages.stream()
-                .filter(message -> message.getType() == ServerMessageType.PLAYER_SUBSCRIBED)
-                .forEach(message -> {
-                    var payload = (PlayerSubscribedDTO) message.getPayload();
+        var messages = get(listenerMessages, ServerMessageType.PLAYER_SUBSCRIBED);
+        assertEquals(1, messages.size());
+        messages.forEach(message -> {
+            var payload = (PlayerSubscribedDTO) message.getPayload();
 
-                });
+            var playerSessions = payload.getPlayerSessions();
+            assertFalse(playerSessions.isEmpty());
+
+            var viewerSessionOpt = playerSessions.stream()
+                    .filter(playerSessionDto ->
+                            playerSessionDto.getUser().getUsername().equals("viewer1")).findFirst();
+            assertTrue(viewerSessionOpt.isPresent());
+
+            for (var playerSessionDto : playerSessions) {
+                assertPlayerSession(playerSessionDto);
+            }
+        });
+    }
+
+    protected void assertCard(CardDTO cardDto, CardType cardType) {
+        var foundCardFromDeck = findCard(cardDto.getRankType(), cardDto.getSuitType());
+        assertEquals(cardDto.getRankType(), foundCardFromDeck.getRankType());
+        assertEquals(cardDto.getRankValue(), foundCardFromDeck.getRankValue());
+        assertEquals(cardDto.getSuitType(), foundCardFromDeck.getSuitType());
+        assertEquals(cardDto.getCardType(), cardType);
+
+        var cardOpt = sqlClient.getCard(cardDto.getId());
+        assertTrue(cardOpt.isPresent());
+        var card = cardOpt.get();
+
+        assertEquals(cardDto.getId(), card.getId());
+        assertEquals(cardDto.getRankType(), card.getRankType());
+        assertEquals(cardDto.getRankValue(), card.getRankValue());
+        assertEquals(cardDto.getSuitType(), card.getSuitType());
+        assertEquals(cardDto.getCardType(), card.getCardType());
+    }
+
+    protected void assertPlayerSession(PlayerSessionDTO playerSessionDto) {
+        assertEquals(SessionState.CONNECTED, playerSessionDto.getSessionState());
+
+        var playerSessionId = playerSessionDto.getId();
+        var playerSessionOpt = sqlClient.getPlayerSession(playerSessionId);
+        assertTrue(playerSessionOpt.isPresent());
+        var playerSession = playerSessionOpt.get();
+        assertEquals(playerSessionId, playerSession.getId());
+        if (playerSessionDto.getConnectionType() == ConnectionType.PLAYER) {
+            assertTrue(playerSessionDto.getPosition() > 0);
+        } else {
+            assertNull(playerSessionDto.getPosition());
+        }
+        assertEquals(playerSessionDto.getPosition(), playerSession.getPosition());
+
+        assertAppUser(playerSessionDto.getUser());
+        assertTable(playerSessionDto.getPokerTable());
+    }
+
+    protected void assertAppUser(AppUserDTO appUserDto) {
+        var appUserId = appUserDto.getId();
+        var appUserOpt = sqlClient.getAppUser(appUserId);
+        assertTrue(appUserOpt.isPresent());
+        var appUser = appUserOpt.get();
+        assertEquals(appUserId, appUser.getId());
+        assertEquals(appUserDto.getUsername(), appUser.getUsername());
+        assertEquals(appUserDto.getFirstName(), appUser.getFirstName());
+        assertEquals(appUserDto.getLastName(), appUser.getLastName());
+        assertEquals(appUserDto.getEmail(), appUser.getEmail());
+        assertEquals(appUserDto.isEmailVerified(), appUser.isEmailVerified());
+        assertEquals(appUserDto.isEnabled(), appUser.isEnabled());
+        assertTrue(appUser.isEnabled());
+    }
+
+    protected void assertTable(TableDTO tableDto) {
+        var tableId = tableDto.getId();
+        var tableOpt = sqlClient.getPokerTable(tableId);
+        assertTrue(tableOpt.isPresent());
+        var table = tableOpt.get();
+        assertEquals(tableId, table.getId());
+        assertEquals(tableDto.getName(), table.getName());
+        assertEquals(tableDto.getGameType(), table.getGameType());
     }
 
     // ***************************************************************
@@ -97,7 +144,7 @@ public abstract class Validator {
         return get(userMessages, type);
     }
 
-    private List<ServerMessageDTO> get(List<ServerMessageDTO> messages, ServerMessageType type) {
+    protected List<ServerMessageDTO> get(List<ServerMessageDTO> messages, ServerMessageType type) {
         return messages.stream()
                 .filter(message -> message.getType() == type)
                 .toList();

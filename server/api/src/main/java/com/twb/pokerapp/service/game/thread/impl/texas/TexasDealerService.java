@@ -15,7 +15,6 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 import static com.twb.pokerapp.util.TransactionUtil.afterCommit;
 
@@ -33,13 +32,13 @@ public class TexasDealerService {
         if (CollectionUtils.isEmpty(playerSessions)) {
             throw new GameInterruptedException("No Players Connected");
         }
-        var currentDealer = nextDealerReorder(params.getTableId(), playerSessions);
-        afterCommit(() -> dispatcher.send(params, messageFactory.dealerDetermined(currentDealer)));
+        var nextDealer = nextDealerReorder(playerSessions);
+        afterCommit(() -> dispatcher.send(params, messageFactory.dealerDetermined(nextDealer)));
     }
 
-    private PlayerSession nextDealerReorder(UUID tableId, List<PlayerSession> playerSessions) {
+    private PlayerSession nextDealerReorder(List<PlayerSession> playerSessions) {
         var nextDealer = getNextDealer(playerSessions);
-        setNextDealer(tableId, nextDealer);
+        setNextDealer(playerSessions, nextDealer);
         return nextDealer;
     }
 
@@ -98,9 +97,15 @@ public class TexasDealerService {
         return dealerSortedList;
     }
 
-    private void setNextDealer(UUID tableId, PlayerSession nextDealer) {
-        playerSessionRepository.resetDealerForTableId(tableId);
-        playerSessionRepository.setDealer(nextDealer.getId(), true);
+    private void setNextDealer(List<PlayerSession> playerSessions, PlayerSession nextDealer) {
+        for (PlayerSession connectedPlayer : playerSessions) {
+            if (connectedPlayer.getId().equals(nextDealer.getId())) {
+                connectedPlayer.setDealer(true);
+                nextDealer.setDealer(true);
+            } else {
+                connectedPlayer.setDealer(false);
+            }
+        }
     }
 
     private record DealerWithIndexDTO(int index, PlayerSession dealerPlayerSession) {
