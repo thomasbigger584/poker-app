@@ -1,12 +1,15 @@
 package com.twb.pokerapp.testutils.validator;
 
-import com.twb.pokerapp.domain.PlayerSession;
+import com.twb.pokerapp.domain.*;
 import com.twb.pokerapp.domain.enumeration.CardType;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.domain.enumeration.SessionState;
 import com.twb.pokerapp.dto.appuser.AppUserDTO;
+import com.twb.pokerapp.dto.bettinground.BettingRoundDTO;
 import com.twb.pokerapp.dto.card.CardDTO;
+import com.twb.pokerapp.dto.playeraction.PlayerActionDTO;
 import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
+import com.twb.pokerapp.dto.round.RoundDTO;
 import com.twb.pokerapp.dto.table.TableDTO;
 import com.twb.pokerapp.testutils.game.GameRunnerParams;
 import com.twb.pokerapp.testutils.http.message.PlayersServerMessages;
@@ -120,7 +123,31 @@ public abstract class Validator {
     // Common Entity Assertions
     // ***************************************************************
 
-    protected void assertCard(CardDTO cardDto, CardType cardType) {
+    protected PlayerAction assertPlayerAction(PlayerActionDTO playerActionDto) {
+        var playerActionId = playerActionDto.getId();
+        var playerActionOpt = sqlClient.getPlayerAction(playerActionId);
+        assertTrue(playerActionOpt.isPresent());
+        var playerAction = playerActionOpt.get();
+        assertEquals(playerActionId, playerAction.getId());
+        assertEquals(playerActionDto.getActionType(), playerAction.getActionType());
+        assertEquals(playerActionDto.getAmount(), playerAction.getAmount());
+
+        assertPlayerSession(playerActionDto.getPlayerSession());
+        assertBettingRound(playerActionDto.getBettingRound());
+        return playerAction;
+    }
+
+    protected BettingRound assertBettingRound(BettingRoundDTO bettingRoundDto) {
+        var bettingRoundId = bettingRoundDto.getId();
+        var bettingRoundOpt = sqlClient.getBettingRound(bettingRoundId);
+        assertTrue(bettingRoundOpt.isPresent());
+        var bettingRound = bettingRoundOpt.get();
+        assertEquals(bettingRoundId, bettingRound.getId());
+        assertEquals(bettingRoundDto.getType(), bettingRound.getType());
+        return bettingRound;
+    }
+
+    protected Card assertCard(CardDTO cardDto, CardType cardType) {
         var foundCardFromDeck = findCard(cardDto.getRankType(), cardDto.getSuitType());
         assertEquals(cardDto.getRankType(), foundCardFromDeck.getRankType());
         assertEquals(cardDto.getRankValue(), foundCardFromDeck.getRankValue());
@@ -136,9 +163,19 @@ public abstract class Validator {
         assertEquals(cardDto.getRankValue(), card.getRankValue());
         assertEquals(cardDto.getSuitType(), card.getSuitType());
         assertEquals(cardDto.getCardType(), card.getCardType());
+        return card;
     }
 
-    protected void assertPlayerSession(PlayerSessionDTO playerSessionDto) {
+    protected Round assertRound(RoundDTO roundDto) {
+        var roundId = roundDto.getId();
+        var roundOpt = sqlClient.getRound(roundId);
+        assertTrue(roundOpt.isPresent());
+        var round = roundOpt.get();
+        assertEquals(roundId, round.getId());
+        return round;
+    }
+
+    protected PlayerSession assertPlayerSession(PlayerSessionDTO playerSessionDto) {
         assertEquals(SessionState.CONNECTED, playerSessionDto.getSessionState());
 
         var playerSessionId = playerSessionDto.getId();
@@ -152,12 +189,12 @@ public abstract class Validator {
             assertNull(playerSessionDto.getPosition());
         }
         assertEquals(playerSessionDto.getPosition(), playerSession.getPosition());
-
         assertAppUser(playerSessionDto.getUser());
         assertTable(playerSessionDto.getPokerTable());
+        return playerSession;
     }
 
-    protected void assertAppUser(AppUserDTO appUserDto) {
+    protected AppUser assertAppUser(AppUserDTO appUserDto) {
         var appUserId = appUserDto.getId();
         var appUserOpt = sqlClient.getAppUser(appUserId);
         assertTrue(appUserOpt.isPresent());
@@ -170,9 +207,10 @@ public abstract class Validator {
         assertEquals(appUserDto.isEmailVerified(), appUser.isEmailVerified());
         assertEquals(appUserDto.isEnabled(), appUser.isEnabled());
         assertTrue(appUser.isEnabled());
+        return appUser;
     }
 
-    protected void assertTable(TableDTO tableDto) {
+    protected PokerTable assertTable(TableDTO tableDto) {
         var tableId = tableDto.getId();
         var tableOpt = sqlClient.getPokerTable(tableId);
         assertTrue(tableOpt.isPresent());
@@ -180,6 +218,7 @@ public abstract class Validator {
         assertEquals(tableId, table.getId());
         assertEquals(tableDto.getName(), table.getName());
         assertEquals(tableDto.getGameType(), table.getGameType());
+        return table;
     }
 
     // ***************************************************************

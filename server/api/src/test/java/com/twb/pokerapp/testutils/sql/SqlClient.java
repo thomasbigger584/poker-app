@@ -1,9 +1,6 @@
 package com.twb.pokerapp.testutils.sql;
 
-import com.twb.pokerapp.domain.AppUser;
-import com.twb.pokerapp.domain.Card;
-import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.domain.PokerTable;
+import com.twb.pokerapp.domain.*;
 import jakarta.persistence.*;
 import jakarta.persistence.metamodel.EntityType;
 import org.testcontainers.containers.JdbcDatabaseContainer;
@@ -75,8 +72,20 @@ public class SqlClient implements AutoCloseable {
     // Get By ID
     // *****************************************************************************************
 
+    public Optional<PlayerAction> getPlayerAction(UUID id) {
+        return getById(id, PlayerAction.class);
+    }
+
+    public Optional<BettingRound> getBettingRound(UUID id) {
+        return getById(id, BettingRound.class);
+    }
+
     public Optional<Card> getCard(UUID id) {
         return getById(id, Card.class);
+    }
+
+    public Optional<Round> getRound(UUID id) {
+        return getById(id, Round.class);
     }
 
     public Optional<PlayerSession> getPlayerSession(UUID id) {
@@ -153,6 +162,4 @@ public class SqlClient implements AutoCloseable {
             emf.close();
         }
     }
-
-
 }
