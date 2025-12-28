@@ -27,6 +27,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -96,16 +97,22 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     @Override
     public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
         this.session = session;
-        session.setAutoReceipt(true);
 
         var gameTopic = GAME_TOPIC_SUFFIX.formatted(params.getTable().getId());
         var notificationTopic = NOTIFICATION_TOPIC_SUFFIX.formatted(params.getUsername());
 
-        // Chain subscriptions to ensure we wait for the server to acknowledge them
-        session.subscribe(gameTopic, this).addReceiptTask(() -> {
+        var gameHeaders = new StompHeaders();
+        gameHeaders.setDestination(gameTopic);
+        gameHeaders.setReceipt("receipt-" + params.getUsername() + "-game-" + UUID.randomUUID());
+
+        session.subscribe(gameHeaders, this).addReceiptTask(() -> {
             log.info("Receipt received for subscription on user {} destination {}", params.getUsername(), gameTopic);
-            
-            session.subscribe(notificationTopic, this).addReceiptTask(() -> {
+
+            var notificationHeaders = new StompHeaders();
+            notificationHeaders.setDestination(notificationTopic);
+            notificationHeaders.setReceipt("receipt-" + params.getUsername() + "-notifications-" + UUID.randomUUID());
+
+            session.subscribe(notificationHeaders, this).addReceiptTask(() -> {
                 log.info("Receipt received for subscription on user {} destination {}", params.getUsername(), notificationTopic);
                 countdownLatch(connectLatch);
             });
@@ -173,9 +180,14 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
             return;
         }
         log.info(">>>> [{}] sending {}", params.getUsername(), dto);
-        var receiptable = session.send(destination, dto);
+
+        var headers = new StompHeaders();
+        headers.setDestination(destination);
+        headers.setReceipt("receipt-" + params.getUsername() + "-send-" + UUID.randomUUID());
+
+        var receiptable = session.send(headers, dto);
         receiptable.addReceiptTask(() -> log.info("Receipt received for user {} destination {} and payload {}", params.getUsername(), destination, dto));
-        receiptable.addReceiptLostTask(() -> log.warn("Failed to receive receipt for user {} destination {} and payload {}", params.getUsername(), destination, dto));
+        receiptable.addReceiptLostTask(() -> log.error("Failed to receive receipt for user {} destination {} and payload {}", params.getUsername(), destination, dto));
     }
 
     // ***************************************************************

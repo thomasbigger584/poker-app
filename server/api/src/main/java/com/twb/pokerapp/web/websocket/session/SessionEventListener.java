@@ -2,6 +2,7 @@ package com.twb.pokerapp.web.websocket.session;
 
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.web.websocket.TableWebSocketController;
+import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -19,6 +20,7 @@ public class SessionEventListener {
 
     private final SessionService sessionService;
     private final TableWebSocketController webSocketController;
+    private final MessageDispatcher dispatcher;
 
     // *****************************************************************************************
     // Lifecycle Methods
@@ -55,6 +57,8 @@ public class SessionEventListener {
     @EventListener
     public void handleEvent(SessionSubscribeEvent event) {
         log.info("New Subscription: {}", event);
+        var headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
+        dispatcher.sendReceipt(headerAccessor);
     }
 
     @EventListener
@@ -76,6 +80,6 @@ public class SessionEventListener {
             log.warn("Session disconnect cannot disconnect player as no poker table id found on session");
             return;
         }
-        webSocketController.sendDisconnectPlayer(principal, tableIdOpt.get());
+        webSocketController.sendDisconnectPlayer(principal, headerAccessor, tableIdOpt.get());
     }
 }

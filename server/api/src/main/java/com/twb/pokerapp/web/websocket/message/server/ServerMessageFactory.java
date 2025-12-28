@@ -20,9 +20,9 @@ public class ServerMessageFactory {
     private final BettingRoundMapper bettingRoundMapper;
     private final CardMapper cardMapper;
 
-    public ServerMessageDTO playerSubscribed(List<PlayerSessionDTO> playerSessions) {
+    public ServerMessageDTO playerSubscribed(List<PlayerSession> playerSessions) {
         var payload = new PlayerSubscribedDTO();
-        payload.setPlayerSessions(playerSessions);
+        payload.setPlayerSessions(playerSessions.stream().map(playerSessionMapper::modelToDto).toList());
         return ServerMessageDTO.create(ServerMessageType.PLAYER_SUBSCRIBED, payload);
     }
 

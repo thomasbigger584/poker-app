@@ -8,7 +8,12 @@ import com.twb.pokerapp.service.game.thread.GameThreadParams;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationContext;
+import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.stomp.StompCommand;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -22,6 +27,7 @@ public class MessageDispatcher {
 
     private final SimpMessagingTemplate template;
     private final ObjectMapper objectMapper;
+    private final ApplicationContext context;
 
     public void send(PokerTable table, ServerMessageDTO message) {
         send(table.getId(), message);
@@ -55,5 +61,22 @@ public class MessageDispatcher {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to send message", e);
         }
+    }
+
+    public void sendReceipt(StompHeaderAccessor headerAccessor) {
+        String receipt = headerAccessor.getReceipt();
+        if (receipt != null) {
+            sendReceipt(receipt, headerAccessor.getSessionId());
+        }
+    }
+
+    private void sendReceipt(String receipt, String sessionId) {
+        var accessor = StompHeaderAccessor.create(StompCommand.RECEIPT);
+        accessor.setReceiptId(receipt);
+        accessor.setSessionId(sessionId);
+        accessor.setLeaveMutable(true);
+        var message = MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
+        var clientOutboundChannel = context.getBean("clientOutboundChannel", MessageChannel.class);
+        clientOutboundChannel.send(message);
     }
 }

@@ -10,7 +10,6 @@ import com.twb.pokerapp.exception.game.RoundInterruptedException;
 import com.twb.pokerapp.service.game.DeckOfCardsFactory;
 import com.twb.pokerapp.service.game.thread.annotation.CallerThread;
 import com.twb.pokerapp.service.game.thread.dto.PlayerTurnLatchDTO;
-import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

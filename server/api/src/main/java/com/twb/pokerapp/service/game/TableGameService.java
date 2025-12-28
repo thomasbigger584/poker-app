@@ -44,32 +44,37 @@ public class TableGameService {
     private final TransactionTemplate transaction;
 
     public ServerMessageDTO onUserConnected(UUID tableId, ConnectionType connectionType, String username, Double buyInAmount) {
-        return mutex.evaluate(tableId, () -> transaction.execute(status -> {
-            var table = getThrowPlayerErrorLog(tableRepository.findById(tableId), "No table found for Table ID: " + tableId);
-            if (connectionType == ConnectionType.PLAYER) {
-                if (buyInAmount < table.getMinBuyin() || buyInAmount > table.getMaxBuyin()) {
-                    var message = "Buy-In amount must be between $%.2f and $%.2f for table %s".formatted(table.getMinBuyin(), table.getMaxBuyin(), tableId);
-                    throw new GamePlayerErrorLogException(message);
-                }
-            }
-            var user = getThrowPlayerErrorLog(userRepository.findByUsername(username), "Failed to connect user %s to table %s as user not found".formatted(username, tableId));
-            if (connectionType == ConnectionType.PLAYER) {
-                if (buyInAmount > user.getTotalFunds()) {
-                    var message = "User %s does not have enough total funds for Buy-In $%.2f, has $%.2f".formatted(username, buyInAmount, user.getTotalFunds());
-                    throw new GamePlayerErrorLogException(message);
-                }
-            }
-            var playerSessionOpt = playerSessionRepository.findByTableIdAndUsername(tableId, username);
-            if (playerSessionOpt.isEmpty()) {
+        return mutex.evaluate(tableId, () -> {
+            var allPlayerSessions = transaction.execute(status -> {
+                var table = getThrowPlayerErrorLog(tableRepository.findById(tableId), "No table found for Table ID: " + tableId);
                 if (connectionType == ConnectionType.PLAYER) {
-                    threadManager.createIfNotExist(table);
+                    if (buyInAmount < table.getMinBuyin() || buyInAmount > table.getMaxBuyin()) {
+                        var message = "Buy-In amount must be between $%.2f and $%.2f for table %s".formatted(table.getMinBuyin(), table.getMaxBuyin(), tableId);
+                        throw new GamePlayerErrorLogException(message);
+                    }
                 }
-                var playerSession = playerSessionService.connectUserToRound(table, user, connectionType, buyInAmount);
-                dispatcher.send(tableId, messageFactory.playerConnected(playerSession));
+                var user = getThrowPlayerErrorLog(userRepository.findByUsername(username), "Failed to connect user %s to table %s as user not found".formatted(username, tableId));
+                if (connectionType == ConnectionType.PLAYER) {
+                    if (buyInAmount > user.getTotalFunds()) {
+                        var message = "User %s does not have enough total funds for Buy-In $%.2f, has $%.2f".formatted(username, buyInAmount, user.getTotalFunds());
+                        throw new GamePlayerErrorLogException(message);
+                    }
+                }
+                var playerSessionOpt = playerSessionRepository.findByTableIdAndUsername(tableId, username);
+                if (playerSessionOpt.isEmpty()) {
+                    if (connectionType == ConnectionType.PLAYER) {
+                        threadManager.createIfNotExist(table);
+                    }
+                    var playerSession = playerSessionService.connectUserToRound(table, user, connectionType, buyInAmount);
+                    afterCommit(() -> dispatcher.send(tableId, messageFactory.playerConnected(playerSession)));
+                }
+                return playerSessionRepository.findConnectedByTableId(tableId);
+            });
+            if (allPlayerSessions == null) {
+                throw new GamePlayerErrorLogException("No player sessions during subscribe as all player sessions are null");
             }
-            var allPlayerSessions = playerSessionService.getByTableId(tableId);
             return messageFactory.playerSubscribed(allPlayerSessions);
-        }));
+        });
     }
 
     public void onPlayerAction(UUID tableId, String username, CreatePlayerActionDTO action) {

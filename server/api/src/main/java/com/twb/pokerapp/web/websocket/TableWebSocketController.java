@@ -42,34 +42,37 @@ public class TableWebSocketController {
     private final TableGameService tableGameService;
 
     @SubscribeMapping(GAME_TOPIC)
-    public ServerMessageDTO sendPlayerSubscribed(Principal principal, StompHeaderAccessor headerAccessor, @DestinationVariable(TABLE_ID) UUID tableId) {
+    public ServerMessageDTO userSubscribed(Principal principal, StompHeaderAccessor headerAccessor, @DestinationVariable(TABLE_ID) UUID tableId) {
         sessionService.putPokerTableId(headerAccessor, tableId);
         var connectionType = getConnectionType(headerAccessor);
         var buyInAmount = getBuyInAmount(headerAccessor);
-        log.info(">>>> sendPlayerSubscribed - Table: {}, User: {}, Connection: {}, BuyIn: {}", tableId, principal.getName(), connectionType, buyInAmount);
+        log.info(">>>> userSubscribed - Table: {}, User: {}, Connection: {}, BuyIn: {}", tableId, principal.getName(), connectionType, buyInAmount);
         try {
             return tableGameService.onUserConnected(tableId, connectionType, principal.getName(), buyInAmount);
         } catch (Exception e) {
+            log.error("Failed to subscribe user {} to table {}", principal.getName(), tableId, e);
             return messageFactory.errorMessage(e.getMessage());
         }
     }
 
     @MessageMapping(INBOUND_MESSAGE_PREFIX + SEND_CHAT_MESSAGE)
     @SendTo(SERVER_MESSAGE_TOPIC)
-    public void sendChatMessage(Principal principal, @DestinationVariable(TABLE_ID) UUID tableId, @Payload @Valid CreateChatMessageDTO message) {
+    public void sendChatMessage(Principal principal, StompHeaderAccessor headerAccessor, @DestinationVariable(TABLE_ID) UUID tableId, @Payload @Valid CreateChatMessageDTO message) {
         var chatMessage = messageFactory.chatMessage(principal.getName(), message.getMessage());
         dispatcher.send(tableId, chatMessage);
+        dispatcher.sendReceipt(headerAccessor);
     }
 
     @MessageMapping(INBOUND_MESSAGE_PREFIX + SEND_PLAYER_ACTION)
     @SendTo(SERVER_MESSAGE_TOPIC)
-    public void sendPlayerAction(Principal principal, @DestinationVariable(TABLE_ID) UUID tableId, @Payload @Valid CreatePlayerActionDTO action) {
+    public void sendPlayerAction(Principal principal, StompHeaderAccessor headerAccessor, @DestinationVariable(TABLE_ID) UUID tableId, @Payload @Valid CreatePlayerActionDTO action) {
         tableGameService.onPlayerAction(tableId, principal.getName(), action);
+        dispatcher.sendReceipt(headerAccessor);
     }
 
     // not returning here as called from multiple places
     @MessageMapping(INBOUND_MESSAGE_PREFIX + SEND_DISCONNECT_PLAYER)
-    public void sendDisconnectPlayer(Principal principal, @DestinationVariable(TABLE_ID) UUID tableId) {
+    public void sendDisconnectPlayer(Principal principal, StompHeaderAccessor headerAccessor, @DestinationVariable(TABLE_ID) UUID tableId) {
         log.info(">>>> sendDisconnectPlayer - Poker Table: {} - User: {}", tableId, principal.getName());
         tableGameService.onUserDisconnected(tableId, principal.getName());
     }
