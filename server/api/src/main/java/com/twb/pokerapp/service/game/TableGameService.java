@@ -41,11 +41,11 @@ public class TableGameService {
     private final MessageDispatcher dispatcher;
     private final XSync<UUID> mutex;
     private final ApplicationContext context;
-    private final TransactionTemplate transaction;
+    private final TransactionTemplate writeTx;
 
     public ServerMessageDTO onUserConnected(UUID tableId, ConnectionType connectionType, String username, Double buyInAmount) {
         return mutex.evaluate(tableId, () -> {
-            var allPlayerSessions = transaction.execute(status -> {
+            var allPlayerSessions = writeTx.execute(status -> {
                 var table = getThrowPlayerErrorLog(tableRepository.findById(tableId), "No table found for Table ID: " + tableId);
                 if (connectionType == ConnectionType.PLAYER) {
                     if (buyInAmount < table.getMinBuyin() || buyInAmount > table.getMaxBuyin()) {
@@ -78,20 +78,22 @@ public class TableGameService {
     }
 
     public void onPlayerAction(UUID tableId, String username, CreatePlayerActionDTO action) {
-        mutex.execute(tableId, () -> transaction.executeWithoutResult(status -> {
+        mutex.execute(tableId, () -> {
             try {
-                var table = getThrowPlayerErrorLog(tableRepository.findById(tableId), "No table found for Table ID: " + tableId);
-                var playerSession = getThrowPlayerErrorLog(playerSessionRepository.findByTableIdAndUsername(tableId, username), "Your session is not found on table %s".formatted(tableId));
-                if (playerSession.getConnectionType() == ConnectionType.LISTENER) {
-                    throw new GamePlayerLogException(playerSession, "You are a listener on table, cannot perform actions");
-                }
-                var gameThread = getThrowPlayerErrorLog(threadManager.getIfExists(tableId), playerSession, "No game thread exists for table %s".formatted(tableId));
-                var playerTurnLatch = gameThread.getPlayerTurnLatch();
-                if (playerTurnLatch == null || !username.equals(playerTurnLatch.playerSession().getUser().getUsername())) {
-                    throw new GamePlayerLogException(playerSession, "Not waiting for you to play on table");
-                }
-                var playerActionService = table.getGameType().getPlayerActionService(context);
-                playerActionService.playerAction(playerSession, gameThread, action);
+                writeTx.executeWithoutResult(status -> {
+                    var table = getThrowPlayerErrorLog(tableRepository.findById(tableId), "No table found for Table ID: " + tableId);
+                    var playerSession = getThrowPlayerErrorLog(playerSessionRepository.findByTableIdAndUsername(tableId, username), "Your session is not found on table %s".formatted(tableId));
+                    if (playerSession.getConnectionType() == ConnectionType.LISTENER) {
+                        throw new GamePlayerLogException(playerSession, "You are a listener on table, cannot perform actions");
+                    }
+                    var gameThread = getThrowPlayerErrorLog(threadManager.getIfExists(tableId), playerSession, "No game thread exists for table %s".formatted(tableId));
+                    var playerTurnLatch = gameThread.getPlayerTurnLatch();
+                    if (playerTurnLatch == null || !username.equals(playerTurnLatch.playerSession().getUser().getUsername())) {
+                        throw new GamePlayerLogException(playerSession, "Not waiting for you to play on table");
+                    }
+                    var playerActionService = table.getGameType().getPlayerActionService(context);
+                    playerActionService.playerAction(playerSession, gameThread, action);
+                });
             } catch (GamePlayerLogException e) {
                 gameLogService.sendLogMessage(e.getPlayerSession(), e.getMessage());
             } catch (GamePlayerErrorLogException e) {
@@ -104,11 +106,11 @@ public class TableGameService {
                 gameLogService.sendErrorMessage(username, e.getMessage());
                 throw e;
             }
-        }));
+        });
     }
 
     public void onUserDisconnected(UUID tableId, String username) {
-        mutex.execute(tableId, () -> transaction.executeWithoutResult(status -> {
+        mutex.execute(tableId, () -> writeTx.executeWithoutResult(status -> {
             var tableOpt = tableRepository.findById(tableId);
             if (tableOpt.isEmpty()) {
                 log.warn("No table found for table: {}", tableId);
