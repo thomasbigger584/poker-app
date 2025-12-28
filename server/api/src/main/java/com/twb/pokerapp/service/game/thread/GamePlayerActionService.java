@@ -20,7 +20,6 @@ import java.util.Optional;
 
 import static com.twb.pokerapp.repository.RepositoryUtil.getThrowPlayerErrorLog;
 import static com.twb.pokerapp.repository.RepositoryUtil.getThrowPlayerLog;
-import static com.twb.pokerapp.util.TransactionUtil.afterCommit;
 
 @Slf4j
 public abstract class GamePlayerActionService {
@@ -51,9 +50,7 @@ public abstract class GamePlayerActionService {
 
         var playerAction = onPlayerAction(playerSession, bettingRound, gameThread, createDto);
 
-        gameThread.onPostPlayerAction(createDto);
-
-        afterCommit(() -> dispatcher.send(table, messageFactory.playerActioned(playerAction)));
+        gameThread.onPostPlayerAction(playerAction);
     }
 
     private void checkIdempotency(PlayerSession playerSession, Round round, CreatePlayerActionDTO createDto) {

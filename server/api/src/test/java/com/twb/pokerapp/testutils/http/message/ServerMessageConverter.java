@@ -1,19 +1,16 @@
 package com.twb.pokerapp.testutils.http.message;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.support.GenericMessage;
-import org.testcontainers.shaded.com.fasterxml.jackson.core.JsonProcessingException;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 @Slf4j
@@ -26,55 +23,20 @@ public class ServerMessageConverter implements MessageConverter {
     @Override
     public Object fromMessage(Message<?> message, @NotNull Class<?> targetClass) {
         var payload = (byte[]) message.getPayload();
-        var jsonObject = getJsonObject(payload);
-        var messageType = getServerMessageType(jsonObject);
-        var payloadClass = messageType.getPayloadClass();
-        var timestamp = getTimestamp(jsonObject);
-        var payloadObject = getPayloadObject(jsonObject, payloadClass);
-
-        return ServerMessageDTO.create(messageType, timestamp, payloadObject);
-    }
-
-    private JSONObject getJsonObject(byte[] payload) {
         try {
-            return new JSONObject(new String(payload));
-        } catch (JSONException e) {
-            throw new RuntimeException("Failed to parse JSON Object", e);
-        }
-    }
+            var rootNode = objectMapper.readTree(payload);
+            var typeStr = rootNode.get(SERVER_MESSAGE_TYPE_KEY).asText();
+            var messageType = ServerMessageType.valueOf(typeStr);
 
-    private ServerMessageType getServerMessageType(JSONObject jsonObject) {
-        if (!jsonObject.has(SERVER_MESSAGE_TYPE_KEY)) {
-            throw new IllegalStateException("Expecting Server Message to contain key "
-                    + SERVER_MESSAGE_TYPE_KEY + " in response");
-        }
-        try {
-            var messageTypeString = jsonObject.getString(SERVER_MESSAGE_TYPE_KEY);
-            return ServerMessageType.valueOf(messageTypeString);
-        } catch (JSONException e) {
-            throw new RuntimeException("Failed to get message type string", e);
-        }
-    }
-
-    private long getTimestamp(JSONObject jsonObject) {
-        if (!jsonObject.has(TIMESTAMP_KEY)) {
-            log.warn("Expected Server Message to provide " + TIMESTAMP_KEY
-                    + " but it is null. Returning from app instead");
-            return System.currentTimeMillis();
-        }
-        try {
-            return jsonObject.getLong(TIMESTAMP_KEY);
-        } catch (JSONException e) {
-            throw new RuntimeException("Failed to get timestamp long", e);
-        }
-    }
-
-    private Object getPayloadObject(JSONObject jsonObject, Class<?> payloadClass) {
-        try {
-            var payloadString = jsonObject.getJSONObject(PAYLOAD_KEY);
-            return objectMapper.readValue(payloadString.toString(), payloadClass);
-        } catch (IOException | JSONException e) {
-            throw new RuntimeException("Failed to parse server message payload", e);
+            var timestamp = System.currentTimeMillis();
+            if (rootNode.has(TIMESTAMP_KEY)) {
+                timestamp = rootNode.get(TIMESTAMP_KEY).asLong();
+            }
+            var payloadNode = rootNode.get(PAYLOAD_KEY);
+            var payloadObject = objectMapper.treeToValue(payloadNode, messageType.getPayloadClass());
+            return ServerMessageDTO.create(messageType, timestamp, payloadObject);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to convert message", e);
         }
     }
 

@@ -1,6 +1,7 @@
 package com.twb.pokerapp.service.game.thread;
 
 import com.twb.pokerapp.domain.Card;
+import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.domain.enumeration.RoundState;
@@ -23,6 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.twb.pokerapp.repository.RepositoryUtil.getThrowGameInterrupted;
 import static com.twb.pokerapp.util.SleepUtil.sleepInMs;
+import static com.twb.pokerapp.util.TransactionUtil.afterCommit;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -191,9 +193,10 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
         if (roundInProgress.get()) {
             writeTx.executeWithoutResult(status -> {
                 var bettingRoundOpt = bettingRoundRepository.findCurrentByRoundId(roundId);
-                bettingRoundOpt.ifPresent(bettingRound ->
-                        bettingRoundService.setBettingRoundFinished(bettingRound));
-
+                bettingRoundOpt.ifPresent(bettingRound -> {
+                    bettingRoundService.setBettingRoundFinished(bettingRound);
+                    afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(bettingRound.getRound(), bettingRound)));
+                });
                 var roundOpt = roundRepository.findById(roundId);
                 roundOpt.ifPresent(round ->
                         roundService.setRoundState(round, RoundState.FINISHED));
@@ -234,7 +237,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
 
     @CallerThread
     @Transactional(propagation = Propagation.MANDATORY)
-    public void onPostPlayerAction(CreatePlayerActionDTO createActionDto) {
+    public void onPostPlayerAction(PlayerAction playerAction) {
         var roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
         if (roundOpt.isEmpty()) {
             // there is no round so ensure we can move to next one
@@ -247,10 +250,13 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                 interruptRound.set(true);
             }
         }
-        if (playerTurnLatch != null) {
-            playerTurnLatch.countDown();
-            playerTurnLatch = null;
-        }
+        afterCommit(() -> {
+            dispatcher.send(params, messageFactory.playerActioned(playerAction));
+            if (playerTurnLatch != null) {
+                playerTurnLatch.countDown();
+                playerTurnLatch = null;
+            }
+        });
     }
 
     private void saveRoundState(RoundState roundState) {

@@ -26,8 +26,8 @@ import java.util.UUID;
 @Controller
 @RequiredArgsConstructor
 public class TableWebSocketController {
-    private static final String TOPIC = "/loops.{tableId}";
-    private static final String SERVER_MESSAGE_TOPIC = "/topic" + TOPIC;
+    private static final String GAME_TOPIC = "/loops.{tableId}";
+    private static final String SERVER_MESSAGE_TOPIC = "/topic" + GAME_TOPIC;
     private static final String INBOUND_MESSAGE_PREFIX = "/pokerTable/{tableId}";
 
     private static final String SEND_CHAT_MESSAGE = "/sendChatMessage";
@@ -41,7 +41,7 @@ public class TableWebSocketController {
     private final MessageDispatcher dispatcher;
     private final TableGameService tableGameService;
 
-    @SubscribeMapping(TOPIC)
+    @SubscribeMapping(GAME_TOPIC)
     public ServerMessageDTO sendPlayerSubscribed(Principal principal, StompHeaderAccessor headerAccessor, @DestinationVariable(TABLE_ID) UUID tableId) {
         sessionService.putPokerTableId(headerAccessor, tableId);
         var connectionType = getConnectionType(headerAccessor);

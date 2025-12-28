@@ -131,13 +131,15 @@ public class LastAggressorService {
     public void postPlayerTurn() {
         writeTx.executeWithoutResult(status -> {
             var latestPlayerActionOpt = playerActionRepository.findByBettingRoundAndPlayer(bettingRound.getId(), currentPlayer.getId());
-            latestPlayerActionOpt.ifPresent(actionJustTaken -> {
+            latestPlayerActionOpt.ifPresentOrElse(actionJustTaken -> {
                 if (actionJustTaken.getAmount() != null) {
                     lastAggressorId = getLastAggressorId(actionJustTaken, lastAggressorId, currentPlayer);
                     bettingRound = getBettingRound(bettingRound);
                     round = roundService.updatePot(round, actionJustTaken);
                     afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound)));
                 }
+            }, () -> {
+                throw new GameInterruptedException("Last Player Action not found for player: " + currentPlayer.getUser().getUsername());
             });
         });
         playerIndex++;
@@ -147,7 +149,7 @@ public class LastAggressorService {
                 playerIndex = 0;
                 isFirstPass = false;
             }
-            if (checkIfOnlyOnePlayerActive(params, round)) {
+            if (activePlayers.size() <= 1) {
                 throw new LastAggressorBreakException("Only one active player, skipping betting round");
             }
         });
@@ -225,11 +227,6 @@ public class LastAggressorService {
             bettingRound = bettingRoundOpt.get();
         }
         return bettingRound;
-    }
-
-    private boolean checkIfOnlyOnePlayerActive(GameThreadParams params, Round round) {
-        var active = playerSessionRepository.findActivePlayersByTableId(params.getTableId(), round.getId());
-        return active.size() <= 1;
     }
 
     static class LastAggressorBreakException extends RuntimeException {

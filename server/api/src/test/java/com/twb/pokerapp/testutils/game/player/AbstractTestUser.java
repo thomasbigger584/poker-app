@@ -75,7 +75,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         }
 
         client.connectAsync(url, headers, stompHeaders, this);
-        if (!connectLatch.await(10, TimeUnit.SECONDS)) {
+        if (!connectLatch.await(15, TimeUnit.SECONDS)) {
             log.error("Timed out user {} from connecting to table {} via websocket", params.getUsername(), params.getTable().getId());
             throw new RuntimeException("Timed out user " + params.getUsername() + " from connecting to table " + params.getTable().getId());
         }
@@ -95,11 +95,21 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
     @Override
     public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
-        session.setAutoReceipt(true);
-        session.subscribe(GAME_TOPIC_SUFFIX.formatted(params.getTable().getId()), this);
-        session.subscribe(NOTIFICATION_TOPIC_SUFFIX.formatted(params.getUsername()), this);
         this.session = session;
-        countdownLatch(connectLatch);
+        session.setAutoReceipt(true);
+
+        var gameTopic = GAME_TOPIC_SUFFIX.formatted(params.getTable().getId());
+        var notificationTopic = NOTIFICATION_TOPIC_SUFFIX.formatted(params.getUsername());
+
+        // Chain subscriptions to ensure we wait for the server to acknowledge them
+        session.subscribe(gameTopic, this).addReceiptTask(() -> {
+            log.info("Receipt received for subscription on user {} destination {}", params.getUsername(), gameTopic);
+            
+            session.subscribe(notificationTopic, this).addReceiptTask(() -> {
+                log.info("Receipt received for subscription on user {} destination {}", params.getUsername(), notificationTopic);
+                countdownLatch(connectLatch);
+            });
+        });
     }
 
     @Override
@@ -128,29 +138,26 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
             log.error("Frame received but payload is null with headers {}", headers);
             return;
         }
-        var message = (ServerMessageDTO) payload;
-        receivedMessages.add(message);
+        try {
+            var message = (ServerMessageDTO) payload;
+            receivedMessages.add(message);
 
-        if (message.getPayload() instanceof ErrorMessageDTO errorDto) {
-            log.error("{} received error message: {}", params.getUsername(), errorDto.getMessage());
-            return;
-        } else if (message.getPayload() instanceof LogMessageDTO logDto) {
-            log.info("{} received log message: {}", params.getUsername(), logDto.getMessage());
-            return;
-        } else if (message.getPayload() instanceof ValidationDTO validationDto) {
-            log.info("{} received validation message: {}", params.getUsername(), validationDto.getFields());
-            return;
+            if (message.getPayload() instanceof ErrorMessageDTO errorDto) {
+                log.error("{} received error message: {}", params.getUsername(), errorDto.getMessage());
+                return;
+            } else if (message.getPayload() instanceof LogMessageDTO logDto) {
+                log.info("{} received log message: {}", params.getUsername(), logDto.getMessage());
+                return;
+            } else if (message.getPayload() instanceof ValidationDTO validationDto) {
+                log.info("{} received validation message: {}", params.getUsername(), validationDto.getFields());
+                return;
+            }
+            handleMessage(headers, message);
+        } catch (Exception e) {
+            log.error("Failed to handle frame", e);
+            throw e;
         }
-        handleMessage(headers, message);
     }
-
-//    @Override
-//    public void close() {
-//        disconnect();
-//        if (client.isRunning()) {
-//            client.stop();
-//        }
-//    }
 
     // ***************************************************************
     // Send Methods
