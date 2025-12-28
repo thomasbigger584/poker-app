@@ -132,10 +132,12 @@ public class LastAggressorService {
         writeTx.executeWithoutResult(status -> {
             var latestPlayerActionOpt = playerActionRepository.findByBettingRoundAndPlayer(bettingRound.getId(), currentPlayer.getId());
             latestPlayerActionOpt.ifPresent(actionJustTaken -> {
-                lastAggressorId = getLastAggressorId(actionJustTaken, lastAggressorId, currentPlayer);
-                bettingRound = getBettingRound(bettingRound);
-                round = roundService.updatePot(round, actionJustTaken);
-                afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound)));
+                if (actionJustTaken.getAmount() != null) {
+                    lastAggressorId = getLastAggressorId(actionJustTaken, lastAggressorId, currentPlayer);
+                    bettingRound = getBettingRound(bettingRound);
+                    round = roundService.updatePot(round, actionJustTaken);
+                    afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound)));
+                }
             });
         });
         playerIndex++;
