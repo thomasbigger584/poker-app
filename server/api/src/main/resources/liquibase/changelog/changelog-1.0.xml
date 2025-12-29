@@ -105,6 +105,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="poker_table_id" type="uuid"/>
+            <column name="round_id" type="uuid"/>
             <column name="position" type="int"/>
             <column name="dealer" type="boolean" defaultValue="0"/>
             <column name="current" type="boolean" defaultValue="0"/>

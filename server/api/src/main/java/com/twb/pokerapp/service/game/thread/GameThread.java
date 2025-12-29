@@ -135,7 +135,8 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
         } else {
             writeTx.executeWithoutResult(status -> {
                 this.table = getThrowGameInterrupted(tableRepository.findById(params.getTableId()), "Cannot start as table doesn't exist");
-                this.roundId = roundService.create(table).getId();
+                var connectedPlayers = playerSessionRepository.findConnectedPlayersByTableId(params.getTableId());
+                this.roundId = roundService.create(table, connectedPlayers).getId();
             });
         }
         gameLogService.sendLogMessage(table, "New Round...");
@@ -185,7 +186,8 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
 
     private void initBettingRound(RoundState roundState) {
         var bettingRoundTypeOpt = roundState.getBettingRoundType();
-        bettingRoundTypeOpt.ifPresent(bettingRoundType -> bettingRoundService.create(params.getTableId(), bettingRoundType));
+        bettingRoundTypeOpt.ifPresent(bettingRoundType ->
+                bettingRoundService.create(params.getTableId(), bettingRoundType));
     }
 
     private void finishRound() {

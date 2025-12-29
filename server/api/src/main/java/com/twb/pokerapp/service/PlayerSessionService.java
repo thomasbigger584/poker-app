@@ -8,7 +8,6 @@ import com.twb.pokerapp.domain.enumeration.SessionState;
 import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.mapper.PlayerSessionMapper;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
-import com.twb.pokerapp.repository.TableRepository;
 import com.twb.pokerapp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -21,15 +20,12 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class PlayerSessionService {
-    private final TableRepository tableRepository;
     private final UserRepository userRepository;
     private final PlayerSessionRepository repository;
     private final PlayerSessionMapper mapper;
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public PlayerSessionDTO connectUserToRound(PokerTable table, AppUser user,
-                                               ConnectionType connectionType,
-                                               Double buyInAmount) {
+    public PlayerSessionDTO connectUserToRound(PokerTable table, AppUser user, ConnectionType connectionType, Double buyInAmount) {
         var sessionOpt = repository
                 .findByTableIdAndUsername(table.getId(), user.getUsername());
         PlayerSession session;
@@ -72,6 +68,7 @@ public class PlayerSessionService {
         playerSession.setDealer(null);
         playerSession.setFunds(null);
         playerSession.setPokerTable(null);
+        playerSession.setRound(null);
         playerSession.setConnectionType(null);
         playerSession.setSessionState(SessionState.DISCONNECTED);
 

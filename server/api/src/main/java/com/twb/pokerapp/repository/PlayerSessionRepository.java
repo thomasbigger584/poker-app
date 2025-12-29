@@ -43,24 +43,6 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
     List<PlayerSession> findConnectedPlayersByTableId(@Param("tableId") UUID tableId);
 
     @Query("""
-            SELECT s
-            FROM PlayerSession s
-            WHERE s.pokerTable.id = :tableId
-            AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
-            AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
-            AND s.funds > 0
-            AND NOT EXISTS (
-                SELECT 1
-                FROM PlayerAction a
-                WHERE a.playerSession = s
-                AND a.bettingRound.round.id = :roundId
-                AND a.actionType = com.twb.pokerapp.domain.enumeration.ActionType.FOLD
-            )
-            ORDER BY s.position ASC
-            """)
-    List<PlayerSession> findActivePlayersByTableId(@Param("tableId") UUID tableId, @Param("roundId") UUID roundId);
-
-    @Query("""
             SELECT count(s)
             FROM PlayerSession s
             WHERE s.pokerTable.id = :tableId
@@ -76,4 +58,24 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             AND s.connectionType = :connectionType
             """)
     int countConnected(@Param("connectionType") ConnectionType connectionType);
+
+    @Query("""
+            SELECT s
+            FROM PlayerSession s
+            WHERE s.pokerTable.id = :tableId
+            AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
+            AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
+            AND s.round.id = :roundId
+            AND s.funds > 0
+            AND NOT EXISTS (
+                SELECT 1
+                FROM PlayerAction a
+                WHERE a.playerSession = s
+                AND a.bettingRound.round.id = :roundId
+                AND a.actionType = com.twb.pokerapp.domain.enumeration.ActionType.FOLD
+            )
+            ORDER BY s.position ASC
+            """)
+    List<PlayerSession> findActivePlayersByTableId(@Param("tableId") UUID tableId, @Param("roundId") UUID roundId);
+
 }

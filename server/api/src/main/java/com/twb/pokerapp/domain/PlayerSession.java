@@ -63,6 +63,11 @@ public class PlayerSession extends Auditable {
     @OneToMany(mappedBy = "playerSession")
     private List<PlayerAction> playerActions = new ArrayList<>();
 
+    @Nullable
+    @ManyToOne
+    @JoinColumn(name = "round_id")
+    private Round round;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

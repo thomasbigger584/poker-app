@@ -1,6 +1,7 @@
 package com.twb.pokerapp.service;
 
 import com.twb.pokerapp.domain.PlayerAction;
+import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.domain.Round;
 import com.twb.pokerapp.domain.enumeration.RoundState;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Component
 @Transactional
 @RequiredArgsConstructor
@@ -19,12 +22,16 @@ public class RoundService {
     private final RoundMapper mapper;
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public Round create(PokerTable table) {
+    public Round create(PokerTable table, List<PlayerSession> playerSessions) {
         var round = new Round();
         round.setRoundState(RoundState.WAITING_FOR_PLAYERS);
         round.setPokerTable(table);
         round.setPot(0d);
+        round.setPlayerSessions(playerSessions);
         round = repository.save(round);
+        for (PlayerSession playerSession : playerSessions) {
+            playerSession.setRound(round);
+        }
         return round;
     }
 
