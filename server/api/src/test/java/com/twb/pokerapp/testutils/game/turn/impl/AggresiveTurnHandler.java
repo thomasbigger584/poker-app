@@ -21,7 +21,7 @@ public class AggresiveTurnHandler implements TurnHandler {
             sendPlayerAction(user, ActionType.CALL, playerTurn.getAmountToCall());
         } else if (Arrays.stream(playerTurn.getNextActions())
                 .anyMatch(actionType -> actionType == ActionType.CHECK)) {
-            sendPlayerAction(user, ActionType.CALL, 0d);
+            sendPlayerAction(user, ActionType.CHECK, 0d);
         } else {
             throw new IllegalStateException("Failed to find bet action in player turn response");
         }

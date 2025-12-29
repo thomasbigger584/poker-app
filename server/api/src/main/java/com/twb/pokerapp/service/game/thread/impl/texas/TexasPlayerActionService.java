@@ -86,7 +86,10 @@ public class TexasPlayerActionService extends GamePlayerActionService {
             throw new GamePlayerLogException(playerSession, "Cannot call as previous action was a check");
         }
         var amountToCall = playerActionService.getAmountToCall(playerSession, lastPlayerActions);
-        createActionDto.setAmount(amountToCall);
+        if (createActionDto.getAmount() != amountToCall) {
+            log.warn("Call amount sent ${} not equalled to actual amount to call ${} so setting it", createActionDto.getAmount(), amountToCall);
+            createActionDto.setAmount(amountToCall);
+        }
         if (createActionDto.getAmount() > playerSession.getFunds()) {
             throw new GamePlayerLogException(playerSession, "Cannot call as $%.2f is more than current funds".formatted(createActionDto.getAmount()));
         }
