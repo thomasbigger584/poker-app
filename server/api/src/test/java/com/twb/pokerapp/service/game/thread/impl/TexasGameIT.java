@@ -7,6 +7,7 @@ import com.twb.pokerapp.testutils.game.GameLatches;
 import com.twb.pokerapp.testutils.game.GameRunner;
 import com.twb.pokerapp.testutils.game.GameRunnerParams;
 import com.twb.pokerapp.testutils.game.turn.TurnHandler;
+import com.twb.pokerapp.testutils.game.turn.impl.AggresiveTurnHandler;
 import com.twb.pokerapp.testutils.game.turn.impl.FirstActionTurnHandler;
 import com.twb.pokerapp.testutils.game.turn.impl.InvalidActionTurnHandler;
 import com.twb.pokerapp.testutils.game.turn.impl.OptimisticTurnHandler;
@@ -91,6 +92,22 @@ class TexasGameIT extends BaseTestContainersIT {
         var turnHandlers = TurnHandler.of(
                 new OptimisticTurnHandler(),
                 new FirstActionTurnHandler()
+        );
+
+        // when
+        var messages = runner.run(turnHandlers);
+
+        // then
+        validator.validateEndOfRun(messages);
+    }
+
+    @Test
+    void testGameWithBetAndRaiseActions() throws Throwable {
+
+        // given
+        var turnHandlers = TurnHandler.of(
+                new OptimisticTurnHandler(),
+                new AggresiveTurnHandler()
         );
 
         // when

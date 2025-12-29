@@ -10,19 +10,20 @@ import java.util.Arrays;
 
 import static com.twb.pokerapp.testutils.game.turn.TurnHandler.sendPlayerAction;
 
-// Will Bet or Call when it can. It will not check or fold
-public class OptimisticTurnHandler implements TurnHandler {
-    private static final double DEFAULT_BET_AMOUNT = 10d;
+public class AggresiveTurnHandler implements TurnHandler {
+    private static final double DEFAULT_RAISE_AMOUNT = 20d;
 
     @Override
     public void handle(AbstractTestUser user, StompHeaders headers, PlayerTurnDTO playerTurn) {
         if (Arrays.stream(playerTurn.getNextActions())
-                .anyMatch(actionType -> actionType == ActionType.BET)) {
-            sendPlayerAction(user, ActionType.BET, DEFAULT_BET_AMOUNT);
+                .anyMatch(actionType -> actionType == ActionType.RAISE)) {
+            sendPlayerAction(user, ActionType.RAISE, DEFAULT_RAISE_AMOUNT);
         } else if (Arrays.stream(playerTurn.getNextActions())
                 .anyMatch(actionType -> actionType == ActionType.CALL)) {
-            // todo: fix this so that we send the amount to call, need to calculate correctly the amount to call
-            sendPlayerAction(user, ActionType.CALL, DEFAULT_BET_AMOUNT);
+            sendPlayerAction(user, ActionType.CALL, playerTurn.getAmountToCall());
+        } else if (Arrays.stream(playerTurn.getNextActions())
+                .anyMatch(actionType -> actionType == ActionType.CHECK)) {
+            sendPlayerAction(user, ActionType.CALL, 0d);
         } else {
             throw new IllegalStateException("Failed to find bet action in player turn response");
         }

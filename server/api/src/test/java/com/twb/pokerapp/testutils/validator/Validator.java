@@ -62,6 +62,10 @@ public abstract class Validator {
                 fieldsExpected.contains(validationFieldDto.getField())));
     }
 
+    // ***************************************************************
+    // Lifecycle Assertions
+    // ***************************************************************
+
     private void assertPlayersConnected(List<ServerMessageDTO> listenerMessages) {
         var messages = get(listenerMessages, ServerMessageType.PLAYER_CONNECTED);
         assertEquals(2, messages.size());

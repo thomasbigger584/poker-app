@@ -43,6 +43,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
     }
 
     private PlayerAction foldAction(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
+        createActionDto.setAmount(null);
         return playerActionService.create(playerSession, bettingRound, createActionDto);
     }
 
@@ -52,6 +53,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
         if (!canPerformCheck) {
             throw new GamePlayerLogException(playerSession, "Cannot check as previous actions was not a check");
         }
+        createActionDto.setAmount(0d);
         return playerActionService.create(playerSession, bettingRound, createActionDto);
     }
 
