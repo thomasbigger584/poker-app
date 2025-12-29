@@ -12,6 +12,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 @Component
 @RequiredArgsConstructor
 public class PlayerActionService {
@@ -21,7 +26,6 @@ public class PlayerActionService {
 
     @Transactional(propagation = Propagation.MANDATORY)
     public PlayerAction create(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createDto) {
-
         var amount = createDto.getAmount();
         if (amount != null && amount > 0d) {
             playerSession.setFunds(playerSession.getFunds() - amount);
@@ -38,4 +42,22 @@ public class PlayerActionService {
 
         return playerAction;
     }
+
+    @Transactional(propagation = Propagation.MANDATORY, readOnly = true)
+    public double getAmountToCall(PlayerSession playerSession, List<PlayerAction> prevPlayerActions) {
+        var playerContributions = getPlayerContributions(prevPlayerActions);
+        var maxBet = playerContributions.values().stream().max(Double::compare).orElse(0d);
+        var currentContribution = playerContributions.getOrDefault(playerSession.getId(), 0d);
+        return Math.max(0d, maxBet - currentContribution);
+    }
+
+    private Map<UUID, Double> getPlayerContributions(List<PlayerAction> prevPlayerActions) {
+        var playerContributions = new HashMap<UUID, Double>();
+        for (var action : prevPlayerActions) {
+            var thisAmount = action.getAmount() == null ? 0d : action.getAmount();
+            playerContributions.merge(action.getPlayerSession().getId(), thisAmount, Double::sum);
+        }
+        return playerContributions;
+    }
+
 }

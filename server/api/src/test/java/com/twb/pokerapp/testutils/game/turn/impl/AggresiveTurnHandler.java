@@ -11,13 +11,11 @@ import java.util.Arrays;
 import static com.twb.pokerapp.testutils.game.turn.TurnHandler.sendPlayerAction;
 
 public class AggresiveTurnHandler implements TurnHandler {
-    private static final double DEFAULT_RAISE_AMOUNT = 20d;
-
     @Override
     public void handle(AbstractTestUser user, StompHeaders headers, PlayerTurnDTO playerTurn) {
         if (Arrays.stream(playerTurn.getNextActions())
                 .anyMatch(actionType -> actionType == ActionType.RAISE)) {
-            sendPlayerAction(user, ActionType.RAISE, DEFAULT_RAISE_AMOUNT);
+            sendPlayerAction(user, ActionType.RAISE, playerTurn.getAmountToCall() * 2);
         } else if (Arrays.stream(playerTurn.getNextActions())
                 .anyMatch(actionType -> actionType == ActionType.CALL)) {
             sendPlayerAction(user, ActionType.CALL, playerTurn.getAmountToCall());

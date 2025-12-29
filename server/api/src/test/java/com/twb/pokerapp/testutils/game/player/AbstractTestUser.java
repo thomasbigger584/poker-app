@@ -105,17 +105,25 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         gameHeaders.setDestination(gameTopic);
         gameHeaders.setReceipt("receipt-" + params.getUsername() + "-game-" + UUID.randomUUID());
 
-        session.subscribe(gameHeaders, this).addReceiptTask(() -> {
+        var gameReceipt = session.subscribe(gameHeaders, this);
+        gameReceipt.addReceiptTask(() -> {
             log.info("Receipt received for subscription on user {} destination {}", params.getUsername(), gameTopic);
 
             var notificationHeaders = new StompHeaders();
             notificationHeaders.setDestination(notificationTopic);
             notificationHeaders.setReceipt("receipt-" + params.getUsername() + "-notifications-" + UUID.randomUUID());
 
-            session.subscribe(notificationHeaders, this).addReceiptTask(() -> {
+            var notificationReceipt = session.subscribe(notificationHeaders, this);
+            notificationReceipt.addReceiptTask(() -> {
                 log.info("Receipt received for subscription on user {} destination {}", params.getUsername(), notificationTopic);
                 countdownLatch(connectLatch);
             });
+            notificationReceipt.addReceiptLostTask(() -> {
+                throw new RuntimeException("Failed to receive notification receipt for subscription on user " + params.getUsername() + " destination " + notificationTopic);
+            });
+        });
+        gameReceipt.addReceiptLostTask(() -> {
+            throw new RuntimeException("Failed to receive game receipt for subscription on user " + params.getUsername() + " destination " + gameTopic);
         });
     }
 
@@ -187,7 +195,9 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
         var receiptable = session.send(headers, dto);
         receiptable.addReceiptTask(() -> log.info("Receipt received for user {} destination {} and payload {}", params.getUsername(), destination, dto));
-        receiptable.addReceiptLostTask(() -> log.error("Failed to receive receipt for user {} destination {} and payload {}", params.getUsername(), destination, dto));
+        receiptable.addReceiptLostTask(() -> {
+            throw new RuntimeException(String.format("Failed to receive receipt for user %s destination %s and payload %s", params.getUsername(), destination, dto));
+        });
     }
 
     // ***************************************************************

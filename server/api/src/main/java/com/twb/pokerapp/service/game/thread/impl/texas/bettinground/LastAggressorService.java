@@ -12,6 +12,7 @@ import com.twb.pokerapp.repository.PlayerActionRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.RoundRepository;
 import com.twb.pokerapp.service.BettingRoundService;
+import com.twb.pokerapp.service.PlayerActionService;
 import com.twb.pokerapp.service.RoundService;
 import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
@@ -66,6 +67,9 @@ public class LastAggressorService {
 
     @Autowired
     private TexasPlayerActionService texasPlayerActionService;
+
+    @Autowired
+    private PlayerActionService playerActionService;
 
     @Autowired
     private MessageDispatcher dispatcher;
@@ -177,15 +181,13 @@ public class LastAggressorService {
     }
 
     private NextActionsDTO getNextActions(List<PlayerAction> prevPlayerActions) {
-        var amountToCall = 0d;
         var nextActions = ActionType.getDefaultActions();
-
+        var amountToCall = 0d;
         if (!prevPlayerActions.isEmpty()) {
             var previousPlayerAction = prevPlayerActions.getFirst();
             var previousPlayerActionType = previousPlayerAction.getActionType();
-
             nextActions = previousPlayerActionType.getNextActions();
-            amountToCall = previousPlayerActionType.getAmountToCall(previousPlayerAction.getAmount());
+            amountToCall = playerActionService.getAmountToCall(currentPlayer, prevPlayerActions);
         }
         return new NextActionsDTO(amountToCall, nextActions);
     }

@@ -8,7 +8,6 @@ import com.twb.pokerapp.exception.game.GamePlayerLogException;
 import com.twb.pokerapp.repository.PlayerActionRepository;
 import com.twb.pokerapp.service.BettingRoundService;
 import com.twb.pokerapp.service.PlayerActionService;
-import com.twb.pokerapp.service.game.thread.GameLogService;
 import com.twb.pokerapp.service.game.thread.GamePlayerActionService;
 import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
@@ -28,7 +27,6 @@ public class TexasPlayerActionService extends GamePlayerActionService {
     private final PlayerActionRepository playerActionRepository;
     private final PlayerActionService playerActionService;
     private final BettingRoundService bettingRoundService;
-    private final GameLogService gameLogService;
 
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
@@ -87,7 +85,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
         if (lastPlayerActionType == ActionType.CHECK) {
             throw new GamePlayerLogException(playerSession, "Cannot call as previous action was a check");
         }
-        var amountToCall = lastPlayerActionType.getAmountToCall(lastPlayerAction.getAmount());
+        var amountToCall = playerActionService.getAmountToCall(playerSession, lastPlayerActions);
         createActionDto.setAmount(amountToCall);
         if (createActionDto.getAmount() > playerSession.getFunds()) {
             throw new GamePlayerLogException(playerSession, "Cannot call as $%.2f is more than current funds".formatted(createActionDto.getAmount()));
@@ -111,7 +109,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
         if (createActionDto.getAmount() > playerSession.getFunds()) {
             throw new GamePlayerLogException(playerSession, "Cannot raise as $%.2f is more than current funds".formatted(createActionDto.getAmount()));
         }
-        var amountToCall = lastPlayerActionType.getAmountToCall(lastPlayerAction.getAmount());
+        var amountToCall = playerActionService.getAmountToCall(playerSession, lastPlayerActions);
         if (createActionDto.getAmount() <= amountToCall) {
             throw new GamePlayerLogException(playerSession, "Cannot raise as $%.2f is less than or equal to $%.2f".formatted(createActionDto.getAmount(), amountToCall));
         }

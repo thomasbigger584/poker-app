@@ -21,8 +21,7 @@ public class OptimisticTurnHandler implements TurnHandler {
             sendPlayerAction(user, ActionType.BET, DEFAULT_BET_AMOUNT);
         } else if (Arrays.stream(playerTurn.getNextActions())
                 .anyMatch(actionType -> actionType == ActionType.CALL)) {
-            // todo: fix this so that we send the amount to call, need to calculate correctly the amount to call
-            sendPlayerAction(user, ActionType.CALL, DEFAULT_BET_AMOUNT);
+            sendPlayerAction(user, ActionType.CALL, playerTurn.getAmountToCall());
         } else {
             throw new IllegalStateException("Failed to find bet action in player turn response");
         }
