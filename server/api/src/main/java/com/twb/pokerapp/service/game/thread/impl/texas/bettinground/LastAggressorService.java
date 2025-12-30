@@ -123,7 +123,7 @@ public class LastAggressorService {
                 throw new LastAggressorBreakException("Checked around, betting round finished.");
             }
             var prevPlayerActions = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId());
-            nextActions = getNextActions(prevPlayerActions);
+            nextActions = playerActionService.getNextActions(currentPlayer, prevPlayerActions);
         });
     }
 
@@ -178,18 +178,6 @@ public class LastAggressorService {
             throw new RoundInterruptedException("Only one active player, skipping betting round");
         }
         return activePlayers;
-    }
-
-    private NextActionsDTO getNextActions(List<PlayerAction> prevPlayerActions) {
-        var nextActions = ActionType.getDefaultActions();
-        var amountToCall = 0d;
-        if (!prevPlayerActions.isEmpty()) {
-            var previousPlayerAction = prevPlayerActions.getFirst();
-            var previousPlayerActionType = previousPlayerAction.getActionType();
-            nextActions = previousPlayerActionType.getNextActions();
-            amountToCall = playerActionService.getAmountToCall(currentPlayer, prevPlayerActions);
-        }
-        return new NextActionsDTO(amountToCall, nextActions);
     }
 
     private void waitPlayerTurn(GameThreadParams params, GameThread gameThread, PlayerSession playerSession) {

@@ -3,19 +3,18 @@ package com.twb.pokerapp.service;
 import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
+import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.mapper.PlayerActionMapper;
 import com.twb.pokerapp.repository.PlayerActionRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
+import com.twb.pokerapp.service.game.thread.impl.texas.dto.NextActionsDTO;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -44,6 +43,33 @@ public class PlayerActionService {
     }
 
     @Transactional(propagation = Propagation.MANDATORY, readOnly = true)
+    public NextActionsDTO getNextActions(PlayerSession playerSession, List<PlayerAction> prevPlayerActions) {
+        var nextActions = ActionType.getDefaultActions();
+        var amountToCall = 0d;
+        if (!prevPlayerActions.isEmpty()) {
+            var previousPlayerAction = prevPlayerActions.getFirst();
+            var previousPlayerActionType = previousPlayerAction.getActionType();
+            nextActions = previousPlayerActionType.getNextActions();
+            amountToCall = getAmountToCall(playerSession, prevPlayerActions);
+        }
+        nextActions = filterNextActionsForAffordability(playerSession, amountToCall, nextActions);
+        return new NextActionsDTO(amountToCall, nextActions);
+    }
+
+    private ActionType[] filterNextActionsForAffordability(PlayerSession playerSession, double amountToCall, ActionType[] nextActions) {
+        if (amountToCall > playerSession.getFunds()) {
+            // note: removing call here but in an all in scenario that is restricted,
+            // consider adding new ActionType for ALL_IN here and handle appropriately and also client side button
+            nextActions = Arrays.stream(nextActions)
+                    .filter(actionType -> actionType != ActionType.BET &&
+                            actionType != ActionType.CALL &&
+                            actionType != ActionType.RAISE)
+                    .toArray(ActionType[]::new);
+        }
+        return nextActions;
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY, readOnly = true)
     public double getAmountToCall(PlayerSession playerSession, List<PlayerAction> prevPlayerActions) {
         var playerContributions = getPlayerContributions(prevPlayerActions);
         var maxBet = playerContributions.values().stream().max(Double::compare).orElse(0d);
@@ -59,5 +85,4 @@ public class PlayerActionService {
         }
         return playerContributions;
     }
-
 }
