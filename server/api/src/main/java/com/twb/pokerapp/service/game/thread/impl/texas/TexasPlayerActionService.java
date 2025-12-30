@@ -37,6 +37,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
             case BET -> betAction(playerSession, bettingRound, createDto);
             case CALL -> callAction(playerSession, bettingRound, createDto);
             case RAISE -> raiseAction(playerSession, bettingRound, createDto);
+            case ALL_IN -> allInAction(playerSession, bettingRound, createDto);
         };
     }
 
@@ -87,7 +88,8 @@ public class TexasPlayerActionService extends GamePlayerActionService {
         }
         var amountToCall = playerActionService.getAmountToCall(playerSession, lastPlayerActions);
         if (createActionDto.getAmount() != amountToCall) {
-            log.warn("Call amount sent ${} not equalled to actual amount to call ${} so setting it", createActionDto.getAmount(), amountToCall);
+            var message = "Call amount sent $%.2f not equalled to actual amount to call $%.2f so setting it".formatted(createActionDto.getAmount(), amountToCall);
+            log.warn(message);
             createActionDto.setAmount(amountToCall);
         }
         if (createActionDto.getAmount() > playerSession.getFunds()) {
@@ -119,6 +121,28 @@ public class TexasPlayerActionService extends GamePlayerActionService {
         var action = playerActionService.create(playerSession, bettingRound, createActionDto);
         bettingRound = bettingRoundService.updatePot(bettingRound, createActionDto);
         log.info("BettingRound pot for raise updated to {}", bettingRound.getPot());
+        return action;
+    }
+
+    private PlayerAction allInAction(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
+        var lastPlayerActions = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId());
+        if (lastPlayerActions.isEmpty()) {
+            throw new GamePlayerLogException(playerSession, "Cannot go All-In as there was no previous action");
+        }
+        var lastPlayerAction = lastPlayerActions.getFirst();
+        var lastPlayerActionType = lastPlayerAction.getActionType();
+        if (lastPlayerActionType == ActionType.CHECK) {
+            throw new GamePlayerLogException(playerSession, "Cannot go All-In as previous action was a check");
+        }
+        double playerSessionFunds = playerSession.getFunds();
+        if (createActionDto.getAmount() != playerSessionFunds) {
+            var message = "All-In amount sent $%.2f not equalled to actual amount to All-In $%.2f so setting it".formatted(createActionDto.getAmount(), playerSessionFunds);
+            log.warn(message);
+            createActionDto.setAmount(playerSession.getFunds());
+        }
+        var action = playerActionService.create(playerSession, bettingRound, createActionDto);
+        bettingRound = bettingRoundService.updatePot(bettingRound, createActionDto);
+        log.info("BettingRound pot for all-in updated to {}", bettingRound.getPot());
         return action;
     }
 }

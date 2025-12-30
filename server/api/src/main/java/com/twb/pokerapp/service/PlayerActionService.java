@@ -52,21 +52,10 @@ public class PlayerActionService {
             nextActions = previousPlayerActionType.getNextActions();
             amountToCall = getAmountToCall(playerSession, prevPlayerActions);
         }
-        nextActions = filterNextActionsForAffordability(playerSession, amountToCall, nextActions);
-        return new NextActionsDTO(amountToCall, nextActions);
-    }
-
-    private ActionType[] filterNextActionsForAffordability(PlayerSession playerSession, double amountToCall, ActionType[] nextActions) {
         if (amountToCall > playerSession.getFunds()) {
-            // note: removing call here but in an all in scenario that is restricted,
-            // consider adding new ActionType for ALL_IN here and handle appropriately and also client side button
-            nextActions = Arrays.stream(nextActions)
-                    .filter(actionType -> actionType != ActionType.BET &&
-                            actionType != ActionType.CALL &&
-                            actionType != ActionType.RAISE)
-                    .toArray(ActionType[]::new);
+            nextActions = ActionType.getAllInActions();
         }
-        return nextActions;
+        return new NextActionsDTO(amountToCall, nextActions);
     }
 
     @Transactional(propagation = Propagation.MANDATORY, readOnly = true)
