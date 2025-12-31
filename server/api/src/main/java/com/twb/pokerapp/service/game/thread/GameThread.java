@@ -196,9 +196,9 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                 var bettingRoundOpt = bettingRoundRepository.findCurrentByRoundId(roundId);
                 bettingRoundOpt.ifPresent(bettingRound -> {
                     var round = bettingRound.getRound();
+                    var thisBettingRound = bettingRoundService.setBettingRoundFinished(bettingRound);
                     var roundPots = round.getRoundPots();
-                    bettingRoundService.setBettingRoundFinished(bettingRound);
-                    afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound, roundPots)));
+                    afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, thisBettingRound, roundPots)));
                 });
                 var roundOpt = roundRepository.findById(roundId);
                 roundOpt.ifPresent(round ->

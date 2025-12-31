@@ -165,7 +165,8 @@ public class TexasLastAggressorService {
             bettingRoundOpt.ifPresent(bettingRound -> {
                 this.round = texasRoundPotService.reconcilePots(round);
                 this.bettingRound = bettingRoundService.setBettingRoundFinished(bettingRound);
-                afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound, this.round.getRoundPots())));
+                var roundPots = this.round.getRoundPots();
+                afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound, roundPots)));
             });
         });
     }
