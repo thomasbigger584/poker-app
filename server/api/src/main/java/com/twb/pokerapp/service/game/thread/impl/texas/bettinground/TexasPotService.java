@@ -2,7 +2,6 @@ package com.twb.pokerapp.service.game.thread.impl.texas.bettinground;
 
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.Round;
-import com.twb.pokerapp.domain.RoundPot;
 import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.repository.PlayerActionRepository;
 import com.twb.pokerapp.repository.RoundRepository;
@@ -10,7 +9,6 @@ import com.twb.pokerapp.service.RoundPotService;
 import com.twb.pokerapp.service.game.thread.dto.ContributionDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -89,37 +87,15 @@ public class TexasPotService {
             for (var j = index; j < contributions.size(); j++) {
                 var contributor = contributions.get(j);
                 sliceTotalMoney += stepAmount;
-
-                // Only non-folded players are eligible to win this slice
                 if (!contributor.isFolded()) {
                     eligiblePlayers.add(contributor.player());
                 }
             }
             if (sliceTotalMoney > 0) {
-                distributeSliceToPots(round, sliceTotalMoney, eligiblePlayers);
+                roundPotService.distributeSliceToPots(round, sliceTotalMoney, eligiblePlayers);
             }
             previousAmount = current.amount();
         }
         roundRepository.save(round);
-    }
-
-    private void distributeSliceToPots(Round round, double amount, List<PlayerSession> eligiblePlayers) {
-        var pots = round.getRoundPots();
-
-        if (!pots.isEmpty()) {
-            var lastPot = pots.getLast();
-            if (CollectionUtils.isEqualCollection(lastPot.getEligiblePlayers(), eligiblePlayers)) {
-                lastPot.setPotAmount(lastPot.getPotAmount() + amount);
-                return;
-            }
-        }
-
-        var newPot = new RoundPot();
-        newPot.setRound(round);
-        newPot.setPotAmount(amount);
-        newPot.setEligiblePlayers(new ArrayList<>(eligiblePlayers));
-        newPot.setPotIndex(pots.size());
-
-        pots.add(newPot);
     }
 }
