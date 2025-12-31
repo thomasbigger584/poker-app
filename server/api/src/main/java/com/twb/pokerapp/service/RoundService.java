@@ -1,6 +1,5 @@
 package com.twb.pokerapp.service;
 
-import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.domain.Round;
@@ -26,20 +25,11 @@ public class RoundService {
         var round = new Round();
         round.setRoundState(RoundState.WAITING_FOR_PLAYERS);
         round.setPokerTable(table);
-        round.setPot(0d);
         round.setPlayerSessions(playerSessions);
         round = repository.save(round);
         for (PlayerSession playerSession : playerSessions) {
             playerSession.setRound(round);
         }
-        return round;
-    }
-
-    @Transactional(propagation = Propagation.MANDATORY)
-    public Round updatePot(Round round, PlayerAction playerAction) {
-        var newPot = round.getPot() + playerAction.getAmount();
-        round.setPot(newPot);
-        round = repository.save(round);
         return round;
     }
 

@@ -59,7 +59,8 @@ public class TexasEvaluationService {
 
         var winnerUsername = winner.getUser().getUsername();
 
-        afterCommit(() -> gameLogService.sendLogMessage(params.getTableId(), "%s wins round with $%.2f".formatted(winnerUsername, round.getPot())));
+//        afterCommit(() -> gameLogService.sendLogMessage(params.getTableId(), "%s wins round with $%.2f".formatted(winnerUsername, round.getPot())));
+        afterCommit(() -> gameLogService.sendLogMessage(params.getTableId(), "%s wins round".formatted(winnerUsername)));
     }
 
     private void evaluateMultiPlayersStanding(GameThreadParams params, Round round, List<PlayerSession> activePlayers) {

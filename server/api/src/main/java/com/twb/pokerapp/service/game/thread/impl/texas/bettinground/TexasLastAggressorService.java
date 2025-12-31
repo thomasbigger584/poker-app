@@ -141,9 +141,9 @@ public class TexasLastAggressorService {
             latestPlayerActionOpt.ifPresentOrElse(actionJustTaken -> {
                 if (actionJustTaken.getAmount() != null) {
                     lastAggressorId = getLastAggressorId(actionJustTaken, lastAggressorId, currentPlayer);
-                    bettingRound = getBettingRound(bettingRound);
-                    round = roundService.updatePot(round, actionJustTaken);
-                    afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound)));
+//                    bettingRound = getBettingRound(bettingRound);
+//                    round = roundService.updatePot(round, actionJustTaken);
+//                    afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound)));
                 }
             }, () -> {
                 throw new GameInterruptedException("Last Player Action not found for player: " + currentPlayer.getUser().getUsername());
