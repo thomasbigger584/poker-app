@@ -35,9 +35,9 @@ public class RoundPot extends Auditable {
 
     @ManyToMany
     @JoinTable(
-        name = "round_pot_eligible_players",
-        joinColumns = @JoinColumn(name = "round_pot_id"),
-        inverseJoinColumns = @JoinColumn(name = "player_session_id")
+            name = "round_pot_eligible_players",
+            joinColumns = @JoinColumn(name = "round_pot_id"),
+            inverseJoinColumns = @JoinColumn(name = "player_session_id")
     )
     private List<PlayerSession> eligiblePlayers = new ArrayList<>();
 

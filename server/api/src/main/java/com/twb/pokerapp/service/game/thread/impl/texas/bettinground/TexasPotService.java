@@ -16,8 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
-import static com.twb.pokerapp.repository.RepositoryUtil.getThrowGameInterrupted;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -77,7 +75,7 @@ public class TexasPotService {
 
         for (var index = 0; index < contributions.size(); index++) {
             var current = contributions.get(index);
-            var stepAmount = current.getAmount() - previousAmount;
+            var stepAmount = current.amount() - previousAmount;
 
             if (stepAmount <= 0) {
                 continue;
@@ -92,13 +90,13 @@ public class TexasPotService {
 
                 // Only non-folded players are eligible to win this slice
                 if (!contributor.isFolded()) {
-                    eligiblePlayers.add(contributor.getPlayer());
+                    eligiblePlayers.add(contributor.player());
                 }
             }
             if (sliceTotalMoney > 0) {
                 distributeSliceToPots(round, sliceTotalMoney, eligiblePlayers);
             }
-            previousAmount = current.getAmount();
+            previousAmount = current.amount();
         }
         roundRepository.save(round);
     }

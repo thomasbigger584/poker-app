@@ -11,5 +11,4 @@ public class BettingRoundDTO {
     private UUID id;
     private BettingRoundType type;
     private BettingRoundState state;
-    private Double pot;
 }

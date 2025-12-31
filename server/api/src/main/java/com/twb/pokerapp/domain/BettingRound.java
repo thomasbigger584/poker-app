@@ -36,9 +36,6 @@ public class BettingRound extends Auditable {
     @Column(name = "state")
     private BettingRoundState state;
 
-    @Column(name = "pot")
-    private Double pot;
-
     @ManyToOne(optional = false)
     @JoinColumn(name = "round_id")
     private Round round;
@@ -53,13 +50,13 @@ public class BettingRound extends Auditable {
         return new EqualsBuilder().append(id, bettingRound.id)
                 .append(type, bettingRound.type)
                 .append(state, bettingRound.state)
-                .append(pot, bettingRound.pot).isEquals();
+                .isEquals();
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
-                .append(id).append(type).append(state).append(pot).toHashCode();
+                .append(id).append(type).append(state).toHashCode();
     }
 
     @Override
@@ -68,7 +65,6 @@ public class BettingRound extends Auditable {
                 "id=" + id +
                 ", type=" + type +
                 ", state=" + state +
-                ", pot=" + pot +
                 '}';
     }
 }

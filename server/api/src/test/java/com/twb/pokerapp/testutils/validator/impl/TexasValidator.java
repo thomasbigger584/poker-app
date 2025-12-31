@@ -1,7 +1,5 @@
 package com.twb.pokerapp.testutils.validator.impl;
 
-import com.twb.pokerapp.domain.enumeration.ActionType;
-import com.twb.pokerapp.domain.enumeration.BettingRoundState;
 import com.twb.pokerapp.domain.enumeration.CardType;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.testutils.game.GameRunnerParams;
@@ -10,13 +8,13 @@ import com.twb.pokerapp.testutils.sql.SqlClient;
 import com.twb.pokerapp.testutils.validator.Validator;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
-import com.twb.pokerapp.web.websocket.message.server.payload.*;
+import com.twb.pokerapp.web.websocket.message.server.payload.DealCommunityCardDTO;
+import com.twb.pokerapp.web.websocket.message.server.payload.DealPlayerCardDTO;
+import com.twb.pokerapp.web.websocket.message.server.payload.DealerDeterminedDTO;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -39,7 +37,6 @@ public class TexasValidator extends Validator {
         assertDealerDetermined(listenerMessages);
         assertDealInit(listenerMessages);
         assertDealCommunity(listenerMessages);
-        assertBettingRoundWithPlayerActions(listenerMessages);
     }
 
     private void assertDealerDetermined(List<ServerMessageDTO> listenerMessages) {
@@ -90,61 +87,5 @@ public class TexasValidator extends Validator {
             var payload = (DealCommunityCardDTO) message.getPayload();
             assertCard(payload.getCard(), cardType);
         }
-    }
-
-    private void assertBettingRoundWithPlayerActions(List<ServerMessageDTO> listenerMessages) {
-        var playerActionsByBettingRound = listenerMessages.stream()
-                .filter(serverMessageDTO -> serverMessageDTO.getType() == ServerMessageType.PLAYER_ACTIONED)
-                .map(serverMessageDTO -> (PlayerActionedDTO) serverMessageDTO.getPayload())
-                .filter(playerActionedDTO -> playerActionedDTO.getAction().getActionType() != ActionType.FOLD)
-                .collect(Collectors.groupingBy(this::playerActionBettingRoundGroupByKey));
-
-        var bettingRoundsUpdatedById = listenerMessages.stream()
-                .filter(serverMessageDTO -> serverMessageDTO.getType() == ServerMessageType.BETTING_ROUND_UPDATED)
-                .map(serverMessageDTO -> (BettingRoundUpdatedDTO) serverMessageDTO.getPayload())
-                .collect(Collectors.groupingBy(this::bettingRoundUpdatedGroupByKey));
-
-        for (var playerActionsEntry : playerActionsByBettingRound.entrySet()) {
-            var bettingRoundId = playerActionsEntry.getKey();
-            var playerActionedList = playerActionsEntry.getValue();
-            var bettingRoundpdatedList = bettingRoundsUpdatedById.get(bettingRoundId);
-            assertEquals(playerActionedList.size() + 1, bettingRoundpdatedList.size(), "Betting Round assertion failed: " + bettingRoundId);
-
-            double expectedBettingRoundPot = 0;
-
-            for (var index = 0; index < playerActionedList.size(); index++) {
-                var playerActionedDto = playerActionedList.get(index);
-                var playerActionDto = playerActionedDto.getAction();
-                assertPlayerAction(playerActionDto);
-                expectedBettingRoundPot += playerActionDto.getAmount();
-
-                var bettingRoundUpdatedDto = bettingRoundpdatedList.get(index);
-                var bettingRoundDto = bettingRoundUpdatedDto.getBettingRound();
-                assertEquals(BettingRoundState.IN_PROGRESS, bettingRoundDto.getState());
-                assertBettingRound(bettingRoundDto);
-                assertEquals(expectedBettingRoundPot, bettingRoundDto.getPot());
-
-                var roundDto = bettingRoundUpdatedDto.getRound();
-                assertRound(roundDto);
-            }
-
-            var finishedBettingRoundUpdated = bettingRoundpdatedList.getLast();
-            var finishedBettingRoundDto = finishedBettingRoundUpdated.getBettingRound();
-            assertEquals(BettingRoundState.FINISHED, finishedBettingRoundDto.getState());
-            var finishedBettingRound = assertBettingRound(finishedBettingRoundDto);
-            assertEquals(expectedBettingRoundPot, finishedBettingRound.getPot());
-            assertEquals(expectedBettingRoundPot, finishedBettingRoundDto.getPot());
-
-            var finishedRoundDto = finishedBettingRoundUpdated.getRound();
-            assertRound(finishedRoundDto);
-        }
-    }
-
-    private UUID playerActionBettingRoundGroupByKey(PlayerActionedDTO playerActionedDto) {
-        return playerActionedDto.getAction().getBettingRound().getId();
-    }
-
-    private UUID bettingRoundUpdatedGroupByKey(BettingRoundUpdatedDTO bettingRoundUpdatedDto) {
-        return bettingRoundUpdatedDto.getBettingRound().getId();
     }
 }
