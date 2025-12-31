@@ -29,7 +29,7 @@ public class Round extends Auditable {
     @Column(name = "round_state")
     private RoundState roundState;
 
-    @OneToMany(mappedBy = "round", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "round")
     private List<RoundPot> roundPots = new ArrayList<>();
 
     @ManyToOne(optional = false)

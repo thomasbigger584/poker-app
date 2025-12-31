@@ -39,7 +39,7 @@ import static com.twb.pokerapp.util.TransactionUtil.afterCommit;
 @Slf4j
 @Component
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class LastAggressorService {
+public class TexasLastAggressorService {
     @Autowired
     private TransactionTemplate writeTx;
 
@@ -72,6 +72,9 @@ public class LastAggressorService {
     private PlayerActionService playerActionService;
 
     @Autowired
+    private TexasPotService texasPotService;
+
+    @Autowired
     private MessageDispatcher dispatcher;
 
     @Autowired
@@ -88,7 +91,7 @@ public class LastAggressorService {
     private PlayerSession currentPlayer = null;
     private NextActionsDTO nextActions = null;
 
-    public LastAggressorService(GameThreadParams params, GameThread gameThread) {
+    public TexasLastAggressorService(GameThreadParams params, GameThread gameThread) {
         this.params = params;
         this.gameThread = gameThread;
     }

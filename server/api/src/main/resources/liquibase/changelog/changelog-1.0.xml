@@ -253,4 +253,41 @@
                                  referencedTableName="betting_round" referencedColumnNames="id"/>
     </changeSet>
 
+    <changeSet author="tbigg" id="9">
+        <createTable tableName="round_pot">
+            <column name="id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="round_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pot_amount" type="double"/>
+            <column name="pot_index" type="int"/>
+            <column name="created_date_time" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_date_time" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="pk_round_pot" tableName="round_pot"/>
+        <addForeignKeyConstraint constraintName="fk_round_pot_round_id" onDelete="CASCADE"
+                                 baseTableName="round_pot" baseColumnNames="round_id"
+                                 referencedTableName="round" referencedColumnNames="id"/>
+
+        <createTable tableName="round_pot_eligible_players">
+            <column name="round_pot_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="player_session_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint constraintName="fk_round_pot_eligible_players_round_pot_id" onDelete="CASCADE"
+                                 baseTableName="round_pot_eligible_players" baseColumnNames="round_pot_id"
+                                 referencedTableName="round_pot" referencedColumnNames="id"/>
+        <addForeignKeyConstraint constraintName="fk_round_pot_eligible_players_player_session_id" onDelete="CASCADE"
+                                 baseTableName="round_pot_eligible_players" baseColumnNames="player_session_id"
+                                 referencedTableName="player_session" referencedColumnNames="id"/>
+    </changeSet>
 </databaseChangeLog>

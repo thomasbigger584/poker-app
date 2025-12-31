@@ -68,6 +68,9 @@ public class PlayerSession extends Auditable {
     @JoinColumn(name = "round_id")
     private Round round;
 
+    @ManyToMany(mappedBy = "eligiblePlayers")
+    private List<RoundPot> roundPots = new ArrayList<>();
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
