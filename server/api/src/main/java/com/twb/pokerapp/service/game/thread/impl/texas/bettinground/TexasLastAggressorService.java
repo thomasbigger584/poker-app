@@ -22,6 +22,7 @@ import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -166,6 +167,7 @@ public class TexasLastAggressorService {
                 this.round = texasRoundPotService.reconcilePots(round);
                 this.bettingRound = bettingRoundService.setBettingRoundFinished(bettingRound);
                 var roundPots = this.round.getRoundPots();
+                roundPots.forEach(roundPot -> Hibernate.initialize(roundPot.getEligiblePlayers()));
                 afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound, roundPots)));
             });
         });

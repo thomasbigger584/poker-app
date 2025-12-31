@@ -14,6 +14,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.hibernate.Hibernate;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -198,6 +199,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                     var round = bettingRound.getRound();
                     var thisBettingRound = bettingRoundService.setBettingRoundFinished(bettingRound);
                     var roundPots = round.getRoundPots();
+                    roundPots.forEach(roundPot -> Hibernate.initialize(roundPot.getEligiblePlayers()));
                     afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, thisBettingRound, roundPots)));
                 });
                 var roundOpt = roundRepository.findById(roundId);
