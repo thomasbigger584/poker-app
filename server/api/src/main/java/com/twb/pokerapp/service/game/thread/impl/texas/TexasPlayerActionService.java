@@ -6,7 +6,6 @@ import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.exception.game.GamePlayerLogException;
 import com.twb.pokerapp.repository.PlayerActionRepository;
-import com.twb.pokerapp.service.BettingRoundService;
 import com.twb.pokerapp.service.PlayerActionService;
 import com.twb.pokerapp.service.game.thread.GamePlayerActionService;
 import com.twb.pokerapp.service.game.thread.GameThread;
@@ -26,7 +25,6 @@ import java.util.List;
 public class TexasPlayerActionService extends GamePlayerActionService {
     private final PlayerActionRepository playerActionRepository;
     private final PlayerActionService playerActionService;
-    private final BettingRoundService bettingRoundService;
 
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
@@ -70,10 +68,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
                 throw new GamePlayerLogException(playerSession, "Cannot bet as previous action was not a check");
             }
         }
-        var action = playerActionService.create(playerSession, bettingRound, createActionDto);
-        bettingRound = bettingRoundService.updatePot(bettingRound, createActionDto);
-        log.info("BettingRound pot for bet updated to {}", bettingRound.getPot());
-        return action;
+        return playerActionService.create(playerSession, bettingRound, createActionDto);
     }
 
     private PlayerAction callAction(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
@@ -95,10 +90,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
         if (createActionDto.getAmount() > playerSession.getFunds()) {
             throw new GamePlayerLogException(playerSession, "Cannot call as $%.2f is more than current funds".formatted(createActionDto.getAmount()));
         }
-        var action = playerActionService.create(playerSession, bettingRound, createActionDto);
-        bettingRound = bettingRoundService.updatePot(bettingRound, createActionDto);
-        log.info("BettingRound pot for call updated to {}", bettingRound.getPot());
-        return action;
+        return playerActionService.create(playerSession, bettingRound, createActionDto);
     }
 
     private PlayerAction raiseAction(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
@@ -118,10 +110,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
         if (createActionDto.getAmount() <= amountToCall) {
             throw new GamePlayerLogException(playerSession, "Cannot raise as $%.2f is less than or equal to $%.2f".formatted(createActionDto.getAmount(), amountToCall));
         }
-        var action = playerActionService.create(playerSession, bettingRound, createActionDto);
-        bettingRound = bettingRoundService.updatePot(bettingRound, createActionDto);
-        log.info("BettingRound pot for raise updated to {}", bettingRound.getPot());
-        return action;
+        return playerActionService.create(playerSession, bettingRound, createActionDto);
     }
 
     private PlayerAction allInAction(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
@@ -140,9 +129,6 @@ public class TexasPlayerActionService extends GamePlayerActionService {
             log.warn(message);
             createActionDto.setAmount(playerSession.getFunds());
         }
-        var action = playerActionService.create(playerSession, bettingRound, createActionDto);
-        bettingRound = bettingRoundService.updatePot(bettingRound, createActionDto);
-        log.info("BettingRound pot for all-in updated to {}", bettingRound.getPot());
-        return action;
+        return playerActionService.create(playerSession, bettingRound, createActionDto);
     }
 }

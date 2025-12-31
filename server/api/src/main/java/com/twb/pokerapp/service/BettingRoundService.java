@@ -36,7 +36,6 @@ public class BettingRoundService {
         bettingRound.setRound(round);
         bettingRound.setType(state);
         bettingRound.setState(IN_PROGRESS);
-        bettingRound.setPot(0d);
 
         bettingRound = repository.save(bettingRound);
 

@@ -6,6 +6,7 @@ import com.twb.pokerapp.domain.RoundPot;
 import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.repository.PlayerActionRepository;
 import com.twb.pokerapp.repository.RoundRepository;
+import com.twb.pokerapp.service.RoundPotService;
 import com.twb.pokerapp.service.game.thread.dto.ContributionDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ import java.util.*;
 public class TexasPotService {
     private final RoundRepository roundRepository;
     private final PlayerActionRepository playerActionRepository;
+    private final RoundPotService roundPotService;
 
     @Transactional(propagation = Propagation.MANDATORY)
     public void reconcilePots(Round round) {
@@ -82,7 +84,7 @@ public class TexasPotService {
             }
             // Calculate the total money for this slice
             // (stepAmount * number of players who contributed at least this much)
-            var sliceTotalMoney = 0.0;
+            var sliceTotalMoney = 0d;
             var eligiblePlayers = new ArrayList<PlayerSession>();
             for (var j = index; j < contributions.size(); j++) {
                 var contributor = contributions.get(j);
@@ -104,7 +106,6 @@ public class TexasPotService {
     private void distributeSliceToPots(Round round, double amount, List<PlayerSession> eligiblePlayers) {
         var pots = round.getRoundPots();
 
-        // Check if we can merge into the last created pot (if eligible players are identical)
         if (!pots.isEmpty()) {
             var lastPot = pots.getLast();
             if (CollectionUtils.isEqualCollection(lastPot.getEligiblePlayers(), eligiblePlayers)) {
@@ -113,12 +114,11 @@ public class TexasPotService {
             }
         }
 
-        // Create new Pot
         var newPot = new RoundPot();
         newPot.setRound(round);
         newPot.setPotAmount(amount);
         newPot.setEligiblePlayers(new ArrayList<>(eligiblePlayers));
-        newPot.setPotIndex(pots.size()); // Auto-increment index based on list size
+        newPot.setPotIndex(pots.size());
 
         pots.add(newPot);
     }
