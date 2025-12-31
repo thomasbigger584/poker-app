@@ -2,6 +2,7 @@ package com.twb.pokerapp.service.game.thread.impl.texas.bettinground;
 
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.Round;
+import com.twb.pokerapp.domain.RoundPot;
 import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.repository.PlayerActionRepository;
 import com.twb.pokerapp.repository.RoundRepository;
@@ -18,13 +19,13 @@ import java.util.*;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class TexasPotService {
+public class TexasRoundPotService {
     private final RoundRepository roundRepository;
     private final PlayerActionRepository playerActionRepository;
     private final RoundPotService roundPotService;
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public void reconcilePots(Round round) {
+    public Round reconcilePots(Round round) {
         var playerTotalBets = new HashMap<UUID, Double>();
         var playerFoldedStatus = new HashMap<UUID, Boolean>();
         var sessionMap = new HashMap<UUID, PlayerSession>();
@@ -37,8 +38,10 @@ public class TexasPotService {
         }
 
         sumAmountsFromActions(round.getId(), playerTotalBets, playerFoldedStatus);
+
         var contributions = getPlayerContributions(playerTotalBets, sessionMap, playerFoldedStatus);
-        calculatePotSlices(round, contributions);
+
+        return calculatePotSlices(round, contributions);
     }
 
     private void sumAmountsFromActions(UUID roundId, HashMap<UUID, Double> playerTotalBets, HashMap<UUID, Boolean> playerFoldedStatus) {
@@ -69,7 +72,7 @@ public class TexasPotService {
         return contributions;
     }
 
-    private void calculatePotSlices(Round round, List<ContributionDTO> contributions) {
+    private Round calculatePotSlices(Round round, List<ContributionDTO> contributions) {
         round.getRoundPots().clear();
         var previousAmount = 0d;
 
@@ -96,6 +99,6 @@ public class TexasPotService {
             }
             previousAmount = current.amount();
         }
-        roundRepository.save(round);
+        return roundRepository.save(round);
     }
 }

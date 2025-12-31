@@ -18,6 +18,7 @@ public class ServerMessageFactory {
     private final PlayerActionMapper playerActionMapper;
     private final RoundMapper roundMapper;
     private final BettingRoundMapper bettingRoundMapper;
+    private final RoundPotMapper roundPotMapper;
     private final CardMapper cardMapper;
 
     public ServerMessageDTO playerSubscribed(List<PlayerSession> playerSessions) {
@@ -70,10 +71,11 @@ public class ServerMessageFactory {
         return ServerMessageDTO.create(ServerMessageType.PLAYER_ACTIONED, payload);
     }
 
-    public ServerMessageDTO bettingRoundUpdated(Round round, BettingRound bettingRound) {
+    public ServerMessageDTO bettingRoundUpdated(Round round, BettingRound bettingRound, List<RoundPot> roundPots) {
         var payload = new BettingRoundUpdatedDTO();
         payload.setRound(roundMapper.modelToDto(round));
         payload.setBettingRound(bettingRoundMapper.modelToDto(bettingRound));
+        payload.setRoundPots(roundPots.stream().map(roundPotMapper::modelToDto).toList());
         return ServerMessageDTO.create(ServerMessageType.BETTING_ROUND_UPDATED, payload);
     }
 

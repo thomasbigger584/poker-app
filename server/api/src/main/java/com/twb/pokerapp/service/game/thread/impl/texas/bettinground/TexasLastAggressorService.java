@@ -72,7 +72,7 @@ public class TexasLastAggressorService {
     private PlayerActionService playerActionService;
 
     @Autowired
-    private TexasPotService texasPotService;
+    private TexasRoundPotService texasRoundPotService;
 
     @Autowired
     private MessageDispatcher dispatcher;
@@ -141,9 +141,6 @@ public class TexasLastAggressorService {
             latestPlayerActionOpt.ifPresentOrElse(actionJustTaken -> {
                 if (actionJustTaken.getAmount() != null) {
                     lastAggressorId = getLastAggressorId(actionJustTaken, lastAggressorId, currentPlayer);
-//                    bettingRound = getBettingRound(bettingRound);
-//                    round = roundService.updatePot(round, actionJustTaken);
-//                    afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound)));
                 }
             }, () -> {
                 throw new GameInterruptedException("Last Player Action not found for player: " + currentPlayer.getUser().getUsername());
@@ -166,8 +163,9 @@ public class TexasLastAggressorService {
         writeTx.executeWithoutResult(status -> {
             var bettingRoundOpt = bettingRoundRepository.findById(bettingRound.getId());
             bettingRoundOpt.ifPresent(bettingRound -> {
+                this.round = texasRoundPotService.reconcilePots(round);
                 this.bettingRound = bettingRoundService.setBettingRoundFinished(bettingRound);
-                afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound)));
+                afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound, this.round.getRoundPots())));
             });
         });
     }
