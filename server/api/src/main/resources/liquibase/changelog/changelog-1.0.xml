@@ -80,9 +80,6 @@
             <column name="round_state" type="text" defaultValue="WAITING_FOR_PLAYERS">
                 <constraints nullable="false"/>
             </column>
-            <column name="pot" type="double">
-                <constraints nullable="false"/>
-            </column>
             <column name="created_date_time" type="TIMESTAMP WITH TIME ZONE">
                 <constraints nullable="false"/>
             </column>
@@ -204,9 +201,6 @@
                 <constraints nullable="false"/>
             </column>
             <column name="state" type="text">
-                <constraints nullable="false"/>
-            </column>
-            <column name="pot" type="double" defaultValueNumeric="0">
                 <constraints nullable="false"/>
             </column>
             <column name="created_date_time" type="TIMESTAMP WITH TIME ZONE">
