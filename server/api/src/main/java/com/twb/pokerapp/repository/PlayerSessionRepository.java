@@ -78,4 +78,15 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             """)
     List<PlayerSession> findActivePlayersByTableId(@Param("tableId") UUID tableId, @Param("roundId") UUID roundId);
 
+
+    @Query("""
+            SELECT s
+            FROM PlayerSession s
+            WHERE s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
+            AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
+            AND s.round.id = :roundId
+            ORDER BY s.position ASC
+            """)
+    List<PlayerSession> findPlayersOnRound(@Param("roundId") UUID roundId);
+
 }

@@ -5,6 +5,7 @@ import com.twb.pokerapp.domain.Round;
 import com.twb.pokerapp.domain.RoundPot;
 import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.repository.PlayerActionRepository;
+import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.RoundRepository;
 import com.twb.pokerapp.service.RoundPotService;
 import com.twb.pokerapp.service.game.thread.dto.ContributionDTO;
@@ -22,6 +23,7 @@ import java.util.*;
 public class TexasRoundPotService {
     private final RoundRepository roundRepository;
     private final PlayerActionRepository playerActionRepository;
+    private final PlayerSessionRepository playerSessionRepository;
     private final RoundPotService roundPotService;
 
     @Transactional(propagation = Propagation.MANDATORY)
@@ -30,8 +32,10 @@ public class TexasRoundPotService {
         var playerFoldedStatus = new HashMap<UUID, Boolean>();
         var sessionMap = new HashMap<UUID, PlayerSession>();
 
+        var playerSessions = playerSessionRepository.findPlayersOnRound(round.getId());
+
         // Initialize active players
-        for (var session : round.getPlayerSessions()) {
+        for (var session : playerSessions) {
             playerTotalBets.put(session.getId(), 0.0);
             playerFoldedStatus.put(session.getId(), false);
             sessionMap.put(session.getId(), session);
