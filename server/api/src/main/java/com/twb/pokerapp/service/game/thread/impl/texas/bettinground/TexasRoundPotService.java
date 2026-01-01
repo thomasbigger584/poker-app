@@ -6,11 +6,12 @@ import com.twb.pokerapp.domain.RoundPot;
 import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.repository.PlayerActionRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
+import com.twb.pokerapp.repository.RoundPotRepository;
 import com.twb.pokerapp.repository.RoundRepository;
-import com.twb.pokerapp.service.RoundPotService;
 import com.twb.pokerapp.service.game.thread.dto.ContributionDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +25,7 @@ public class TexasRoundPotService {
     private final RoundRepository roundRepository;
     private final PlayerActionRepository playerActionRepository;
     private final PlayerSessionRepository playerSessionRepository;
-    private final RoundPotService roundPotService;
+    private final RoundPotRepository roundPotRepository;
 
     @Transactional(propagation = Propagation.MANDATORY)
     public Round reconcilePots(Round round) {
@@ -77,7 +78,13 @@ public class TexasRoundPotService {
     }
 
     private Round calculatePotSlices(Round round, List<ContributionDTO> contributions) {
+        var roundPots = roundPotRepository.findByRound(round.getId());
+        if (CollectionUtils.isNotEmpty(roundPots)) {
+            roundPotRepository.deleteAll(roundPots);
+            roundPots.clear();
+        }
         round.getRoundPots().clear();
+
         var previousAmount = 0d;
 
         for (var index = 0; index < contributions.size(); index++) {
@@ -99,10 +106,31 @@ public class TexasRoundPotService {
                 }
             }
             if (sliceTotalMoney > 0) {
-                roundPotService.distributeSliceToPots(round, sliceTotalMoney, eligiblePlayers);
+                distributeSliceToPots(round, roundPots, sliceTotalMoney, eligiblePlayers);
             }
             previousAmount = current.amount();
         }
         return roundRepository.save(round);
+    }
+
+    private void distributeSliceToPots(Round round, List<RoundPot> roundPots, double amount, List<PlayerSession> eligiblePlayers) {
+        if (!roundPots.isEmpty()) {
+            var lastPot = roundPots.getLast();
+            if (CollectionUtils.isEqualCollection(lastPot.getEligiblePlayers(), eligiblePlayers)) {
+                lastPot.setPotAmount(lastPot.getPotAmount() + amount);
+                roundPotRepository.save(lastPot);
+                return;
+            }
+        }
+
+        var roundPot = new RoundPot();
+        roundPot.setRound(round);
+        roundPot.setPotAmount(amount);
+        roundPot.setEligiblePlayers(new ArrayList<>(eligiblePlayers));
+        roundPot.setPotIndex(roundPots.size());
+
+        roundPot = roundPotRepository.save(roundPot);
+        roundPots.add(roundPot);
+        round.getRoundPots().add(roundPot);
     }
 }
