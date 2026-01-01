@@ -194,17 +194,17 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     private void finishRound() {
         if (roundInProgress.get()) {
             writeTx.executeWithoutResult(status -> {
-                var bettingRoundOpt = bettingRoundRepository.findCurrentByRoundId(roundId);
-                bettingRoundOpt.ifPresent(bettingRound -> {
-                    var round = bettingRound.getRound();
-                    var thisBettingRound = bettingRoundService.setBettingRoundFinished(bettingRound);
-                    var roundPots = round.getRoundPots();
-                    roundPots.forEach(roundPot -> Hibernate.initialize(roundPot.getEligiblePlayers()));
-                    afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, thisBettingRound, roundPots)));
-                });
                 var roundOpt = roundRepository.findById(roundId);
-                roundOpt.ifPresent(round ->
-                        roundService.setRoundState(round, RoundState.FINISHED));
+                roundOpt.ifPresent(round -> {
+                    var bettingRoundOpt = bettingRoundRepository.findCurrentByRoundId(roundId);
+                    bettingRoundOpt.ifPresent(bettingRound -> {
+                        var thisBettingRound = bettingRoundService.setBettingRoundFinished(bettingRound);
+                        var roundPots = round.getRoundPots();
+                        roundPots.forEach(roundPot -> Hibernate.initialize(roundPot.getEligiblePlayers()));
+                        afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, thisBettingRound, roundPots)));
+                    });
+                    roundService.setRoundState(round, RoundState.FINISHED);
+                });
             });
             dispatcher.send(table, messageFactory.roundFinished());
         }

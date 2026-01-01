@@ -30,10 +30,6 @@ public class Hand extends Auditable {
     @Column(name = "hand_type")
     private HandType handType;
 
-    @Nullable
-    @Column(name = "winner")
-    private Boolean winner;
-
     @ManyToOne(optional = false)
     @JoinColumn(name = "player_session_id")
     private PlayerSession playerSession;

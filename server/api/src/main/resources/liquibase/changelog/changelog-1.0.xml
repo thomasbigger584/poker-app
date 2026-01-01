@@ -137,7 +137,6 @@
                 <constraints nullable="false"/>
             </column>
             <column name="hand_type" type="text"/>
-            <column name="winner" type="boolean" defaultValue="0"/>
             <column name="created_date_time" type="TIMESTAMP WITH TIME ZONE">
                 <constraints nullable="false"/>
             </column>

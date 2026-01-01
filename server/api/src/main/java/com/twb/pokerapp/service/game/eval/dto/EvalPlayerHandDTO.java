@@ -16,7 +16,6 @@ public class EvalPlayerHandDTO implements Comparable<EvalPlayerHandDTO> {
     private List<Card> cards;
     private Integer rank;
     private HandType handType;
-    private boolean winner = false;
 
     @Override
     public int compareTo(@NotNull EvalPlayerHandDTO otherHand) {
@@ -33,7 +32,6 @@ public class EvalPlayerHandDTO implements Comparable<EvalPlayerHandDTO> {
                 ", cards=" + cards +
                 ", rank=" + rank +
                 ", handType=" + handType +
-                ", winner=" + winner +
                 '}';
     }
 }
