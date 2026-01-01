@@ -86,11 +86,9 @@ public class TexasRoundPotService {
         round.getRoundPots().clear();
 
         var previousAmount = 0d;
-
         for (var index = 0; index < contributions.size(); index++) {
             var current = contributions.get(index);
             var stepAmount = current.amount() - previousAmount;
-
             if (stepAmount <= 0) {
                 continue;
             }

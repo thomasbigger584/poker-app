@@ -16,7 +16,7 @@ public interface RoundPotRepository extends JpaRepository<RoundPot, UUID> {
             SELECT r
             FROM RoundPot r
             WHERE r.round.id = :roundId
-            ORDER BY rp.potIndex ASC
+            ORDER BY r.potIndex ASC
             """)
     List<RoundPot> findByRound(@Param("roundId") UUID roundId);
 }
