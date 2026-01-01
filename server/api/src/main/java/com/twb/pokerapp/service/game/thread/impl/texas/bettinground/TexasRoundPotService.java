@@ -83,7 +83,6 @@ public class TexasRoundPotService {
             roundPotRepository.deleteAll(roundPots);
             roundPots.clear();
         }
-        round.getRoundPots().clear();
 
         var previousAmount = 0d;
         for (var index = 0; index < contributions.size(); index++) {
@@ -108,6 +107,7 @@ public class TexasRoundPotService {
             }
             previousAmount = current.amount();
         }
+        round.setRoundPots(roundPots);
         return roundRepository.save(round);
     }
 
@@ -129,6 +129,5 @@ public class TexasRoundPotService {
 
         roundPot = roundPotRepository.save(roundPot);
         roundPots.add(roundPot);
-        round.getRoundPots().add(roundPot);
     }
 }
