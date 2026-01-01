@@ -167,7 +167,6 @@ public class TexasLastAggressorService {
                 this.round = texasRoundPotService.reconcilePots(round);
                 this.bettingRound = bettingRoundService.setBettingRoundFinished(bettingRound);
                 var roundPots = this.round.getRoundPots();
-                roundPots.forEach(roundPot -> Hibernate.initialize(roundPot.getEligiblePlayers()));
                 afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound, roundPots)));
             });
         });
