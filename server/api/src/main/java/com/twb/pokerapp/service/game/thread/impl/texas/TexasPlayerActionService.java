@@ -124,7 +124,8 @@ public class TexasPlayerActionService extends GamePlayerActionService {
             throw new GamePlayerLogException(playerSession, "Cannot go All-In as previous action was a check");
         }
         var playerSessionFunds = playerSession.getFunds();
-        if (createActionDto.getAmount() != playerSessionFunds) {
+        var createActionAmount = createActionDto.getAmount();
+        if (createActionAmount == null || createActionAmount.doubleValue() != playerSessionFunds) {
             var message = "All-In amount sent $%.2f not equalled to actual amount to All-In $%.2f so setting it".formatted(createActionDto.getAmount(), playerSessionFunds);
             log.warn(message);
             createActionDto.setAmount(playerSession.getFunds());
