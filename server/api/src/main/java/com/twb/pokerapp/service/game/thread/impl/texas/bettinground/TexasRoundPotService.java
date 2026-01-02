@@ -35,7 +35,6 @@ public class TexasRoundPotService {
 
         var playerSessions = playerSessionRepository.findPlayersOnRound(round.getId());
 
-        // Initialize active players
         for (var session : playerSessions) {
             playerTotalBets.put(session.getId(), 0.0);
             playerFoldedStatus.put(session.getId(), false);

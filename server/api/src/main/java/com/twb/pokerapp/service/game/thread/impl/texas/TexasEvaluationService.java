@@ -53,9 +53,10 @@ public class TexasEvaluationService {
     private void evaluateLastPlayerStanding(GameThreadParams params, PlayerSession winner, Round round) {
         var pots = roundPotRepository.findByRound(round.getId());
         var totalWinnings = 0.0;
-        for (RoundPot pot : pots) {
+        for (var pot : pots) {
             totalWinnings += pot.getPotAmount();
         }
+
         winner.setFunds(winner.getFunds() + totalWinnings);
         playerSessionRepository.save(winner);
 

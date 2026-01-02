@@ -3,6 +3,8 @@ package com.twb.pokerapp.testutils.sql;
 import com.twb.pokerapp.domain.*;
 import jakarta.persistence.*;
 import jakarta.persistence.metamodel.EntityType;
+import org.hibernate.jpa.HibernateHints;
+import org.hibernate.jpa.QueryHints;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 
 import java.util.HashMap;
@@ -110,6 +112,7 @@ public class SqlClient implements AutoCloseable {
             var query = "SELECT o FROM " + className + " o WHERE o.id = :id";
             return Optional.of(em.createQuery(query, clazz)
                     .setParameter("id", id)
+                    .setHint(HibernateHints.HINT_READ_ONLY, true)
                     .getSingleResult());
         } catch (NoResultException e) {
             return Optional.empty();
@@ -119,7 +122,9 @@ public class SqlClient implements AutoCloseable {
     private <T> List<T> getAll(Class<T> clazz) {
         var className = clazz.getSimpleName();
         var query = "SELECT o FROM " + className + " o";
-        return em.createQuery(query, clazz).getResultList();
+        return em.createQuery(query, clazz)
+                .setHint(HibernateHints.HINT_READ_ONLY, true)
+                .getResultList();
     }
 
     private String getNativeTableName(EntityType<?> entity) {
