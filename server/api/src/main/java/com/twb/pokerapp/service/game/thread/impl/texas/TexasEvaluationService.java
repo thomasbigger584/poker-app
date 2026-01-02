@@ -139,7 +139,7 @@ public class TexasEvaluationService {
             saveHandWinner(playerSession, round, winnerHand.getHand(), splitAmount);
         }
 
-        logPotWinners(params, pot, winners, splitAmount);
+        afterCommit(() -> logPotWinners(params, pot, winners, splitAmount));
     }
 
     private void saveHandWinner(PlayerSession playerSession, Round round, Hand hand, double amount) {
@@ -169,7 +169,7 @@ public class TexasEvaluationService {
         } else {
             message = "%s split %s ($%.2f) with a %s (Each gets $%.2f)".formatted(winnerNames, potName, pot.getPotAmount(), handTypeStr, amountPerWinner);
         }
-        afterCommit(() -> gameLogService.sendLogMessage(params.getTableId(), message));
+        gameLogService.sendLogMessage(params.getTableId(), message);
     }
 
     private String getReadableWinners(List<EvalPlayerHandDTO> winners) {

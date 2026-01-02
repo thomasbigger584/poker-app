@@ -48,7 +48,7 @@ public class TexasRoundPotService {
         return calculatePotSlices(round, contributions);
     }
 
-    private void sumAmountsFromActions(UUID roundId, HashMap<UUID, Double> playerTotalBets, HashMap<UUID, Boolean> playerFoldedStatus) {
+    private void sumAmountsFromActions(UUID roundId, Map<UUID, Double> playerTotalBets, Map<UUID, Boolean> playerFoldedStatus) {
         var allActions = playerActionRepository.findByRoundId(roundId);
         for (var action : allActions) {
             var playerId = action.getPlayerSession().getId();
