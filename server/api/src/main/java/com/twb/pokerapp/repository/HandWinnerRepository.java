@@ -13,7 +13,7 @@ import java.util.UUID;
 public interface HandWinnerRepository extends JpaRepository<HandWinner, UUID> {
 
     @Query("""
-            SELECT w
+            SELECT h
             FROM HandWinner h
             WHERE h.round.id = :roundId
             AND h.playerSession.id = :playerSessionId
