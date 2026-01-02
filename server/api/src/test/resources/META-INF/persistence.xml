@@ -14,6 +14,7 @@
         <class>com.twb.pokerapp.domain.PokerTable</class>
         <class>com.twb.pokerapp.domain.Round</class>
         <class>com.twb.pokerapp.domain.RoundPot</class>
+        <class>com.twb.pokerapp.domain.HandWinner</class>
         <shared-cache-mode>NONE</shared-cache-mode>
 
         <properties>
