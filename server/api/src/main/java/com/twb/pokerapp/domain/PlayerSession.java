@@ -71,6 +71,9 @@ public class PlayerSession extends Auditable {
     @ManyToMany(mappedBy = "eligiblePlayers")
     private List<RoundPot> roundPots = new ArrayList<>();
 
+    @OneToMany(mappedBy = "playerSession")
+    private List<HandWinner> handWinners = new ArrayList<>();
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

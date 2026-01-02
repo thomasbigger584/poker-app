@@ -1,5 +1,6 @@
 package com.twb.pokerapp.service.game.thread.impl.texas;
 
+import com.twb.pokerapp.domain.HandWinner;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.Round;
 import com.twb.pokerapp.domain.RoundPot;
@@ -29,6 +30,7 @@ public class TexasEvaluationService {
     private final CardRepository cardRepository;
     private final HandEvaluator handEvaluator;
     private final GameLogService gameLogService;
+    private final HandWinnerRepository handWinnerRepository;
 
     public void evaluate(GameThreadParams params) {
         writeTx.executeWithoutResult(status -> {
@@ -59,6 +61,8 @@ public class TexasEvaluationService {
 
         winner.setFunds(winner.getFunds() + totalWinnings);
         playerSessionRepository.save(winner);
+
+        saveHandWinner(winner, round, totalWinnings);
 
         var winnerUsername = winner.getUser().getUsername();
         var finalTotalWinnings = totalWinnings;
@@ -132,9 +136,19 @@ public class TexasEvaluationService {
             var playerSession = winnerHand.getPlayerSession();
             playerSession.setFunds(playerSession.getFunds() + splitAmount);
             playerSessionRepository.save(playerSession);
+
+            saveHandWinner(playerSession, round, splitAmount);
         }
 
         logPotWinners(params, pot, winners, splitAmount);
+    }
+
+    private void saveHandWinner(PlayerSession playerSession, Round round, double amount) {
+        var handWinner = new HandWinner();
+        handWinner.setPlayerSession(playerSession);
+        handWinner.setRound(round);
+        handWinner.setAmount(amount);
+        handWinnerRepository.save(handWinner);
     }
 
     private void logPotWinners(GameThreadParams params, RoundPot pot, List<EvalPlayerHandDTO> winners, double amountPerWinner) {

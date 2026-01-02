@@ -283,4 +283,34 @@
                                  baseTableName="round_pot_eligible_players" baseColumnNames="player_session_id"
                                  referencedTableName="player_session" referencedColumnNames="id"/>
     </changeSet>
+
+    <changeSet author="tbigg" id="10">
+        <createTable tableName="hand_winner">
+            <column name="id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="player_session_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="round_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="double">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date_time" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_date_time" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="pk_hand_winner" tableName="hand_winner"/>
+        <addForeignKeyConstraint constraintName="fk_hand_winner_player_session_id" onDelete="CASCADE"
+                                 baseTableName="hand_winner" baseColumnNames="player_session_id"
+                                 referencedTableName="player_session" referencedColumnNames="id"/>
+        <addForeignKeyConstraint constraintName="fk_hand_winner_round_id" onDelete="CASCADE"
+                                 baseTableName="hand_winner" baseColumnNames="round_id"
+                                 referencedTableName="round" referencedColumnNames="id"/>
+    </changeSet>
 </databaseChangeLog>
