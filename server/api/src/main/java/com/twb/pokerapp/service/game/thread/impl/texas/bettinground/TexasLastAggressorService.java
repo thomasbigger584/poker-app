@@ -13,7 +13,6 @@ import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.RoundRepository;
 import com.twb.pokerapp.service.BettingRoundService;
 import com.twb.pokerapp.service.PlayerActionService;
-import com.twb.pokerapp.service.RoundService;
 import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
 import com.twb.pokerapp.service.game.thread.impl.texas.TexasPlayerActionService;
@@ -22,7 +21,6 @@ import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -59,9 +57,6 @@ public class TexasLastAggressorService {
 
     @Autowired
     private PlayerActionRepository playerActionRepository;
-
-    @Autowired
-    private RoundService roundService;
 
     @Autowired
     private BettingRoundService bettingRoundService;
@@ -212,14 +207,6 @@ public class TexasLastAggressorService {
             lastAggressorId = currentPlayer.getId();
         }
         return lastAggressorId;
-    }
-
-    private BettingRound getBettingRound(BettingRound bettingRound) {
-        var bettingRoundOpt = bettingRoundRepository.findById(bettingRound.getId());
-        if (bettingRoundOpt.isPresent()) {
-            bettingRound = bettingRoundOpt.get();
-        }
-        return bettingRound;
     }
 
     static class LastAggressorBreakException extends RuntimeException {

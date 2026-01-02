@@ -4,7 +4,6 @@ import com.twb.pokerapp.domain.*;
 import jakarta.persistence.*;
 import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.jpa.HibernateHints;
-import org.hibernate.jpa.QueryHints;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 
 import java.util.HashMap;
