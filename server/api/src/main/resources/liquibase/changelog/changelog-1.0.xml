@@ -295,6 +295,7 @@
             <column name="round_id" type="uuid">
                 <constraints nullable="false"/>
             </column>
+            <column name="hand_id" type="uuid"/>
             <column name="amount" type="double">
                 <constraints nullable="false"/>
             </column>
@@ -312,5 +313,8 @@
         <addForeignKeyConstraint constraintName="fk_hand_winner_round_id" onDelete="CASCADE"
                                  baseTableName="hand_winner" baseColumnNames="round_id"
                                  referencedTableName="round" referencedColumnNames="id"/>
+        <addForeignKeyConstraint constraintName="fk_hand_winner_hand_id" onDelete="CASCADE"
+                                 baseTableName="hand_winner" baseColumnNames="hand_id"
+                                 referencedTableName="hand" referencedColumnNames="id"/>
     </changeSet>
 </databaseChangeLog>

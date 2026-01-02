@@ -42,6 +42,9 @@ public class Hand extends Auditable {
     @OneToMany(mappedBy = "hand", fetch = FetchType.EAGER)
     private List<Card> cards = new ArrayList<>();
 
+    @OneToMany(mappedBy = "hand")
+    private List<HandWinner> handWinners = new ArrayList<>();
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -1,9 +1,6 @@
 package com.twb.pokerapp.service.game.thread.impl.texas;
 
-import com.twb.pokerapp.domain.HandWinner;
-import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.domain.Round;
-import com.twb.pokerapp.domain.RoundPot;
+import com.twb.pokerapp.domain.*;
 import com.twb.pokerapp.repository.*;
 import com.twb.pokerapp.service.game.eval.HandEvaluator;
 import com.twb.pokerapp.service.game.eval.dto.EvalPlayerHandDTO;
@@ -62,7 +59,8 @@ public class TexasEvaluationService {
         winner.setFunds(winner.getFunds() + totalWinnings);
         playerSessionRepository.save(winner);
 
-        saveHandWinner(winner, round, totalWinnings);
+        var hand = handRepository.findHandForRound(winner.getId(), round.getId()).orElse(null);
+        saveHandWinner(winner, round, hand, totalWinnings);
 
         var winnerUsername = winner.getUser().getUsername();
         var finalTotalWinnings = totalWinnings;
@@ -89,6 +87,7 @@ public class TexasEvaluationService {
                 var playerHand = new EvalPlayerHandDTO();
                 playerHand.setPlayerSession(potentialWinner);
                 playerHand.setCards(playableCards);
+                playerHand.setHand(hand);
                 playerHandsList.add(playerHand);
             }
         }
@@ -137,17 +136,25 @@ public class TexasEvaluationService {
             playerSession.setFunds(playerSession.getFunds() + splitAmount);
             playerSessionRepository.save(playerSession);
 
-            saveHandWinner(playerSession, round, splitAmount);
+            saveHandWinner(playerSession, round, winnerHand.getHand(), splitAmount);
         }
 
         logPotWinners(params, pot, winners, splitAmount);
     }
 
-    private void saveHandWinner(PlayerSession playerSession, Round round, double amount) {
-        var handWinner = new HandWinner();
-        handWinner.setPlayerSession(playerSession);
-        handWinner.setRound(round);
-        handWinner.setAmount(amount);
+    private void saveHandWinner(PlayerSession playerSession, Round round, Hand hand, double amount) {
+        var handWinnerOpt = handWinnerRepository.findByRoundAndPlayerSession(round.getId(), playerSession.getId());
+        HandWinner handWinner;
+        if (handWinnerOpt.isPresent()) {
+            handWinner = handWinnerOpt.get();
+            handWinner.setAmount(handWinner.getAmount() + amount);
+        } else {
+            handWinner = new HandWinner();
+            handWinner.setPlayerSession(playerSession);
+            handWinner.setRound(round);
+            handWinner.setHand(hand);
+            handWinner.setAmount(amount);
+        }
         handWinnerRepository.save(handWinner);
     }
 

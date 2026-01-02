@@ -1,5 +1,6 @@
 package com.twb.pokerapp.domain;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -29,6 +30,11 @@ public class HandWinner extends Auditable {
     @JoinColumn(name = "round_id")
     private Round round;
 
+    @Nullable
+    @ManyToOne
+    @JoinColumn(name = "hand_id")
+    private Hand hand;
+
     @Column(name = "amount")
     private Double amount;
 
@@ -37,18 +43,12 @@ public class HandWinner extends Auditable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         var that = (HandWinner) o;
-        return new EqualsBuilder()
-                .append(id, that.id)
-                .append(amount, that.amount)
-                .isEquals();
+        return new EqualsBuilder().append(id, that.id).isEquals();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(17, 37)
-                .append(id)
-                .append(amount)
-                .toHashCode();
+        return new HashCodeBuilder(17, 37).append(id).toHashCode();
     }
 
     @Override

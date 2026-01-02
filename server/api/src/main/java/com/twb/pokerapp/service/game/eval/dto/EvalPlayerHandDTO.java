@@ -1,6 +1,7 @@
 package com.twb.pokerapp.service.game.eval.dto;
 
 import com.twb.pokerapp.domain.Card;
+import com.twb.pokerapp.domain.Hand;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.enumeration.HandType;
 import jakarta.validation.constraints.NotNull;
@@ -13,6 +14,7 @@ import java.util.List;
 @Setter
 public class EvalPlayerHandDTO implements Comparable<EvalPlayerHandDTO> {
     private PlayerSession playerSession;
+    private Hand hand;
     private List<Card> cards;
     private Integer rank;
     private HandType handType;
