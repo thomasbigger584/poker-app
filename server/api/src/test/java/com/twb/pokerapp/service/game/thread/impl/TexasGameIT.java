@@ -7,10 +7,7 @@ import com.twb.pokerapp.testutils.game.GameLatches;
 import com.twb.pokerapp.testutils.game.GameRunner;
 import com.twb.pokerapp.testutils.game.GameRunnerParams;
 import com.twb.pokerapp.testutils.game.turn.TurnHandler;
-import com.twb.pokerapp.testutils.game.turn.impl.AggresiveTurnHandler;
-import com.twb.pokerapp.testutils.game.turn.impl.FirstActionTurnHandler;
-import com.twb.pokerapp.testutils.game.turn.impl.InvalidActionTurnHandler;
-import com.twb.pokerapp.testutils.game.turn.impl.OptimisticTurnHandler;
+import com.twb.pokerapp.testutils.game.turn.impl.*;
 import com.twb.pokerapp.testutils.testcontainers.BaseTestContainersIT;
 import com.twb.pokerapp.testutils.validator.impl.TexasValidator;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +39,6 @@ class TexasGameIT extends BaseTestContainersIT {
 
     @Test
     void testGameWithoutPlayerActions() throws Throwable {
-
         // given
         var turnHandlers = TurnHandler.of(null, null);
 
@@ -55,7 +51,6 @@ class TexasGameIT extends BaseTestContainersIT {
 
     @Test
     void testGameWithDefaultActions() throws Throwable {
-
         // given
         var turnHandlers = TurnHandler.of(
                 new FirstActionTurnHandler(),
@@ -71,7 +66,6 @@ class TexasGameIT extends BaseTestContainersIT {
 
     @Test
     void testGameWithOptimisticActions() throws Throwable {
-
         // given
         var turnHandlers = TurnHandler.of(
                 new OptimisticTurnHandler(),
@@ -87,7 +81,6 @@ class TexasGameIT extends BaseTestContainersIT {
 
     @Test
     void testGameWithSingleOptimisticActions() throws Throwable {
-
         // given
         var turnHandlers = TurnHandler.of(
                 new OptimisticTurnHandler(),
@@ -103,7 +96,6 @@ class TexasGameIT extends BaseTestContainersIT {
 
     @Test
     void testGameWithBetAndRaiseActions() throws Throwable {
-
         // given
         var turnHandlers = TurnHandler.of(
                 new OptimisticTurnHandler(),
@@ -119,7 +111,6 @@ class TexasGameIT extends BaseTestContainersIT {
 
     @Test
     void testGameWithSingleFirstActionActions() throws Throwable {
-
         // given
         var turnHandlers = TurnHandler.of(
                 new FirstActionTurnHandler(),
@@ -134,8 +125,22 @@ class TexasGameIT extends BaseTestContainersIT {
     }
 
     @Test
-    void testGameWithInvalidActions() throws Throwable {
+    void testGameWithAllInAction() throws Throwable {
+        // given
+        var turnHandlers = TurnHandler.of(
+                new OptimisticTurnHandler(),
+                new AllInTurnHandler()
+        );
 
+        // when
+        var messages = runner.run(turnHandlers);
+
+        // then
+        validator.validateEndOfRun(messages);
+    }
+
+    @Test
+    void testGameWithInvalidActions() throws Throwable {
         // given
         var turnHandlers = TurnHandler.of(
                 new OptimisticTurnHandler(),

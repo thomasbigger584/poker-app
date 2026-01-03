@@ -22,7 +22,7 @@ public enum ActionType {
             case RAISE:
             case FOLD:
             case ALL_IN: {
-                yield new ActionType[]{CALL, RAISE, FOLD};
+                yield new ActionType[]{CALL, RAISE, ALL_IN, FOLD};
             }
         };
     }

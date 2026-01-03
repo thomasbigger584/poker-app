@@ -43,12 +43,12 @@ public class RoundWinner extends Auditable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         var that = (RoundWinner) o;
-        return new EqualsBuilder().append(id, that.id).isEquals();
+        return new EqualsBuilder().append(id, that.id).append(amount, that.amount).isEquals();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(17, 37).append(id).toHashCode();
+        return new HashCodeBuilder(17, 37).append(id).append(amount).toHashCode();
     }
 
     @Override
