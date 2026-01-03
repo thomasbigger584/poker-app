@@ -20,6 +20,7 @@ public class ServerMessageFactory {
     private final BettingRoundMapper bettingRoundMapper;
     private final RoundPotMapper roundPotMapper;
     private final CardMapper cardMapper;
+    private final HandWinnerMapper handWinnerMapper;
 
     public ServerMessageDTO playerSubscribed(List<PlayerSession> playerSessions) {
         var payload = new PlayerSubscribedDTO();
@@ -79,8 +80,9 @@ public class ServerMessageFactory {
         return ServerMessageDTO.create(ServerMessageType.BETTING_ROUND_UPDATED, payload);
     }
 
-    public ServerMessageDTO roundFinished() {
+    public ServerMessageDTO roundFinished(List<HandWinner> winners) {
         var payload = new RoundFinishedDTO();
+        payload.setWinners(winners.stream().map(handWinnerMapper::modelToDto).toList());
         return ServerMessageDTO.create(ServerMessageType.ROUND_FINISHED, payload);
     }
 

@@ -4,6 +4,7 @@ import com.twb.pokerapp.domain.Card;
 import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.PokerTable;
+import com.twb.pokerapp.domain.enumeration.BettingRoundState;
 import com.twb.pokerapp.domain.enumeration.RoundState;
 import com.twb.pokerapp.exception.game.GameInterruptedException;
 import com.twb.pokerapp.exception.game.RoundInterruptedException;
@@ -198,15 +199,20 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                 roundOpt.ifPresent(round -> {
                     var bettingRoundOpt = bettingRoundRepository.findCurrentByRoundId(roundId);
                     bettingRoundOpt.ifPresent(bettingRound -> {
-                        var thisBettingRound = bettingRoundService.setBettingRoundFinished(bettingRound);
-                        var roundPots = round.getRoundPots();
-                        roundPots.forEach(roundPot -> Hibernate.initialize(roundPot.getEligiblePlayers()));
-                        afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, thisBettingRound, roundPots)));
+                        if (bettingRound.getState() != BettingRoundState.FINISHED) {
+                            var thisBettingRound = bettingRoundService.setBettingRoundFinished(bettingRound);
+                            var roundPots = round.getRoundPots();
+                            afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, thisBettingRound, roundPots)));
+                        }
                     });
-                    roundService.setRoundState(round, RoundState.FINISHED);
+                    if (round.getRoundState() != RoundState.FINISHED) {
+                        roundService.setRoundState(round, RoundState.FINISHED);
+                    }
+                    var winners = handWinnerRepository.findByRound(round.getId());
+                    afterCommit(() -> dispatcher.send(table, messageFactory.roundFinished(winners)));
                 });
             });
-            dispatcher.send(table, messageFactory.roundFinished());
+
         }
         roundInProgress.set(false);
         sleepInMs(params.getRoundEndWaitMs());
