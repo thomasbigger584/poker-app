@@ -38,7 +38,7 @@ public class HandEvaluator {
         var savingHands = new ArrayList<Hand>();
         for (var playerHand : playerHandsList) {
             var playerSession = playerHand.getPlayerSession();
-            handRepository.findHandForRound(playerSession.getId(), round.getId())
+            handRepository.findForPlayerAndRound(playerSession.getId(), round.getId())
                     .ifPresent(hand -> {
                         hand.setHandType(playerHand.getHandType());
                         savingHands.add(hand);

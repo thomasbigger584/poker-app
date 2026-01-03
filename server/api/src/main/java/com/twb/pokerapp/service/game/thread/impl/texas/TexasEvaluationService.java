@@ -25,9 +25,9 @@ public class TexasEvaluationService {
     private final PlayerSessionRepository playerSessionRepository;
     private final HandRepository handRepository;
     private final CardRepository cardRepository;
+    private final RoundWinnerRepository roundWinnerRepository;
     private final HandEvaluator handEvaluator;
     private final GameLogService gameLogService;
-    private final RoundWinnerRepository roundWinnerRepository;
 
     public void evaluate(GameThreadParams params) {
         writeTx.executeWithoutResult(status -> {
@@ -37,8 +37,7 @@ public class TexasEvaluationService {
                 return;
             }
             var round = roundOpt.get();
-            var activePlayers = playerSessionRepository
-                    .findActivePlayersByTableId(params.getTableId(), round.getId());
+            var activePlayers = playerSessionRepository.findActivePlayersByTableId(params.getTableId(), round.getId());
             if (activePlayers.size() == 1) {
                 var winner = activePlayers.getFirst();
                 evaluateLastPlayerStanding(params, winner, round);
@@ -51,20 +50,17 @@ public class TexasEvaluationService {
 
     private void evaluateLastPlayerStanding(GameThreadParams params, PlayerSession winner, Round round) {
         var pots = roundPotRepository.findByRound(round.getId());
-        var totalWinnings = 0.0;
-        for (var pot : pots) {
-            totalWinnings += pot.getPotAmount();
-        }
-
+        var totalWinnings = pots.stream()
+                .mapToDouble(RoundPot::getPotAmount)
+                .sum();
         winner.setFunds(winner.getFunds() + totalWinnings);
         playerSessionRepository.save(winner);
 
-        var hand = handRepository.findHandForRound(winner.getId(), round.getId()).orElse(null);
+        var hand = handRepository.findForPlayerAndRound(winner.getId(), round.getId()).orElse(null);
         saveRoundWinner(winner, round, hand, totalWinnings);
 
         var winnerUsername = winner.getUser().getUsername();
-        var finalTotalWinnings = totalWinnings;
-        afterCommit(() -> gameLogService.sendLogMessage(params.getTableId(), "%s wins round with $%.2f".formatted(winnerUsername, finalTotalWinnings)));
+        afterCommit(() -> gameLogService.sendLogMessage(params.getTableId(), "%s wins round with $%.2f".formatted(winnerUsername, totalWinnings)));
     }
 
     private void evaluateMultiPlayersStanding(GameThreadParams params, Round round, List<PlayerSession> activePlayers) {
@@ -72,14 +68,9 @@ public class TexasEvaluationService {
 
         var playerHandsList = new ArrayList<EvalPlayerHandDTO>();
         for (PlayerSession potentialWinner : activePlayers) {
-
-            var playableCards = new ArrayList<>(communityCards);
-
-            var playerHandOpt = handRepository
-                    .findHandForRound(potentialWinner.getId(), round.getId());
-
-            if (playerHandOpt.isPresent()) {
-                var hand = playerHandOpt.get();
+            var playerHandOpt = handRepository.findForPlayerAndRound(potentialWinner.getId(), round.getId());
+            playerHandOpt.ifPresent(hand -> {
+                var playableCards = new ArrayList<>(communityCards);
 
                 var playerCards = cardRepository.findCardsForHand(hand.getId());
                 playableCards.addAll(playerCards);
@@ -89,7 +80,7 @@ public class TexasEvaluationService {
                 playerHand.setCards(playableCards);
                 playerHand.setHand(hand);
                 playerHandsList.add(playerHand);
-            }
+            });
         }
 
         handEvaluator.evaluate(round, playerHandsList);
@@ -105,9 +96,7 @@ public class TexasEvaluationService {
         var eligiblePlayerIds = eligiblePlayers.stream().map(PlayerSession::getId).toList();
 
         // Filter hands for this pot, preserving order (best to worst)
-        var potHands = allEvaluatedHands.stream()
-                .filter(hand -> eligiblePlayerIds.contains(hand.getPlayerSession().getId()))
-                .toList();
+        var potHands = allEvaluatedHands.stream().filter(hand -> eligiblePlayerIds.contains(hand.getPlayerSession().getId())).toList();
 
         if (potHands.isEmpty()) return;
 

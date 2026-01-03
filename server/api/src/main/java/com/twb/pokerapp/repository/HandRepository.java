@@ -18,5 +18,5 @@ public interface HandRepository extends JpaRepository<Hand, UUID> {
             WHERE h.playerSession.id = :playerSessionId
             AND h.round.id = :roundId
             """)
-    Optional<Hand> findHandForRound(@Param("playerSessionId") UUID playerSessionId, @Param("roundId") UUID roundId);
+    Optional<Hand> findForPlayerAndRound(@Param("playerSessionId") UUID playerSessionId, @Param("roundId") UUID roundId);
 }
