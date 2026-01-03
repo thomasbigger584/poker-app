@@ -72,7 +72,7 @@ public class PlayerSession extends Auditable {
     private List<RoundPot> roundPots = new ArrayList<>();
 
     @OneToMany(mappedBy = "playerSession")
-    private List<HandWinner> handWinners = new ArrayList<>();
+    private List<RoundWinner> roundWinners = new ArrayList<>();
 
     @Override
     public boolean equals(Object o) {

@@ -43,7 +43,7 @@ public class Hand extends Auditable {
     private List<Card> cards = new ArrayList<>();
 
     @OneToMany(mappedBy = "hand")
-    private List<HandWinner> handWinners = new ArrayList<>();
+    private List<RoundWinner> roundWinners = new ArrayList<>();
 
     @Override
     public boolean equals(Object o) {

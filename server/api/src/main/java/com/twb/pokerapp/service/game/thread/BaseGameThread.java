@@ -51,7 +51,7 @@ public abstract class BaseGameThread extends Thread {
     protected PlayerSessionRepository playerSessionRepository;
 
     @Autowired
-    protected HandWinnerRepository handWinnerRepository;
+    protected RoundWinnerRepository roundWinnerRepository;
 
     @Autowired
     protected HandService handService;

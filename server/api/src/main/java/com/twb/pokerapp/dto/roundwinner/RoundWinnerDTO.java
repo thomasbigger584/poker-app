@@ -1,4 +1,4 @@
-package com.twb.pokerapp.dto.handwinner;
+package com.twb.pokerapp.dto.roundwinner;
 
 import com.twb.pokerapp.dto.hand.HandDTO;
 import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
@@ -8,7 +8,7 @@ import lombok.Data;
 import java.util.UUID;
 
 @Data
-public class HandWinnerDTO {
+public class RoundWinnerDTO {
     private UUID id;
     private PlayerSessionDTO playerSession;
     private RoundDTO round;

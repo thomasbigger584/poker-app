@@ -13,8 +13,8 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
-@Table(name = "hand_winner")
-public class HandWinner extends Auditable {
+@Table(name = "round_winner")
+public class RoundWinner extends Auditable {
 
     @Id
     @NotNull
@@ -42,7 +42,7 @@ public class HandWinner extends Auditable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        var that = (HandWinner) o;
+        var that = (RoundWinner) o;
         return new EqualsBuilder().append(id, that.id).isEquals();
     }
 
@@ -53,7 +53,7 @@ public class HandWinner extends Auditable {
 
     @Override
     public String toString() {
-        return "HandWinner{" +
+        return "RoundWinner{" +
                 "id=" + id +
                 ", amount=" + amount +
                 '}';

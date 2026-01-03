@@ -15,7 +15,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.hibernate.Hibernate;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -208,7 +207,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                     if (round.getRoundState() != RoundState.FINISHED) {
                         roundService.setRoundState(round, RoundState.FINISHED);
                     }
-                    var winners = handWinnerRepository.findByRound(round.getId());
+                    var winners = roundWinnerRepository.findByRound(round.getId());
                     afterCommit(() -> dispatcher.send(table, messageFactory.roundFinished(winners)));
                 });
             });

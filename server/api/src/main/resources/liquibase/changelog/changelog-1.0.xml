@@ -285,7 +285,7 @@
     </changeSet>
 
     <changeSet author="tbigg" id="10">
-        <createTable tableName="hand_winner">
+        <createTable tableName="round_winner">
             <column name="id" type="uuid">
                 <constraints nullable="false"/>
             </column>
@@ -306,15 +306,15 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <addPrimaryKey columnNames="id" constraintName="pk_hand_winner" tableName="hand_winner"/>
-        <addForeignKeyConstraint constraintName="fk_hand_winner_player_session_id" onDelete="CASCADE"
-                                 baseTableName="hand_winner" baseColumnNames="player_session_id"
+        <addPrimaryKey columnNames="id" constraintName="pk_round_winner" tableName="round_winner"/>
+        <addForeignKeyConstraint constraintName="fk_round_winner_player_session_id" onDelete="CASCADE"
+                                 baseTableName="round_winner" baseColumnNames="player_session_id"
                                  referencedTableName="player_session" referencedColumnNames="id"/>
-        <addForeignKeyConstraint constraintName="fk_hand_winner_round_id" onDelete="CASCADE"
-                                 baseTableName="hand_winner" baseColumnNames="round_id"
+        <addForeignKeyConstraint constraintName="fk_round_winner_round_id" onDelete="CASCADE"
+                                 baseTableName="round_winner" baseColumnNames="round_id"
                                  referencedTableName="round" referencedColumnNames="id"/>
-        <addForeignKeyConstraint constraintName="fk_hand_winner_hand_id" onDelete="CASCADE"
-                                 baseTableName="hand_winner" baseColumnNames="hand_id"
+        <addForeignKeyConstraint constraintName="fk_round_winner_hand_id" onDelete="CASCADE"
+                                 baseTableName="round_winner" baseColumnNames="hand_id"
                                  referencedTableName="hand" referencedColumnNames="id"/>
     </changeSet>
 </databaseChangeLog>

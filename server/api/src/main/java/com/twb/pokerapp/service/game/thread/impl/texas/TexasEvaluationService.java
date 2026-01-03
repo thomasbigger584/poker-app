@@ -27,7 +27,7 @@ public class TexasEvaluationService {
     private final CardRepository cardRepository;
     private final HandEvaluator handEvaluator;
     private final GameLogService gameLogService;
-    private final HandWinnerRepository handWinnerRepository;
+    private final RoundWinnerRepository roundWinnerRepository;
 
     public void evaluate(GameThreadParams params) {
         writeTx.executeWithoutResult(status -> {
@@ -60,7 +60,7 @@ public class TexasEvaluationService {
         playerSessionRepository.save(winner);
 
         var hand = handRepository.findHandForRound(winner.getId(), round.getId()).orElse(null);
-        saveHandWinner(winner, round, hand, totalWinnings);
+        saveRoundWinner(winner, round, hand, totalWinnings);
 
         var winnerUsername = winner.getUser().getUsername();
         var finalTotalWinnings = totalWinnings;
@@ -136,26 +136,26 @@ public class TexasEvaluationService {
             playerSession.setFunds(playerSession.getFunds() + splitAmount);
             playerSessionRepository.save(playerSession);
 
-            saveHandWinner(playerSession, round, winnerHand.getHand(), splitAmount);
+            saveRoundWinner(playerSession, round, winnerHand.getHand(), splitAmount);
         }
 
         afterCommit(() -> logPotWinners(params, pot, winners, splitAmount));
     }
 
-    private void saveHandWinner(PlayerSession playerSession, Round round, Hand hand, double amount) {
-        var handWinnerOpt = handWinnerRepository.findByRoundAndPlayerSession(round.getId(), playerSession.getId());
-        HandWinner handWinner;
-        if (handWinnerOpt.isPresent()) {
-            handWinner = handWinnerOpt.get();
-            handWinner.setAmount(handWinner.getAmount() + amount);
+    private void saveRoundWinner(PlayerSession playerSession, Round round, Hand hand, double amount) {
+        var roundWinnerOpt = roundWinnerRepository.findByRoundAndPlayerSession(round.getId(), playerSession.getId());
+        RoundWinner roundWinner;
+        if (roundWinnerOpt.isPresent()) {
+            roundWinner = roundWinnerOpt.get();
+            roundWinner.setAmount(roundWinner.getAmount() + amount);
         } else {
-            handWinner = new HandWinner();
-            handWinner.setPlayerSession(playerSession);
-            handWinner.setRound(round);
-            handWinner.setHand(hand);
-            handWinner.setAmount(amount);
+            roundWinner = new RoundWinner();
+            roundWinner.setPlayerSession(playerSession);
+            roundWinner.setRound(round);
+            roundWinner.setHand(hand);
+            roundWinner.setAmount(amount);
         }
-        handWinnerRepository.save(handWinner);
+        roundWinnerRepository.save(roundWinner);
     }
 
     private void logPotWinners(GameThreadParams params, RoundPot pot, List<EvalPlayerHandDTO> winners, double amountPerWinner) {
