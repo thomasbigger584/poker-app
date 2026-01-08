@@ -1,6 +1,6 @@
 server {
     listen 80;
-    server_name ~^poker-app(-[0-9]+)?\.taila8b6c7\.ts\.net$;
+    server_name ${server_name};
 
     # Keycloak Main Service
     location /auth/ {

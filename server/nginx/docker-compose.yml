@@ -4,5 +4,6 @@ services:
     image: nginx:alpine
     container_name: nginx
     volumes:
-      - ./conf.d:/etc/nginx/conf.d:ro
+      - ./conf.d/tfgen_default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./conf.d/proxy_params.conf:/etc/nginx/conf.d/proxy_params.conf:ro
       - ./html:/usr/share/nginx/html:ro
