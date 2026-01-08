@@ -92,7 +92,18 @@ public class TexasLastAggressorService {
         this.gameThread = gameThread;
     }
 
-    public void prePlayerTurn() {
+    public void runPlayerInBettingRound(GameThread gameThread) {
+        prePlayerTurn();
+        gameThread.checkRoundInterrupted();
+        waitPlayerTurn();
+        postPlayerTurn();
+    }
+
+    // *****************************************************************************************
+    // Lifecycle Methods
+    // *****************************************************************************************
+
+    private void prePlayerTurn() {
         readTx.executeWithoutResult(status -> {
             round = getThrowGameInterrupted(roundRepository.findCurrentByTableId(params.getTableId()), "Round is empty for table");
             bettingRound = getThrowGameInterrupted(bettingRoundRepository.findCurrentByRoundId(round.getId()), "Betting Round is empty for round");
@@ -126,12 +137,12 @@ public class TexasLastAggressorService {
         });
     }
 
-    public void waitPlayerTurn() {
+    private void waitPlayerTurn() {
         dispatcher.send(params, messageFactory.playerTurn(currentPlayer, bettingRound, nextActions, params.getPlayerTurnWaitMs()));
         waitPlayerTurn(params, gameThread, currentPlayer);
     }
 
-    public void postPlayerTurn() {
+    private void postPlayerTurn() {
         writeTx.executeWithoutResult(status -> {
             var latestPlayerActionOpt = playerActionRepository.findByBettingRoundAndPlayer(bettingRound.getId(), currentPlayer.getId());
             latestPlayerActionOpt.ifPresentOrElse(actionJustTaken -> {
@@ -166,6 +177,10 @@ public class TexasLastAggressorService {
             });
         });
     }
+
+    // *****************************************************************************************
+    // Helper Methods
+    // *****************************************************************************************
 
     private List<PlayerSession> getActivePlayers(GameThreadParams params, Round round) {
         var activePlayers = playerSessionRepository.findActivePlayersByTableId(params.getTableId(), round.getId());
