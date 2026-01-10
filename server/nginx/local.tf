@@ -1,6 +1,6 @@
 variable "server_name" {
   type        = string
-  description = "the FQDN of the server"
+  description = "The FQDN of the server"
 }
 
 resource "local_file" "nginx_default_conf" {
