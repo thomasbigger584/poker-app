@@ -48,3 +48,6 @@ mkdir -p /etc/nginx-config
 cat << 'CONF' > /etc/nginx-config/default.conf
 ${nginx_conf_content}
 CONF
+cat << 'CONF' > /etc/nginx-config/proxy_params.conf
+${nginx_proxy_params_content}
+CONF

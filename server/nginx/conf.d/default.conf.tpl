@@ -2,6 +2,18 @@ server {
     listen 80;
     server_name ${server_name};
 
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name ${server_name};
+
+    ssl_certificate /etc/letsencrypt/live/${server_name}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${server_name}/privkey.pem;
+
     # Keycloak Main Service
     location /auth/ {
         proxy_pass http://localhost:8080/auth/;
@@ -38,7 +50,7 @@ server {
     }
 
     location / {
-        root /usr/share/nginx/html;
-        try_files $uri $uri/ /index.html;
+        root   /usr/share/nginx/html;
+        index  index.html;
     }
 }

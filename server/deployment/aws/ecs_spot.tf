@@ -71,6 +71,7 @@ resource "aws_launch_template" "ecs_spot" {
     nginx_conf_content = templatefile("${path.module}/../../nginx/conf.d/default.conf.tpl", {
       server_name = "${var.project_name}.${var.root_domain}"
     })
+    nginx_proxy_params_content = file("${path.module}/../../nginx/conf.d/proxy_params.conf")
   }))
 
   tags = {
