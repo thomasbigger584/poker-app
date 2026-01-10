@@ -170,7 +170,7 @@ buildNumber.properties
 
 ### Terraform ###
 # Local .terraform directories
-**/.terraform/*
+deployment/**/.terraform/*
 
 # .tfstate files
 *.tfstate
