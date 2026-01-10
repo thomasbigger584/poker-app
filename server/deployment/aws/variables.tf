@@ -10,6 +10,12 @@ variable "project_name" {
   default     = "poker-app"
 }
 
+variable "root_domain" {
+  description = "The root domain for the server name"
+  type    = string
+  default = "duckdns.org"
+}
+
 variable "asg_min_size" {
   description = "Minimum number of instances in the Auto Scaling Group"
   type        = number
