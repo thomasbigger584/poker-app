@@ -3,21 +3,19 @@ variable "project_name" {
   default = "poker-app"
 }
 
-variable "tailnet_domain" {
+variable "root_domain" {
   type    = string
   default = "taila8b6c7.ts.net"
 }
 
-resource "local_file" "nginx_default_conf" {
-  content = templatefile("${path.module}/../nginx/conf.d/default.conf.tpl", {
-    server_name = "${var.project_name}.${var.tailnet_domain}"
-  })
-  filename = "${path.module}/../nginx/conf.d/tfgen_default.conf"
+module "nginx" {
+  source         = "../nginx"
+  server_name   = "${var.project_name}.${var.root_domain}"
 }
 
 resource "terraform_data" "docker_up" {
   triggers_replace = {
-    nginx_conf_content = local_file.nginx_default_conf.content
+    nginx_conf_content = module.nginx.config_content
   }
 
   provisioner "local-exec" {
@@ -30,6 +28,6 @@ resource "terraform_data" "docker_down_clean" {
   provisioner "local-exec" {
     when        = destroy
     working_dir = "${path.module}/.."
-    command     = "docker compose down --remove-orphans; docker volume rm $(docker volume ls -q); docker system prune -a -f"
+    command     = "docker compose down --volumes --remove-orphans --rmi local; docker system prune -a -f"
   }
 }
