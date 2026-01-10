@@ -1,5 +1,14 @@
 name: 'tailscale'
 services:
+  tailscale-cleanup-base:
+    image: alpine:latest
+    container_name: tailscale-cleanup
+    env_file:
+      - ../env/.secrets.env
+    volumes:
+      - ./cleanup.sh:/cleanup.sh
+    command: sh -c "chmod +x /cleanup.sh && /cleanup.sh"
+
   tailscale-base:
     image: tailscale/tailscale:latest
     container_name: tailscale

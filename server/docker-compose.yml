@@ -16,10 +16,17 @@ x-common-extra: &common-extra
 services:
 
   # --- Network ---
+  tailscale-cleanup:
+    extends:
+      file: tailscale/docker-compose.yml
+      service: tailscale-cleanup-base
   tailscale:
     extends:
       file: tailscale/docker-compose.yml
       service: tailscale-base
+    depends_on:
+      tailscale-cleanup:
+        condition: service_completed_successfully
     <<: [ *common-extra ]
   nginx:
     extends:
