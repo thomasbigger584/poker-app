@@ -39,7 +39,7 @@ resource "aws_launch_template" "ecs_spot" {
   block_device_mappings {
     device_name = "/dev/xvda"
     ebs {
-      volume_size           = 10
+      volume_size           = 30
       volume_type           = "gp3"
       delete_on_termination = true
     }
