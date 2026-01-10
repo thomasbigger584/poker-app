@@ -38,7 +38,7 @@ resource "aws_route_table_association" "public" {
 
 resource "aws_security_group" "ecs_sg" {
   name_prefix = "${var.project_name}-sg-"
-  vpc_id = aws_vpc.main.id
+  vpc_id      = aws_vpc.main.id
 
   ingress {
     from_port   = 80

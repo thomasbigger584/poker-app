@@ -47,14 +47,14 @@ services:
       tailscale:
         condition: service_healthy
     <<: [ *network, *common-extra ]
-#  pgadmin:
-#    extends:
-#      file: ../../postgres/compose.yml
-#      service: pgadmin-base
-#    depends_on:
-#      postgres:
-#        condition: service_healthy
-#    <<: [ *network, *common-extra ]
+  #  pgadmin:
+  #    extends:
+  #      file: ../../postgres/compose.yml
+  #      service: pgadmin-base
+  #    depends_on:
+  #      postgres:
+  #        condition: service_healthy
+  #    <<: [ *network, *common-extra ]
 
 
   # --- MQ ---

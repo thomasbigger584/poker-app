@@ -12,8 +12,8 @@ variable "project_name" {
 
 variable "root_domain" {
   description = "The root domain for the server name"
-  type    = string
-  default = "duckdns.org"
+  type        = string
+  default     = "duckdns.org"
 }
 
 variable "asg_min_size" {

@@ -39,8 +39,8 @@ resource "aws_launch_template" "ecs_spot" {
   block_device_mappings {
     device_name = "/dev/xvda"
     ebs {
-      volume_size = 10
-      volume_type = "gp3"
+      volume_size           = 10
+      volume_type           = "gp3"
       delete_on_termination = true
     }
   }
@@ -68,8 +68,8 @@ resource "aws_launch_template" "ecs_spot" {
       project_name  = var.project_name
       duckdns_token = var.duckdns_token
     })
-    nginx_conf_content = templatefile("${path.module}/nginx/nginx.conf.tpl", {
-      project_name = var.project_name
+    nginx_conf_content = templatefile("${path.module}/../../nginx/conf.d/default.conf.tpl", {
+      server_name = "${var.project_name}.${var.root_domain}"
     })
   }))
 
@@ -102,93 +102,4 @@ resource "aws_autoscaling_group" "ecs_asg" {
     ignore_changes        = [load_balancers, target_group_arns]
   }
   depends_on = [aws_launch_template.ecs_spot]
-}
-
-resource "aws_cloudwatch_log_group" "ecs_logs" {
-  name              = "/ecs/${var.project_name}-nginx"
-  retention_in_days = 7
-  tags = {
-    Name = "${var.project_name}-logs"
-  }
-}
-
-resource "aws_ecs_task_definition" "nginx" {
-  family                   = "${var.project_name}-nginx"
-  network_mode             = "bridge"
-  requires_compatibilities = ["EC2"]
-  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
-  cpu                      = 256
-  memory                   = 256
-
-  volume {
-    name      = "letsencrypt"
-    host_path = "/etc/letsencrypt"
-  }
-
-  volume {
-    name      = "nginx-config"
-    host_path = "/etc/nginx-config"
-  }
-
-  container_definitions = jsonencode([{
-    name         = "nginx"
-    image        = "nginx:latest"
-    portMappings = [
-      { containerPort = 80, hostPort = 80 },
-      { containerPort = 443, hostPort = 443 }
-    ]
-
-    mountPoints = [
-      {
-        sourceVolume  = "letsencrypt"
-        containerPath = "/etc/letsencrypt"
-        readOnly      = true
-      },
-      {
-        sourceVolume  = "nginx-config"
-        containerPath = "/etc/nginx/conf.d"
-        readOnly      = true
-      }
-    ]
-
-    healthCheck = {
-      command     = ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
-      interval    = 30
-      timeout     = 5
-      retries     = 3
-      startPeriod = 10
-    }
-
-    command = ["/bin/sh", "-c", "echo '<h1>Nginx on ECS Spot with DuckDNS</h1>' > /usr/share/nginx/html/index.html && nginx -g 'daemon off;'"]
-
-    logConfiguration = {
-      logDriver = "awslogs"
-      options = {
-        "awslogs-group"         = aws_cloudwatch_log_group.ecs_logs.name
-        "awslogs-region"        = data.aws_region.current.id
-        "awslogs-stream-prefix" = "ecs"
-      }
-    }
-  }])
-  tags = {
-    Name = "${var.project_name}-nginx-td"
-  }
-}
-
-resource "aws_ecs_service" "main" {
-  name            = "nginx-service"
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.nginx.arn
-  desired_count   = var.asg_desired_capacity
-  launch_type     = "EC2"
-
-  deployment_minimum_healthy_percent = 0
-  deployment_maximum_percent         = 100
-
-  tags = {
-    Name = "${var.project_name}-service"
-  }
-
-  # Ensure IAM permissions are fully propagated before starting the service
-  depends_on = [aws_iam_role_policy_attachment.ecs_task_execution_role_policy]
 }
