@@ -15,23 +15,35 @@ services:
     hostname: poker-app
     volumes:
       - tailscale_data:/var/lib/tailscale
+      - tailscale_certs:/etc/nginx/certs
+      - /dev/net/tun:/dev/net/tun
+    devices:
       - /dev/net/tun:/dev/net/tun
     env_file:
       - ../env/.secrets.env
     cap_add:
       - NET_ADMIN
       - NET_RAW
+      - SYS_MODULE
     environment:
       - TS_HOSTNAME=poker-app
       - TS_STATE_DIR=/var/lib/tailscale
-      - TS_USERSPACE=true
+      - TS_USERSPACE=false
       - TS_ADVERTISE_ROUTES=
       - TS_EPHEMERAL=false
       - TS_EXTRA_ARGS=--accept-routes --shields-up=false
     restart: unless-stopped
-    healthcheck: # This check waits until tailscale can resolve its own hostname to an IP.
-      test: ["CMD-SHELL", "tailscale ip -4 poker-app | grep -E '^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$$' > /dev/null || exit 1"]
+    healthcheck:
+      test: ["CMD-SHELL", "tailscale status --json | grep -q '\"BackendState\":.*\"Running\"' || exit 1"]
       interval: 5s
       timeout: 3s
       retries: 10
       start_period: 10s
+
+  tailscale-cert-fetcher-base:
+    image: alpine:latest
+    container_name: tailscale-cert-fetcher
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./fetch-cert.sh:/fetch-cert.sh
+    command: sh -c "chmod +x /fetch-cert.sh && /fetch-cert.sh"

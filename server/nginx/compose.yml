@@ -6,4 +6,10 @@ services:
     volumes:
       - ./conf.d/tfgen_default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./conf.d/proxy_params.conf:/etc/nginx/conf.d/proxy_params.conf:ro
+      - tailscale_certs:/etc/letsencrypt/live/poker-app.taila8b6c7.ts.net/:ro
       - ./html:/usr/share/nginx/html:ro
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "--no-check-certificate", "--header", "Host: poker-app.taila8b6c7.ts.net", "https://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
