@@ -36,7 +36,7 @@ services:
       - TS_EXTRA_ARGS=--accept-routes --shields-up=false
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "tailscale status --json | grep -q '\"BackendState\":.*\"Running\"' || exit 1"]
+      test: [ "CMD-SHELL", "tailscale status --json | grep -q '\"BackendState\":.*\"Running\"' || exit 1" ]
       interval: 5s
       timeout: 3s
       retries: 10

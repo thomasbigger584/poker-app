@@ -13,13 +13,7 @@ variable "cluster_id" {
   type        = string
 }
 
-variable "asg_desired_capacity" {
-  description = "The number of instances that should be running in the group"
-  type        = number
-}
-
 data "aws_region" "current" {}
-
 
 resource "local_file" "nginx_default_conf" {
   content = templatefile("${path.module}/duckdns-ssl.conf.tpl", {
@@ -61,8 +55,8 @@ resource "aws_ecs_task_definition" "nginx" {
   }
 
   container_definitions = jsonencode([{
-    name         = "nginx"
-    image        = "nginx:latest"
+    name  = "nginx"
+    image = "nginx:latest"
     portMappings = [
       { containerPort = 80, hostPort = 80 },
       { containerPort = 443, hostPort = 443 }
@@ -109,7 +103,7 @@ resource "aws_ecs_service" "nginx" {
   name            = "nginx-service"
   cluster         = var.cluster_id
   task_definition = aws_ecs_task_definition.nginx.arn
-  desired_count   = var.asg_desired_capacity
+  desired_count   = 1
   launch_type     = "EC2"
 
   deployment_minimum_healthy_percent = 0

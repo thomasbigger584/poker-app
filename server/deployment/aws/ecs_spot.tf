@@ -73,8 +73,8 @@ resource "aws_launch_template" "ecs_spot" {
 
     # Nginx Configurations
     nginx_app_locations_content = file("${path.module}/../../nginx/conf.d/app_locations.inc")
-    nginx_proxy_params_content = file("${path.module}/../../nginx/conf.d/proxy_params.conf")
-    nginx_conf_content = module.nginx-aws.config_content
+    nginx_proxy_params_content  = file("${path.module}/../../nginx/conf.d/proxy_params.conf")
+    nginx_conf_content          = module.nginx-aws.config_content
 
   }))
 
@@ -89,9 +89,9 @@ resource "aws_launch_template" "ecs_spot" {
 
 resource "aws_autoscaling_group" "ecs_asg" {
   vpc_zone_identifier = [aws_subnet.public.id]
-  min_size            = var.asg_min_size
-  max_size            = var.asg_max_size
-  desired_capacity    = var.asg_desired_capacity
+  min_size            = 0
+  max_size            = 1
+  desired_capacity    = 1
   launch_template {
     id      = aws_launch_template.ecs_spot.id
     version = "$Latest"
