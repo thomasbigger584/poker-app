@@ -14,8 +14,9 @@ services:
     container_name: tailscale
     hostname: poker-app
     volumes:
+      - ./serve.json:/etc/tailscale/serve.json:ro
       - tailscale_data:/var/lib/tailscale
-      - tailscale_certs:/etc/nginx/certs
+      - /lib/modules:/lib/modules:ro # Required for Linux although doesnt fix any issue
       - /dev/net/tun:/dev/net/tun
     devices:
       - /dev/net/tun:/dev/net/tun
@@ -29,6 +30,7 @@ services:
       - TS_HOSTNAME=poker-app
       - TS_STATE_DIR=/var/lib/tailscale
       - TS_USERSPACE=false
+      - TS_SERVE_CONFIG=/etc/tailscale/serve.json
       - TS_ADVERTISE_ROUTES=
       - TS_EPHEMERAL=false
       - TS_EXTRA_ARGS=--accept-routes --shields-up=false
@@ -39,11 +41,3 @@ services:
       timeout: 3s
       retries: 10
       start_period: 10s
-
-  tailscale-cert-fetcher-base:
-    image: alpine:latest
-    container_name: tailscale-cert-fetcher
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./fetch-cert.sh:/fetch-cert.sh
-    command: sh -c "chmod +x /fetch-cert.sh && /fetch-cert.sh"

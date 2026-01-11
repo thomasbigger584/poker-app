@@ -64,14 +64,20 @@ resource "aws_launch_template" "ecs_spot" {
   user_data = base64encode(templatefile("${path.module}/script/setup_ecs_instance.sh.tpl", {
     ecs_cluster_name = aws_ecs_cluster.main.name
     project_name     = var.project_name
+
+    # DuckDNS Configuration
     update_duckdns_content = templatefile("${path.module}/script/update_duckdns.sh.tpl", {
       project_name  = var.project_name
       duckdns_token = var.duckdns_token
     })
-    nginx_conf_content = templatefile("${path.module}/../../nginx/conf.d/default.conf.tpl", {
-      server_name = "${var.project_name}.${var.root_domain}"
+
+    # Nginx Configurations
+    nginx_app_locations_content = file("${path.module}/../../nginx/conf.d/app_locations.inc")
+    nginx_conf_content = templatefile("${path.module}/../../nginx/conf.d/aws/default.conf.tpl", {
+      project_name = var.project_name
     })
     nginx_proxy_params_content = file("${path.module}/../../nginx/conf.d/proxy_params.conf")
+
   }))
 
   tags = {

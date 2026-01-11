@@ -28,14 +28,6 @@ services:
       tailscale-cleanup:
         condition: service_completed_successfully
     <<: [ *common-extra ]
-  tailscale-cert-fetcher:
-    extends:
-      file: ../../tailscale/compose.yml
-      service: tailscale-cert-fetcher-base
-    depends_on:
-      tailscale:
-        condition: service_healthy
-    <<: [ *common-extra ]
   nginx:
     extends:
       file: ../../nginx/compose.yml
@@ -43,8 +35,6 @@ services:
     depends_on:
       tailscale:
         condition: service_healthy
-      tailscale-cert-fetcher:
-        condition: service_completed_successfully
     <<: [ *network, *common-extra ]
 
   # --- Database ---
@@ -120,6 +110,4 @@ volumes:
   pgadmin_data:
     driver: local
   tailscale_data:
-    driver: local
-  tailscale_certs:
     driver: local

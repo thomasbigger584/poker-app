@@ -1,7 +1,7 @@
 # Nginx Modules
 module "nginx" {
   source      = "../../nginx"
-  server_name = "${var.project_name}.${var.root_domain}"
+  project_name = var.project_name
 }
 
 module "nginx-aws" {

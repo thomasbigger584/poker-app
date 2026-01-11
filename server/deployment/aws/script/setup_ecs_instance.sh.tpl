@@ -45,6 +45,9 @@ done
 
 # Create Nginx Config
 mkdir -p /etc/nginx-config
+cat << 'CONF' > /etc/nginx-config/app_locations.inc
+${nginx_app_locations_content}
+CONF
 cat << 'CONF' > /etc/nginx-config/default.conf
 ${nginx_conf_content}
 CONF
