@@ -20,6 +20,20 @@ variable "asg_desired_capacity" {
 
 data "aws_region" "current" {}
 
+
+resource "local_file" "nginx_default_conf" {
+  content = templatefile("${path.module}/duckdns-ssl.conf.tpl", {
+    project_name = var.project_name
+  })
+  filename = "${path.module}/tfgen_duckdns-ssl.conf"
+}
+
+output "config_content" {
+  value       = local_file.nginx_default_conf.content
+  description = "The generated NGINX configuration content"
+}
+
+
 resource "aws_cloudwatch_log_group" "nginx" {
   name              = "/ecs/${var.project_name}-nginx"
   retention_in_days = 7

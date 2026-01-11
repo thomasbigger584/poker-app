@@ -73,10 +73,8 @@ resource "aws_launch_template" "ecs_spot" {
 
     # Nginx Configurations
     nginx_app_locations_content = file("${path.module}/../../nginx/conf.d/app_locations.inc")
-    nginx_conf_content = templatefile("${path.module}/../../nginx/conf.d/aws/default.conf.tpl", {
-      project_name = var.project_name
-    })
     nginx_proxy_params_content = file("${path.module}/../../nginx/conf.d/proxy_params.conf")
+    nginx_conf_content = module.nginx-aws.config_content
 
   }))
 
