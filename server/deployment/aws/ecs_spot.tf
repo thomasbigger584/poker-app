@@ -2,8 +2,6 @@ data "aws_ssm_parameter" "ecs_ami" {
   name = "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"
 }
 
-data "aws_region" "current" {}
-
 resource "aws_ecs_cluster" "main" {
   name = "${var.project_name}-cluster"
   tags = {
@@ -75,6 +73,7 @@ resource "aws_launch_template" "ecs_spot" {
     nginx_app_locations_content = file("${path.module}/../../nginx/conf.d/app_locations.inc")
     nginx_proxy_params_content  = file("${path.module}/../../nginx/conf.d/proxy_params.conf")
     nginx_conf_content          = module.nginx-aws.config_content
+    nginx_html                  = file("${path.module}/../../nginx/html/index.html")
 
   }))
 

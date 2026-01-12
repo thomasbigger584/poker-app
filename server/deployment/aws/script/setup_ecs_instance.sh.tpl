@@ -54,3 +54,7 @@ CONF
 cat << 'CONF' > /etc/nginx-config/proxy_params.conf
 ${nginx_proxy_params_content}
 CONF
+mkdir -p /etc/nginx-html
+cat << 'HTML' > /etc/nginx-html/index.html
+${nginx_html}
+HTML

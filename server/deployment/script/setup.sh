@@ -17,8 +17,10 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+echo "$PROFILE profile selected."
+
 if [ "$PROFILE" = "aws" ]; then
-    SECRETS_FILE="$(dirname "$0")/../env/.secrets.env"
+    SECRETS_FILE="$(dirname "$0")/../../env/.secrets.env"
     if [ ! -f "$SECRETS_FILE" ]; then
         echo "Error: Secrets file not found at $SECRETS_FILE"
         exit 1
@@ -29,4 +31,4 @@ if [ "$PROFILE" = "aws" ]; then
     set +a
 fi
 
-cd "$(dirname "$0")/$PROFILE"
+cd "$(dirname "$0")/../$PROFILE"

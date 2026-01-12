@@ -27,7 +27,6 @@ output "config_content" {
   description = "The generated NGINX configuration content"
 }
 
-
 resource "aws_cloudwatch_log_group" "nginx" {
   name              = "/ecs/${var.project_name}-nginx"
   retention_in_days = 7
@@ -54,6 +53,11 @@ resource "aws_ecs_task_definition" "nginx" {
     host_path = "/etc/nginx-config"
   }
 
+  volume {
+    name = "nginx-html"
+    host_path = "/etc/nginx-html"
+  }
+
   container_definitions = jsonencode([{
     name  = "nginx"
     image = "nginx:latest"
@@ -72,6 +76,11 @@ resource "aws_ecs_task_definition" "nginx" {
         sourceVolume  = "nginx-config"
         containerPath = "/etc/nginx/conf.d"
         readOnly      = true
+      },
+      {
+        sourceVolume  = "nginx-html"
+        containerPath = "/usr/share/nginx/html"
+        readOnly      = true
       }
     ]
 
@@ -82,8 +91,6 @@ resource "aws_ecs_task_definition" "nginx" {
       retries     = 3
       startPeriod = 10
     }
-
-    command = ["/bin/sh", "-c", "echo '<h1>Nginx on ECS Spot with DuckDNS</h1>' > /usr/share/nginx/html/index.html && nginx -g 'daemon off;'"]
 
     logConfiguration = {
       logDriver = "awslogs"
