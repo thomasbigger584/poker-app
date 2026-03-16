@@ -30,4 +30,11 @@ public enum ActionType {
     public static ActionType[] getAllInActions() {
         return new ActionType[]{FOLD, ALL_IN};
     }
+
+    public boolean isAggressive() {
+        return switch (this) {
+            case BET, RAISE -> true;
+            default -> false;
+        };
+    }
 }

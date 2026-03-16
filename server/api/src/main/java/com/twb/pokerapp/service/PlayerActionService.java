@@ -69,6 +69,29 @@ public class PlayerActionService {
         return Math.max(0d, maxBet - currentContribution);
     }
 
+    @Transactional(propagation = Propagation.MANDATORY, readOnly = true)
+    public boolean isAggressive(PlayerAction playerAction) {
+        var bettingRound = playerAction.getBettingRound();
+        var actionType = playerAction.getActionType();
+        var isAggressive = actionType.isAggressive();
+
+        // If All-In, we must check if it was a Raise (Aggressive) or a Call (Passive)
+        // by comparing the amount against the max bet of other players.
+        if (!isAggressive && actionType == ActionType.ALL_IN) {
+            var amount = playerAction.getAmount();
+            var otherActions = repository.findPlayerActionsNotFolded(bettingRound.getId());
+            var maxOtherAmount = otherActions.stream()
+                    .filter(action -> !action.getId().equals(playerAction.getId()))
+                    .mapToDouble(action -> action.getAmount() != null ? action.getAmount() : 0d)
+                    .max()
+                    .orElse(0d);
+            if (amount != null && amount > maxOtherAmount) {
+                isAggressive = true;
+            }
+        }
+        return isAggressive;
+    }
+
     private Map<UUID, Double> getPlayerContributions(List<PlayerAction> prevPlayerActions) {
         var playerContributions = new HashMap<UUID, Double>();
         for (var action : prevPlayerActions) {

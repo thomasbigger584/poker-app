@@ -66,7 +66,13 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
             AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
             AND s.round.id = :roundId
-            AND s.funds > 0
+            AND (s.funds > 0 OR EXISTS (
+                SELECT 1
+                FROM PlayerAction a
+                WHERE a.playerSession = s
+                AND a.bettingRound.round.id = :roundId
+                AND a.actionType = com.twb.pokerapp.domain.enumeration.ActionType.ALL_IN
+            ))
             AND NOT EXISTS (
                 SELECT 1
                 FROM PlayerAction a

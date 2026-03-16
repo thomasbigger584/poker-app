@@ -1,7 +1,6 @@
 package com.twb.pokerapp.service.game.thread.impl.texas.bettinground;
 
 import com.twb.pokerapp.domain.BettingRound;
-import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.Round;
 import com.twb.pokerapp.domain.enumeration.ActionType;
@@ -146,8 +145,8 @@ public class TexasLastAggressorService {
         writeTx.executeWithoutResult(status -> {
             var latestPlayerActionOpt = playerActionRepository.findByBettingRoundAndPlayer(bettingRound.getId(), currentPlayer.getId());
             latestPlayerActionOpt.ifPresentOrElse(actionJustTaken -> {
-                if (actionJustTaken.getAmount() != null) {
-                    lastAggressorId = getLastAggressorId(actionJustTaken, lastAggressorId, currentPlayer);
+                if (playerActionService.isAggressive(actionJustTaken)) {
+                    lastAggressorId = currentPlayer.getId();
                 }
             }, () -> {
                 throw new GameInterruptedException("Last Player Action not found for player: " + currentPlayer.getUser().getUsername());
@@ -213,15 +212,6 @@ public class TexasLastAggressorService {
             var playerSessionManaged = getThrowGameInterrupted(playerSessionRepository.findById(playerSession.getId()), "Player Session not found");
             texasPlayerActionService.playerAction(playerSessionManaged, gameThread, createActionDto);
         });
-    }
-
-    private UUID getLastAggressorId(PlayerAction actionJustTaken, UUID lastAggressorId, PlayerSession currentPlayer) {
-        var type = actionJustTaken.getActionType();
-        // last aggressor is the current player if the current player has just bet or raised
-        if (type == ActionType.BET || type == ActionType.RAISE) {
-            lastAggressorId = currentPlayer.getId();
-        }
-        return lastAggressorId;
     }
 
     static class LastAggressorBreakException extends RuntimeException {

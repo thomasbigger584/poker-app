@@ -119,6 +119,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
             log.warn("All-In amount sent $%.2f not equalled to actual amount to All-In $%.2f so setting it".formatted(createActionDto.getAmount(), playerSessionFunds));
             createActionDto.setAmount(playerSession.getFunds());
         }
+        createActionDto.setAction(ActionType.ALL_IN);
         return playerActionService.create(playerSession, bettingRound, createActionDto);
     }
 }
