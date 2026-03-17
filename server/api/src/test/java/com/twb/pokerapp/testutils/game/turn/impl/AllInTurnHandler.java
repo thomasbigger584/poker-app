@@ -17,7 +17,7 @@ public class AllInTurnHandler implements TurnHandler {
                 .anyMatch(actionType -> actionType == ActionType.ALL_IN)) {
             sendPlayerAction(user, ActionType.ALL_IN, playerTurn.getPlayerSession().getFunds());
         } else {
-            throw new IllegalStateException("Failed to find bet action in player turn response");
+            throw new IllegalStateException("Failed to find All-In action in player turn response");
         }
     }
 }

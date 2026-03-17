@@ -83,7 +83,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
         }
         var amountToCall = playerActionService.getAmountToCall(playerSession, lastPlayerActions);
         if (createActionDto.getAmount() != amountToCall) {
-            log.warn( "Call amount sent $%.2f not equalled to actual amount to call $%.2f so setting it".formatted(createActionDto.getAmount(), amountToCall));
+            log.warn("Call amount sent $%.2f not equalled to actual amount to call $%.2f so setting it".formatted(createActionDto.getAmount(), amountToCall));
             createActionDto.setAmount(amountToCall);
         }
         if (createActionDto.getAmount() >= playerSession.getFunds()) {
