@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import static com.twb.pokerapp.util.SleepUtil.sleepInMs;
@@ -96,7 +97,10 @@ public class TexasEvaluationService {
         var eligiblePlayerIds = eligiblePlayers.stream().map(PlayerSession::getId).toList();
 
         // Filter hands for this pot, preserving order (best to worst)
-        var potHands = allEvaluatedHands.stream().filter(hand -> eligiblePlayerIds.contains(hand.getPlayerSession().getId())).toList();
+        var potHands = allEvaluatedHands.stream()
+                .filter(hand -> eligiblePlayerIds.contains(hand.getPlayerSession().getId()))
+                .sorted(Comparator.reverseOrder())
+                .toList();
 
         if (potHands.isEmpty()) return;
 
@@ -118,14 +122,24 @@ public class TexasEvaluationService {
 
     private void distributePotToWinners(GameThreadParams params, Round round, RoundPot pot, List<EvalPlayerHandDTO> winners) {
         var potAmount = pot.getPotAmount();
-        var splitAmount = potAmount / winners.size();
+        var winnerCount = winners.size();
 
-        for (var winnerHand : winners) {
+        // Calculate split in cents to handle odd chips correctly
+        var totalCents = Math.round(potAmount * 100);
+        var splitCents = totalCents / winnerCount;
+        var remainderCents = totalCents % winnerCount;
+        var splitAmount = splitCents / 100.0;
+
+        for (int index = 0; index < winnerCount; index++) {
+            var winnerHand = winners.get(index);
+            // Add 1 cent to the award amount for each winner until the remainder is exhausted
+            var awardAmount = splitAmount + (index < remainderCents ? 0.01 : 0.0);
+
             var playerSession = winnerHand.getPlayerSession();
-            playerSession.setFunds(playerSession.getFunds() + splitAmount);
+            playerSession.setFunds(playerSession.getFunds() + awardAmount);
             playerSessionRepository.save(playerSession);
 
-            saveRoundWinner(playerSession, round, winnerHand.getHand(), splitAmount);
+            saveRoundWinner(playerSession, round, winnerHand.getHand(), awardAmount);
         }
 
         afterCommit(() -> logPotWinners(params, pot, winners, splitAmount));
