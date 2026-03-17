@@ -77,15 +77,26 @@ public class PlayerActionService {
 
         // If All-In, we must check if it was a Raise (Aggressive) or a Call (Passive)
         // by comparing the amount against the max bet of other players.
+
+        // scenario where a player has already put money in the pot (e.g., a Call) and then later goes All-In for a raise.
+        // 1. Player A Bets 100.
+        // 2. Player B Calls 100.
+        // 3. Player C Raises to 300 (Delta: 300).
+        // 4. Player A Calls 200 (Total: 300).
+        // 5. Player B goes All-In for 400 Total (Delta: 300).
+
         if (!isAggressive && actionType == ActionType.ALL_IN) {
-            var amount = playerAction.getAmount();
-            var otherActions = repository.findPlayerActionsNotFolded(bettingRound.getId());
-            var maxOtherAmount = otherActions.stream()
-                    .filter(action -> !action.getId().equals(playerAction.getId()))
-                    .mapToDouble(action -> action.getAmount() != null ? action.getAmount() : 0d)
+            var actions = repository.findPlayerActionsNotFolded(bettingRound.getId());
+            var playerContributions = getPlayerContributions(actions);
+
+            var currentPlayerId = playerAction.getPlayerSession().getId();
+            var currentPlayerTotal = playerContributions.getOrDefault(currentPlayerId, 0d);
+            var maxOtherTotal = playerContributions.entrySet().stream()
+                    .filter(entry -> !entry.getKey().equals(currentPlayerId))
+                    .mapToDouble(Map.Entry::getValue)
                     .max()
                     .orElse(0d);
-            if (amount != null && amount > maxOtherAmount) {
+            if (currentPlayerTotal > maxOtherTotal) {
                 isAggressive = true;
             }
         }
