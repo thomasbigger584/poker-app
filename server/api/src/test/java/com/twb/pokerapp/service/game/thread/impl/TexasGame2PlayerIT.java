@@ -1,8 +1,5 @@
 package com.twb.pokerapp.service.game.thread.impl;
 
-import com.twb.pokerapp.domain.enumeration.GameType;
-import com.twb.pokerapp.dto.table.CreateTableDTO;
-import com.twb.pokerapp.dto.table.TableDTO;
 import com.twb.pokerapp.testutils.game.GameLatches;
 import com.twb.pokerapp.testutils.game.GameRunner;
 import com.twb.pokerapp.testutils.game.GameRunnerParams;
@@ -12,14 +9,11 @@ import com.twb.pokerapp.testutils.testcontainers.BaseTestContainersIT;
 import com.twb.pokerapp.testutils.validator.impl.TexasValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
-
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Slf4j
-class TexasGameIT extends BaseTestContainersIT {
+class TexasGame2PlayerIT extends BaseTestContainersIT {
+    private static final int PLAYER_COUNT = 2;
+    private static final Double BUY_IN_AMOUNT = 5_000d;
 
     @Override
     protected void beforeEach() throws Exception {
@@ -27,9 +21,9 @@ class TexasGameIT extends BaseTestContainersIT {
                 .keycloakClients(keycloakClients)
                 .numberOfRounds(1)
                 .latches(GameLatches.create())
-                .table(createTable())
+                .table(adminRestClient.createTable(PLAYER_COUNT))
                 .validator(validator)
-                .buyinAmount(5_000d)
+                .buyinAmount(BUY_IN_AMOUNT)
                 .build();
         validator = new TexasValidator(params, sqlClient);
         runner = new GameRunner(params);
@@ -153,23 +147,5 @@ class TexasGameIT extends BaseTestContainersIT {
         // then
         validator.validateInvalidAction(messages);
         validator.validateEndOfRunConnections(messages);
-    }
-
-    // *****************************************************************************************
-    // Helper Methods
-    // *****************************************************************************************
-
-    private TableDTO createTable() throws Exception {
-        var createDto = new CreateTableDTO();
-        createDto.setName(UUID.randomUUID().toString());
-        createDto.setGameType(GameType.TEXAS_HOLDEM);
-        createDto.setMinPlayers(2);
-        createDto.setMaxPlayers(6);
-        createDto.setMinBuyin(100d);
-        createDto.setMaxBuyin(10_000d);
-
-        var createResponse = adminRestClient.post(TableDTO.class, createDto, "/poker-table");
-        assertEquals(HttpStatus.CREATED.value(), createResponse.httpResponse().statusCode());
-        return createResponse.resultBody();
     }
 }

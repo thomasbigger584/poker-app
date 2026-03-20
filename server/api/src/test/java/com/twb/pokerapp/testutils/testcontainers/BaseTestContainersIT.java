@@ -41,8 +41,12 @@ public abstract class BaseTestContainersIT {
     private static final String DB_PASSWORD = "password";
     private static final String DB_NAME = "db";
     private static final int DB_PORT = 5432;
+
     private static final String SPRING_DATASOURCE_URL_KEY = "SPRING_DATASOURCE_URL";
     private static final String DB_DATASOURCE_URL = "jdbc:postgresql://%s:%d/%s".formatted(DB_SERVICE, DB_PORT, DB_NAME);
+
+    private static final String SPRING_PROFILES_ACTIVE_KEY = "SPRING_PROFILES_ACTIVE";
+    private static final String SPRING_PROFILES_ACTIVE = "local,test";
 
     // API Constants
     private static final String API_IMAGE_NAME = "com.twb.pokerapp/api";
@@ -81,6 +85,7 @@ public abstract class BaseTestContainersIT {
                     .withEnv(KEYCLOAK_SERVER_URL_INTERNAL_KEY, KEYCLOAK_HOSTNAME)
                     .withEnv(KEYCLOAK_SERVER_URL_EXTERNAL_KEY, KEYCLOAK_HOSTNAME)
                     .withEnv(SPRING_DATASOURCE_URL_KEY, DB_DATASOURCE_URL)
+                    .withEnv(SPRING_PROFILES_ACTIVE_KEY, SPRING_PROFILES_ACTIVE)
                     .withExposedPorts(API_PORT)
                     .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(API_SERVICE))
                     .withNetwork(NETWORK)

@@ -6,6 +6,6 @@ import org.springframework.context.annotation.Profile;
 
 @EnableRabbit
 @Configuration
-@Profile(ProfileConfiguration.DIGITALOCEAN_PROFILE)
+@Profile(ProfileConfiguration.CLOUD_PROFILE)
 public class RabbitMqConfiguration {
 }

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Profile(ProfileConfiguration.DIGITALOCEAN_PROFILE)
+@Profile(ProfileConfiguration.CLOUD_PROFILE)
 public class KeycloakRabbitMqConsumer {
 
     @RabbitListener(queues = {"app.keycloak"})

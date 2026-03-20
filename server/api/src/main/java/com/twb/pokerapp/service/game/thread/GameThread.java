@@ -8,7 +8,6 @@ import com.twb.pokerapp.domain.enumeration.BettingRoundState;
 import com.twb.pokerapp.domain.enumeration.RoundState;
 import com.twb.pokerapp.exception.game.GameInterruptedException;
 import com.twb.pokerapp.exception.game.RoundInterruptedException;
-import com.twb.pokerapp.service.game.DeckOfCardsFactory;
 import com.twb.pokerapp.service.game.thread.annotation.CallerThread;
 import com.twb.pokerapp.service.game.thread.dto.PlayerTurnLatchDTO;
 import lombok.Getter;
@@ -211,7 +210,6 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                     afterCommit(() -> dispatcher.send(table, messageFactory.roundFinished(winners)));
                 });
             });
-
         }
         roundInProgress.set(false);
         sleepInMs(params.getRoundEndWaitMs());
@@ -230,7 +228,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     // *****************************************************************************************
 
     protected void shuffleCards() {
-        deckOfCards = DeckOfCardsFactory.getCards(true);
+        deckOfCards = deckOfCardsFactory.getCards(true);
         deckCardPointer = 0;
     }
 

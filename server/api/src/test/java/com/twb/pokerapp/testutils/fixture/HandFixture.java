@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 public class HandFixture {
 
-    private static final Map<String, Card> DECK_MAP = DeckOfCardsFactory.getCards(false).stream()
+    private static final Map<String, Card> DECK_MAP = DeckOfCardsFactory.CARDS.stream()
             .collect(Collectors.toUnmodifiableMap(card -> card.getRankType().toString() + card.getSuitType().toString(), Function.identity()));
 
     public static List<Card> createRoyalFlush() {

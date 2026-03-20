@@ -14,7 +14,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 @Configuration
 @EnableWebSocketMessageBroker
-@Profile(ProfileConfiguration.DIGITALOCEAN_PROFILE)
+@Profile(ProfileConfiguration.CLOUD_PROFILE)
 public class RabbitMqWebsocketConfiguration implements WebSocketMessageBrokerConfigurer {
 
     @Value("${app.relay.host:rabbitmq}")

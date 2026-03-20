@@ -10,16 +10,25 @@ import java.util.Arrays;
 @Configuration
 @RequiredArgsConstructor
 public class ProfileConfiguration {
+    public static final String TEST_PROFILE = "test";
     public static final String LOCAL_PROFILE = "local";
-    public static final String DIGITALOCEAN_PROFILE = "digitalocean";
+    public static final String CLOUD_PROFILE = "cloud";
 
     private final Environment environment;
 
     @PostConstruct
     public void init() {
-        if (hasLocalProfile() && hasDigitalOceanProfile()) {
-            throw new RuntimeException("Cannot set both local and digitalocean profiles");
+        if (hasLocalProfile() && hasCloudProfile()) {
+            throw new RuntimeException("Cannot set both local and cloud profiles");
         }
+        if (hasCloudProfile() && hasTestProfile()) {
+            throw new RuntimeException("Cannot set both cloud and test profiles");
+        }
+    }
+
+    public boolean hasTestProfile() {
+        var activeProfiles = environment.getActiveProfiles();
+        return Arrays.asList(activeProfiles).contains(TEST_PROFILE);
     }
 
     public boolean hasLocalProfile() {
@@ -27,8 +36,8 @@ public class ProfileConfiguration {
         return Arrays.asList(activeProfiles).contains(LOCAL_PROFILE);
     }
 
-    public boolean hasDigitalOceanProfile() {
+    public boolean hasCloudProfile() {
         var activeProfiles = environment.getActiveProfiles();
-        return Arrays.asList(activeProfiles).contains(DIGITALOCEAN_PROFILE);
+        return Arrays.asList(activeProfiles).contains(CLOUD_PROFILE);
     }
 }

@@ -1,6 +1,9 @@
 package com.twb.pokerapp.testutils.http;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.twb.pokerapp.domain.enumeration.GameType;
+import com.twb.pokerapp.dto.table.CreateTableDTO;
+import com.twb.pokerapp.dto.table.TableDTO;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +16,9 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @RequiredArgsConstructor
 public class RestClient {
@@ -31,6 +37,20 @@ public class RestClient {
         var instance = new RestClient(keycloak);
         INSTANCES.put(keycloak, instance);
         return instance;
+    }
+
+    public TableDTO createTable(int minPlayers) throws Exception {
+        var createDto = new CreateTableDTO();
+        createDto.setName(UUID.randomUUID().toString());
+        createDto.setGameType(GameType.TEXAS_HOLDEM);
+        createDto.setMinPlayers(minPlayers);
+        createDto.setMaxPlayers(6);
+        createDto.setMinBuyin(100d);
+        createDto.setMaxBuyin(10_000d);
+
+        var createResponse = post(TableDTO.class, createDto, "/poker-table");
+        assertEquals(HttpStatus.CREATED.value(), createResponse.httpResponse().statusCode());
+        return createResponse.resultBody();
     }
 
     public <ResultBody, RequestBody> ApiHttpResponse<ResultBody> post(Class<ResultBody> resultClass,
