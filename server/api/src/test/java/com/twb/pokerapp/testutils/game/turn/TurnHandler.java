@@ -15,7 +15,7 @@ public interface TurnHandler {
 
     static Map<String, TurnHandler> of(TurnHandler... handlers) {
         var userToTurnHandlers = new HashMap<String, TurnHandler>();
-        for (int index = 1; index <= handlers.length; index++) {
+        for (var index = 1; index <= handlers.length; index++) {
             userToTurnHandlers.put("user" + index, handlers[index - 1]);
         }
         return userToTurnHandlers;

@@ -130,7 +130,7 @@ public class TexasEvaluationService {
         var remainderCents = totalCents % winnerCount;
         var splitAmount = splitCents / 100.0;
 
-        for (int index = 0; index < winnerCount; index++) {
+        for (var index = 0; index < winnerCount; index++) {
             var winnerHand = winners.get(index);
             // Add 1 cent to the award amount for each winner until the remainder is exhausted
             var awardAmount = splitAmount + (index < remainderCents ? 0.01 : 0.0);
