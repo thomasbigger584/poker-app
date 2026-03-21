@@ -317,4 +317,19 @@
                                  baseTableName="round_winner" baseColumnNames="hand_id"
                                  referencedTableName="hand" referencedColumnNames="id"/>
     </changeSet>
+
+    <changeSet author="tbigg" id="11">
+        <createTable tableName="fixed_scenario">
+            <column name="id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="player_hands" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+            <column name="community_cards" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="pk_fixed_scenario" tableName="fixed_scenario"/>
+    </changeSet>
 </databaseChangeLog>

@@ -45,8 +45,7 @@ jwt:
       resource-id: ${keycloak.client-id}
       principal-attribute: preferred_username
 server:
-  port:
-    8081
+  port: 8081
 app:
   deal-wait-ms: 1000
   db-poll-wait-ms: 1000

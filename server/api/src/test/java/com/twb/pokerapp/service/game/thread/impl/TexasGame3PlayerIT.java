@@ -30,13 +30,16 @@
 //        sqlClient.updateUsersTotalFunds(params.getBuyinAmount());
 //    }
 //
-//    @ParameterizedTest(name = "{0}") // Displays the 'Logic_Check' string as the test name
+//    @ParameterizedTest(name = "{0}") // Displays the 'Scenario' string as the test name
 //    @CsvFileSource(resources = "/texas-holdem-3player-scenarios.csv", numLinesToSkip = 1)
 //    void test3PlayerScenariosFromCsv(
 //            String scenario,
-//            String u1Hand,
-//            String u2Hand,
-//            String u3Hand,
+//            String user1Hand,
+//            int user1Start,
+//            String user2Hand,
+//            int user2Start,
+//            String user3Hand,
+//            int user3Start,
 //            String community,
 //            String preFlop,
 //            String flop,
@@ -44,12 +47,12 @@
 //            String river,
 //            String expectedWinners,
 //            int totalPot,
-//            int u1Win,
-//            int u2Win,
-//            int u3Win
+//            int user1Win,
+//            int user2Win,
+//            int user3Win
 //    ) {
 //        System.out.println("TexasGame3PlayerIT.test3PlayerScenariosFromCsv");
-//        System.out.println("scenario = " + scenario + ", u1Hand = " + u1Hand + ", u2Hand = " + u2Hand + ", u3Hand = " + u3Hand + ", community = " + community + ", preFlop = " + preFlop + ", flop = " + flop + ", turn = " + turn + ", river = " + river + ", expectedWinners = " + expectedWinners + ", totalPot = " + totalPot + ", u1Win = " + u1Win + ", u2Win = " + u2Win + ", u3Win = " + u3Win);
+//        System.out.println("scenario = " + scenario + ", user1Hand = " + user1Hand + ", user1Start = " + user1Start + ", user2Hand = " + user2Hand + ", user2Start = " + user2Start + ", user3Hand = " + user3Hand + ", user3Start = " + user3Start + ", community = " + community + ", preFlop = " + preFlop + ", flop = " + flop + ", turn = " + turn + ", river = " + river + ", expectedWinners = " + expectedWinners + ", totalPot = " + totalPot + ", user1Win = " + user1Win + ", user2Win = " + user2Win + ", user3Win = " + user3Win);
 //
 //    }
 //

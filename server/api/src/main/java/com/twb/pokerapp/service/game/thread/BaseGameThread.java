@@ -5,7 +5,7 @@ import com.twb.pokerapp.service.BettingRoundService;
 import com.twb.pokerapp.service.CardService;
 import com.twb.pokerapp.service.HandService;
 import com.twb.pokerapp.service.RoundService;
-import com.twb.pokerapp.service.game.DeckOfCardsFactory;
+import com.twb.pokerapp.service.game.deck.DeckFactory;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +34,7 @@ public abstract class BaseGameThread extends Thread {
     protected GameLogService gameLogService;
 
     @Autowired
-    protected DeckOfCardsFactory deckOfCardsFactory;
+    protected DeckFactory deckFactory;
 
     @Autowired
     protected TableRepository tableRepository;

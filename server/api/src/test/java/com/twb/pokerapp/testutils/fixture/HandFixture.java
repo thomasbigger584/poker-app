@@ -4,7 +4,7 @@ import com.twb.pokerapp.domain.Card;
 import com.twb.pokerapp.domain.enumeration.RankType;
 import com.twb.pokerapp.domain.enumeration.SuitType;
 import com.twb.pokerapp.exception.NotFoundException;
-import com.twb.pokerapp.service.game.DeckOfCardsFactory;
+import com.twb.pokerapp.service.game.deck.DeckFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 public class HandFixture {
 
-    private static final Map<String, Card> DECK_MAP = DeckOfCardsFactory.CARDS.stream()
+    private static final Map<String, Card> DECK_MAP = DeckFactory.CARDS.stream()
             .collect(Collectors.toUnmodifiableMap(card -> card.getRankType().toString() + card.getSuitType().toString(), Function.identity()));
 
     public static List<Card> createRoyalFlush() {

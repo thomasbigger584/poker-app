@@ -24,4 +24,13 @@ public enum RankType {
 
     private final int position;
     private final char rankChar;
+
+    public static RankType fromRankChar(char rankChar) {
+        for (RankType rankType : values()) {
+            if (rankType.getRankChar() == rankChar) {
+                return rankType;
+            }
+        }
+        throw new IllegalArgumentException("Invalid rank character: " + rankChar);
+    }
 }

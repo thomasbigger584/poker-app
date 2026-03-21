@@ -27,7 +27,6 @@ class TexasGame2PlayerIT extends BaseTestContainersIT {
                 .build();
         validator = new TexasValidator(params, sqlClient);
         runner = new GameRunner(params);
-
         sqlClient.updateUsersTotalFunds(params.getBuyinAmount());
     }
 

@@ -228,7 +228,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     // *****************************************************************************************
 
     protected void shuffleCards() {
-        deckOfCards = deckOfCardsFactory.getCards(true);
+        deckOfCards = deckFactory.getShuffledDeck();
         deckCardPointer = 0;
     }
 

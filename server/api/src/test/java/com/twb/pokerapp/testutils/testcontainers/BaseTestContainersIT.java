@@ -45,9 +45,6 @@ public abstract class BaseTestContainersIT {
     private static final String SPRING_DATASOURCE_URL_KEY = "SPRING_DATASOURCE_URL";
     private static final String DB_DATASOURCE_URL = "jdbc:postgresql://%s:%d/%s".formatted(DB_SERVICE, DB_PORT, DB_NAME);
 
-    private static final String SPRING_PROFILES_ACTIVE_KEY = "SPRING_PROFILES_ACTIVE";
-    private static final String SPRING_PROFILES_ACTIVE = "local,test";
-
     // API Constants
     private static final String API_IMAGE_NAME = "com.twb.pokerapp/api";
     private static final String API_IMAGE_VERSION = "latest";
@@ -56,6 +53,7 @@ public abstract class BaseTestContainersIT {
     private static final String KEYCLOAK_SERVER_URL_EXTERNAL_KEY = "KEYCLOAK_SERVER_URL_EXTERNAL";
     private static final int API_PORT = 8081;
     private static final int API_DEBUG_PORT = 5005;
+    private static final String APP_USE_FIXED_SCENARIO = "APP_USE_FIXED_SCENARIO";
 
     // Test Containers
     private static final Network NETWORK = Network.newNetwork();
@@ -79,13 +77,12 @@ public abstract class BaseTestContainersIT {
                     .withNetworkAliases(DB_SERVICE)
                     .dependsOn(KEYCLOAK_CONTAINER);
 
-
     private static final GenericContainer<?> API_CONTAINER =
             new GenericContainer<>("%s:%s".formatted(API_IMAGE_NAME, API_IMAGE_VERSION))
                     .withEnv(KEYCLOAK_SERVER_URL_INTERNAL_KEY, KEYCLOAK_HOSTNAME)
                     .withEnv(KEYCLOAK_SERVER_URL_EXTERNAL_KEY, KEYCLOAK_HOSTNAME)
                     .withEnv(SPRING_DATASOURCE_URL_KEY, DB_DATASOURCE_URL)
-                    .withEnv(SPRING_PROFILES_ACTIVE_KEY, SPRING_PROFILES_ACTIVE)
+                    .withEnv(APP_USE_FIXED_SCENARIO, Boolean.TRUE.toString())
                     .withExposedPorts(API_PORT)
                     .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(API_SERVICE))
                     .withNetwork(NETWORK)

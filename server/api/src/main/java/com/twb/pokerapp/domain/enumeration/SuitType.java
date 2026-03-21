@@ -15,4 +15,13 @@ public enum SuitType {
 
     private final int value;
     private final char suitChar;
+
+    public static SuitType fromSuitChar(char suitChar) {
+        for (SuitType suitType : values()) {
+            if (suitType.getSuitChar() == suitChar) {
+                return suitType;
+            }
+        }
+        throw new IllegalArgumentException("Invalid suit character: " + suitChar);
+    }
 }

@@ -1,42 +1,21 @@
-package com.twb.pokerapp.service.game.thread.impl.texas;
+package com.twb.pokerapp.service.game.thread.impl.texas.dealer.impl;
 
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.exception.game.GameInterruptedException;
-import com.twb.pokerapp.repository.PlayerSessionRepository;
-import com.twb.pokerapp.service.game.thread.GameThreadParams;
-import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
-import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
-import lombok.RequiredArgsConstructor;
-import org.apache.commons.collections4.CollectionUtils;
+import com.twb.pokerapp.service.game.thread.impl.texas.dealer.TexasDealerService;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.twb.pokerapp.util.TransactionUtil.afterCommit;
-
 @Component
-@RequiredArgsConstructor
-public class TexasDealerService {
-    private static final SecureRandom RANDOM = new SecureRandom();
-    private final PlayerSessionRepository playerSessionRepository;
-    private final ServerMessageFactory messageFactory;
-    private final MessageDispatcher dispatcher;
+@ConditionalOnMissingBean(TexasDealerService.class)
+public class DefaultTexasDealerService extends TexasDealerService {
 
-    @Transactional
-    public void determineNextDealer(GameThreadParams params) {
-        var playerSessions = playerSessionRepository.findConnectedPlayersByTableId(params.getTableId());
-        if (CollectionUtils.isEmpty(playerSessions)) {
-            throw new GameInterruptedException("No Players Connected");
-        }
-        var nextDealer = nextDealerReorder(playerSessions);
-        afterCommit(() -> dispatcher.send(params, messageFactory.dealerDetermined(nextDealer)));
-    }
-
-    private PlayerSession nextDealerReorder(List<PlayerSession> playerSessions) {
+    @Override
+    protected PlayerSession nextDealerReorder(List<PlayerSession> playerSessions) {
         var nextDealer = getNextDealer(playerSessions);
         setNextDealer(playerSessions, nextDealer);
         return nextDealer;
@@ -95,17 +74,6 @@ public class TexasDealerService {
             dealerSortedList.add(playerSessions.get(index));
         }
         return dealerSortedList;
-    }
-
-    private void setNextDealer(List<PlayerSession> playerSessions, PlayerSession nextDealer) {
-        for (PlayerSession connectedPlayer : playerSessions) {
-            if (connectedPlayer.getId().equals(nextDealer.getId())) {
-                connectedPlayer.setDealer(true);
-                nextDealer.setDealer(true);
-            } else {
-                connectedPlayer.setDealer(false);
-            }
-        }
     }
 
     private record DealerWithIndexDTO(int index, PlayerSession dealerPlayerSession) {

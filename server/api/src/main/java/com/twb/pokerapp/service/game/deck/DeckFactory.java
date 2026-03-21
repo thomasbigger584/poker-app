@@ -1,15 +1,14 @@
-package com.twb.pokerapp.service.game;
+package com.twb.pokerapp.service.game.deck;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.twb.pokerapp.configuration.ProfileConfiguration;
 import com.twb.pokerapp.domain.Card;
 import com.twb.pokerapp.domain.enumeration.RankType;
 import com.twb.pokerapp.domain.enumeration.SuitType;
+import com.twb.pokerapp.service.game.deck.shuffler.Shuffler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -17,8 +16,8 @@ import java.util.List;
  */
 @Component
 @RequiredArgsConstructor
-public class DeckOfCardsFactory {
-    private final ProfileConfiguration profileConfiguration;
+public class DeckFactory {
+    private final Shuffler shuffler;
 
     @VisibleForTesting
     public static final List<Card> CARDS = new ArrayList<>();
@@ -35,20 +34,9 @@ public class DeckOfCardsFactory {
     /**
      * Returns a new instance of a deck of cards.
      *
-     * @param shuffle if true, the deck will be shuffled
-     * @return a list of cards representing the deck
+     * @return a list of cards representing the shuffled deck
      */
-    public List<Card> getCards(boolean shuffle) {
-        var deckOfCardsCopy = new ArrayList<>(CARDS);
-        if (shuffle) {
-            Collections.shuffle(deckOfCardsCopy);
-        }
-        if (!profileConfiguration.hasTestProfile()) {
-            return deckOfCardsCopy;
-        }
-        /* TODO: get all test cards from database
-         *  add those as Cards to the top of the list and add the rest to make a full deck
-         */
-        return deckOfCardsCopy;
+    public List<Card> getShuffledDeck() {
+        return shuffler.shuffle(CARDS);
     }
 }

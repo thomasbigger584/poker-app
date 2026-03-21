@@ -15,6 +15,7 @@
         <class>com.twb.pokerapp.domain.Round</class>
         <class>com.twb.pokerapp.domain.RoundPot</class>
         <class>com.twb.pokerapp.domain.RoundWinner</class>
+        <class>com.twb.pokerapp.domain.FixedScenario</class>
         <shared-cache-mode>NONE</shared-cache-mode>
 
         <properties>
