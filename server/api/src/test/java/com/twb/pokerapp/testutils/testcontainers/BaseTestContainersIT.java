@@ -54,6 +54,7 @@ public abstract class BaseTestContainersIT {
     private static final int API_PORT = 8081;
     private static final int API_DEBUG_PORT = 5005;
     private static final String APP_USE_FIXED_SCENARIO = "APP_USE_FIXED_SCENARIO";
+    protected static boolean useFixedScenario = false;
 
     // Test Containers
     private static final Network NETWORK = Network.newNetwork();
@@ -77,17 +78,7 @@ public abstract class BaseTestContainersIT {
                     .withNetworkAliases(DB_SERVICE)
                     .dependsOn(KEYCLOAK_CONTAINER);
 
-    private static final GenericContainer<?> API_CONTAINER =
-            new GenericContainer<>("%s:%s".formatted(API_IMAGE_NAME, API_IMAGE_VERSION))
-                    .withEnv(KEYCLOAK_SERVER_URL_INTERNAL_KEY, KEYCLOAK_HOSTNAME)
-                    .withEnv(KEYCLOAK_SERVER_URL_EXTERNAL_KEY, KEYCLOAK_HOSTNAME)
-                    .withEnv(SPRING_DATASOURCE_URL_KEY, DB_DATASOURCE_URL)
-                    .withEnv(APP_USE_FIXED_SCENARIO, Boolean.TRUE.toString())
-                    .withExposedPorts(API_PORT)
-                    .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(API_SERVICE))
-                    .withNetwork(NETWORK)
-                    .withNetworkAliases(API_SERVICE)
-                    .dependsOn(KEYCLOAK_CONTAINER, DB_CONTAINER);
+    private static GenericContainer<?> API_CONTAINER;
 
     protected static KeycloakClients keycloakClients;
     protected static RestClient adminRestClient;
@@ -99,10 +90,26 @@ public abstract class BaseTestContainersIT {
     static {
         DB_CONTAINER.setPortBindings(
                 List.of(getPortBindingString(DB_PORT)));
-        API_CONTAINER.setPortBindings(
-                List.of(getPortBindingString(API_PORT),
-                        getPortBindingString(API_DEBUG_PORT)));
+    }
 
+    // *****************************************************************************************
+    // Lifecycle Methods
+    // *****************************************************************************************
+
+    @BeforeAll
+    public static void onBeforeAll() {
+        DB_CONTAINER.start();
+        KEYCLOAK_CONTAINER.start();
+        API_CONTAINER = new GenericContainer<>("%s:%s".formatted(API_IMAGE_NAME, API_IMAGE_VERSION))
+                .withEnv(KEYCLOAK_SERVER_URL_INTERNAL_KEY, KEYCLOAK_HOSTNAME)
+                .withEnv(KEYCLOAK_SERVER_URL_EXTERNAL_KEY, KEYCLOAK_HOSTNAME)
+                .withEnv(SPRING_DATASOURCE_URL_KEY, DB_DATASOURCE_URL)
+                .withEnv(APP_USE_FIXED_SCENARIO, String.valueOf(useFixedScenario))
+                .withExposedPorts(API_PORT)
+                .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(API_SERVICE))
+                .withNetwork(NETWORK)
+                .withNetworkAliases(API_SERVICE)
+                .dependsOn(KEYCLOAK_CONTAINER, DB_CONTAINER);
         boolean isDebug = getRuntimeMXBean()
                 .getInputArguments().toString().contains("jdwp");
         if (isDebug) {
@@ -117,23 +124,12 @@ public abstract class BaseTestContainersIT {
                     "api.jar"
             );
         } else {
-            API_CONTAINER.setPortBindings(
-                    List.of(getPortBindingString(API_PORT)));
+            API_CONTAINER.setPortBindings(List.of(getPortBindingString(API_PORT)));
         }
-    }
-
-    // *****************************************************************************************
-    // Lifecycle Methods
-    // *****************************************************************************************
-
-    @BeforeAll
-    public static void onBeforeAll() {
-        DB_CONTAINER.start();
-        KEYCLOAK_CONTAINER.start();
         API_CONTAINER.start();
         keycloakClients = new KeycloakClients(KEYCLOAK_CONTAINER.getAuthServerUrl());
         adminRestClient = RestClient.getInstance(keycloakClients.getAdminKeycloak());
-        sqlClient = new SqlClient(DB_CONTAINER);
+        sqlClient = SqlClient.getInstance(DB_CONTAINER);
     }
 
     @BeforeEach

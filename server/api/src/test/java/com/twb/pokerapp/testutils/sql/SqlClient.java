@@ -16,6 +16,15 @@ public class SqlClient implements AutoCloseable {
     private final EntityManagerFactory emf;
     private final EntityManager em;
 
+    private static SqlClient INSTANCE;
+
+    public synchronized static SqlClient getInstance(JdbcDatabaseContainer<?> container) {
+        if (INSTANCE == null) {
+            INSTANCE = new SqlClient(container);
+        }
+        return INSTANCE;
+    }
+
     public SqlClient(JdbcDatabaseContainer<?> container) {
         this(container.getJdbcUrl(), container.getUsername(), container.getPassword());
     }
@@ -44,16 +53,21 @@ public class SqlClient implements AutoCloseable {
         transaction.commit();
     }
 
-    public void updateUsersTotalFunds(double totalFunds) {
+    public void updateUsersTotalFunds(List<Double> totalFunds) {
         var transaction = em.getTransaction();
         transaction.begin();
-        em.createQuery("""
-                        UPDATE AppUser u
-                        SET u.totalFunds = :totalFunds
-                        """)
-                .setParameter("totalFunds", totalFunds)
-                .executeUpdate();
-
+        for (var index = 0; index < totalFunds.size(); index++) {
+            var username = "user" + (index + 1);
+            var totalFund = totalFunds.get(index);
+            em.createQuery("""
+                            UPDATE AppUser u
+                            SET u.totalFunds = :totalFund
+                            WHERE u.username = :username
+                            """)
+                    .setParameter("totalFunds", totalFund)
+                    .setParameter("username", username)
+                    .executeUpdate();
+        }
         transaction.commit();
     }
 

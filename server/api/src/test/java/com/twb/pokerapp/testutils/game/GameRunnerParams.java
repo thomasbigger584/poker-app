@@ -6,6 +6,8 @@ import com.twb.pokerapp.testutils.validator.Validator;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Builder
 public class GameRunnerParams {
@@ -14,7 +16,7 @@ public class GameRunnerParams {
     private final GameLatches latches;
     private final TableDTO table;
     private final Validator validator;
-    private final double buyinAmount;
+    private final List<Double> buyInAmounts;
 }
 
 

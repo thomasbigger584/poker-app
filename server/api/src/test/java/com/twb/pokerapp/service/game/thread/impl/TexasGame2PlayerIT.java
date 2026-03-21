@@ -10,6 +10,8 @@ import com.twb.pokerapp.testutils.validator.impl.TexasValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
+import static java.util.Collections.nCopies;
+
 @Slf4j
 class TexasGame2PlayerIT extends BaseTestContainersIT {
     private static final int PLAYER_COUNT = 2;
@@ -23,11 +25,10 @@ class TexasGame2PlayerIT extends BaseTestContainersIT {
                 .latches(GameLatches.create())
                 .table(adminRestClient.createTable(PLAYER_COUNT))
                 .validator(validator)
-                .buyinAmount(BUY_IN_AMOUNT)
+                .buyInAmounts(nCopies(PLAYER_COUNT, BUY_IN_AMOUNT))
                 .build();
         validator = new TexasValidator(params, sqlClient);
-        runner = new GameRunner(params);
-        sqlClient.updateUsersTotalFunds(params.getBuyinAmount());
+        runner = new GameRunner(params, sqlClient);
     }
 
     @Test

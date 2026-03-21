@@ -7,15 +7,19 @@ import com.twb.pokerapp.testutils.game.player.impl.TestTexasHoldemPlayerUser;
 import com.twb.pokerapp.testutils.game.turn.TurnHandler;
 import com.twb.pokerapp.testutils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.testutils.keycloak.KeycloakClients;
+import com.twb.pokerapp.testutils.sql.SqlClient;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @RequiredArgsConstructor
 public class GameRunner {
     private final GameRunnerParams params;
+    private final SqlClient sqlClient;
 
     public PlayersServerMessages run(Map<String, TurnHandler> turnHandlers) throws Exception {
         var players = getPlayers(turnHandlers);
@@ -23,6 +27,8 @@ public class GameRunner {
     }
 
     private PlayersServerMessages run(List<AbstractTestUser> players) throws Exception {
+        sqlClient.updateUsersTotalFunds(params.getBuyInAmounts());
+
         var listener = connectListener();
         connectPlayers(players);
 
@@ -59,8 +65,14 @@ public class GameRunner {
     }
 
     private void connectPlayers(List<AbstractTestUser> players) throws Exception {
-        for (var player : players) {
-            player.connect(params.getBuyinAmount());
+        var buyInAmounts = params.getBuyInAmounts();
+        assertEquals(players.size(), buyInAmounts.size());
+
+        for (var index = 0; index < players.size(); index++) {
+            var player = players.get(index);
+            var buyInAmount = buyInAmounts.get(index);
+
+            player.connect(buyInAmount);
         }
     }
 
@@ -95,5 +107,9 @@ public class GameRunner {
                 throw new RuntimeException("Test Failure for player: " + player, exceptionThrown.get());
             }
         }
+    }
+
+    public interface GameRunnerCallback {
+        void onAfterConnection();
     }
 }
