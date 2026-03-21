@@ -108,8 +108,4 @@ public class GameRunner {
             }
         }
     }
-
-    public interface GameRunnerCallback {
-        void onAfterConnection();
-    }
 }
