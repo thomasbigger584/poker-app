@@ -68,7 +68,7 @@ public class TexasEvaluationService {
         var communityCards = cardRepository.findCommunityCardsForRound(round.getId());
 
         var playerHandsList = new ArrayList<EvalPlayerHandDTO>();
-        for (PlayerSession potentialWinner : activePlayers) {
+        for (var potentialWinner : activePlayers) {
             var playerHandOpt = handRepository.findForPlayerAndRound(potentialWinner.getId(), round.getId());
             playerHandOpt.ifPresent(hand -> {
                 var playableCards = new ArrayList<>(communityCards);

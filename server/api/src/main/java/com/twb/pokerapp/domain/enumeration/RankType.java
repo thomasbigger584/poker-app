@@ -26,7 +26,7 @@ public enum RankType {
     private final char rankChar;
 
     public static RankType fromRankChar(char rankChar) {
-        for (RankType rankType : values()) {
+        for (var rankType : values()) {
             if (rankType.getRankChar() == rankChar) {
                 return rankType;
             }

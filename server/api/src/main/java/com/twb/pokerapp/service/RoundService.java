@@ -27,7 +27,7 @@ public class RoundService {
         round.setPokerTable(table);
         round.setPlayerSessions(playerSessions);
         round = repository.save(round);
-        for (PlayerSession playerSession : playerSessions) {
+        for (var playerSession : playerSessions) {
             playerSession.setRound(round);
         }
         return round;

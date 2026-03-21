@@ -17,7 +17,7 @@ public enum SuitType {
     private final char suitChar;
 
     public static SuitType fromSuitChar(char suitChar) {
-        for (SuitType suitType : values()) {
+        for (var suitType : values()) {
             if (suitType.getSuitChar() == suitChar) {
                 return suitType;
             }

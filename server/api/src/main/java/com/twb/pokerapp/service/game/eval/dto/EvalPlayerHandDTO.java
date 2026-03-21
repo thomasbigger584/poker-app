@@ -31,6 +31,7 @@ public class EvalPlayerHandDTO implements Comparable<EvalPlayerHandDTO> {
     public String toString() {
         return "PlayerHandDTO{" +
                 "playerSession=" + playerSession.getUser().getUsername() +
+                ", hand=" + hand +
                 ", cards=" + cards +
                 ", rank=" + rank +
                 ", handType=" + handType +
