@@ -25,7 +25,7 @@ public class SqlClient implements AutoCloseable {
         return INSTANCE;
     }
 
-    public SqlClient(JdbcDatabaseContainer<?> container) {
+    private SqlClient(JdbcDatabaseContainer<?> container) {
         this(container.getJdbcUrl(), container.getUsername(), container.getPassword());
     }
 
@@ -53,18 +53,18 @@ public class SqlClient implements AutoCloseable {
         transaction.commit();
     }
 
-    public void updateUsersTotalFunds(List<Double> totalFunds) {
+    public void updateUsersTotalFunds(List<Double> playerTotalFunds) {
         var transaction = em.getTransaction();
         transaction.begin();
-        for (var index = 0; index < totalFunds.size(); index++) {
+        for (var index = 0; index < playerTotalFunds.size(); index++) {
             var username = "user" + (index + 1);
-            var totalFund = totalFunds.get(index);
+            var totalFunds = playerTotalFunds.get(index);
             em.createQuery("""
                             UPDATE AppUser u
-                            SET u.totalFunds = :totalFund
+                            SET u.totalFunds = :totalFunds
                             WHERE u.username = :username
                             """)
-                    .setParameter("totalFunds", totalFund)
+                    .setParameter("totalFunds", totalFunds)
                     .setParameter("username", username)
                     .executeUpdate();
         }
