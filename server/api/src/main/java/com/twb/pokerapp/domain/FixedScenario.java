@@ -1,9 +1,7 @@
 package com.twb.pokerapp.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.annotation.Nullable;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,6 +23,7 @@ public class FixedScenario {
     @Id
     @NotNull
     @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @NotNull
@@ -32,10 +31,9 @@ public class FixedScenario {
     @Column(name = "player_hands", columnDefinition = "jsonb")
     private List<String> playerHands = new ArrayList<>();
 
-    @NotNull
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "community_cards", columnDefinition = "jsonb")
-    private List<String> communityCards = new ArrayList<>();
+    @Nullable
+    @Column(name = "community_cards")
+    private String communityCards;
 
     @Override
     public boolean equals(Object o) {
@@ -57,6 +55,8 @@ public class FixedScenario {
     public String toString() {
         return "FixedScenario{" +
                 "id=" + id +
+                ", playerHands=" + playerHands +
+                ", communityCards=" + communityCards +
                 '}';
     }
 }

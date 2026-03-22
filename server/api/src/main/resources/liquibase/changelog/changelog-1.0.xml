@@ -326,9 +326,7 @@
             <column name="player_hands" type="jsonb">
                 <constraints nullable="false"/>
             </column>
-            <column name="community_cards" type="jsonb">
-                <constraints nullable="false"/>
-            </column>
+            <column name="community_cards" type="text" />
         </createTable>
         <addPrimaryKey columnNames="id" constraintName="pk_fixed_scenario" tableName="fixed_scenario"/>
     </changeSet>

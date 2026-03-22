@@ -21,7 +21,7 @@ public class GameRunner {
     private final SqlClient sqlClient;
 
     public PlayersServerMessages run() throws Exception {
-        sqlClient.updateUsersTotalFunds(params);
+        setupDatabase();
 
         var listenerUser = connectListener();
 
@@ -43,8 +43,16 @@ public class GameRunner {
     }
 
     // ***************************************************************
-    // Helper Methods
+    // Helper Methodsx
     // ***************************************************************
+
+    private void setupDatabase() {
+        var scenarioParams = params.getScenarioParams();
+        if (scenarioParams.isUseFixedScenario()) {
+            sqlClient.insertFixedScenario(scenarioParams);
+        }
+        sqlClient.updateUsersTotalFunds(scenarioParams);
+    }
 
     private AbstractTestUser connectListener() throws Exception {
         var keycloak = params.getKeycloakClients().getViewerKeycloak();

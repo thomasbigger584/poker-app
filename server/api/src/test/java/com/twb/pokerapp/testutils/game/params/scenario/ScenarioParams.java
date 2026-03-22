@@ -10,5 +10,5 @@ import java.util.List;
 public class ScenarioParams {
     private boolean useFixedScenario;
     private List<ScenarioPlayer> scenarioPlayers;
-    private List<String> communityCards;
+    private String communityCards;
 }

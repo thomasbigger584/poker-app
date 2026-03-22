@@ -23,7 +23,11 @@ class TexasGame3PlayerIT extends BaseTestContainersIT {
     }
 
     @ParameterizedTest(name = "{0}")
-    @CsvFileSource(resources = "/texas-holdem-3player-scenarios.csv", numLinesToSkip = 1)
+    @CsvFileSource(
+            resources = "/texas-holdem-3player-scenarios.csv",
+            numLinesToSkip = 1,
+            nullValues = "None"
+    )
     void test3PlayerScenariosFromCsv(
             String scenario,
             String user1Hand,
@@ -46,21 +50,21 @@ class TexasGame3PlayerIT extends BaseTestContainersIT {
         var players = List.of(
                 ScenarioPlayer.builder()
                         .username("user1")
-                        .handCards(getCardsAsList(user1Hand))
+                        .handCards(user1Hand)
                         .buyIn(user1Start)
                         .turnHandler(new FixedScenarioTurnHandler())
                         .winAmount(user1Win)
                         .build(),
                 ScenarioPlayer.builder()
                         .username("user2")
-                        .handCards(getCardsAsList(user2Hand))
+                        .handCards(user2Hand)
                         .buyIn(user2Start)
                         .turnHandler(new FixedScenarioTurnHandler())
                         .winAmount(user2Win)
                         .build(),
                 ScenarioPlayer.builder()
                         .username("user3")
-                        .handCards(getCardsAsList(user3Hand))
+                        .handCards(user3Hand)
                         .buyIn(user3Start)
                         .turnHandler(new FixedScenarioTurnHandler())
                         .winAmount(user3Win)
@@ -69,7 +73,7 @@ class TexasGame3PlayerIT extends BaseTestContainersIT {
         var scenarioParams = ScenarioParams.builder()
                 .useFixedScenario(true)
                 .scenarioPlayers(players)
-                .communityCards(getCardsAsList(community))
+                .communityCards(community)
                 .build();
 
         var params = GameRunnerParams.builder()
@@ -86,9 +90,5 @@ class TexasGame3PlayerIT extends BaseTestContainersIT {
 //        var messages = runner.run();
 //
 //        validator.validateEndOfRun(messages);
-    }
-
-    private @NonNull List<String> getCardsAsList(String user2Hand) {
-        return Arrays.stream(user2Hand.split(";")).toList();
     }
 }

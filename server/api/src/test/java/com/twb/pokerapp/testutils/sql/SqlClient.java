@@ -2,6 +2,8 @@ package com.twb.pokerapp.testutils.sql;
 
 import com.twb.pokerapp.domain.*;
 import com.twb.pokerapp.testutils.game.params.GameRunnerParams;
+import com.twb.pokerapp.testutils.game.params.scenario.ScenarioParams;
+import com.twb.pokerapp.testutils.game.params.scenario.ScenarioPlayer;
 import jakarta.persistence.*;
 import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.jpa.HibernateHints;
@@ -11,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 
 public class SqlClient implements AutoCloseable {
     private static final String PERSISTENCE_UNIT_NAME = "poker-app-test";
@@ -45,11 +48,23 @@ public class SqlClient implements AutoCloseable {
         transaction.commit();
     }
 
-    public void updateUsersTotalFunds(GameRunnerParams params) {
-        var scenarioPlayers = params.getScenarioParams();
+    public void insertFixedScenario(ScenarioParams scenarioParams) {
         var transaction = em.getTransaction();
         transaction.begin();
-        for (var scenarioPlayer : scenarioPlayers.getScenarioPlayers()) {
+
+        var fixedScenario = new FixedScenario();
+        fixedScenario.setPlayerHands(scenarioParams.getScenarioPlayers()
+                .stream().map(ScenarioPlayer::getHandCards).toList());
+        fixedScenario.setCommunityCards(scenarioParams.getCommunityCards());
+        em.persist(fixedScenario);
+
+        transaction.commit();
+    }
+
+    public void updateUsersTotalFunds(ScenarioParams params) {
+        var transaction = em.getTransaction();
+        transaction.begin();
+        for (var scenarioPlayer : params.getScenarioPlayers()) {
             em.createQuery("""
                             UPDATE AppUser u
                             SET u.totalFunds = :totalFunds

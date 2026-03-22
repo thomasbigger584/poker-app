@@ -1,6 +1,7 @@
 package com.twb.pokerapp.service.game.deck.shuffler.impl;
 
 import com.twb.pokerapp.domain.Card;
+import com.twb.pokerapp.domain.FixedScenario;
 import com.twb.pokerapp.domain.enumeration.RankType;
 import com.twb.pokerapp.domain.enumeration.SuitType;
 import com.twb.pokerapp.repository.FixedScenarioRepository;
@@ -30,8 +31,7 @@ public class FixedScenarioShuffler extends Shuffler {
         var fixedScenario = fixedScenarioOpt.get();
         var playerCards = fixedScenario.getPlayerHands()
                 .stream().flatMap(cardStr -> parse(cards, cardStr)).toList();
-        var communityCards = fixedScenario.getCommunityCards()
-                .stream().flatMap(cardStr -> parse(cards, cardStr)).toList();
+        var communityCards = parseCommunityCards(cards, fixedScenario);
         var fixedCards = new ArrayList<Card>();
         for (var index = 1; index <= playerCards.size(); index++) {
             if (!isEven(index)) {
@@ -53,6 +53,14 @@ public class FixedScenarioShuffler extends Shuffler {
             return false;
         }).toList());
         return fixedCards;
+    }
+
+    private List<Card> parseCommunityCards(List<Card> cards, FixedScenario fixedScenario) {
+        var fixedCommunityCards = fixedScenario.getCommunityCards();
+        if (fixedCommunityCards == null) {
+            return Collections.emptyList();
+        }
+        return parse(cards, fixedScenario.getCommunityCards()).toList();
     }
 
     private Stream<Card> parse(List<Card> cards, String cardsStr) {
