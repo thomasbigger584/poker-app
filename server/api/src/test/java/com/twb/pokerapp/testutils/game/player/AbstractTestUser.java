@@ -10,6 +10,7 @@ import com.twb.pokerapp.web.websocket.message.server.payload.validation.Validati
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.keycloak.admin.client.Keycloak;
 import org.springframework.http.HttpHeaders;
 import org.springframework.messaging.simp.stomp.*;
@@ -95,7 +96,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     // ***************************************************************
 
     @Override
-    public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
+    public void afterConnected(StompSession session, @NonNull StompHeaders connectedHeaders) {
         this.session = session;
 
         var gameTopic = GAME_TOPIC_SUFFIX.formatted(params.getTable().getId());

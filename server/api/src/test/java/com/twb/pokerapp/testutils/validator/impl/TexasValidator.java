@@ -2,7 +2,7 @@ package com.twb.pokerapp.testutils.validator.impl;
 
 import com.twb.pokerapp.domain.enumeration.CardType;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
-import com.twb.pokerapp.testutils.game.GameRunnerParams;
+import com.twb.pokerapp.testutils.game.params.GameRunnerParams;
 import com.twb.pokerapp.testutils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.testutils.sql.SqlClient;
 import com.twb.pokerapp.testutils.validator.Validator;

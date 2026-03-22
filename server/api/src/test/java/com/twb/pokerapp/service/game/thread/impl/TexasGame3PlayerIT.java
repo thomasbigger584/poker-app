@@ -1,9 +1,20 @@
 package com.twb.pokerapp.service.game.thread.impl;
 
+import com.twb.pokerapp.testutils.game.GameLatches;
+import com.twb.pokerapp.testutils.game.GameRunner;
+import com.twb.pokerapp.testutils.game.params.GameRunnerParams;
+import com.twb.pokerapp.testutils.game.params.scenario.ScenarioParams;
+import com.twb.pokerapp.testutils.game.params.scenario.ScenarioPlayer;
+import com.twb.pokerapp.testutils.game.turn.impl.FixedScenarioTurnHandler;
 import com.twb.pokerapp.testutils.testcontainers.BaseTestContainersIT;
+import com.twb.pokerapp.testutils.validator.impl.TexasValidator;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvFileSource;
+
+import java.util.Arrays;
+import java.util.List;
 
 @Slf4j
 class TexasGame3PlayerIT extends BaseTestContainersIT {
@@ -32,26 +43,52 @@ class TexasGame3PlayerIT extends BaseTestContainersIT {
             double user2Win,
             double user3Win
     ) throws Exception {
-        System.out.println("TexasGame3PlayerIT.test3PlayerScenariosFromCsv");
-        System.out.println("scenario = " + scenario + ", user1Hand = " + user1Hand + ", user1Start = " + user1Start + ", user2Hand = " + user2Hand + ", user2Start = " + user2Start + ", user3Hand = " + user3Hand + ", user3Start = " + user3Start + ", community = " + community + ", preFlop = " + preFlop + ", flop = " + flop + ", turn = " + turn + ", river = " + river + ", expectedWinners = " + expectedWinners + ", totalPot = " + totalPot + ", user1Win = " + user1Win + ", user2Win = " + user2Win + ", user3Win = " + user3Win);
-//        var params = GameRunnerParams.builder()
-//                .keycloakClients(keycloakClients)
-//                .numberOfRounds(1)
-//                .latches(GameLatches.create())
-//                .table(adminRestClient.createTable(3))
-//                .validator(validator)
-//                .buyInAmounts(List.of(user1Start, user2Start, user3Start))
-//                .build();
-//        validator = new TexasValidator(params, sqlClient);
-//        runner = new GameRunner(params, sqlClient);
-//
-//        var user1TurnHandler = new FixedScenarioTurnHandler();
-//        var user2TurnHandler = new FixedScenarioTurnHandler();
-//        var user3TurnHandler = new FixedScenarioTurnHandler();
-//        var turnHandlers = TurnHandler.of(user1TurnHandler, user2TurnHandler, user3TurnHandler);
-//
-//        var messages = runner.run(turnHandlers);
-//
-//        validator.validateEndOfRun(messages);
+        var players = List.of(
+                ScenarioPlayer.builder()
+                        .username("user1")
+                        .handCards(getCardsAsList(user1Hand))
+                        .buyIn(user1Start)
+                        .turnHandler(new FixedScenarioTurnHandler())
+                        .winAmount(user1Win)
+                        .build(),
+                ScenarioPlayer.builder()
+                        .username("user2")
+                        .handCards(getCardsAsList(user2Hand))
+                        .buyIn(user2Start)
+                        .turnHandler(new FixedScenarioTurnHandler())
+                        .winAmount(user2Win)
+                        .build(),
+                ScenarioPlayer.builder()
+                        .username("user3")
+                        .handCards(getCardsAsList(user3Hand))
+                        .buyIn(user3Start)
+                        .turnHandler(new FixedScenarioTurnHandler())
+                        .winAmount(user3Win)
+                        .build()
+                );
+        var scenarioParams = ScenarioParams.builder()
+                .useFixedScenario(true)
+                .scenarioPlayers(players)
+                .communityCards(getCardsAsList(community))
+                .build();
+
+        var params = GameRunnerParams.builder()
+                .keycloakClients(keycloakClients)
+                .numberOfRounds(1)
+                .latches(GameLatches.create())
+                .table(adminRestClient.createTable(3))
+                .validator(validator)
+                .scenarioParams(scenarioParams)
+                .build();
+        validator = new TexasValidator(params, sqlClient);
+        runner = new GameRunner(params, sqlClient);
+
+        var messages = runner.run();
+
+        validator.validateEndOfRun(messages);
+    }
+
+    private @NonNull List<String> getCardsAsList(String user2Hand) {
+        return Arrays.stream(user2Hand.split(";")).toList();
     }
 }

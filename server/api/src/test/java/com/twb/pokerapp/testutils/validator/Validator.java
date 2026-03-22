@@ -11,7 +11,7 @@ import com.twb.pokerapp.dto.playeraction.PlayerActionDTO;
 import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.dto.round.RoundDTO;
 import com.twb.pokerapp.dto.table.TableDTO;
-import com.twb.pokerapp.testutils.game.GameRunnerParams;
+import com.twb.pokerapp.testutils.game.params.GameRunnerParams;
 import com.twb.pokerapp.testutils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.testutils.sql.SqlClient;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;

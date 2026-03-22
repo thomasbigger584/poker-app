@@ -1,6 +1,7 @@
 package com.twb.pokerapp.testutils.sql;
 
 import com.twb.pokerapp.domain.*;
+import com.twb.pokerapp.testutils.game.params.GameRunnerParams;
 import jakarta.persistence.*;
 import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.jpa.HibernateHints;
@@ -44,19 +45,18 @@ public class SqlClient implements AutoCloseable {
         transaction.commit();
     }
 
-    public void updateUsersTotalFunds(List<Double> playerTotalFunds) {
+    public void updateUsersTotalFunds(GameRunnerParams params) {
+        var scenarioPlayers = params.getScenarioParams();
         var transaction = em.getTransaction();
         transaction.begin();
-        for (var index = 0; index < playerTotalFunds.size(); index++) {
-            var username = "user" + (index + 1);
-            var totalFunds = playerTotalFunds.get(index);
+        for (var scenarioPlayer : scenarioPlayers.getScenarioPlayers()) {
             em.createQuery("""
                             UPDATE AppUser u
                             SET u.totalFunds = :totalFunds
                             WHERE u.username = :username
                             """)
-                    .setParameter("totalFunds", totalFunds)
-                    .setParameter("username", username)
+                    .setParameter("totalFunds", scenarioPlayer.getBuyIn())
+                    .setParameter("username", scenarioPlayer.getUsername())
                     .executeUpdate();
         }
         transaction.commit();

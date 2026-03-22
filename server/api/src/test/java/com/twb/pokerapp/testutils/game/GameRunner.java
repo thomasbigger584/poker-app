@@ -1,10 +1,10 @@
 package com.twb.pokerapp.testutils.game;
 
+import com.twb.pokerapp.testutils.game.params.GameRunnerParams;
 import com.twb.pokerapp.testutils.game.player.AbstractTestUser;
 import com.twb.pokerapp.testutils.game.player.TestUserParams;
 import com.twb.pokerapp.testutils.game.player.impl.TestGameListenerUser;
 import com.twb.pokerapp.testutils.game.player.impl.TestTexasHoldemPlayerUser;
-import com.twb.pokerapp.testutils.game.turn.TurnHandler;
 import com.twb.pokerapp.testutils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.testutils.keycloak.KeycloakClients;
 import com.twb.pokerapp.testutils.sql.SqlClient;
@@ -12,37 +12,33 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @RequiredArgsConstructor
 public class GameRunner {
     private final GameRunnerParams params;
     private final SqlClient sqlClient;
 
-    public PlayersServerMessages run(Map<String, TurnHandler> turnHandlers) throws Exception {
-        var players = getPlayers(turnHandlers);
-        return run(players);
-    }
+    public PlayersServerMessages run() throws Exception {
+        sqlClient.updateUsersTotalFunds(params);
 
-    private PlayersServerMessages run(List<AbstractTestUser> players) throws Exception {
-        sqlClient.updateUsersTotalFunds(params.getBuyInAmounts());
+        var listenerUser = connectListener();
 
-        var listener = connectListener();
-        connectPlayers(players);
+        var playerUsers = getPlayerUsers();
+        connectPlayers(playerUsers);
 
         params.getLatches().roundLatch().await();
 
-        disconnectPlayers(players);
+        disconnectPlayers(playerUsers);
 
         params.getLatches().gameLatch().await();
 
-        listener.disconnect();
+        listenerUser.disconnect();
 
-        throwExceptionIfOccurred(players);
+        throwExceptionIfOccurred(playerUsers);
 
-        var messages = new PlayersServerMessages(listener, players);
+        var messages = new PlayersServerMessages(listenerUser, playerUsers);
         return messages.getByNumberOfRounds(params.getNumberOfRounds());
     }
 
@@ -64,15 +60,17 @@ public class GameRunner {
         return listener;
     }
 
-    private void connectPlayers(List<AbstractTestUser> players) throws Exception {
-        var buyInAmounts = params.getBuyInAmounts();
-        assertEquals(players.size(), buyInAmounts.size());
+    private void connectPlayers(List<AbstractTestUser> playerUsers) throws Exception {
+        var scenarioPlayers = params.getScenarioParams().getScenarioPlayers();
+        for (var clientPlayer : playerUsers) {
+            var scenarioPlayerOpt = scenarioPlayers.stream()
+                    .filter(scenarioPlayer ->
+                            scenarioPlayer.getUsername().equals(clientPlayer.getParams().getUsername()))
+                    .findFirst();
+            assertTrue(scenarioPlayerOpt.isPresent());
+            var scenarioPlayer = scenarioPlayerOpt.get();
 
-        for (var index = 0; index < players.size(); index++) {
-            var player = players.get(index);
-            var buyInAmount = buyInAmounts.get(index);
-
-            player.connect(buyInAmount);
+            clientPlayer.connect(scenarioPlayer.getBuyIn());
         }
     }
 
@@ -82,22 +80,22 @@ public class GameRunner {
         }
     }
 
-    private List<AbstractTestUser> getPlayers(Map<String, TurnHandler> playerToTurnHandler) {
-        var players = new ArrayList<AbstractTestUser>();
-        for (var playerTurn : playerToTurnHandler.entrySet()) {
-            var username = playerTurn.getKey();
+    private List<AbstractTestUser> getPlayerUsers() {
+        var scenarioPlayers = params.getScenarioParams().getScenarioPlayers();
+        var playerUsers = new ArrayList<AbstractTestUser>();
+        for (var scenarioPlayer : scenarioPlayers) {
+            var username = scenarioPlayer.getUsername();
             var keycloak = params.getKeycloakClients().get(username);
             var userParams = TestUserParams.builder()
-                    .table(params.getTable())
-                    .username(username)
+                    .table(params.getTable()).username(username)
                     .latches(params.getLatches())
                     .keycloak(keycloak)
-                    .turnHandler(playerTurn.getValue())
+                    .turnHandler(scenarioPlayer.getTurnHandler())
                     .validator(params.getValidator())
                     .build();
-            players.add(new TestTexasHoldemPlayerUser(userParams));
+            playerUsers.add(new TestTexasHoldemPlayerUser(userParams));
         }
-        return players;
+        return playerUsers;
     }
 
     private void throwExceptionIfOccurred(List<AbstractTestUser> players) {

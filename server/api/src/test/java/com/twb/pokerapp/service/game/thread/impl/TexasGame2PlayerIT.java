@@ -2,7 +2,9 @@ package com.twb.pokerapp.service.game.thread.impl;
 
 import com.twb.pokerapp.testutils.game.GameLatches;
 import com.twb.pokerapp.testutils.game.GameRunner;
-import com.twb.pokerapp.testutils.game.GameRunnerParams;
+import com.twb.pokerapp.testutils.game.params.GameRunnerParams;
+import com.twb.pokerapp.testutils.game.params.scenario.ScenarioParams;
+import com.twb.pokerapp.testutils.game.params.scenario.ScenarioPlayer;
 import com.twb.pokerapp.testutils.game.turn.TurnHandler;
 import com.twb.pokerapp.testutils.game.turn.impl.*;
 import com.twb.pokerapp.testutils.testcontainers.BaseTestContainersIT;
@@ -10,34 +12,20 @@ import com.twb.pokerapp.testutils.validator.impl.TexasValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
-import static java.util.Collections.nCopies;
+import java.util.List;
 
 @Slf4j
 class TexasGame2PlayerIT extends BaseTestContainersIT {
     private static final int PLAYER_COUNT = 2;
     private static final Double BUY_IN_AMOUNT = 5_000d;
 
-    @Override
-    protected void beforeEach() throws Exception {
-        var params = GameRunnerParams.builder()
-                .keycloakClients(keycloakClients)
-                .numberOfRounds(1)
-                .latches(GameLatches.create())
-                .table(adminRestClient.createTable(PLAYER_COUNT))
-                .validator(validator)
-                .buyInAmounts(nCopies(PLAYER_COUNT, BUY_IN_AMOUNT))
-                .build();
-        validator = new TexasValidator(params, sqlClient);
-        runner = new GameRunner(params, sqlClient);
-    }
-
     @Test
     void testGameWithoutPlayerActions() throws Throwable {
         // given
-        var turnHandlers = TurnHandler.of(null, null);
+        setupScenario(null, null);
 
         // when
-        var messages = runner.run(turnHandlers);
+        var messages = runner.run();
 
         // then
         validator.validateEndOfRunConnections(messages);
@@ -46,13 +34,13 @@ class TexasGame2PlayerIT extends BaseTestContainersIT {
     @Test
     void testGameWithDefaultActions() throws Throwable {
         // given
-        var turnHandlers = TurnHandler.of(
-                new FirstActionTurnHandler(),
-                new FirstActionTurnHandler()
+        setupScenario(
+            new FirstActionTurnHandler(),
+            new FirstActionTurnHandler()
         );
 
         // when
-        var messages = runner.run(turnHandlers);
+        var messages = runner.run();
 
         // then
         validator.validateEndOfRun(messages);
@@ -61,13 +49,13 @@ class TexasGame2PlayerIT extends BaseTestContainersIT {
     @Test
     void testGameWithOptimisticActions() throws Throwable {
         // given
-        var turnHandlers = TurnHandler.of(
-                new OptimisticTurnHandler(),
-                new OptimisticTurnHandler()
+        setupScenario(
+            new OptimisticTurnHandler(),
+            new OptimisticTurnHandler()
         );
 
         // when
-        var messages = runner.run(turnHandlers);
+        var messages = runner.run();
 
         // then
         validator.validateEndOfRun(messages);
@@ -76,13 +64,13 @@ class TexasGame2PlayerIT extends BaseTestContainersIT {
     @Test
     void testGameWithSingleOptimisticActions() throws Throwable {
         // given
-        var turnHandlers = TurnHandler.of(
-                new OptimisticTurnHandler(),
-                new FirstActionTurnHandler()
+        setupScenario(
+            new OptimisticTurnHandler(),
+            new FirstActionTurnHandler()
         );
 
         // when
-        var messages = runner.run(turnHandlers);
+        var messages = runner.run();
 
         // then
         validator.validateEndOfRun(messages);
@@ -91,13 +79,13 @@ class TexasGame2PlayerIT extends BaseTestContainersIT {
     @Test
     void testGameWithBetAndRaiseActions() throws Throwable {
         // given
-        var turnHandlers = TurnHandler.of(
-                new OptimisticTurnHandler(),
-                new AggresiveTurnHandler()
+        setupScenario(
+            new OptimisticTurnHandler(),
+            new AggresiveTurnHandler()
         );
 
         // when
-        var messages = runner.run(turnHandlers);
+        var messages = runner.run();
 
         // then
         validator.validateEndOfRun(messages);
@@ -106,13 +94,13 @@ class TexasGame2PlayerIT extends BaseTestContainersIT {
     @Test
     void testGameWithSingleFirstActionActions() throws Throwable {
         // given
-        var turnHandlers = TurnHandler.of(
-                new FirstActionTurnHandler(),
-                new OptimisticTurnHandler()
+        setupScenario(
+            new FirstActionTurnHandler(),
+            new OptimisticTurnHandler()
         );
 
         // when
-        var messages = runner.run(turnHandlers);
+        var messages = runner.run();
 
         // then
         validator.validateEndOfRun(messages);
@@ -121,13 +109,13 @@ class TexasGame2PlayerIT extends BaseTestContainersIT {
     @Test
     void testGameWithAllInAction() throws Throwable {
         // given
-        var turnHandlers = TurnHandler.of(
-                new OptimisticTurnHandler(),
-                new AllInTurnHandler()
+        setupScenario(
+            new OptimisticTurnHandler(),
+            new AllInTurnHandler()
         );
 
         // when
-        var messages = runner.run(turnHandlers);
+        var messages = runner.run();
 
         // then
         validator.validateEndOfRun(messages);
@@ -136,16 +124,46 @@ class TexasGame2PlayerIT extends BaseTestContainersIT {
     @Test
     void testGameWithInvalidActions() throws Throwable {
         // given
-        var turnHandlers = TurnHandler.of(
-                new OptimisticTurnHandler(),
-                new InvalidActionTurnHandler()
+        setupScenario(
+            new OptimisticTurnHandler(),
+            new InvalidActionTurnHandler()
         );
 
         // when
-        var messages = runner.run(turnHandlers);
+        var messages = runner.run();
 
         // then
         validator.validateInvalidAction(messages);
         validator.validateEndOfRunConnections(messages);
+    }
+
+    private void setupScenario(TurnHandler... turnHandlers) throws Exception {
+        assert turnHandlers.length == PLAYER_COUNT;
+        var players = List.of(
+                ScenarioPlayer.builder()
+                        .username("user1")
+                        .buyIn(BUY_IN_AMOUNT)
+                        .turnHandler(turnHandlers[0])
+                        .build(),
+                ScenarioPlayer.builder()
+                        .username("user2")
+                        .buyIn(BUY_IN_AMOUNT)
+                        .turnHandler(turnHandlers[1])
+                        .build()
+        );
+        var scenarioParams = ScenarioParams.builder()
+                .useFixedScenario(false)
+                .scenarioPlayers(players)
+                .build();
+        var params = GameRunnerParams.builder()
+                .keycloakClients(keycloakClients)
+                .numberOfRounds(1)
+                .latches(GameLatches.create())
+                .table(adminRestClient.createTable(PLAYER_COUNT))
+                .validator(validator)
+                .scenarioParams(scenarioParams)
+                .build();
+        validator = new TexasValidator(params, sqlClient);
+        runner = new GameRunner(params, sqlClient);
     }
 }
