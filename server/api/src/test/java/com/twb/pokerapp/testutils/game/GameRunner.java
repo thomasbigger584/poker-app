@@ -43,7 +43,7 @@ public class GameRunner {
     }
 
     // ***************************************************************
-    // Helper Methodsx
+    // Helper Methods
     // ***************************************************************
 
     private void setupDatabase() {

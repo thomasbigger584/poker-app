@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Function;
 
 public class SqlClient implements AutoCloseable {
     private static final String PERSISTENCE_UNIT_NAME = "poker-app-test";
@@ -48,14 +47,14 @@ public class SqlClient implements AutoCloseable {
         transaction.commit();
     }
 
-    public void insertFixedScenario(ScenarioParams scenarioParams) {
+    public void insertFixedScenario(ScenarioParams params) {
         var transaction = em.getTransaction();
         transaction.begin();
 
         var fixedScenario = new FixedScenario();
-        fixedScenario.setPlayerHands(scenarioParams.getScenarioPlayers()
+        fixedScenario.setPlayerHands(params.getScenarioPlayers()
                 .stream().map(ScenarioPlayer::getHandCards).toList());
-        fixedScenario.setCommunityCards(scenarioParams.getCommunityCards());
+        fixedScenario.setCommunityCards(params.getCommunityCards());
         em.persist(fixedScenario);
 
         transaction.commit();
