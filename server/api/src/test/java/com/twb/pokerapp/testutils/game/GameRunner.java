@@ -18,11 +18,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @RequiredArgsConstructor
 public class GameRunner {
     private final GameRunnerParams params;
-    private final SqlClient sqlClient;
 
     public PlayersServerMessages run() throws Exception {
-        setupDatabase();
-
         var listenerUser = connectListener();
 
         var playerUsers = getPlayerUsers();
@@ -45,14 +42,6 @@ public class GameRunner {
     // ***************************************************************
     // Helper Methods
     // ***************************************************************
-
-    private void setupDatabase() {
-        var scenarioParams = params.getScenarioParams();
-        if (scenarioParams.isUseFixedScenario()) {
-            sqlClient.insertFixedScenario(scenarioParams);
-        }
-        sqlClient.updateUsersTotalFunds(scenarioParams);
-    }
 
     private AbstractTestUser connectListener() throws Exception {
         var keycloak = params.getKeycloakClients().getViewerKeycloak();

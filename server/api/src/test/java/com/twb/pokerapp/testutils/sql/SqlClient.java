@@ -1,7 +1,6 @@
 package com.twb.pokerapp.testutils.sql;
 
 import com.twb.pokerapp.domain.*;
-import com.twb.pokerapp.testutils.game.params.GameRunnerParams;
 import com.twb.pokerapp.testutils.game.params.scenario.ScenarioParams;
 import com.twb.pokerapp.testutils.game.params.scenario.ScenarioPlayer;
 import jakarta.persistence.*;

@@ -1,15 +1,10 @@
-package com.twb.pokerapp.testutils.testcontainers;
+package com.twb.pokerapp.testutils;
 
-import com.twb.pokerapp.testutils.game.GameRunner;
 import com.twb.pokerapp.testutils.http.RestClient;
 import com.twb.pokerapp.testutils.keycloak.KeycloakClients;
 import com.twb.pokerapp.testutils.sql.SqlClient;
-import com.twb.pokerapp.testutils.validator.Validator;
 import dasniko.testcontainers.keycloak.KeycloakContainer;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -21,9 +16,8 @@ import java.util.List;
 
 import static java.lang.management.ManagementFactory.getRuntimeMXBean;
 
-// NOTE: Requires building docker image before: `docker compose build api`
-
-public abstract class BaseTestContainersIT {
+@Getter
+public class TestEnvironment implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger("TEST");
 
     // Keycloak Constants
@@ -54,7 +48,6 @@ public abstract class BaseTestContainersIT {
     private static final int API_PORT = 8081;
     private static final int API_DEBUG_PORT = 5005;
     private static final String APP_USE_FIXED_SCENARIO = "APP_USE_FIXED_SCENARIO";
-    protected static boolean useFixedScenario = false;
 
     // Test Containers
     private static final Network NETWORK = Network.newNetwork();
@@ -80,12 +73,9 @@ public abstract class BaseTestContainersIT {
 
     private static GenericContainer<?> API_CONTAINER;
 
-    protected static KeycloakClients keycloakClients;
-    protected static RestClient adminRestClient;
-    protected static SqlClient sqlClient;
-
-    protected GameRunner runner;
-    protected Validator validator;
+    private KeycloakClients keycloakClients;
+    private RestClient adminRestClient;
+    private SqlClient sqlClient;
 
     static {
         DB_CONTAINER.setPortBindings(
@@ -96,8 +86,11 @@ public abstract class BaseTestContainersIT {
     // Lifecycle Methods
     // *****************************************************************************************
 
-    @BeforeAll
-    public static void onBeforeAll() {
+    public TestEnvironment start() {
+        return start(false);
+    }
+
+    public TestEnvironment start(boolean useFixedScenario) {
         DB_CONTAINER.start();
         KEYCLOAK_CONTAINER.start();
         API_CONTAINER = new GenericContainer<>("%s:%s".formatted(API_IMAGE_NAME, API_IMAGE_VERSION))
@@ -130,34 +123,18 @@ public abstract class BaseTestContainersIT {
         keycloakClients = new KeycloakClients(KEYCLOAK_CONTAINER.getAuthServerUrl());
         adminRestClient = RestClient.getInstance(keycloakClients.getAdminKeycloak());
         sqlClient = new SqlClient(DB_CONTAINER);
+        return this;
     }
 
-    @BeforeEach
-    public void onBeforeEach() throws Throwable {
-        beforeEach();
-    }
-
-    @AfterEach
-    public void onAfterEach() throws Throwable {
+    public void afterEach() {
         sqlClient.truncate();
-        afterEach();
     }
 
-    @AfterAll
-    public static void onAfterAll() {
+    @Override
+    public void close() {
         API_CONTAINER.stop();
         KEYCLOAK_CONTAINER.stop();
         DB_CONTAINER.stop();
-    }
-
-    // *****************************************************************************************
-    // Overridable Methods
-    // *****************************************************************************************
-
-    protected void beforeEach() throws Throwable {
-    }
-
-    protected void afterEach() throws Throwable {
     }
 
     // *****************************************************************************************

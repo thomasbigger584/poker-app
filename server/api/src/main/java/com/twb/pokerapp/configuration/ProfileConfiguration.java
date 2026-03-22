@@ -2,22 +2,31 @@ package com.twb.pokerapp.configuration;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 import java.util.Arrays;
 
+@Slf4j
 @Configuration
-@RequiredArgsConstructor
 public class ProfileConfiguration {
     public static final String TEST_PROFILE = "test";
     public static final String LOCAL_PROFILE = "local";
     public static final String CLOUD_PROFILE = "cloud";
 
-    private final Environment environment;
+    @Autowired
+    private Environment environment;
+
+    @Value("${app.use-fixed-scenario}")
+    private boolean useFixedScenario;
 
     @PostConstruct
     public void init() {
+        log.info(">>>>> Use Fixed Scenario: {}", useFixedScenario);
+
         if (hasLocalProfile() && hasCloudProfile()) {
             throw new RuntimeException("Cannot set both local and cloud profiles");
         }

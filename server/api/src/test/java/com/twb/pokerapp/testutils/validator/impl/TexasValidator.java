@@ -22,8 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TexasValidator extends Validator {
 
-    public TexasValidator(GameRunnerParams params, SqlClient sqlClient) {
-        super(params, sqlClient);
+    public TexasValidator(SqlClient sqlClient) {
+        super(sqlClient);
     }
 
     @Override

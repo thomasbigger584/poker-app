@@ -28,11 +28,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @RequiredArgsConstructor
 public abstract class Validator {
-    protected final GameRunnerParams params;
     protected final SqlClient sqlClient;
 
     public void validateHandleMessage(ServerMessageDTO message) {
-
         onValidateHandleMessage(message);
     }
 
