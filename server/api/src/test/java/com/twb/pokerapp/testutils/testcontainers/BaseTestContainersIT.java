@@ -129,7 +129,7 @@ public abstract class BaseTestContainersIT {
         API_CONTAINER.start();
         keycloakClients = new KeycloakClients(KEYCLOAK_CONTAINER.getAuthServerUrl());
         adminRestClient = RestClient.getInstance(keycloakClients.getAdminKeycloak());
-        sqlClient = SqlClient.getInstance(DB_CONTAINER);
+        sqlClient = new SqlClient(DB_CONTAINER);
     }
 
     @BeforeEach

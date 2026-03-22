@@ -16,16 +16,7 @@ public class SqlClient implements AutoCloseable {
     private final EntityManagerFactory emf;
     private final EntityManager em;
 
-    private static SqlClient INSTANCE;
-
-    public synchronized static SqlClient getInstance(JdbcDatabaseContainer<?> container) {
-        if (INSTANCE == null) {
-            INSTANCE = new SqlClient(container);
-        }
-        return INSTANCE;
-    }
-
-    private SqlClient(JdbcDatabaseContainer<?> container) {
+    public SqlClient(JdbcDatabaseContainer<?> container) {
         this(container.getJdbcUrl(), container.getUsername(), container.getPassword());
     }
 
