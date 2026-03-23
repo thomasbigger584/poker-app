@@ -9,7 +9,7 @@ import com.twb.pokerapp.web.websocket.message.server.payload.PlayerTurnDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
@@ -24,14 +24,14 @@ public class FixedScenarioTurnHandler implements TurnHandler {
                                     String turnActionsStr,
                                     String riverActionsStr
     ) {
-        this.bettingRoundActions = new HashMap<>();
+        this.bettingRoundActions = new EnumMap<>(BettingRoundType.class);
         parseRound(username, preFlopActionsStr, BettingRoundType.DEAL);
         parseRound(username, flopActionsStr, BettingRoundType.FLOP);
         parseRound(username, turnActionsStr, BettingRoundType.TURN);
         parseRound(username, riverActionsStr, BettingRoundType.RIVER);
     }
 
-    private void parseRound(String username, String playerActionStr, BettingRoundType roundType) {
+    private void parseRound(String username, String playerActionStr, BettingRoundType bettingRoundType) {
         if (playerActionStr == null || playerActionStr.isBlank() || "None".equalsIgnoreCase(playerActionStr)) {
             return;
         }
@@ -44,8 +44,8 @@ public class FixedScenarioTurnHandler implements TurnHandler {
             }
             var actionStrVal = parts[1].trim();
 
-            var roundActions = this.bettingRoundActions
-                    .computeIfAbsent(roundType, k -> new LinkedList<>());
+            var bettingRoundActions = this.bettingRoundActions
+                    .computeIfAbsent(bettingRoundType, k -> new LinkedList<>());
 
             var action = new CreatePlayerActionDTO();
             var actionType = ActionType.valueOf(actionStrVal);
@@ -55,7 +55,7 @@ public class FixedScenarioTurnHandler implements TurnHandler {
                 var amount = Double.parseDouble(parts[2].trim());
                 action.setAmount(amount);
             }
-            roundActions.add(action);
+            bettingRoundActions.add(action);
         }
     }
 

@@ -11,8 +11,8 @@ public class ScenarioPlayer {
     private String username;
     private String handCards;
     private Double buyIn;
-    private Double winAmount;
     private TurnHandler turnHandler;
+    private Double winAmount;
 
     public static ScenarioPlayer create(String username,
                                         String hand,
