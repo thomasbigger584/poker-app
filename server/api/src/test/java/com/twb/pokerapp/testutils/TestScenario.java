@@ -28,8 +28,10 @@ public class TestScenario {
 
         var sqlClient = env.getSqlClient();
         var keycloakClients = env.getKeycloakClients();
+        
         var playerCount = params.getScenarioPlayers().size();
         var adminRestClient = env.getAdminRestClient();
+        var table = adminRestClient.createTable(playerCount);
 
         this.validator = new TexasValidator(sqlClient);
 
@@ -37,7 +39,7 @@ public class TestScenario {
                 .keycloakClients(keycloakClients)
                 .numberOfRounds(1)
                 .latches(GameLatches.create())
-                .table(adminRestClient.createTable(playerCount))
+                .table(table)
                 .validator(validator)
                 .scenarioParams(params)
                 .build();
@@ -48,12 +50,12 @@ public class TestScenario {
 
     public TestScenario setupScenario(TurnHandler... turnHandlers) throws Exception {
         var scenarioPlayers = new ArrayList<ScenarioPlayer>();
-        for (var index = 1; index <= turnHandlers.length; index++) {
+        for (var index = 0; index < turnHandlers.length; index++) {
             scenarioPlayers.add(
                     ScenarioPlayer.builder()
-                        .username("user" + index)
+                        .username("user" + (index + 1))
                         .buyIn(DEFAULT_BUY_IN_AMOUNT)
-                        .turnHandler(turnHandlers[index - 1])
+                        .turnHandler(turnHandlers[index])
                         .build()
             );
         }

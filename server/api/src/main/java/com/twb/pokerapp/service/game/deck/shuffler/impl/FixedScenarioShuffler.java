@@ -35,22 +35,22 @@ public class FixedScenarioShuffler extends Shuffler {
         var fixedCards = new ArrayList<Card>();
         for (var index = 1; index <= playerCards.size(); index++) {
             if (!isEven(index)) {
-                fixedCards.add(playerCards.get(index));
+                fixedCards.add(playerCards.get(index - 1));
             }
         }
         for (var index = 1; index <= playerCards.size(); index++) {
             if (isEven(index)) {
-                fixedCards.add(playerCards.get(index));
+                fixedCards.add(playerCards.get(index - 1));
             }
         }
         fixedCards.addAll(communityCards);
         fixedCards.addAll(cards.stream().filter(card -> {
             for (var fixedCard : fixedCards) {
                 if (rankAndSuitCardEquals(fixedCard, card.getRankType(), card.getSuitType())) {
-                    return true;
+                    return false;
                 }
             }
-            return false;
+            return true;
         }).toList());
         return fixedCards;
     }

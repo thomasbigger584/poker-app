@@ -61,6 +61,10 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         this.session = null;
     }
 
+    public String getUsername() {
+        return params.getUsername();
+    }
+
     public void connect() throws InterruptedException {
         connect(null);
     }
