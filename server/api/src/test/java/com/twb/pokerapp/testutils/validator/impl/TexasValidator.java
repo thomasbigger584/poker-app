@@ -119,13 +119,18 @@ public class TexasValidator extends Validator {
             var communityCardsSplit = communityCards.split(";");
             assertEquals(noCardsDealt, messages.size());
             assertEquals(communityCardsSplit.length, messages.size());
+
             for (var index = 0; index < noCardsDealt; index++) {
                 var message = messages.get(index);
                 assertInstanceOf(DealCommunityCardDTO.class, message.getPayload());
 
                 var payload = (DealCommunityCardDTO) message.getPayload();
                 var cardType = expectedCommunityCards.get(index);
+                var card = payload.getCard();
                 assertCard(payload.getCard(), cardType);
+
+                assertEquals(card.getRankChar(), communityCardsSplit[index].charAt(0));
+                assertEquals(card.getSuitChar(), communityCardsSplit[index].charAt(1));
             }
 
         } else {

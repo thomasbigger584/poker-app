@@ -37,6 +37,7 @@ public class PlayerSessionService {
         }
 
         session.setConnectionType(connectionType);
+        session.setActive(false);
         session.setSessionState(SessionState.CONNECTED);
 
         if (connectionType == ConnectionType.PLAYER) {
