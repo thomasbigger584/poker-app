@@ -118,10 +118,6 @@ public class TexasLastAggressorService {
                 playerIndex = 0; // wrap index
             }
 
-            // if current player is not active (e.g. folded) then skip them
-            // but we need to increment the index to the next player
-            // effectively this loop will run until it finds an active player
-            // or it will circle back to the start and finish the betting round
             currentPlayer = activePlayers.get(playerIndex);
             while (!Boolean.TRUE.equals(currentPlayer.getActive())) {
                 playerIndex++;
@@ -132,8 +128,6 @@ public class TexasLastAggressorService {
             }
 
             // --- TERMINATION CHECKS ---
-            // This means everyone else has had a chance to call/fold, and we are back to the person who bet/raised.
-            // They do not act again unless someone else re-raised (which would have updated lastAggressorId).
             if (currentPlayer.getId().equals(lastAggressorId)) {
                 throw new LastAggressorBreakException("Returned to last aggressor %s, betting round finished.".formatted(currentPlayer.getId()));
             }

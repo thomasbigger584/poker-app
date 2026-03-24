@@ -106,6 +106,7 @@
             <column name="position" type="int"/>
             <column name="dealer" type="boolean" defaultValue="0"/>
             <column name="current" type="boolean" defaultValue="0"/>
+            <column name="active" type="boolean" defaultValue="0"/>
             <column name="funds" type="double"/>
             <column name="session_state" type="text"/>
             <column name="connection_type" type="text"/>
@@ -329,11 +330,5 @@
             <column name="community_cards" type="text" />
         </createTable>
         <addPrimaryKey columnNames="id" constraintName="pk_fixed_scenario" tableName="fixed_scenario"/>
-    </changeSet>
-
-    <changeSet author="tbigg" id="12">
-        <addColumn tableName="player_session">
-            <column name="active" type="boolean" defaultValue="0"/>
-        </addColumn>
     </changeSet>
 </databaseChangeLog>

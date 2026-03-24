@@ -13,7 +13,15 @@ public class RankEvaluator {
 
     static {
         // Load the native library containing the evaluator function
-        System.load(System.getenv("EVALUATOR_SO_PATH"));
+        try {
+            String path = System.getenv("EVALUATOR_SO_PATH");
+            if (path != null) {
+                System.load(path);
+            }
+        } catch (UnsatisfiedLinkError e) {
+            // Log or handle the error appropriately
+            System.err.println("Failed to load native library: " + e.getMessage());
+        }
     }
 
     /**
