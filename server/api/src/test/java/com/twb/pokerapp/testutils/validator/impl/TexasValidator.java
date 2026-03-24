@@ -2,7 +2,8 @@ package com.twb.pokerapp.testutils.validator.impl;
 
 import com.twb.pokerapp.domain.enumeration.CardType;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
-import com.twb.pokerapp.testutils.game.params.GameRunnerParams;
+import com.twb.pokerapp.testutils.game.params.scenario.ScenarioParams;
+import com.twb.pokerapp.testutils.game.params.scenario.ScenarioPlayer;
 import com.twb.pokerapp.testutils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.testutils.sql.SqlClient;
 import com.twb.pokerapp.testutils.validator.Validator;
@@ -11,24 +12,54 @@ import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
 import com.twb.pokerapp.web.websocket.message.server.payload.DealCommunityCardDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.DealPlayerCardDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.DealerDeterminedDTO;
+import com.twb.pokerapp.web.websocket.message.server.payload.RoundFinishedDTO;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-
+@Slf4j
 public class TexasValidator extends Validator {
 
-    public TexasValidator(SqlClient sqlClient) {
-        super(sqlClient);
+    public TexasValidator(ScenarioParams params, SqlClient sqlClient) {
+        super(params, sqlClient);
     }
 
     @Override
     protected void onValidateHandleMessage(ServerMessageDTO message) {
-        // todo specific intra-game message assertions
+        switch (message.getType()) {
+            // todo specific intra-game message assertions
+
+            case ROUND_FINISHED -> {
+                var payload = (RoundFinishedDTO) message.getPayload();
+                if (params.isUseFixedScenario()) {
+                    var winningScenarioPlayers = params.getScenarioPlayers().stream()
+                            .filter(scenarioPlayer -> scenarioPlayer.getWinAmount() != null
+                                    && scenarioPlayer.getWinAmount() != 0d)
+                            .sorted(Comparator.comparing(ScenarioPlayer::getUsername))
+                            .toList();
+                    var roundWinners = payload.getWinners().stream()
+                            .sorted(Comparator.comparing(roundWinner ->
+                                    roundWinner.getPlayerSession().getUser().getUsername()))
+                            .toList();
+                    assertEquals(winningScenarioPlayers.size(), roundWinners.size());
+                    for (var index = 0; index < winningScenarioPlayers.size(); index++) {
+                        var scenarioPlayer = winningScenarioPlayers.get(index);
+                        var roundWinner = roundWinners.get(index);
+                        assertEquals(scenarioPlayer.getUsername(), roundWinner.getPlayerSession().getUser().getUsername());
+                        assertEquals(scenarioPlayer.getWinAmount(), roundWinner.getAmount());
+                    }
+                } else {
+                    log.warn("Not a fixed scenario so cannot assert on ROUND_FINISHED");
+                }
+            }
+        }
     }
 
     @Override
@@ -54,7 +85,8 @@ public class TexasValidator extends Validator {
 
     private void assertDealInit(List<ServerMessageDTO> listenerMessages) {
         var messages = get(listenerMessages, ServerMessageType.DEAL_INIT);
-        var noCardsDealt = 2 * 2;
+        var scenarioPlayersSize = params.getScenarioPlayers().size();
+        var noCardsDealt = scenarioPlayersSize * 2;
 
         assertEquals(noCardsDealt, messages.size());
 
@@ -72,20 +104,30 @@ public class TexasValidator extends Validator {
 
     private void assertDealCommunity(List<ServerMessageDTO> listenerMessages) {
         var messages = get(listenerMessages, ServerMessageType.DEAL_COMMUNITY);
+        if (params.isUseFixedScenario()) {
+            var communityCards = params.getCommunityCards();
+            if (communityCards == null) {
+                return;
+            }
+            throw new NotImplementedException("Assertions not implemented yet for a set amount of community cards should equal what was dealt");
+        } else {
+            var expectedCommunityCards = new ArrayList<>(Arrays.stream(CardType.FLOP_CARDS).toList());
+            expectedCommunityCards.add(CardType.TURN_CARD);
+            expectedCommunityCards.add(CardType.RIVER_CARD);
 
-        var expectedCommunityCards = new ArrayList<>(Arrays.stream(CardType.FLOP_CARDS).toList());
-        expectedCommunityCards.add(CardType.TURN_CARD);
-        expectedCommunityCards.add(CardType.RIVER_CARD);
+            var noCardsDealt = expectedCommunityCards.size();
+            assertEquals(noCardsDealt, messages.size());
 
-        var noCardsDealt = expectedCommunityCards.size();
-        assertEquals(noCardsDealt, messages.size());
+            for (var index = 0; index < noCardsDealt; index++) {
+                var message = messages.get(index);
+                var cardType = expectedCommunityCards.get(index);
 
-        for (var index = 0; index < noCardsDealt; index++) {
-            var message = messages.get(index);
-            var cardType = expectedCommunityCards.get(index);
-
-            var payload = (DealCommunityCardDTO) message.getPayload();
-            assertCard(payload.getCard(), cardType);
+                var payload = (DealCommunityCardDTO) message.getPayload();
+                assertCard(payload.getCard(), cardType);
+            }
         }
+        var communityCards = params.getCommunityCards();
+
+
     }
 }

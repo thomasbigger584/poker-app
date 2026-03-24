@@ -9,8 +9,8 @@ import com.twb.pokerapp.web.websocket.message.server.payload.PlayerTurnDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 
+import java.util.ArrayDeque;
 import java.util.EnumMap;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 
@@ -42,18 +42,15 @@ public class FixedScenarioTurnHandler implements TurnHandler {
             if (!actionUsername.equalsIgnoreCase(username)) {
                 continue;
             }
-            var actionStrVal = parts[1].trim();
 
             var bettingRoundActions = this.bettingRoundActions
-                    .computeIfAbsent(bettingRoundType, k -> new LinkedList<>());
+                    .computeIfAbsent(bettingRoundType, k -> new ArrayDeque<>());
 
             var action = new CreatePlayerActionDTO();
-            var actionType = ActionType.valueOf(actionStrVal);
-            action.setAction(actionType);
+            action.setAction(ActionType.valueOf(parts[1].trim()));
 
             if (parts.length > 2) {
-                var amount = Double.parseDouble(parts[2].trim());
-                action.setAmount(amount);
+                action.setAmount(Double.parseDouble(parts[2].trim()));
             }
             bettingRoundActions.add(action);
         }

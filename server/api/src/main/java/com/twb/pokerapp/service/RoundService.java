@@ -5,6 +5,7 @@ import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.domain.Round;
 import com.twb.pokerapp.domain.enumeration.RoundState;
 import com.twb.pokerapp.mapper.RoundMapper;
+import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.RoundRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -18,6 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RoundService {
     private final RoundRepository repository;
+    private final PlayerSessionRepository playerSessionRepository;
     private final RoundMapper mapper;
 
     @Transactional(propagation = Propagation.MANDATORY)
@@ -28,8 +30,10 @@ public class RoundService {
         round.setPlayerSessions(playerSessions);
         round = repository.save(round);
         for (var playerSession : playerSessions) {
+            playerSession.setActive(true);
             playerSession.setRound(round);
         }
+        playerSessionRepository.saveAll(playerSessions);
         return round;
     }
 

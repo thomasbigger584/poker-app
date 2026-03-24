@@ -330,4 +330,10 @@
         </createTable>
         <addPrimaryKey columnNames="id" constraintName="pk_fixed_scenario" tableName="fixed_scenario"/>
     </changeSet>
+
+    <changeSet author="tbigg" id="12">
+        <addColumn tableName="player_session">
+            <column name="active" type="boolean" defaultValue="0"/>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

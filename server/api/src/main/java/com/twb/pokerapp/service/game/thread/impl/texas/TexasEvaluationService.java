@@ -1,6 +1,7 @@
 package com.twb.pokerapp.service.game.thread.impl.texas;
 
 import com.twb.pokerapp.domain.*;
+import com.twb.pokerapp.domain.enumeration.HandType;
 import com.twb.pokerapp.repository.*;
 import com.twb.pokerapp.service.game.eval.HandEvaluator;
 import com.twb.pokerapp.service.game.eval.dto.EvalPlayerHandDTO;
@@ -57,11 +58,16 @@ public class TexasEvaluationService {
         winner.setFunds(winner.getFunds() + totalWinnings);
         playerSessionRepository.save(winner);
 
-        var hand = handRepository.findForPlayerAndRound(winner.getId(), round.getId()).orElse(null);
+        var handOpt = handRepository.findForPlayerAndRound(winner.getId(), round.getId());
+        Hand hand = handOpt.orElse(null);
+        
         saveRoundWinner(winner, round, hand, totalWinnings);
 
         var winnerUsername = winner.getUser().getUsername();
-        afterCommit(() -> gameLogService.sendLogMessage(params.getTableId(), "%s wins round with $%.2f".formatted(winnerUsername, totalWinnings)));
+        
+        // Use afterCommit for sending log messages to avoid transaction issues
+        var tableId = params.getTableId();
+        afterCommit(() -> gameLogService.sendLogMessage(tableId, "%s wins round with $%.2f".formatted(winnerUsername, totalWinnings)));
     }
 
     private void evaluateMultiPlayersStanding(GameThreadParams params, Round round, List<PlayerSession> activePlayers) {
@@ -70,7 +76,8 @@ public class TexasEvaluationService {
         var playerHandsList = new ArrayList<EvalPlayerHandDTO>();
         for (var potentialWinner : activePlayers) {
             var playerHandOpt = handRepository.findForPlayerAndRound(potentialWinner.getId(), round.getId());
-            playerHandOpt.ifPresent(hand -> {
+            if (playerHandOpt.isPresent()) {
+                var hand = playerHandOpt.get();
                 var playableCards = new ArrayList<>(communityCards);
 
                 var playerCards = cardRepository.findCardsForHand(hand.getId());
@@ -81,7 +88,7 @@ public class TexasEvaluationService {
                 playerHand.setCards(playableCards);
                 playerHand.setHand(hand);
                 playerHandsList.add(playerHand);
-            });
+            }
         }
 
         handEvaluator.evaluate(round, playerHandsList);
@@ -96,7 +103,8 @@ public class TexasEvaluationService {
         var eligiblePlayers = pot.getEligiblePlayers();
         var eligiblePlayerIds = eligiblePlayers.stream().map(PlayerSession::getId).toList();
 
-        // Filter hands for this pot, preserving order (best to worst)
+        // Filter hands for this pot, preserving order (best to worst after sort)
+        // Note: EvalPlayerHandDTO must implement Comparable based on hand strength
         var potHands = allEvaluatedHands.stream()
                 .filter(hand -> eligiblePlayerIds.contains(hand.getPlayerSession().getId()))
                 .sorted(Comparator.reverseOrder())
@@ -108,6 +116,7 @@ public class TexasEvaluationService {
         var bestHand = potHands.getFirst();
         winners.add(bestHand);
 
+        // Check for ties
         for (var index = 1; index < potHands.size(); index++) {
             var nextHand = potHands.get(index);
             if (nextHand.compareTo(bestHand) == 0) {
@@ -123,6 +132,9 @@ public class TexasEvaluationService {
     private void distributePotToWinners(GameThreadParams params, Round round, RoundPot pot, List<EvalPlayerHandDTO> winners) {
         var potAmount = pot.getPotAmount();
         var winnerCount = winners.size();
+        
+        // Just in case
+        if (winnerCount == 0) return;
 
         // Calculate split in cents to handle odd chips correctly
         var totalCents = Math.round(potAmount * 100);
@@ -133,7 +145,8 @@ public class TexasEvaluationService {
         for (var index = 0; index < winnerCount; index++) {
             var winnerHand = winners.get(index);
             // Add 1 cent to the award amount for each winner until the remainder is exhausted
-            var awardAmount = splitAmount + (index < remainderCents ? 0.01 : 0.0);
+            var extraCent = (index < remainderCents) ? 0.01 : 0.0;
+            var awardAmount = splitAmount + extraCent;
 
             var playerSession = winnerHand.getPlayerSession();
             playerSession.setFunds(playerSession.getFunds() + awardAmount);
@@ -164,13 +177,17 @@ public class TexasEvaluationService {
     private void logPotWinners(GameThreadParams params, RoundPot pot, List<EvalPlayerHandDTO> winners, double amountPerWinner) {
         var potName = (pot.getPotIndex() == 0) ? "Main Pot" : "Side Pot " + pot.getPotIndex();
         var winnerNames = getReadableWinners(winners);
-        var handTypeStr = winners.getFirst().getHandType().getValue();
+        
+        String handTypeStr = "Unknown";
+        if (!winners.isEmpty() && winners.getFirst().getHandType() != null) {
+            handTypeStr = winners.getFirst().getHandType().getValue();
+        }
 
         String message;
         if (winners.size() == 1) {
             message = "%s wins %s ($%.2f) with a %s".formatted(winnerNames, potName, pot.getPotAmount(), handTypeStr);
         } else {
-            message = "%s split %s ($%.2f) with a %s (Each gets $%.2f)".formatted(winnerNames, potName, pot.getPotAmount(), handTypeStr, amountPerWinner);
+            message = "%s split %s ($%.2f) with a %s (Each gets ~$%.2f)".formatted(winnerNames, potName, pot.getPotAmount(), handTypeStr, amountPerWinner);
         }
         gameLogService.sendLogMessage(params.getTableId(), message);
     }

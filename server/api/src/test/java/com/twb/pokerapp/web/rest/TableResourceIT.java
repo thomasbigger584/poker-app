@@ -20,6 +20,10 @@ class TableResourceIT {
     private static final String ENDPOINT = "/poker-table";
     private final static TestEnvironment env = new TestEnvironment();
 
+    // *****************************************************************************************
+    // Lifecycle Methods
+    // *****************************************************************************************
+
     @BeforeAll
     static void beforeAll() {
         env.start(true);
@@ -34,6 +38,10 @@ class TableResourceIT {
     static void afterAll() {
         env.close();
     }
+
+    // *****************************************************************************************
+    // Test Methods
+    // *****************************************************************************************
 
     @Test
     void testCreateAndFetchTable() throws Throwable {

@@ -16,6 +16,14 @@ public class TexasBettingRoundService {
 
     public void runBettingRound(GameThreadParams params, GameThread gameThread) {
         var service = context.getBean(TexasLastAggressorService.class, params, gameThread);
+        try {
+            runBettingRound(gameThread, service);
+        } finally {
+            service.finishBettingRound();
+        }
+    }
+
+    private void runBettingRound(GameThread gameThread, TexasLastAggressorService service) {
         while (true) {
             try {
                 service.runPlayerInBettingRound(gameThread);
@@ -24,6 +32,5 @@ public class TexasBettingRoundService {
                 break;
             }
         }
-        service.finishBettingRound();
     }
 }

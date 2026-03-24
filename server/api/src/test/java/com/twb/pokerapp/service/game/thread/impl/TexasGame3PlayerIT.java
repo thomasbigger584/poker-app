@@ -1,6 +1,7 @@
 package com.twb.pokerapp.service.game.thread.impl;
 
 import com.twb.pokerapp.testutils.TestEnvironment;
+import com.twb.pokerapp.testutils.TestScenario;
 import com.twb.pokerapp.testutils.game.params.scenario.ScenarioParams;
 import com.twb.pokerapp.testutils.game.params.scenario.ScenarioPlayer;
 import lombok.extern.slf4j.Slf4j;
@@ -75,15 +76,13 @@ class TexasGame3PlayerIT {
                 .scenarioPlayers(players)
                 .communityCards(community)
                 .build();
+        var testScenario = new TestScenario(env).setup(params);
 
         // when
-//        var messages = new TestScenario(env)
-//                .setupScenario(params)
-//                .run();
+        var messages = testScenario.run();
 
         // then
-//        validator.validateEndOfRun(messages);
+        var validator = testScenario.getValidator();
+        validator.validateEndOfRun(messages);
     }
-
-
 }

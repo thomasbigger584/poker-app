@@ -12,6 +12,7 @@ import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.dto.round.RoundDTO;
 import com.twb.pokerapp.dto.table.TableDTO;
 import com.twb.pokerapp.testutils.game.params.GameRunnerParams;
+import com.twb.pokerapp.testutils.game.params.scenario.ScenarioParams;
 import com.twb.pokerapp.testutils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.testutils.sql.SqlClient;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
@@ -28,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @RequiredArgsConstructor
 public abstract class Validator {
+    protected final ScenarioParams params;
     protected final SqlClient sqlClient;
 
     public void validateHandleMessage(ServerMessageDTO message) {
@@ -66,7 +68,7 @@ public abstract class Validator {
 
     private void assertPlayersConnected(List<ServerMessageDTO> listenerMessages) {
         var messages = get(listenerMessages, ServerMessageType.PLAYER_CONNECTED);
-        assertEquals(2, messages.size());
+        assertEquals(params.getScenarioPlayers().size(), messages.size());
         messages.forEach(message -> {
             var payload = (PlayerConnectedDTO) message.getPayload();
 
@@ -100,7 +102,8 @@ public abstract class Validator {
 
     private void assertPlayersDisconnect() {
         var playerSessions = sqlClient.getPlayerSessions();
-        assertEquals(3, playerSessions.size());
+        var scenarioPlayersSize = params.getScenarioPlayers().size();
+        assertEquals(scenarioPlayersSize + 1, playerSessions.size());
 
         var listenerPlayerSessionList = playerSessions.stream()
                 .filter(playerSession -> playerSession.getUser().getUsername().equals("viewer1")).toList();
@@ -109,7 +112,7 @@ public abstract class Validator {
 
         var playerPlayerSessionList = playerSessions.stream()
                 .filter(playerSession -> playerSession.getUser().getUsername().startsWith("user")).toList();
-        assertEquals(2, playerPlayerSessionList.size());
+        assertEquals(scenarioPlayersSize, playerPlayerSessionList.size());
         playerPlayerSessionList.forEach(this::assertPlayerDisconnect);
     }
 

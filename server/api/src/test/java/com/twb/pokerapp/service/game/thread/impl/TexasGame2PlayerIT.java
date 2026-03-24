@@ -39,7 +39,7 @@ class TexasGame2PlayerIT {
     @Test
     void testGameWithoutPlayerActions() throws Throwable {
         // given
-        var scenario = new TestScenario(env).setupScenario(null, null);
+        var scenario = new TestScenario(env).setup(null, null);
 
         // when
         var messages = scenario.run();
@@ -52,7 +52,7 @@ class TexasGame2PlayerIT {
     @Test
     void testGameWithDefaultActions() throws Throwable {
         // given
-        var scenario = new TestScenario(env).setupScenario(
+        var scenario = new TestScenario(env).setup(
                 new FirstActionTurnHandler(),
                 new FirstActionTurnHandler()
         );
@@ -68,7 +68,7 @@ class TexasGame2PlayerIT {
     @Test
     void testGameWithOptimisticActions() throws Throwable {
         // given
-        var scenario = new TestScenario(env).setupScenario(
+        var scenario = new TestScenario(env).setup(
                 new OptimisticTurnHandler(),
                 new OptimisticTurnHandler()
         );
@@ -84,7 +84,7 @@ class TexasGame2PlayerIT {
     @Test
     void testGameWithSingleOptimisticActions() throws Throwable {
         // given
-        var scenario = new TestScenario(env).setupScenario(
+        var scenario = new TestScenario(env).setup(
                 new OptimisticTurnHandler(),
                 new FirstActionTurnHandler()
         );
@@ -100,7 +100,7 @@ class TexasGame2PlayerIT {
     @Test
     void testGameWithBetAndRaiseActions() throws Throwable {
         // given
-        var scenario = new TestScenario(env).setupScenario(
+        var scenario = new TestScenario(env).setup(
                 new OptimisticTurnHandler(),
                 new AggresiveTurnHandler()
         );
@@ -116,7 +116,7 @@ class TexasGame2PlayerIT {
     @Test
     void testGameWithSingleFirstActionActions() throws Throwable {
         // given
-        var scenario = new TestScenario(env).setupScenario(
+        var scenario = new TestScenario(env).setup(
                 new FirstActionTurnHandler(),
                 new OptimisticTurnHandler()
         );
@@ -132,7 +132,7 @@ class TexasGame2PlayerIT {
     @Test
     void testGameWithAllInAction() throws Throwable {
         // given
-        var scenario = new TestScenario(env).setupScenario(
+        var scenario = new TestScenario(env).setup(
                 new OptimisticTurnHandler(),
                 new AllInTurnHandler()
         );
@@ -148,7 +148,7 @@ class TexasGame2PlayerIT {
     @Test
     void testGameWithInvalidActions() throws Throwable {
         // given
-        var scenario = new TestScenario(env).setupScenario(
+        var scenario = new TestScenario(env).setup(
                 new OptimisticTurnHandler(),
                 new InvalidActionTurnHandler()
         );

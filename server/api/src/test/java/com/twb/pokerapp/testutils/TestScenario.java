@@ -23,7 +23,11 @@ public class TestScenario {
     private Validator validator;
     private GameRunner runner;
 
-    public TestScenario setupScenario(ScenarioParams params) throws Exception {
+    // *****************************************************************************************
+    // Public Methods
+    // *****************************************************************************************
+
+    public TestScenario setup(ScenarioParams params) throws Exception {
         setupDatabase(params);
 
         var sqlClient = env.getSqlClient();
@@ -33,7 +37,7 @@ public class TestScenario {
         var adminRestClient = env.getAdminRestClient();
         var table = adminRestClient.createTable(playerCount);
 
-        this.validator = new TexasValidator(sqlClient);
+        this.validator = new TexasValidator(params, sqlClient);
 
         var gameRunnerParams = GameRunnerParams.builder()
                 .keycloakClients(keycloakClients)
@@ -48,7 +52,7 @@ public class TestScenario {
         return this;
     }
 
-    public TestScenario setupScenario(TurnHandler... turnHandlers) throws Exception {
+    public TestScenario setup(TurnHandler... turnHandlers) throws Exception {
         var scenarioPlayers = new ArrayList<ScenarioPlayer>();
         for (var index = 0; index < turnHandlers.length; index++) {
             scenarioPlayers.add(
@@ -63,12 +67,19 @@ public class TestScenario {
                 .useFixedScenario(false)
                 .scenarioPlayers(scenarioPlayers)
                 .build();
-        return setupScenario(scenarioParams);
+        return setup(scenarioParams);
     }
 
     public PlayersServerMessages run() throws Exception {
+        if (this.runner == null) {
+            throw new IllegalStateException("Scenario not setup");
+        }
         return this.runner.run();
     }
+
+    // *****************************************************************************************
+    // Helper Methods
+    // *****************************************************************************************
 
     private void setupDatabase(ScenarioParams params) {
         var sqlClient = env.getSqlClient();

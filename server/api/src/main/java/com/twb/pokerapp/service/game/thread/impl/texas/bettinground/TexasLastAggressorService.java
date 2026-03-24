@@ -27,6 +27,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -80,6 +81,7 @@ public class TexasLastAggressorService {
 
     private Round round;
     private BettingRound bettingRound;
+    private List<PlayerSession> activePlayers = new ArrayList<>();
     private int playerIndex = 0;
     private UUID lastAggressorId = null;
     private boolean isFirstPass = true;
@@ -107,19 +109,27 @@ public class TexasLastAggressorService {
             round = getThrowGameInterrupted(roundRepository.findCurrentByTableId(params.getTableId()), "Round is empty for table");
             bettingRound = getThrowGameInterrupted(bettingRoundRepository.findCurrentByRoundId(round.getId()), "Betting Round is empty for round");
 
-            var activePlayers = getActivePlayers(params, round);
-
-            // TODO: check what happens with folds, we may need to gracefully handle this inside the loop
-            // Re-fetch players only if necessary to handle folds dynamically,
-            // but for index stability, it is often safer to keep the list and check 'isActive'
-            // inside the loop. For this implementation, we assume activePlayers list
-            // stays valid for indexing, but we check if they folded via DB/Status if needed.
+            if (activePlayers.isEmpty()) {
+                activePlayers = getActivePlayers(params, round);
+            }
 
             if (playerIndex >= activePlayers.size()) {
+                log.info("Wrapping index with size: {}...", activePlayers.size());
                 playerIndex = 0; // wrap index
             }
 
+            // if current player is not active (e.g. folded) then skip them
+            // but we need to increment the index to the next player
+            // effectively this loop will run until it finds an active player
+            // or it will circle back to the start and finish the betting round
             currentPlayer = activePlayers.get(playerIndex);
+            while (!Boolean.TRUE.equals(currentPlayer.getActive())) {
+                playerIndex++;
+                if (playerIndex >= activePlayers.size()) {
+                    playerIndex = 0;
+                }
+                currentPlayer = activePlayers.get(playerIndex);
+            }
 
             // --- TERMINATION CHECKS ---
             // This means everyone else has had a chance to call/fold, and we are back to the person who bet/raised.
@@ -154,13 +164,16 @@ public class TexasLastAggressorService {
         });
         playerIndex++;
         readTx.executeWithoutResult(status -> {
-            var activePlayers = getActivePlayers(params, round);
+            refreshActivePlayers();
             if (playerIndex >= activePlayers.size()) {
                 playerIndex = 0;
                 isFirstPass = false;
             }
-            if (activePlayers.size() <= 1) {
-                throw new LastAggressorBreakException("Only one active player, skipping betting round");
+            long activeCount = activePlayers.stream()
+                    .filter(p -> Boolean.TRUE.equals(p.getActive()))
+                    .count();
+            if (activeCount <= 1) {
+                throw new RoundInterruptedException("Only one active player, skipping betting round");
             }
         });
     }
@@ -190,6 +203,19 @@ public class TexasLastAggressorService {
             throw new RoundInterruptedException("Only one active player, skipping betting round");
         }
         return activePlayers;
+    }
+
+    private void refreshActivePlayers() {
+        var latestPlayers = playerSessionRepository.findPlayersOnRound(round.getId());
+        for (var index = 0; index < activePlayers.size(); index++) {
+            var currentPlayer = activePlayers.get(index);
+            for (var latestPlayer : latestPlayers) {
+                if (currentPlayer.getId().equals(latestPlayer.getId())) {
+                    activePlayers.set(index, latestPlayer);
+                    break;
+                }
+            }
+        }
     }
 
     private void waitPlayerTurn(GameThreadParams params, GameThread gameThread, PlayerSession playerSession) {

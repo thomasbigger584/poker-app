@@ -42,6 +42,11 @@ public class PlayerActionService {
 
         playerAction = repository.save(playerAction);
 
+        if (playerAction.getActionType() == ActionType.FOLD) {
+            playerSession.setActive(false);
+            playerSessionRepository.save(playerSession);
+        }
+
         return playerAction;
     }
 
