@@ -26,7 +26,7 @@ class TableResourceIT {
 
     @BeforeAll
     static void beforeAll() {
-        env.start(true);
+        env.start();
     }
 
     @AfterEach

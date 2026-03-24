@@ -1,5 +1,6 @@
 package com.twb.pokerapp.testutils.validator.impl;
 
+import com.google.common.base.Splitter;
 import com.twb.pokerapp.domain.enumeration.CardType;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.testutils.game.params.scenario.ScenarioParams;
@@ -21,8 +22,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
 public class TexasValidator extends Validator {
@@ -104,18 +104,31 @@ public class TexasValidator extends Validator {
 
     private void assertDealCommunity(List<ServerMessageDTO> listenerMessages) {
         var messages = get(listenerMessages, ServerMessageType.DEAL_COMMUNITY);
+
+        var expectedCommunityCards = new ArrayList<>(Arrays.stream(CardType.FLOP_CARDS).toList());
+        expectedCommunityCards.add(CardType.TURN_CARD);
+        expectedCommunityCards.add(CardType.RIVER_CARD);
+
+        var noCardsDealt = expectedCommunityCards.size();
+
         if (params.isUseFixedScenario()) {
             var communityCards = params.getCommunityCards();
             if (communityCards == null) {
                 return;
             }
-            throw new NotImplementedException("Assertions not implemented yet for a set amount of community cards should equal what was dealt");
-        } else {
-            var expectedCommunityCards = new ArrayList<>(Arrays.stream(CardType.FLOP_CARDS).toList());
-            expectedCommunityCards.add(CardType.TURN_CARD);
-            expectedCommunityCards.add(CardType.RIVER_CARD);
+            var communityCardsSplit = communityCards.split(";");
+            assertEquals(noCardsDealt, messages.size());
+            assertEquals(communityCardsSplit.length, messages.size());
+            for (var index = 0; index < noCardsDealt; index++) {
+                var message = messages.get(index);
+                assertInstanceOf(DealCommunityCardDTO.class, message.getPayload());
 
-            var noCardsDealt = expectedCommunityCards.size();
+                var payload = (DealCommunityCardDTO) message.getPayload();
+                var cardType = expectedCommunityCards.get(index);
+                assertCard(payload.getCard(), cardType);
+            }
+
+        } else {
             assertEquals(noCardsDealt, messages.size());
 
             for (var index = 0; index < noCardsDealt; index++) {
@@ -126,8 +139,5 @@ public class TexasValidator extends Validator {
                 assertCard(payload.getCard(), cardType);
             }
         }
-        var communityCards = params.getCommunityCards();
-
-
     }
 }

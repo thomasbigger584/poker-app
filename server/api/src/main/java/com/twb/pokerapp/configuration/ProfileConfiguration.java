@@ -12,21 +12,16 @@ import java.util.Arrays;
 
 @Slf4j
 @Configuration
+@RequiredArgsConstructor
 public class ProfileConfiguration {
     public static final String TEST_PROFILE = "test";
     public static final String LOCAL_PROFILE = "local";
     public static final String CLOUD_PROFILE = "cloud";
 
-    @Autowired
-    private Environment environment;
-
-    @Value("${app.use-fixed-scenario}")
-    private boolean useFixedScenario;
+    private final Environment environment;
 
     @PostConstruct
     public void init() {
-        log.info(">>>>> Use Fixed Scenario: {}", useFixedScenario);
-
         if (hasLocalProfile() && hasCloudProfile()) {
             throw new RuntimeException("Cannot set both local and cloud profiles");
         }
