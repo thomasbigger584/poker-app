@@ -93,6 +93,11 @@ public class TexasLastAggressorService {
         this.gameThread = gameThread;
     }
 
+    // *****************************************************************************************
+    // Public Methods
+    // *****************************************************************************************
+
+
     public void runPlayerInBettingRound(GameThread gameThread) {
         prePlayerTurn();
         gameThread.checkRoundInterrupted();
@@ -115,7 +120,7 @@ public class TexasLastAggressorService {
 
             if (playerIndex >= activePlayers.size()) {
                 log.info("Wrapping index with size: {}...", activePlayers.size());
-                playerIndex = 0; // wrap index
+                playerIndex = 0;
             }
 
             currentPlayer = activePlayers.get(playerIndex);

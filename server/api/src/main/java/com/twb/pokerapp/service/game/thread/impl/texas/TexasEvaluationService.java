@@ -73,7 +73,7 @@ public class TexasEvaluationService {
     private void evaluateMultiPlayersStanding(GameThreadParams params, Round round, List<PlayerSession> activePlayers) {
         var communityCards = cardRepository.findCommunityCardsForRound(round.getId());
 
-        var playerHandsList = new ArrayList<EvalPlayerHandDTO>();
+        var evalPlayerHandsList = new ArrayList<EvalPlayerHandDTO>();
         for (var potentialWinner : activePlayers) {
             var playerHandOpt = handRepository.findForPlayerAndRound(potentialWinner.getId(), round.getId());
             if (playerHandOpt.isPresent()) {
@@ -83,29 +83,29 @@ public class TexasEvaluationService {
                 var playerCards = cardRepository.findCardsForHand(hand.getId());
                 playableCards.addAll(playerCards);
 
-                var playerHand = new EvalPlayerHandDTO();
-                playerHand.setPlayerSession(potentialWinner);
-                playerHand.setCards(playableCards);
-                playerHand.setHand(hand);
-                playerHandsList.add(playerHand);
+                var evalPlayerHand = new EvalPlayerHandDTO();
+                evalPlayerHand.setPlayerSession(potentialWinner);
+                evalPlayerHand.setCards(playableCards);
+                evalPlayerHand.setHand(hand);
+                evalPlayerHandsList.add(evalPlayerHand);
             }
         }
 
-        handEvaluator.evaluate(round, playerHandsList);
+        handEvaluator.evaluate(round, evalPlayerHandsList);
 
         var pots = roundPotRepository.findByRound(round.getId());
         for (var pot : pots) {
-            handlePotDistribution(params, round, pot, playerHandsList);
+            handlePotDistribution(params, round, pot, evalPlayerHandsList);
         }
     }
 
-    private void handlePotDistribution(GameThreadParams params, Round round, RoundPot pot, List<EvalPlayerHandDTO> allEvaluatedHands) {
+    private void handlePotDistribution(GameThreadParams params, Round round, RoundPot pot, List<EvalPlayerHandDTO> evalPlayerHandsList) {
         var eligiblePlayers = pot.getEligiblePlayers();
         var eligiblePlayerIds = eligiblePlayers.stream().map(PlayerSession::getId).toList();
 
         // Filter hands for this pot, preserving order (best to worst after sort)
         // Note: EvalPlayerHandDTO must implement Comparable based on hand strength
-        var potHands = allEvaluatedHands.stream()
+        var potHands = evalPlayerHandsList.stream()
                 .filter(hand -> eligiblePlayerIds.contains(hand.getPlayerSession().getId()))
                 .sorted(Comparator.naturalOrder())
                 .toList();

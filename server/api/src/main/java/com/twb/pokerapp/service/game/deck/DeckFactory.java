@@ -24,8 +24,8 @@ public class DeckFactory {
 
     static {
         var valueIndex = 0;
-        for (var rank : RankType.values()) {
-            for (var suit : SuitType.values()) {
+        for (var suit : SuitType.values()) {
+            for (var rank : RankType.values()) {
                 CARDS.add(new Card(rank, suit, valueIndex++));
             }
         }

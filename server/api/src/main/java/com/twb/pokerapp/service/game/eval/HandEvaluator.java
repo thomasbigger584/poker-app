@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 @Component
@@ -28,10 +27,10 @@ public class HandEvaluator {
 
     private void evaluateRankAndHandType(List<EvalPlayerHandDTO> playerHandList) {
         for (var playerHand : playerHandList) {
-            playerHand.setRank(rankEvaluator.getRank(playerHand.getCards()));
-            playerHand.setHandType(handTypeEvaluator.evaluate(playerHand.getCards()));
+            var cards = playerHand.getCards();
+            playerHand.setRank(rankEvaluator.getRank(cards));
+            playerHand.setHandType(handTypeEvaluator.evaluate(cards));
         }
-//        playerHandList.sort(Comparator.reverseOrder());
     }
 
     private void savePlayerHandEvaluation(Round round, List<EvalPlayerHandDTO> playerHandsList) {
