@@ -31,7 +31,7 @@ public class HandEvaluator {
             playerHand.setRank(rankEvaluator.getRank(playerHand.getCards()));
             playerHand.setHandType(handTypeEvaluator.evaluate(playerHand.getCards()));
         }
-        playerHandList.sort(Comparator.reverseOrder());
+//        playerHandList.sort(Comparator.reverseOrder());
     }
 
     private void savePlayerHandEvaluation(Round round, List<EvalPlayerHandDTO> playerHandsList) {

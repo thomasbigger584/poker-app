@@ -107,7 +107,7 @@ public class TexasEvaluationService {
         // Note: EvalPlayerHandDTO must implement Comparable based on hand strength
         var potHands = allEvaluatedHands.stream()
                 .filter(hand -> eligiblePlayerIds.contains(hand.getPlayerSession().getId()))
-                .sorted(Comparator.reverseOrder())
+                .sorted(Comparator.naturalOrder())
                 .toList();
 
         if (potHands.isEmpty()) return;

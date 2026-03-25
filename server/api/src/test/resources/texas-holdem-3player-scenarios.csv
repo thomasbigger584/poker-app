@@ -1,2 +1,4 @@
 Scenario,user1Hand,user1Start,user2Hand,user2Start,user3Hand,user3Start,Community,PreFlop,Flop,Turn,River,Winner,TotalPot,user1Win,user2Win,user3Win
+"Pot remains 0 if all check",as;kd,5000,qs;js,5000,9h;8h,5000,2d;5s;7c;tc;3d,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,None,0,0,0,0
+"Single bet wins immediately",ac;kc,5000,7s;2d,5000,5h;5s,5000,None,user1:BET:500;user2:FOLD;user3:FOLD,None,None,None,user1,500,500,0,0
 "Kicker tie-breaker validation",ah;qc,5000,ad;jh,5000,2s;3c,5000,as;ts;7d;5s;2c,user1:BET:200;user2:CALL:200;user3:FOLD,user1:BET:500;user2:CALL:500,user1:BET:1000;user2:CALL:1000,user1:BET:1000;user2:CALL:1000,user1,5400,5400,0,0
