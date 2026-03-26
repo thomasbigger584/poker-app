@@ -12,6 +12,7 @@ import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.RoundRepository;
 import com.twb.pokerapp.service.BettingRoundService;
 import com.twb.pokerapp.service.PlayerActionService;
+import com.twb.pokerapp.service.game.thread.GamePlayerTurnService;
 import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
 import com.twb.pokerapp.service.game.thread.impl.texas.TexasPlayerActionService;
@@ -31,14 +32,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.twb.pokerapp.repository.RepositoryUtil.getThrowGameInterrupted;
 import static com.twb.pokerapp.util.TransactionUtil.afterCommit;
 
 @Slf4j
-@Component
+@Component("texasPlayerTurnService")
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class TexasLastAggressorService {
+public class TexasPlayerTurnService implements GamePlayerTurnService {
+
     @Autowired
     private TransactionTemplate writeTx;
 
@@ -76,8 +79,8 @@ public class TexasLastAggressorService {
     @Autowired
     private ServerMessageFactory messageFactory;
 
-    private final GameThreadParams params;
     private final GameThread gameThread;
+    private final GameThreadParams params;
 
     private Round round;
     private BettingRound bettingRound;
@@ -88,41 +91,61 @@ public class TexasLastAggressorService {
     private PlayerSession currentPlayer = null;
     private NextActionsDTO nextActions = null;
 
-    public TexasLastAggressorService(GameThreadParams params, GameThread gameThread) {
-        this.params = params;
+    public TexasPlayerTurnService(GameThread gameThread) {
         this.gameThread = gameThread;
-    }
-
-    // *****************************************************************************************
-    // Public Methods
-    // *****************************************************************************************
-
-
-    public void runPlayerInBettingRound(GameThread gameThread) {
-        prePlayerTurn();
-        gameThread.checkRoundInterrupted();
-        waitPlayerTurn();
-        postPlayerTurn();
+        this.params = gameThread.getParams();
     }
 
     // *****************************************************************************************
     // Lifecycle Methods
     // *****************************************************************************************
 
-    private void prePlayerTurn() {
+    @Override
+    public boolean executeTurn(GameThread gameThread) {
+        // Check if the betting round should naturally conclude before taking the turn
+        if (!prePlayerTurn()) {
+            return false;
+        }
+
+        gameThread.checkRoundInterrupted();
+        waitPlayerTurn();
+        postPlayerTurn();
+
+        return true;
+    }
+
+    @Override
+    public void finish() {
+        if (bettingRound == null) {
+            throw new GameInterruptedException("Betting round not found so cannot finish");
+        }
+        writeTx.executeWithoutResult(status -> {
+            var bettingRoundOpt = bettingRoundRepository.findById(bettingRound.getId());
+            bettingRoundOpt.ifPresent(br -> {
+                this.round = texasRoundPotService.reconcilePots(round);
+                this.bettingRound = bettingRoundService.setBettingRoundFinished(br);
+                var roundPots = this.round.getRoundPots();
+                afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, br, roundPots)));
+            });
+        });
+    }
+
+    // *****************************************************************************************
+    // Internal Methods
+    // *****************************************************************************************
+
+    private boolean prePlayerTurn() {
+        var shouldContinue = new AtomicBoolean(true);
         readTx.executeWithoutResult(status -> {
             round = getThrowGameInterrupted(roundRepository.findCurrentByTableId(params.getTableId()), "Round is empty for table");
             bettingRound = getThrowGameInterrupted(bettingRoundRepository.findCurrentByRoundId(round.getId()), "Betting Round is empty for round");
-
             if (activePlayers.isEmpty()) {
-                activePlayers = getActivePlayers(params, round);
+                activePlayers = getActivePlayers(round);
             }
-
             if (playerIndex >= activePlayers.size()) {
                 log.info("Wrapping index with size: {}...", activePlayers.size());
                 playerIndex = 0;
             }
-
             currentPlayer = activePlayers.get(playerIndex);
             while (!Boolean.TRUE.equals(currentPlayer.getActive())) {
                 playerIndex++;
@@ -134,15 +157,19 @@ public class TexasLastAggressorService {
 
             // --- TERMINATION CHECKS ---
             if (currentPlayer.getId().equals(lastAggressorId)) {
-                throw new LastAggressorBreakException("Returned to last aggressor %s, betting round finished.".formatted(currentPlayer.getId()));
+                log.info("Returned to last aggressor {}, betting round finished.", currentPlayer.getId());
+                shouldContinue.set(false);
+                return;
             }
-            // If we have circled back to the start and no one has bet (lastAggressorId is null).
             if (lastAggressorId == null && !isFirstPass && playerIndex == 0) {
-                throw new LastAggressorBreakException("Checked around, betting round finished.");
+                log.info("Checked around, betting round finished.");
+                shouldContinue.set(false);
+                return;
             }
             var prevPlayerActions = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId());
             nextActions = playerActionService.getNextActions(currentPlayer, prevPlayerActions);
         });
+        return shouldContinue.get();
     }
 
     private void waitPlayerTurn() {
@@ -161,7 +188,9 @@ public class TexasLastAggressorService {
                 throw new GameInterruptedException("Last Player Action not found for player: " + currentPlayer.getUser().getUsername());
             });
         });
+
         playerIndex++;
+
         readTx.executeWithoutResult(status -> {
             refreshActivePlayers();
             if (playerIndex >= activePlayers.size()) {
@@ -177,39 +206,27 @@ public class TexasLastAggressorService {
         });
     }
 
-    public void finishBettingRound() {
-        writeTx.executeWithoutResult(status -> {
-            var bettingRoundOpt = bettingRoundRepository.findById(bettingRound.getId());
-            bettingRoundOpt.ifPresent(bettingRound -> {
-                this.round = texasRoundPotService.reconcilePots(round);
-                this.bettingRound = bettingRoundService.setBettingRoundFinished(bettingRound);
-                var roundPots = this.round.getRoundPots();
-                afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, bettingRound, roundPots)));
-            });
-        });
-    }
-
     // *****************************************************************************************
     // Helper Methods
     // *****************************************************************************************
 
-    private List<PlayerSession> getActivePlayers(GameThreadParams params, Round round) {
-        var activePlayers = playerSessionRepository.findActivePlayersByTableId(params.getTableId(), round.getId());
-        if (activePlayers.isEmpty()) {
+    private List<PlayerSession> getActivePlayers(Round round) {
+        var players = playerSessionRepository.findActivePlayersByTableId(params.getTableId(), round.getId());
+        if (players.isEmpty()) {
             throw new GameInterruptedException("No Active Players found");
         }
-        if (activePlayers.size() == 1) {
+        if (players.size() == 1) {
             throw new RoundInterruptedException("Only one active player, skipping betting round");
         }
-        return activePlayers;
+        return players;
     }
 
     private void refreshActivePlayers() {
         var latestPlayers = playerSessionRepository.findPlayersOnRound(round.getId());
         for (var index = 0; index < activePlayers.size(); index++) {
-            var currentPlayer = activePlayers.get(index);
+            var session = activePlayers.get(index);
             for (var latestPlayer : latestPlayers) {
-                if (currentPlayer.getId().equals(latestPlayer.getId())) {
+                if (session.getId().equals(latestPlayer.getId())) {
                     activePlayers.set(index, latestPlayer);
                     break;
                 }
@@ -237,11 +254,5 @@ public class TexasLastAggressorService {
             var playerSessionManaged = getThrowGameInterrupted(playerSessionRepository.findById(playerSession.getId()), "Player Session not found");
             texasPlayerActionService.playerAction(playerSessionManaged, gameThread, createActionDto);
         });
-    }
-
-    static class LastAggressorBreakException extends RuntimeException {
-        public LastAggressorBreakException(String message) {
-            super(message);
-        }
     }
 }

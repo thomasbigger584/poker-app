@@ -12,6 +12,8 @@ import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,9 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Slf4j
-@Transactional
 @RequiredArgsConstructor
 @Component("texasPlayerActionService")
+@Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class TexasPlayerActionService extends GamePlayerActionService {
     private final PlayerActionRepository playerActionRepository;
     private final PlayerActionService playerActionService;

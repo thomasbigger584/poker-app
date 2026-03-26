@@ -37,6 +37,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     // *****************************************************************************************
     // Constructor Fields
     // *****************************************************************************************
+    @Getter
     protected final GameThreadParams params;
 
     // *****************************************************************************************

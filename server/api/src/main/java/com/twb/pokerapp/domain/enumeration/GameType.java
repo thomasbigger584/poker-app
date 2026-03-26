@@ -5,8 +5,11 @@ import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
 import com.twb.pokerapp.service.game.thread.impl.blackjack.BlackjackGameThread;
 import com.twb.pokerapp.service.game.thread.impl.blackjack.BlackjackPlayerActionService;
+import com.twb.pokerapp.service.game.thread.impl.blackjack.bettinground.BlackjackPlayerTurnService;
 import com.twb.pokerapp.service.game.thread.impl.texas.TexasGameThread;
 import com.twb.pokerapp.service.game.thread.impl.texas.TexasPlayerActionService;
+import com.twb.pokerapp.service.game.thread.GamePlayerTurnService;
+import com.twb.pokerapp.service.game.thread.impl.texas.bettinground.TexasPlayerTurnService;
 import com.twb.pokerapp.service.table.validation.TableValidationService;
 import com.twb.pokerapp.service.table.validation.impl.BlackjackTableValidationService;
 import com.twb.pokerapp.service.table.validation.impl.TexasTableValidationService;
@@ -32,6 +35,12 @@ public enum GameType {
         public GamePlayerActionService getPlayerActionService(ApplicationContext context) {
             return context.getBean(TexasPlayerActionService.class);
         }
+
+        @Override
+        public GamePlayerTurnService getPlayerTurnService(ApplicationContext context, GameThread gameThread) {
+            return context.getBean(TexasPlayerTurnService.class, gameThread);
+        }
+
     },
     BLACKJACK(1, 1) {
         @Override
@@ -48,6 +57,11 @@ public enum GameType {
         public GamePlayerActionService getPlayerActionService(ApplicationContext context) {
             return context.getBean(BlackjackPlayerActionService.class);
         }
+
+        @Override
+        public GamePlayerTurnService getPlayerTurnService(ApplicationContext context, GameThread gameThread) {
+            return context.getBean(BlackjackPlayerTurnService.class, gameThread);
+        }
     };
 
     private final int minPlayerCount;
@@ -58,4 +72,6 @@ public enum GameType {
     public abstract GameThread getGameThread(ApplicationContext context, GameThreadParams params);
 
     public abstract GamePlayerActionService getPlayerActionService(ApplicationContext context);
+
+    public abstract GamePlayerTurnService getPlayerTurnService(ApplicationContext context, GameThread gameThread);
 }

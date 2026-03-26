@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 import static com.twb.pokerapp.util.SleepUtil.sleepInMs;
 
 @Slf4j
-@Component
+@Component("texasGameThread")
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class TexasGameThread extends GameThread {
 
@@ -43,7 +43,7 @@ public class TexasGameThread extends GameThread {
         switch (roundState) {
             case INIT_DEAL -> initDeal();
             case INIT_DEAL_BET, FLOP_DEAL_BET, TURN_DEAL_BET, RIVER_DEAL_BET ->
-                    texasBettingRoundService.runBettingRound(params, this);
+                    texasBettingRoundService.runBettingRound(this);
             case FLOP_DEAL -> dealFlop();
             case TURN_DEAL -> dealCommunityCard(CardType.TURN_CARD);
             case RIVER_DEAL -> dealCommunityCard(CardType.RIVER_CARD);

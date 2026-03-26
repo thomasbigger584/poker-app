@@ -1,8 +1,7 @@
 package com.twb.pokerapp.service.game.thread.impl.texas.bettinground;
 
+import com.twb.pokerapp.domain.enumeration.GameType;
 import com.twb.pokerapp.service.game.thread.GameThread;
-import com.twb.pokerapp.service.game.thread.GameThreadParams;
-import com.twb.pokerapp.service.game.thread.impl.texas.bettinground.TexasLastAggressorService.LastAggressorBreakException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -14,23 +13,16 @@ import org.springframework.stereotype.Component;
 public class TexasBettingRoundService {
     private final ApplicationContext context;
 
-    public void runBettingRound(GameThreadParams params, GameThread gameThread) {
-        var service = context.getBean(TexasLastAggressorService.class, params, gameThread);
+    public void runBettingRound(GameThread gameThread) {
+        var service = GameType.TEXAS_HOLDEM
+                .getPlayerTurnService(context, gameThread);
         try {
-            runBettingRound(gameThread, service);
+            boolean shouldContinue;
+            do {
+                shouldContinue = service.executeTurn(gameThread);
+            } while (shouldContinue);
         } finally {
-            service.finishBettingRound();
-        }
-    }
-
-    private void runBettingRound(GameThread gameThread, TexasLastAggressorService service) {
-        while (true) {
-            try {
-                service.runPlayerInBettingRound(gameThread);
-            } catch (LastAggressorBreakException e) {
-                log.info("Breaking Betting loop Last Aggressor: {}", e.getMessage());
-                break;
-            }
+            service.finish();
         }
     }
 }
