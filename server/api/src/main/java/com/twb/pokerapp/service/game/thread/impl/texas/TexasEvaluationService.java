@@ -58,8 +58,8 @@ public class TexasEvaluationService {
         winner.setFunds(winner.getFunds() + totalWinnings);
         playerSessionRepository.save(winner);
 
-        var handOpt = handRepository.findForPlayerAndRound(winner.getId(), round.getId());
-        Hand hand = handOpt.orElse(null);
+        var hand = handRepository.findForPlayerAndRound(winner.getId(), round.getId())
+                .orElse(null);
         
         saveRoundWinner(winner, round, hand, totalWinnings);
 

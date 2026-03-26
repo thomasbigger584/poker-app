@@ -68,6 +68,7 @@ public class PlayerSessionService {
         playerSession.setUser(user);
         playerSession.setDealer(null);
         playerSession.setFunds(null);
+        playerSession.setActive(null);
         playerSession.setPokerTable(null);
         playerSession.setRound(null);
         playerSession.setConnectionType(null);

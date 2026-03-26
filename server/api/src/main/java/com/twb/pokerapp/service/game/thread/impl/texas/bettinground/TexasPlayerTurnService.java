@@ -197,7 +197,7 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
                 playerIndex = 0;
                 isFirstPass = false;
             }
-            long activeCount = activePlayers.stream()
+            var activeCount = activePlayers.stream()
                     .filter(p -> Boolean.TRUE.equals(p.getActive()))
                     .count();
             if (activeCount <= 1) {
