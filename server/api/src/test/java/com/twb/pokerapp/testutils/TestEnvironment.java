@@ -1,5 +1,7 @@
 package com.twb.pokerapp.testutils;
 
+import com.twb.pokerapp.domain.PlayerSession;
+import com.twb.pokerapp.domain.enumeration.SessionState;
 import com.twb.pokerapp.testutils.http.RestClient;
 import com.twb.pokerapp.testutils.keycloak.KeycloakClients;
 import com.twb.pokerapp.testutils.sql.SqlClient;
@@ -14,6 +16,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.util.List;
 
+import static com.twb.pokerapp.util.SleepUtil.sleepInMs;
 import static java.lang.management.ManagementFactory.getRuntimeMXBean;
 
 @Getter
@@ -127,6 +130,7 @@ public class TestEnvironment implements AutoCloseable {
     }
 
     public void afterEach() {
+        waitForSessionsToDisconnect();
         sqlClient.truncate();
     }
 
@@ -143,5 +147,20 @@ public class TestEnvironment implements AutoCloseable {
 
     private static String getPortBindingString(int port) {
         return "%d:%d".formatted(port, port);
+    }
+
+    private void waitForSessionsToDisconnect() {
+        var timeout = System.currentTimeMillis() + 10000;
+        while (System.currentTimeMillis() < timeout) {
+            var sessions = sqlClient.getPlayerSessions();
+            if (sessions.isEmpty()|| isAllDisconnected(sessions)) {
+                return;
+            }
+            sleepInMs(200);
+        }
+    }
+
+    private static boolean isAllDisconnected(List<PlayerSession> sessions) {
+        return sessions.stream().allMatch(playerSession -> SessionState.CONNECTED != playerSession.getSessionState());
     }
 }
