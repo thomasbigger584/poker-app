@@ -143,7 +143,7 @@ public class TableGameService {
             }
 
             var playerSessions = playerSessionRepository.findConnectedPlayersByTableId(tableId);
-            if (playerSessions.size() < 2) {
+            if (playerSessions.isEmpty()) {
                 gameThread.stopGame();
             }
         }));

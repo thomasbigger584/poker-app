@@ -2,6 +2,7 @@ package com.twb.pokerapp.service.game.thread;
 
 import com.antkorwin.xsync.XSync;
 import com.twb.pokerapp.domain.PokerTable;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -36,7 +37,12 @@ public class GameThreadManager {
         return mutex.evaluate(table.getId(), () -> {
             var threadOpt = getIfExists(table);
             if (threadOpt.isPresent()) {
-                return threadOpt.get();
+                var thread = threadOpt.get();
+                if (!thread.isStopping()) {
+                    return thread;
+                }
+                log.info("Game thread for table {} is stopping, waiting for it to finish before creating a new one.", table.getId());
+                thread.stopGame();
             }
             var params = getGameThreadParams(table);
             var thread = create(params);
@@ -48,6 +54,7 @@ public class GameThreadManager {
                 GAME_THREAD_MAP.put(table.getId(), thread);
                 return thread;
             } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 throw new RuntimeException("Exception thrown while waiting for game to start", e);
             }
         });
@@ -68,6 +75,14 @@ public class GameThreadManager {
             }
             return false;
         });
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        log.info("SShutting down GameThreadManagerr, stopping all game threads...");
+        for (var thread : GAME_THREAD_MAP.values()) {
+            thread.stopGame();
+        }
     }
 
     // -------------------------------------------------------------------------------------

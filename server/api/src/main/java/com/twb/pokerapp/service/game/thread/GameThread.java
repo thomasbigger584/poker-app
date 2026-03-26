@@ -13,12 +13,12 @@ import com.twb.pokerapp.service.game.thread.dto.PlayerTurnLatchDTO;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.twb.pokerapp.repository.RepositoryUtil.getThrowGameInterrupted;
@@ -33,6 +33,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     // *****************************************************************************************
     private static final int MESSAGE_POLL_DIVISOR = 5;
     private static final int MINIMUM_PLAYERS_CONNECTED = 1;
+    private static final int GAME_STOP_TIMEOUT_IN_SECS = 10;
 
     // *****************************************************************************************
     // Constructor Fields
@@ -63,12 +64,13 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
         try {
             initializeTable();
 
-            waitForPlayersToJoin(MINIMUM_PLAYERS_CONNECTED);
-
-            while (isPlayersJoined(MINIMUM_PLAYERS_CONNECTED)) {
+            while (!interruptGame.get()) {
+                waitForPlayersToJoin(MINIMUM_PLAYERS_CONNECTED);
                 checkGameInterrupted();
+
                 waitForMinimumPlayersToJoin();
                 checkGameInterrupted();
+
                 while (isPlayersJoined()) {
                     checkGameInterrupted();
                     createNewRound();
@@ -81,9 +83,11 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                     checkGameInterrupted();
                 }
             }
-            finishGame();
+        } catch (GameInterruptedException | RoundInterruptedException e) {
+            log.info("Game or Round interrupted for table {}: {}", params.getTableId(), e.getMessage());
         } catch (Exception e) {
-            log.error(e.getMessage(), e);
+            log.error("Unexpected error in GameThread for table {}: {}", params.getTableId(), e.getMessage(), e);
+        } finally {
             finishRound();
             finishGame();
         }
@@ -110,11 +114,9 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
 
     private void waitForPlayersToJoin(int minPlayerCount) {
         var pollCount = 0;
-        List<PlayerSession> playerSessions;
         do {
             checkGameInterrupted();
-            playerSessions = playerSessionRepository.findConnectedPlayersByTableId(params.getTableId());
-            if (playerSessions.size() >= minPlayerCount) {
+            if (isPlayersJoined(minPlayerCount)) {
                 return;
             }
             if (pollCount % MESSAGE_POLL_DIVISOR == 0) {
@@ -122,7 +124,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
             }
             sleepInMs(params.getDbPollWaitMs());
             pollCount++;
-        } while (playerSessions.size() < minPlayerCount);
+        } while (true);
     }
 
     private void createNewRound() {
@@ -150,19 +152,16 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     }
 
     private boolean isPlayersJoined(int count) {
-        var playerSessions = playerSessionRepository.findConnectedPlayersByTableId(params.getTableId());
-        if (CollectionUtils.isEmpty(playerSessions)) {
-            throw new GameInterruptedException("No more players connected");
-        }
-        return playerSessions.size() >= count;
+        return playerSessionRepository.countConnectedPlayersByTableId(params.getTableId()) >= count;
     }
 
     private void initRound() {
-        roundInProgress.set(true);
-        interruptRound.set(false);
-        shuffleCards();
-        checkRoundInterrupted();
-        onInitRound();
+        if (roundInProgress.compareAndSet(false, true)) {
+            interruptRound.set(false);
+            shuffleCards();
+            checkRoundInterrupted();
+            onInitRound();
+        }
     }
 
     private void runRound() {
@@ -192,7 +191,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     }
 
     private void finishRound() {
-        if (roundInProgress.get()) {
+        if (roundInProgress.compareAndSet(true, false)) {
             writeTx.executeWithoutResult(status -> {
                 var roundOpt = roundRepository.findById(roundId);
                 roundOpt.ifPresent(round -> {
@@ -211,17 +210,15 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                     afterCommit(() -> dispatcher.send(table, messageFactory.roundFinished(winners)));
                 });
             });
+            sleepInMs(params.getRoundEndWaitMs());
         }
-        roundInProgress.set(false);
-        sleepInMs(params.getRoundEndWaitMs());
     }
 
     private void finishGame() {
-        if (gameInProgress.get()) {
+        if (gameInProgress.compareAndSet(true, false)) {
             dispatcher.send(table, messageFactory.gameFinished());
             threadManager.delete(params.getTableId());
         }
-        gameInProgress.set(false);
     }
 
     // *****************************************************************************************
@@ -278,7 +275,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     private void checkGameInterrupted() {
         if (interruptGame.get() || Thread.interrupted()) {
             var endLatch = params.getEndLatch();
-            for (var index = 0; index < endLatch.getCount(); index++) {
+            while (endLatch.getCount() > 0) {
                 endLatch.countDown();
             }
             throw new GameInterruptedException("Game is interrupted");
@@ -296,10 +293,19 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     public void stopGame() {
         interruptGame.set(true);
         try {
-            params.getEndLatch().await();
+            boolean terminated = params.getEndLatch().await(GAME_STOP_TIMEOUT_IN_SECS, TimeUnit.SECONDS);
+            if (!terminated) {
+                log.warn("Game thread for table {} did not terminate within {} seconds. Forcing interrupt...", params.getTableId(), GAME_STOP_TIMEOUT_IN_SECS);
+                this.interrupt();
+            }
         } catch (InterruptedException e) {
-            log.error("Failed to wait for game end latch", e);
+            log.error("Failed to wait for game end latch for table {}", params.getTableId(), e);
+            Thread.currentThread().interrupt();
         }
+    }
+
+    public boolean isStopping() {
+        return interruptGame.get();
     }
 
     // ***************************************************************
@@ -309,8 +315,6 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     @Override
     public void uncaughtException(Thread thread, Throwable throwable) {
         log.error("Exception thrown in thread", throwable);
-        finishRound();
-        finishGame();
         stopGame();
     }
 
