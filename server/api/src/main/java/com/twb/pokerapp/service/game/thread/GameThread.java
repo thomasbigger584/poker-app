@@ -291,9 +291,9 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
 
     @CallerThread
     public void stopGame() {
-        interruptGame.set(true);
+        interruptGame.compareAndSet(false, true);
         try {
-            boolean terminated = params.getEndLatch().await(GAME_STOP_TIMEOUT_IN_SECS, TimeUnit.SECONDS);
+            var terminated = params.getEndLatch().await(GAME_STOP_TIMEOUT_IN_SECS, TimeUnit.SECONDS);
             if (!terminated) {
                 log.warn("Game thread for table {} did not terminate within {} seconds. Forcing interrupt...", params.getTableId(), GAME_STOP_TIMEOUT_IN_SECS);
                 this.interrupt();
@@ -305,7 +305,8 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     }
 
     public boolean isStopping() {
-        return interruptGame.get();
+        return interruptGame.get()
+                || !gameInProgress.get();
     }
 
     // ***************************************************************

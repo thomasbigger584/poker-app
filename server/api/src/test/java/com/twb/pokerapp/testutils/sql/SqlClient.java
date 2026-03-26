@@ -44,6 +44,7 @@ public class SqlClient implements AutoCloseable {
             }
         }
         transaction.commit();
+        em.clear();
     }
 
     public void insertFixedScenario(ScenarioParams params) {
@@ -57,6 +58,7 @@ public class SqlClient implements AutoCloseable {
         em.persist(fixedScenario);
 
         transaction.commit();
+        em.clear();
     }
 
     public void updateUsersTotalFunds(ScenarioParams params) {
@@ -73,6 +75,7 @@ public class SqlClient implements AutoCloseable {
                     .executeUpdate();
         }
         transaction.commit();
+        em.clear();
     }
 
     // *****************************************************************************************
@@ -124,6 +127,7 @@ public class SqlClient implements AutoCloseable {
     // *****************************************************************************************
 
     private <T> Optional<T> getById(UUID id, Class<T> clazz) {
+        em.clear();
         try {
             var className = clazz.getSimpleName();
             var query = "SELECT o FROM " + className + " o WHERE o.id = :id";
@@ -137,6 +141,7 @@ public class SqlClient implements AutoCloseable {
     }
 
     private <T> List<T> getAll(Class<T> clazz) {
+        em.clear();
         var className = clazz.getSimpleName();
         var query = "SELECT o FROM " + className + " o";
         return em.createQuery(query, clazz)

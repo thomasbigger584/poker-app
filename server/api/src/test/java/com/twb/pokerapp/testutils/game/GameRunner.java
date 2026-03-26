@@ -97,9 +97,9 @@ public class GameRunner {
 
     private void throwExceptionIfOccurred(List<AbstractTestUser> players) {
         for (var player : players) {
-            var exceptionThrown = player.getExceptionThrown();
-            if (exceptionThrown.get() != null) {
-                throw new RuntimeException("Test Failure for player: " + player, exceptionThrown.get());
+            var exceptionThrown = player.getExceptionThrown().get();
+            if (exceptionThrown != null) {
+                throw new RuntimeException("Test Failure for player: " + player.getUsername(), exceptionThrown);
             }
         }
     }

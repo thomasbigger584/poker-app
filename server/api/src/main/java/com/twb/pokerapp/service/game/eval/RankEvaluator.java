@@ -14,7 +14,7 @@ import java.util.List;
 public class RankEvaluator {
     static {
         try {
-            String path = System.getenv("EVALUATOR_SO_PATH");
+            var path = System.getenv("EVALUATOR_SO_PATH");
             if (path != null) {
                 System.load(path);
                 log.info("Successfully loaded native library.");

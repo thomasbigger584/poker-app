@@ -160,7 +160,7 @@ public class TestEnvironment implements AutoCloseable {
         }
     }
 
-    private static boolean isAllDisconnected(List<PlayerSession> sessions) {
+    private boolean isAllDisconnected(List<PlayerSession> sessions) {
         return sessions.stream().allMatch(playerSession -> SessionState.CONNECTED != playerSession.getSessionState());
     }
 }

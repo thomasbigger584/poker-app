@@ -16,9 +16,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.UUID;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -32,7 +29,7 @@ public class PlayerSessionService {
         var sessionOpt = repository.findByTableIdAndUsername(table.getId(), user.getUsername());
         
         if (sessionOpt.isPresent() && sessionOpt.get().getSessionState() == SessionState.CONNECTED) {
-            String message = String.format("User %s is already connected to table %s", user.getUsername(), table.getId());
+            var message = String.format("User %s is already connected to table %s", user.getUsername(), table.getId());
             log.warn(message);
             throw new GamePlayerErrorLogException(sessionOpt.get(), message);
         }
@@ -72,28 +69,24 @@ public class PlayerSessionService {
         session.setSessionState(SessionState.DISCONNECTED);
         session.setPokerTable(null);
         session.setRound(null);
-        session.setActive(false);
-        session.setFunds(0d);
-        session.setDealer(false);
-        session.setCurrent(false);
+        session.setActive(null);
+        session.setFunds(null);
+        session.setDealer(null);
+        session.setCurrent(null);
+        session.setConnectionType(null);
         
         repository.save(session);
     }
 
     private int getNextAvailablePosition(PokerTable table) {
         var sessions = repository.findConnectedPlayersByTableId(table.getId());
-        for (int position = 1; position <= table.getMaxPlayers(); position++) {
-            final int p = position;
-            if (sessions.stream().noneMatch(s -> s.getPosition() != null && s.getPosition() == p)) {
+        for (var position = 1; position <= table.getMaxPlayers(); position++) {
+            final var finalPosition = position;
+            if (sessions.stream().noneMatch(s ->
+                    s.getPosition() != null && s.getPosition() == finalPosition)) {
                 return position;
             }
         }
-        return 1; // Fallback
-    }
-
-    @Transactional(readOnly = true)
-    public List<PlayerSessionDTO> getByTableId(UUID tableId) {
-        return repository.findConnectedByTableId(tableId)
-                .stream().map(mapper::modelToDto).toList();
+        return 1;
     }
 }

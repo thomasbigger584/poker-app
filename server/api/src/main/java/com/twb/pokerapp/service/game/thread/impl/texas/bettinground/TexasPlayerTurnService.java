@@ -102,7 +102,6 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
 
     @Override
     public boolean executeTurn(GameThread gameThread) {
-        // Check if the betting round should naturally conclude before taking the turn
         if (!prePlayerTurn()) {
             return false;
         }

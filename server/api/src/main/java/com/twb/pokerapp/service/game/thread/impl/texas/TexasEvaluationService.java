@@ -1,7 +1,6 @@
 package com.twb.pokerapp.service.game.thread.impl.texas;
 
 import com.twb.pokerapp.domain.*;
-import com.twb.pokerapp.domain.enumeration.HandType;
 import com.twb.pokerapp.repository.*;
 import com.twb.pokerapp.service.game.eval.HandEvaluator;
 import com.twb.pokerapp.service.game.eval.dto.EvalPlayerHandDTO;
@@ -103,8 +102,6 @@ public class TexasEvaluationService {
         var eligiblePlayers = pot.getEligiblePlayers();
         var eligiblePlayerIds = eligiblePlayers.stream().map(PlayerSession::getId).toList();
 
-        // Filter hands for this pot, preserving order (best to worst after sort)
-        // Note: EvalPlayerHandDTO must implement Comparable based on hand strength
         var potHands = evalPlayerHandsList.stream()
                 .filter(hand -> eligiblePlayerIds.contains(hand.getPlayerSession().getId()))
                 .sorted(Comparator.naturalOrder())
@@ -122,7 +119,7 @@ public class TexasEvaluationService {
             if (nextHand.compareTo(bestHand) == 0) {
                 winners.add(nextHand);
             } else {
-                break; // Since sorted, once we find a worse hand, we stop
+                break;
             }
         }
 
@@ -178,7 +175,7 @@ public class TexasEvaluationService {
         var potName = (pot.getPotIndex() == 0) ? "Main Pot" : "Side Pot " + pot.getPotIndex();
         var winnerNames = getReadableWinners(winners);
         
-        String handTypeStr = "Unknown";
+        var handTypeStr = "Unknown";
         if (!winners.isEmpty() && winners.getFirst().getHandType() != null) {
             handTypeStr = winners.getFirst().getHandType().getValue();
         }

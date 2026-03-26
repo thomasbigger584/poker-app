@@ -117,11 +117,12 @@ public abstract class Validator {
     }
 
     private void assertPlayerDisconnect(PlayerSession playerSession) {
-        assertNull(playerSession.getDealer());
-        assertNull(playerSession.getFunds());
-        assertNull(playerSession.getPokerTable());
-        assertNull(playerSession.getConnectionType());
-        assertEquals(SessionState.DISCONNECTED, playerSession.getSessionState());
+        var username = playerSession.getUser().getUsername();
+        assertNull(playerSession.getDealer(), "Dealer should be null for user " + username);
+        assertNull(playerSession.getFunds(), "Funds should be null for user " + username);
+        assertNull(playerSession.getPokerTable(), "Table should be null for user " + username);
+        assertNull(playerSession.getConnectionType(), "ConnectionType should be null for user " + username);
+        assertEquals(SessionState.DISCONNECTED, playerSession.getSessionState(), "SessionState should be DISCONNECTED for user " + username);
     }
 
     // ***************************************************************

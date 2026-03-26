@@ -135,16 +135,16 @@ public class TableGameService {
             }
             var gameThread = threadOpt.get();
 
-            if (playerSession.getConnectionType() == ConnectionType.PLAYER) {
-                var playerActionService = table.getGameType().getPlayerActionService(context);
-                var action = new CreatePlayerActionDTO();
-                action.setAction(ActionType.FOLD);
-                playerActionService.playerAction(playerSession, gameThread, action);
-            }
-
             var playerSessions = playerSessionRepository.findConnectedPlayersByTableId(tableId);
-            if (playerSessions.isEmpty()) {
-                gameThread.stopGame();
+            if (playerSessions.size() >= table.getMinPlayers()) {
+                if (playerSession.getConnectionType() == ConnectionType.PLAYER) {
+                    var playerActionService = table.getGameType().getPlayerActionService(context);
+                    var action = new CreatePlayerActionDTO();
+                    action.setAction(ActionType.FOLD);
+                    playerActionService.playerAction(playerSession, gameThread, action);
+                }
+            } else {
+                afterCommit(gameThread::stopGame);
             }
         }));
     }
