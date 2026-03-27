@@ -46,6 +46,9 @@ jwt:
       principal-attribute: preferred_username
 server:
   port: 8081
+  tomcat:
+    websocket:
+      idle-timeout: 300000
 app:
   deal-wait-ms: 1000
   db-poll-wait-ms: 1000

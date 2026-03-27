@@ -5,14 +5,10 @@ RUN apk add --update g++ make git && \
 
 WORKDIR /app
 
-COPY . .
-
-RUN sed -i 's/\r//g' ./mvnw && chmod +x ./mvnw
-
 RUN git clone -b develop https://github.com/HenryRLee/PokerHandEvaluator.git /app/src/main/cpp/PokerHandEvaluator
+COPY ./src/main/cpp/ /app/src/main/cpp/
 
 ENV EVALUATOR_SO_PATH=/app/src/main/cpp/evaluator.so
-
 RUN g++ -shared -fPIC -Wl,--no-undefined -o $EVALUATOR_SO_PATH \
     /app/src/main/cpp/PokerEvaluator.cpp \
     /app/src/main/cpp/PokerHandEvaluator/cpp/src/evaluator7.c \
@@ -25,6 +21,12 @@ RUN g++ -shared -fPIC -Wl,--no-undefined -o $EVALUATOR_SO_PATH \
     -I $JAVA_HOME/include \
     -I $JAVA_HOME/include/linux
 
+COPY mvnw .
+COPY .mvn .mvn
+COPY pom.xml .
+RUN sed -i 's/\r//g' ./mvnw && chmod +x ./mvnw
+
+COPY src ./src
 RUN --mount=type=cache,target=~/.m2 ./mvnw --no-transfer-progress package
 
 FROM bellsoft/liberica-runtime-container:jre-21-musl
