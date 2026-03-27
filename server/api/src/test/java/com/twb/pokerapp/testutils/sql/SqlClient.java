@@ -18,6 +18,10 @@ public class SqlClient implements AutoCloseable {
     private final EntityManagerFactory emf;
     private final EntityManager em;
 
+    // *****************************************************************************************
+    // Constructors
+    // *****************************************************************************************
+
     public SqlClient(JdbcDatabaseContainer<?> container) {
         this(container.getJdbcUrl(), container.getUsername(), container.getPassword());
     }
@@ -31,6 +35,10 @@ public class SqlClient implements AutoCloseable {
         emf = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, properties);
         em = emf.createEntityManager();
     }
+
+    // *****************************************************************************************
+    // Public Methods
+    // *****************************************************************************************
 
     public void truncate() {
         runInTransaction(() -> {

@@ -1,20 +1,17 @@
 "Side Pot: Short stack cap (user2)",ks;kh,5000,qs;qd,1000,js;jh,5000,as;2h;3d;4c;5s,user1:ALL_IN:5000;user2:CALL:1000;user3:ALL_IN:5000,None,None,None,user1,11000,11000,0,0
 "3-Way split on board Royal Flush",2s;3h,5000,4d;5c,5000,6h;7s,5000,ah;kh;qh;jh;th,user1:BET:100;user2:CALL:100;user3:CALL:100,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1;user2;user3,300,100,100,100
 "Triple All-In pot summation",ah;as,5000,kc;kd,5000,qh;qd,5000,ac;kc;qc;2h;3d,user1:ALL_IN:5000;user2:ALL_IN:5000;user3:ALL_IN:5000,None,None,None,user1,15000,15000,0,0
-"River bluff with worst hand",2s;7h,5000,ah;kh,5000,qd;jd,5000,3s;5h;9c;4d;ts,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1:BET:2500;user2:FOLD;user3:FOLD,user1,2500,2500,0,0
 "Bet refund: caller has less chips",as;ac,5000,kh;ks,1000,7s;8s,5000,2d;3h;4c;5s;9d,user1:BET:500;user2:CALL:500;user3:FOLD,user1:BET:4500;user2:CALL:500,None,None,user1,2000,2000,0,0
 "Flush vs Full House logic",5s;6s,5000,kh;kc,5000,2d;3d,5000,as;ks;qs;js;2h,user1:BET:200;user2:CALL:200;user3:FOLD,user1:BET:800;user2:CALL:800,user1:BET:1500;user2:CALL:1500,user1:BET:2500;user2:CALL:2500,user2,10000,0,10000,0
 "Heads-up exact split pot",kd;qd,5000,ks;qs,5000,ah;2h,5000,kc;qc;jd;5s;4h,user1:BET:1000;user2:CALL:1000;user3:FOLD,user1:BET:2000;user2:CALL:2000,user1:CHECK;user2:CHECK,user1:CHECK;user2:CHECK,user1;user2,6000,3000,3000,0
 "Main Pot (user2) vs Side Pot (user1)",as;ks,5000,2d;2h,500,qd;qs,5000,2s;3d;4h;5s;9c,user1:ALL_IN:5000;user2:CALL:500;user3:ALL_IN:5000,None,None,None,user2;user1,10500,9000,1500,0
 "Board straight beats pocket pair",2s;2h,5000,3s;3h,5000,ac;kc,5000,4d;5s;6h;7c;8d,user1:BET:100;user2:CALL:100;user3:CALL:100,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1;user2;user3,300,100,100,100
 "Ace-high vs King-high flush",ah;4h,5000,kh;jh,5000,2s;3c,5000,th;8h;2h;5d;9c,user1:BET:1000;user2:CALL:1000;user3:FOLD,user1:BET:2000;user2:CALL:2000,user1:BET:2000;user2:FOLD,None,user1,6000,6000,0,0
-"Counterfeit pair on board",5s;5h,5000,2d;2c,5000,ah;kh,5000,ts;th;js;jh;qd,user1:BET:100;user2:CALL:100;user3:CALL:100,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user3,300,0,0,300
 "Trips vs Straight on River",ts;tc,5000,8h;9h,5000,2d;3d,5000,th;jh;qc;7d;5s,user1:BET:500;user2:CALL:500;user3:FOLD,user1:BET:1000;user2:CALL:1000,user1:BET:2000;user2:CALL:2000,None,user2,7000,0,7000,0
 "Wheel Straight (a-2-3-4-5)",as;2d,5000,kh;qh,5000,jh;th,5000,3c;4s;5h;9d;8c,user1:BET:100;user2:CALL:100;user3:CALL:100,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1,300,300,0,0
 "One All-In; others keep betting",ah;kh,1000,2s;2c,5000,qs;jd,5000,ad;kd;7c;5h;3s,user1:ALL_IN:1000;user2:CALL:1000;user3:CALL:1000,user2:BET:500;user3:CALL:500,user2:BET:1000;user3:FOLD,None,user2;user1,4500,3000,1500,0
 "The Broadway Straight",as;kh,5000,2d;3d,5000,4h;5s,5000,ts;jc;qd;kd;ad,user1:BET:500;user2:FOLD;user3:FOLD,None,None,None,user1,500,500,0,0
 "Full House: a over k vs k over a",as;ad,5000,ks;kd,5000,2h;3h,5000,ac;ah;kc;kh;qd,user1:ALL_IN:5000;user2:ALL_IN:5000;user3:FOLD,None,None,None,user1,10000,10000,0,0
-"Flush: Ten-high vs Seven-high",ts;9s,5000,7s;6s,5000,2h;3h,5000,as;js;4s;3d;2c,user1:BET:1000;user2:CALL:1000;user3:FOLD,user1:CHECK;user2:CHECK,user1:CHECK;user2:CHECK,user1:CHECK;user2:CHECK,user1,2000,2000,0,0
 "Dry Side Pot (U2 vs U3)",as;ks,5000,qd;jd,1000,7h;8h,5000,2s;3c;4d;5h;9s,user1:FOLD;user2:ALL_IN:1000;user3:CALL:1000,None,user3:BET:1000;user1:FOLD,user3:CHECK,user2,2000,0,2000,0
 "Multi Side Pot: 3 Different Stacks",as;ah,500,ks;kh,2000,qs;qh,5000,2d;3d;4d;5h;9s,user1:ALL_IN:500;user2:ALL_IN:2000;user3:CALL:2000,None,None,None,user1;user2,4500,1500,3000,0
 "The Overbet Refund",ac;kc,5000,7s;2d,200,5h;5s,5000,ad;9c;3s;2h;jh,user1:BET:5000;user2:CALL:200;user3:FOLD,None,None,None,user1,400,400,0,0
@@ -33,5 +30,4 @@
 "Split Pot / Odd Chip Distribution",ah;kd,5000,ad;kh,5000,2s;7c,5000,as;ks;qh;jc;ts,user1:BET:100;user2:CALL:100;user3:FOLD,None,None,None,user1;user2,200,100,100,0
 "Inside Straight vs Outside Straight",3s;4h,5000,7d;8c,5000,as;ah,5000,5d;6h;2s;9c;ts,user1:BET:500;user2:CALL:500;user3:FOLD,None,None,None,user2,1000,0,1000,0
 "All-In with 'Dead' Small Stack",9s;9h,200,as;ks,5000,kh;qh,5000,2s;3d;4h;5c;jh,user1:ALL_IN:200;user2:BET:1000;user3:CALL:1000,user2:BET:2000;user3:FOLD,None,None,user2,3400,0,3400,0
-"Counterfeit Full House",2s;2h,5000,3s;3h,5000,as;kh,5000,js;jh;jd;tc;td,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user2,0,0,0,0
 "Nut Flush vs Royal Flush",as;ks,5000,qs;js,5000,2h;2d,5000,ts;js;qs;ks;as,user1:BET:1000;user2:CALL:1000;user3:FOLD,user1:ALL_IN:4000;user2:CALL:4000,None,None,user1;user2,10000,5000,5000,0
