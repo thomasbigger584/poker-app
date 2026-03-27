@@ -33,49 +33,41 @@ public class SqlClient implements AutoCloseable {
     }
 
     public void truncate() {
-        var transaction = em.getTransaction();
-        transaction.begin();
-        var entities = em.getMetamodel().getEntities();
-        for (var entity : entities) {
-            // don't wipe the users as they get populated on app startup
-            if (!entity.getName().equals(AppUser.class.getSimpleName())) {
-                var nativeTableName = getNativeTableName(entity);
-                em.createNativeQuery("TRUNCATE TABLE " + nativeTableName + " CASCADE").executeUpdate();
+        runInTransaction(() -> {
+            var entities = em.getMetamodel().getEntities();
+            for (var entity : entities) {
+                // don't wipe the users as they get populated on app startup
+                if (!entity.getName().equals(AppUser.class.getSimpleName())) {
+                    var nativeTableName = getNativeTableName(entity);
+                    em.createNativeQuery("TRUNCATE TABLE " + nativeTableName + " CASCADE").executeUpdate();
+                }
             }
-        }
-        transaction.commit();
-        em.clear();
+        });
     }
 
     public void insertFixedScenario(ScenarioParams params) {
-        var transaction = em.getTransaction();
-        transaction.begin();
-
-        var fixedScenario = new FixedScenario();
-        fixedScenario.setPlayerHands(params.getScenarioPlayers()
-                .stream().map(ScenarioPlayer::getHandCards).toList());
-        fixedScenario.setCommunityCards(params.getCommunityCards());
-        em.persist(fixedScenario);
-
-        transaction.commit();
-        em.clear();
+        runInTransaction(() -> {
+            var fixedScenario = new FixedScenario();
+            fixedScenario.setPlayerHands(params.getScenarioPlayers()
+                    .stream().map(ScenarioPlayer::getHandCards).toList());
+            fixedScenario.setCommunityCards(params.getCommunityCards());
+            em.persist(fixedScenario);
+        });
     }
 
     public void updateUsersTotalFunds(ScenarioParams params) {
-        var transaction = em.getTransaction();
-        transaction.begin();
-        for (var scenarioPlayer : params.getScenarioPlayers()) {
-            em.createQuery("""
+        runInTransaction(() -> {
+            for (var scenarioPlayer : params.getScenarioPlayers()) {
+                em.createQuery("""
                             UPDATE AppUser u
                             SET u.totalFunds = :totalFunds
                             WHERE u.username = :username
                             """)
-                    .setParameter("totalFunds", scenarioPlayer.getBuyIn())
-                    .setParameter("username", scenarioPlayer.getUsername())
-                    .executeUpdate();
-        }
-        transaction.commit();
-        em.clear();
+                        .setParameter("totalFunds", scenarioPlayer.getBuyIn())
+                        .setParameter("username", scenarioPlayer.getUsername())
+                        .executeUpdate();
+            }
+        });
     }
 
     // *****************************************************************************************
@@ -156,7 +148,7 @@ public class SqlClient implements AutoCloseable {
     }
 
     // *****************************************************************************************
-    // Entity Helper
+    // Helper Methods
     // *****************************************************************************************
 
     private Class<?> getClassForName(String className) {
@@ -174,6 +166,16 @@ public class SqlClient implements AutoCloseable {
             throw new RuntimeException("Failed to get table name from entity class: " + entityClass);
         }
         return tableAnnotation.name();
+    }
+
+    private void runInTransaction(Runnable runnable) {
+        var transaction = em.getTransaction();
+        transaction.begin();
+
+        runnable.run();
+
+        transaction.commit();
+        em.clear();
     }
 
     // *****************************************************************************************
