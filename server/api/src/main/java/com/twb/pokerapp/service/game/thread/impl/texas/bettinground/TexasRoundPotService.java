@@ -48,7 +48,9 @@ public class TexasRoundPotService {
         return calculatePotSlices(round, contributions);
     }
 
-    private void sumAmountsFromActions(UUID roundId, Map<UUID, Double> playerTotalBets, Map<UUID, Boolean> playerFoldedStatus) {
+    private void sumAmountsFromActions(UUID roundId,
+                                       Map<UUID, Double> playerTotalBets,
+                                       Map<UUID, Boolean> playerFoldedStatus) {
         var allActions = playerActionRepository.findByRoundId(roundId);
         for (var action : allActions) {
             var playerId = action.getPlayerSession().getId();
@@ -61,7 +63,10 @@ public class TexasRoundPotService {
         }
     }
 
-    private List<ContributionDTO> getPlayerContributions(Map<UUID, Double> playerTotalBets, Map<UUID, PlayerSession> sessionMap, Map<UUID, Boolean> playerFoldedStatus) {
+    private List<ContributionDTO> getPlayerContributions(Map<UUID, Double> playerTotalBets,
+                                                         Map<UUID, PlayerSession> sessionMap,
+                                                         Map<UUID, Boolean> playerFoldedStatus
+    ) {
         var contributions = new ArrayList<ContributionDTO>();
         for (var entry : playerTotalBets.entrySet()) {
             var playerId = entry.getKey();
@@ -110,7 +115,11 @@ public class TexasRoundPotService {
         return roundRepository.save(round);
     }
 
-    private void distributeSliceToPots(Round round, List<RoundPot> roundPots, double amount, List<PlayerSession> eligiblePlayers) {
+    private void distributeSliceToPots(Round round,
+                                       List<RoundPot> roundPots,
+                                       double amount,
+                                       List<PlayerSession> eligiblePlayers
+    ) {
         if (!roundPots.isEmpty()) {
             var lastPot = roundPots.getLast();
             if (CollectionUtils.isEqualCollection(lastPot.getEligiblePlayers(), eligiblePlayers)) {

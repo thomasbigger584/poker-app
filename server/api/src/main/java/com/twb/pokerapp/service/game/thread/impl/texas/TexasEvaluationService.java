@@ -63,10 +63,8 @@ public class TexasEvaluationService {
         saveRoundWinner(winner, round, hand, totalWinnings);
 
         var winnerUsername = winner.getUser().getUsername();
-        
-        // Use afterCommit for sending log messages to avoid transaction issues
-        var tableId = params.getTableId();
-        afterCommit(() -> gameLogService.sendLogMessage(tableId, "%s wins round with $%.2f".formatted(winnerUsername, totalWinnings)));
+        afterCommit(() -> gameLogService.sendLogMessage(params.getTableId(), "%s wins round with $%.2f"
+                .formatted(winnerUsername, totalWinnings)));
     }
 
     private void evaluateMultiPlayersStanding(GameThreadParams params, Round round, List<PlayerSession> activePlayers) {
@@ -98,12 +96,15 @@ public class TexasEvaluationService {
         }
     }
 
-    private void handlePotDistribution(GameThreadParams params, Round round, RoundPot pot, List<EvalPlayerHandDTO> evalPlayerHandsList) {
+    private void handlePotDistribution(GameThreadParams params, Round round,
+                                       RoundPot pot, List<EvalPlayerHandDTO> evalPlayerHandsList) {
         var eligiblePlayers = pot.getEligiblePlayers();
-        var eligiblePlayerIds = eligiblePlayers.stream().map(PlayerSession::getId).toList();
+        var eligiblePlayerIds = eligiblePlayers.stream()
+                .map(PlayerSession::getId).toList();
 
         var potHands = evalPlayerHandsList.stream()
-                .filter(hand -> eligiblePlayerIds.contains(hand.getPlayerSession().getId()))
+                .filter(hand ->
+                        eligiblePlayerIds.contains(hand.getPlayerSession().getId()))
                 .sorted(Comparator.naturalOrder())
                 .toList();
 
@@ -129,8 +130,6 @@ public class TexasEvaluationService {
     private void distributePotToWinners(GameThreadParams params, Round round, RoundPot pot, List<EvalPlayerHandDTO> winners) {
         var potAmount = pot.getPotAmount();
         var winnerCount = winners.size();
-        
-        // Just in case
         if (winnerCount == 0) return;
 
         // Calculate split in cents to handle odd chips correctly
@@ -155,8 +154,10 @@ public class TexasEvaluationService {
         afterCommit(() -> logPotWinners(params, pot, winners, splitAmount));
     }
 
-    private void saveRoundWinner(PlayerSession playerSession, Round round, Hand hand, double amount) {
-        var roundWinnerOpt = roundWinnerRepository.findByRoundAndPlayerSession(round.getId(), playerSession.getId());
+    private void saveRoundWinner(PlayerSession playerSession, Round round,
+                                 Hand hand, double amount) {
+        var roundWinnerOpt = roundWinnerRepository
+                .findByRoundAndPlayerSession(round.getId(), playerSession.getId());
         RoundWinner roundWinner;
         if (roundWinnerOpt.isPresent()) {
             roundWinner = roundWinnerOpt.get();
@@ -171,7 +172,8 @@ public class TexasEvaluationService {
         roundWinnerRepository.save(roundWinner);
     }
 
-    private void logPotWinners(GameThreadParams params, RoundPot pot, List<EvalPlayerHandDTO> winners, double amountPerWinner) {
+    private void logPotWinners(GameThreadParams params, RoundPot pot,
+                               List<EvalPlayerHandDTO> winners, double amountPerWinner) {
         var potName = (pot.getPotIndex() == 0) ? "Main Pot" : "Side Pot " + pot.getPotIndex();
         var winnerNames = getReadableWinners(winners);
         

@@ -291,7 +291,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
 
     @CallerThread
     public void stopGame() {
-        interruptGame.compareAndSet(false, true);
+        interruptGame.set(true);
         try {
             var terminated = params.getEndLatch().await(GAME_STOP_TIMEOUT_IN_SECS, TimeUnit.SECONDS);
             if (!terminated) {
