@@ -11,6 +11,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -20,7 +21,7 @@ public class LocalWebsocketConfiguration implements WebSocketMessageBrokerConfig
     @Value("${app.websocket.heartbeat.time-secs:20}")
     private int heartbeatTimeSecs;
 
-    @Value("${app.websocket.heartbeat.thread-pool-size:1}")
+    @Value("${app.websocket.heartbeat.thread-pool-size:2}")
     private int heartbeatThreadPoolSize;
 
     @Value("${app.websocket.stream-bytes-limit:524288}") // 512 * 1024
@@ -31,6 +32,15 @@ public class LocalWebsocketConfiguration implements WebSocketMessageBrokerConfig
 
     @Value("${app.websocket.disconnect-delay:30000}") //30 * 1000
     private long disconnectDelayMs;
+
+    @Value("${app.websocket.message-size-limit-kb:512}")
+    private int messageSizeLimitKb;
+
+    @Value("${app.websocket.send-buffer-size-limit-kb:1}")
+    private int sendBufferSizeLimitMb;
+
+    @Value("${app.websocket.send-time-limit-secs:20}")
+    private int sendTimeLimitSecs;
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
@@ -54,6 +64,13 @@ public class LocalWebsocketConfiguration implements WebSocketMessageBrokerConfig
                 .setStreamBytesLimit(streamBytesLimit)
                 .setHttpMessageCacheSize(httpMessageCacheSize)
                 .setDisconnectDelay(disconnectDelayMs);
+    }
+
+    @Override
+    public void configureWebSocketTransport(WebSocketTransportRegistration registry) {
+        registry.setMessageSizeLimit(messageSizeLimitKb * 1024);
+        registry.setSendBufferSizeLimit(sendBufferSizeLimitMb * 1024 * 1024);  // 1 MB
+        registry.setSendTimeLimit(sendTimeLimitSecs * 1000);
     }
 
     @Bean

@@ -22,6 +22,7 @@ import com.twb.pokerapp.web.websocket.message.server.payload.PlayerSubscribedDTO
 import com.twb.pokerapp.web.websocket.message.server.payload.validation.ValidationDTO;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Comparator;
 import java.util.List;
 
 import static com.twb.pokerapp.testutils.fixture.HandFixture.findCard;
@@ -239,6 +240,7 @@ public abstract class Validator {
     protected List<ServerMessageDTO> get(List<ServerMessageDTO> messages, ServerMessageType type) {
         return messages.stream()
                 .filter(message -> message.getType() == type)
+                .sorted(Comparator.comparing(ServerMessageDTO::getTimestamp))
                 .toList();
     }
 

@@ -14,7 +14,7 @@ import org.jspecify.annotations.NonNull;
 import org.keycloak.admin.client.Keycloak;
 import org.springframework.http.HttpHeaders;
 import org.springframework.messaging.simp.stomp.*;
-import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
@@ -30,7 +30,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -227,9 +226,16 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
         var sockJsClient = new SockJsClient(transports);
         var stompClient = new WebSocketStompClient(sockJsClient);
-        stompClient.setTaskScheduler(new ConcurrentTaskScheduler(Executors.newSingleThreadScheduledExecutor()));
+
+        var taskScheduler = new ThreadPoolTaskScheduler();
+        taskScheduler.setPoolSize(2);
+        taskScheduler.setThreadNamePrefix("stomp-test-heartbeat-");
+        taskScheduler.initialize();
+        stompClient.setTaskScheduler(taskScheduler);
+
         stompClient.setDefaultHeartbeat(new long[]{HEARTBEAT_IN_MS, (long) (HEARTBEAT_IN_MS * 1.2f)});
         stompClient.setMessageConverter(new ServerMessageConverter());
+        stompClient.setInboundMessageSizeLimit(512 * 1024);
         return stompClient;
     }
 
