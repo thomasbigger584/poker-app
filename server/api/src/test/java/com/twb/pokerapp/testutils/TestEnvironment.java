@@ -16,7 +16,6 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.util.List;
 
-import static com.twb.pokerapp.util.SleepUtil.sleepInMs;
 import static java.lang.management.ManagementFactory.getRuntimeMXBean;
 
 @Getter
@@ -51,6 +50,7 @@ public class TestEnvironment implements AutoCloseable {
     private static final int API_PORT = 8081;
     private static final int API_DEBUG_PORT = 5005;
     private static final String APP_USE_FIXED_SCENARIO = "APP_USE_FIXED_SCENARIO";
+    private static final String APP_SPEED_MULTIPLIER = "APP_SPEED_MULTIPLIER";
 
     // Test Containers
     private static final Network NETWORK = Network.newNetwork();
@@ -90,17 +90,20 @@ public class TestEnvironment implements AutoCloseable {
     // *****************************************************************************************
 
     public TestEnvironment start() {
-        return start(false);
+        return start(false, 1);
     }
 
-    public TestEnvironment start(boolean useFixedScenario) {
+    // todo: EnvironmentParams
+    public TestEnvironment start(boolean useFixedScenario, int speedMultiplier) {
         DB_CONTAINER.start();
         KEYCLOAK_CONTAINER.start();
+        //noinspection resource
         API_CONTAINER = new GenericContainer<>("%s:%s".formatted(API_IMAGE_NAME, API_IMAGE_VERSION))
                 .withEnv(KEYCLOAK_SERVER_URL_INTERNAL_KEY, KEYCLOAK_HOSTNAME)
                 .withEnv(KEYCLOAK_SERVER_URL_EXTERNAL_KEY, KEYCLOAK_HOSTNAME)
                 .withEnv(SPRING_DATASOURCE_URL_KEY, DB_DATASOURCE_URL)
                 .withEnv(APP_USE_FIXED_SCENARIO, String.valueOf(useFixedScenario))
+                .withEnv(APP_SPEED_MULTIPLIER, String.valueOf(speedMultiplier))
                 .withExposedPorts(API_PORT)
                 .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(API_SERVICE))
                 .withNetwork(NETWORK)
@@ -156,7 +159,12 @@ public class TestEnvironment implements AutoCloseable {
             if (sessions.isEmpty()|| isAllDisconnected(sessions)) {
                 return;
             }
-            sleepInMs(200);
+            try {
+                //noinspection BusyWait
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                throw new RuntimeException("Failed to sleep waiting for sessions to disconnect", e);
+            }
         }
     }
 

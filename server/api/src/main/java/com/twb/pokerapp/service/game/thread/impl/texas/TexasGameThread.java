@@ -13,8 +13,6 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import static com.twb.pokerapp.util.SleepUtil.sleepInMs;
-
 @Slf4j
 @Component("texasGameThread")
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -70,7 +68,7 @@ public class TexasGameThread extends GameThread {
             return card;
         });
         dispatcher.send(table, messageFactory.initDeal(playerSession, playerCard));
-        sleepInMs(params.getDealWaitMs());
+        gameSpeedService.sleep(params.getDealWaitMs());
     }
 
     private void dealFlop() {
@@ -88,7 +86,7 @@ public class TexasGameThread extends GameThread {
             return card;
         });
         dispatcher.send(table, messageFactory.communityCardDeal(communityCard));
-        sleepInMs(params.getDealWaitMs());
+        gameSpeedService.sleep(params.getDealWaitMs());
     }
 
     @Override

@@ -34,6 +34,9 @@ public abstract class BaseGameThread extends Thread {
     protected GameLogService gameLogService;
 
     @Autowired
+    protected GameSpeedService gameSpeedService;
+
+    @Autowired
     protected DeckFactory deckFactory;
 
     @Autowired

@@ -16,6 +16,7 @@ import java.util.List;
 @Slf4j
 class TexasGame3PlayerIT {
     private final static TestEnvironment env = new TestEnvironment();
+    private static final int SPEED_MULTIPLIER = 2;
 
     // *****************************************************************************************
     // Lifecycle Methods
@@ -23,7 +24,7 @@ class TexasGame3PlayerIT {
 
     @BeforeAll
     static void beforeAll() {
-        env.start(true);
+        env.start(true, SPEED_MULTIPLIER);
     }
 
     @AfterEach

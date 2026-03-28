@@ -5,6 +5,7 @@ import com.twb.pokerapp.repository.*;
 import com.twb.pokerapp.service.game.eval.HandEvaluator;
 import com.twb.pokerapp.service.game.eval.dto.EvalPlayerHandDTO;
 import com.twb.pokerapp.service.game.thread.GameLogService;
+import com.twb.pokerapp.service.game.thread.GameSpeedService;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -14,7 +15,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import static com.twb.pokerapp.util.SleepUtil.sleepInMs;
 import static com.twb.pokerapp.util.TransactionUtil.afterCommit;
 
 @Component
@@ -29,6 +29,7 @@ public class TexasEvaluationService {
     private final RoundWinnerRepository roundWinnerRepository;
     private final HandEvaluator handEvaluator;
     private final GameLogService gameLogService;
+    private final GameSpeedService gameSpeedService;
 
     public void evaluate(GameThreadParams params) {
         writeTx.executeWithoutResult(status -> {
@@ -46,7 +47,7 @@ public class TexasEvaluationService {
                 evaluateMultiPlayersStanding(params, round, activePlayers);
             }
         });
-        sleepInMs(params.getEvalWaitMs());
+        gameSpeedService.sleep(params.getEvalWaitMs());
     }
 
     private void evaluateLastPlayerStanding(GameThreadParams params, PlayerSession winner, Round round) {

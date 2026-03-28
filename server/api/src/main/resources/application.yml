@@ -50,6 +50,7 @@ server:
     websocket:
       idle-timeout: 300000
 app:
+  speed-multiplier: 1
   deal-wait-ms: 1000
   db-poll-wait-ms: 1000
   eval-wait-ms: 4000

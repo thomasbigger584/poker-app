@@ -22,7 +22,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.twb.pokerapp.repository.RepositoryUtil.getThrowGameInterrupted;
-import static com.twb.pokerapp.util.SleepUtil.sleepInMs;
 import static com.twb.pokerapp.util.TransactionUtil.afterCommit;
 
 @Slf4j
@@ -122,7 +121,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
             if (pollCount % MESSAGE_POLL_DIVISOR == 0) {
                 gameLogService.sendLogMessage(table, "Waiting for players to join...");
             }
-            sleepInMs(params.getDbPollWaitMs());
+            gameSpeedService.sleep(params.getDbPollWaitMs());
             pollCount++;
         } while (true);
     }
@@ -143,7 +142,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
             });
         }
         gameLogService.sendLogMessage(table, "New Round...");
-        sleepInMs(params.getRoundStartWaitMs());
+        gameSpeedService.sleep(params.getRoundStartWaitMs());
     }
 
     private boolean isPlayersJoined() {
@@ -210,7 +209,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                     afterCommit(() -> dispatcher.send(table, messageFactory.roundFinished(winners)));
                 });
             });
-            sleepInMs(params.getRoundEndWaitMs());
+            gameSpeedService.sleep(params.getRoundEndWaitMs());
         }
     }
 
