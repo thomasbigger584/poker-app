@@ -33,13 +33,13 @@ public class LocalWebsocketConfiguration implements WebSocketMessageBrokerConfig
     @Value("${app.websocket.disconnect-delay:30000}") //30 * 1000
     private long disconnectDelayMs;
 
-    @Value("${app.websocket.message-size-limit-kb:512}")
-    private int messageSizeLimitKb;
+    @Value("${app.websocket.message-size-limit-mb:1}")
+    private int messageSizeLimitMb;
 
-    @Value("${app.websocket.send-buffer-size-limit-kb:1}")
+    @Value("${app.websocket.send-buffer-size-limit-mb:2}")
     private int sendBufferSizeLimitMb;
 
-    @Value("${app.websocket.send-time-limit-secs:20}")
+    @Value("${app.websocket.send-time-limit-secs:30}")
     private int sendTimeLimitSecs;
 
     @Override
@@ -68,8 +68,8 @@ public class LocalWebsocketConfiguration implements WebSocketMessageBrokerConfig
 
     @Override
     public void configureWebSocketTransport(WebSocketTransportRegistration registry) {
-        registry.setMessageSizeLimit(messageSizeLimitKb * 1024);
-        registry.setSendBufferSizeLimit(sendBufferSizeLimitMb * 1024 * 1024);  // 1 MB
+        registry.setMessageSizeLimit(messageSizeLimitMb * 1024 * 1024);
+        registry.setSendBufferSizeLimit(sendBufferSizeLimitMb * 1024 * 1024);
         registry.setSendTimeLimit(sendTimeLimitSecs * 1000);
     }
 

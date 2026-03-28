@@ -49,6 +49,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private final WebSocketStompClient client;
     private final CountDownLatch connectLatch = new CountDownLatch(1);
     @Getter
+    @SuppressWarnings("WriteOnlyObject")
     private final AtomicReference<Throwable> exceptionThrown = new AtomicReference<>();
     @Getter
     private final List<ServerMessageDTO> receivedMessages = Collections.synchronizedList(new ArrayList<>());
@@ -133,27 +134,27 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     }
 
     @Override
-    public void handleException(StompSession session, StompCommand command,
-                                StompHeaders headers, byte[] payload, Throwable exception) {
+    public void handleException(@NonNull StompSession session, StompCommand command,
+                                @NonNull StompHeaders headers, byte @NonNull [] payload, @NonNull Throwable exception) {
         log.error("Exception thrown during stomp session", exception);
         exceptionThrown.set(exception);
         countdownLatches();
     }
 
     @Override
-    public void handleTransportError(StompSession session, Throwable exception) {
+    public void handleTransportError(@NonNull StompSession session, @NonNull Throwable exception) {
         log.error("Exception thrown after connect failure", exception);
         exceptionThrown.set(exception);
         countdownLatches();
     }
 
     @Override
-    public Type getPayloadType(StompHeaders headers) {
+    public @NonNull Type getPayloadType(@NonNull StompHeaders headers) {
         return ServerMessageDTO.class;
     }
 
     @Override
-    public void handleFrame(StompHeaders headers, Object payload) {
+    public void handleFrame(@NonNull StompHeaders headers, Object payload) {
         if (payload == null) {
             log.error("Frame received but payload is null with headers {}", headers);
             return;
@@ -218,24 +219,25 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     // ***************************************************************
 
     @NotNull
-    @NotNull
     private WebSocketStompClient createClient() {
         var transports = new ArrayList<Transport>(2);
         transports.add(new WebSocketTransport(new StandardWebSocketClient()));
         transports.add(new RestTemplateXhrTransport());
 
         var sockJsClient = new SockJsClient(transports);
-        var stompClient = new WebSocketStompClient(sockJsClient);
+        sockJsClient.setInfoReceiver(new RestTemplateXhrTransport());
 
         var taskScheduler = new ThreadPoolTaskScheduler();
         taskScheduler.setPoolSize(2);
         taskScheduler.setThreadNamePrefix("stomp-test-heartbeat-");
         taskScheduler.initialize();
+
+        var stompClient = new WebSocketStompClient(sockJsClient);
         stompClient.setTaskScheduler(taskScheduler);
 
         stompClient.setDefaultHeartbeat(new long[]{HEARTBEAT_IN_MS, (long) (HEARTBEAT_IN_MS * 1.2f)});
         stompClient.setMessageConverter(new ServerMessageConverter());
-        stompClient.setInboundMessageSizeLimit(512 * 1024);
+        stompClient.setInboundMessageSizeLimit(1024 * 1024);
         return stompClient;
     }
 
