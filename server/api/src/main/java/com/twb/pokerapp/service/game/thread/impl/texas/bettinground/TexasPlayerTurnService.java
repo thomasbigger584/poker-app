@@ -141,26 +141,41 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
             if (activePlayers.isEmpty()) {
                 activePlayers = getActivePlayers(round);
             }
+
             if (playerIndex >= activePlayers.size()) {
                 log.info("Wrapping index with size: {}...", activePlayers.size());
                 playerIndex = 0;
-            }
-            currentPlayer = activePlayers.get(playerIndex);
-            while (!Boolean.TRUE.equals(currentPlayer.getActive())) {
-                playerIndex++;
-                if (playerIndex >= activePlayers.size()) {
-                    playerIndex = 0;
-                }
-                currentPlayer = activePlayers.get(playerIndex);
+                isFirstPass = false;
             }
 
-            // --- TERMINATION CHECKS ---
-            if (currentPlayer.getId().equals(lastAggressorId)) {
-                log.info("Returned to last aggressor {}, betting round finished.", currentPlayer.getId());
+            // Termination Check: Last Aggressor
+            if (activePlayers.get(playerIndex).getId().equals(lastAggressorId)) {
+                log.info("Returned to last aggressor {}, betting round finished.", lastAggressorId);
                 shouldContinue.set(false);
                 return;
             }
-            if (lastAggressorId == null && !isFirstPass && playerIndex == 0) {
+
+            // Skip Non-Actionable Players (folded or all-in)
+            int startPlayerIndex = playerIndex;
+            while (!isActionable(activePlayers.get(playerIndex))) {
+                playerIndex++;
+                if (playerIndex >= activePlayers.size()) {
+                    playerIndex = 0;
+                    isFirstPass = false;
+                }
+                if (activePlayers.get(playerIndex).getId().equals(lastAggressorId)) {
+                    log.info("Skipped to last aggressor {}, betting round finished.", lastAggressorId);
+                    shouldContinue.set(false);
+                    return;
+                }
+                if (playerIndex == startPlayerIndex) {
+                    log.info("No actionable players found, betting round finished.");
+                    shouldContinue.set(false);
+                    return;
+                }
+            }
+            currentPlayer = activePlayers.get(playerIndex);
+            if (lastAggressorId == null && !isFirstPass) {
                 log.info("Checked around, betting round finished.");
                 shouldContinue.set(false);
                 return;
@@ -208,6 +223,11 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
     // *****************************************************************************************
     // Helper Methods
     // *****************************************************************************************
+
+    private boolean isActionable(PlayerSession playerSession) {
+        return Boolean.TRUE.equals(playerSession.getActive()) &&
+                playerSession.getFunds() != null && playerSession.getFunds() > 0;
+    }
 
     private List<PlayerSession> getActivePlayers(Round round) {
         var players = playerSessionRepository.findActivePlayersByTableId(params.getTableId(), round.getId());
