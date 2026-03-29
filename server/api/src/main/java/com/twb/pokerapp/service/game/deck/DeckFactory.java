@@ -23,10 +23,9 @@ public class DeckFactory {
     public static final List<Card> CARDS = new ArrayList<>();
 
     static {
-        var valueIndex = 0;
         for (var suit : SuitType.values()) {
             for (var rank : RankType.values()) {
-                CARDS.add(new Card(rank, suit, valueIndex++));
+                CARDS.add(new Card(rank, suit));
             }
         }
     }

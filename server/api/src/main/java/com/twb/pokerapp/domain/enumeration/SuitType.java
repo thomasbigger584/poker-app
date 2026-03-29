@@ -8,10 +8,10 @@ import lombok.ToString;
 @ToString
 @RequiredArgsConstructor
 public enum SuitType {
-    CLUBS(0x8000, 'c'),
-    DIAMONDS(0x4000, 'd'),
-    HEARTS(0x2000, 'h'),
-    SPADES(0x1000, 's');
+    CLUBS(0, 'c'),
+    DIAMONDS(1, 'd'),
+    HEARTS(2, 'h'),
+    SPADES(3, 's');
 
     private final int value;
     private final char suitChar;

@@ -77,9 +77,11 @@ public class TestScenario {
         if (this.runner == null) {
             throw new IllegalStateException("Scenario not setup");
         }
-        var messages = this.runner.run();
-        waitForSessionsToDisconnect();
-        return messages;
+        try {
+            return this.runner.run();
+        } finally {
+            waitForSessionsToDisconnect();
+        }
     }
 
     // *****************************************************************************************

@@ -9,7 +9,7 @@ RUN git clone -b develop https://github.com/HenryRLee/PokerHandEvaluator.git /ap
 COPY ./src/main/cpp/ /app/src/main/cpp/
 
 ENV EVALUATOR_SO_PATH=/app/src/main/cpp/evaluator.so
-RUN g++ -shared -fPIC -Wl,--no-undefined -o $EVALUATOR_SO_PATH \
+RUN g++ -shared -fPIC -Wl,--no-undefined -O3 -o $EVALUATOR_SO_PATH \
     /app/src/main/cpp/PokerEvaluator.cpp \
     /app/src/main/cpp/PokerHandEvaluator/cpp/src/evaluator7.c \
     /app/src/main/cpp/PokerHandEvaluator/cpp/src/hash.c \

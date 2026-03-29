@@ -8,3 +8,4 @@ Scenario,user1Hand,user1Start,user2Hand,user2Start,user3Hand,user3Start,Communit
 "Counterfeit Full House",2s;2h,5000,3s;3h,5000,as;kh,5000,js;jh;jd;tc;td,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user2,0,0,0,0
 "Side Pot: Short stack cap (user2)",ks;kh,5000,qs;qd,1000,js;jh,5000,as;2h;3d;4c;5s,user1:ALL_IN:5000;user2:CALL:1000;user3:ALL_IN:5000,None,None,None,user1,11000,11000,0,0
 "3-Way split on board Royal Flush",2s;3h,5000,4d;5c,5000,6h;7s,5000,ah;kh;qh;jh;th,user1:BET:100;user2:CALL:100;user3:CALL:100,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1;user2;user3,300,100,100,100
+"Triple All-In pot summation",ah;as,5000,kc;kd,5000,qh;qd,5000,ad;kh;qs;2h;3d,user1:ALL_IN:5000;user2:ALL_IN:5000;user3:ALL_IN:5000,None,None,None,user1,15000,15000,0,0
