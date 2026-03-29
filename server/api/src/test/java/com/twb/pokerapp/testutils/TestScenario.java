@@ -1,5 +1,7 @@
 package com.twb.pokerapp.testutils;
 
+import com.twb.pokerapp.domain.PlayerSession;
+import com.twb.pokerapp.domain.enumeration.SessionState;
 import com.twb.pokerapp.testutils.game.GameLatches;
 import com.twb.pokerapp.testutils.game.GameRunner;
 import com.twb.pokerapp.testutils.game.params.GameRunnerParams;
@@ -13,6 +15,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @RequiredArgsConstructor
 public class TestScenario {
@@ -74,7 +77,9 @@ public class TestScenario {
         if (this.runner == null) {
             throw new IllegalStateException("Scenario not setup");
         }
-        return this.runner.run();
+        var messages = this.runner.run();
+        waitForSessionsToDisconnect();
+        return messages;
     }
 
     // *****************************************************************************************
@@ -87,5 +92,25 @@ public class TestScenario {
             sqlClient.insertFixedScenario(params);
         }
         sqlClient.updateUsersTotalFunds(params);
+    }
+
+    private void waitForSessionsToDisconnect() {
+        var timeout = System.currentTimeMillis() + 10000;
+        while (System.currentTimeMillis() < timeout) {
+            var sessions = env.getSqlClient().getPlayerSessions();
+            if (sessions.isEmpty()|| isAllDisconnected(sessions)) {
+                return;
+            }
+            try {
+                //noinspection BusyWait
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                throw new RuntimeException("Failed to sleep waiting for sessions to disconnect", e);
+            }
+        }
+    }
+
+    private boolean isAllDisconnected(List<PlayerSession> sessions) {
+        return sessions.stream().allMatch(playerSession -> SessionState.CONNECTED != playerSession.getSessionState());
     }
 }
