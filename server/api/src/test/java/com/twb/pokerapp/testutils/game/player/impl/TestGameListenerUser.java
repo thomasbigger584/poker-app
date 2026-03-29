@@ -7,6 +7,7 @@ import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.GameFinishedDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.RoundFinishedDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.opentest4j.AssertionFailedError;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -25,7 +26,12 @@ public class TestGameListenerUser extends AbstractTestUser {
     protected void handleMessage(StompHeaders headers, ServerMessageDTO message) {
         var validator = params.getValidator();
         if (validator != null) {
-            validator.validateHandleMessage(message);
+            try {
+                validator.validateHandleMessage(message);
+            } catch (Exception | AssertionFailedError e) {
+                log.error("Validation on handle message failed", e);
+                getExceptionThrown().compareAndSet(null, e);
+            }
         }
 
         var payload = message.getPayload();

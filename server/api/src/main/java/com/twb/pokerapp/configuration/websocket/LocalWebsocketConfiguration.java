@@ -18,7 +18,7 @@ import org.springframework.web.socket.config.annotation.WebSocketTransportRegist
 @Profile(ProfileConfiguration.LOCAL_PROFILE)
 public class LocalWebsocketConfiguration implements WebSocketMessageBrokerConfigurer {
 
-    @Value("${app.websocket.heartbeat.time-secs:20}")
+    @Value("${app.websocket.heartbeat.time-secs:5}")
     private int heartbeatTimeSecs;
 
     @Value("${app.websocket.heartbeat.thread-pool-size:2}")
@@ -53,7 +53,7 @@ public class LocalWebsocketConfiguration implements WebSocketMessageBrokerConfig
                 .setUserDestinationPrefix("/user")
                 .setPreservePublishOrder(true)
                 .enableSimpleBroker("/topic", "/user")
-                .setHeartbeatValue(new long[]{heartbeatMs, (long) (heartbeatMs * 1.2f)})
+                .setHeartbeatValue(new long[]{heartbeatMs, heartbeatMs * 2})
                 .setTaskScheduler(heartBeatScheduler());
     }
 

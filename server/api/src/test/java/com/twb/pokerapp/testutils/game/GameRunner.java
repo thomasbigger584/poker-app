@@ -7,7 +7,6 @@ import com.twb.pokerapp.testutils.game.player.impl.TestGameListenerUser;
 import com.twb.pokerapp.testutils.game.player.impl.TestTexasHoldemPlayerUser;
 import com.twb.pokerapp.testutils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.testutils.keycloak.KeycloakClients;
-import com.twb.pokerapp.testutils.sql.SqlClient;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
@@ -33,7 +32,7 @@ public class GameRunner {
 
         listenerUser.disconnect();
 
-        throwExceptionIfOccurred(playerUsers);
+        throwExceptionIfOccurred(listenerUser, playerUsers);
 
         var messages = new PlayersServerMessages(listenerUser, playerUsers);
         return messages.getByNumberOfRounds(params.getNumberOfRounds());
@@ -95,11 +94,15 @@ public class GameRunner {
         return playerUsers;
     }
 
-    private void throwExceptionIfOccurred(List<AbstractTestUser> players) {
+    private void throwExceptionIfOccurred(AbstractTestUser listenerUser, List<AbstractTestUser> players) {
+        var listenerExceptionThrown = listenerUser.getExceptionThrown().get();
+        if (listenerExceptionThrown != null) {
+            throw new RuntimeException("Test Failure for listener: " + listenerUser.getUsername(), listenerExceptionThrown);
+        }
         for (var player : players) {
-            var exceptionThrown = player.getExceptionThrown().get();
-            if (exceptionThrown != null) {
-                throw new RuntimeException("Test Failure for player: " + player.getUsername(), exceptionThrown);
+            var playerExceptionThrown = player.getExceptionThrown().get();
+            if (playerExceptionThrown != null) {
+                throw new RuntimeException("Test Failure for player: " + player.getUsername(), playerExceptionThrown);
             }
         }
     }
