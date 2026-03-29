@@ -1,6 +1,7 @@
 package com.twb.pokerapp.service.game.thread.impl.texas;
 
 import com.twb.pokerapp.domain.*;
+import com.twb.pokerapp.domain.enumeration.HandType;
 import com.twb.pokerapp.repository.*;
 import com.twb.pokerapp.service.game.eval.HandEvaluator;
 import com.twb.pokerapp.service.game.eval.dto.EvalPlayerHandDTO;
@@ -12,7 +13,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 import static com.twb.pokerapp.util.TransactionUtil.afterCommit;
@@ -99,31 +99,20 @@ public class TexasEvaluationService {
 
     private void handlePotDistribution(GameThreadParams params, Round round,
                                        RoundPot pot, List<EvalPlayerHandDTO> evalPlayerHandsList) {
-        var eligiblePlayers = pot.getEligiblePlayers();
-        var eligiblePlayerIds = eligiblePlayers.stream()
+        var eligiblePlayerIds = pot.getEligiblePlayers().stream()
                 .map(PlayerSession::getId).toList();
 
         var potHands = evalPlayerHandsList.stream()
-                .filter(hand ->
-                        eligiblePlayerIds.contains(hand.getPlayerSession().getId()))
-                .sorted(Comparator.naturalOrder())
+                .filter(hand -> eligiblePlayerIds.contains(hand.getPlayerSession().getId()))
+                .sorted()
                 .toList();
 
         if (potHands.isEmpty()) return;
 
-        var winners = new ArrayList<EvalPlayerHandDTO>();
         var bestHand = potHands.getFirst();
-        winners.add(bestHand);
-
-        // Check for ties
-        for (var index = 1; index < potHands.size(); index++) {
-            var nextHand = potHands.get(index);
-            if (nextHand.compareTo(bestHand) == 0) {
-                winners.add(nextHand);
-            } else {
-                break;
-            }
-        }
+        var winners = potHands.stream()
+                .filter(hand -> hand.compareTo(bestHand) == 0 || hand.getHandType() == HandType.ROYAL_FLUSH)
+                .toList();
 
         distributePotToWinners(params, round, pot, winners);
     }
