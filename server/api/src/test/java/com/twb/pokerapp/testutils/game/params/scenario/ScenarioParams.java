@@ -9,6 +9,7 @@ import java.util.List;
 @Builder
 public class ScenarioParams {
     private boolean useFixedScenario;
+    private String scenario;
     private List<ScenarioPlayer> scenarioPlayers;
     private String communityCards;
 }

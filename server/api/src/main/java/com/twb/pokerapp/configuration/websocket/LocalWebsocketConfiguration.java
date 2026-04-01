@@ -18,28 +18,28 @@ import org.springframework.web.socket.config.annotation.WebSocketTransportRegist
 @Profile(ProfileConfiguration.LOCAL_PROFILE)
 public class LocalWebsocketConfiguration implements WebSocketMessageBrokerConfigurer {
 
-    @Value("${app.websocket.heartbeat.time-secs:5}")
+    @Value("${app.websocket.heartbeat.time-secs:10}")
     private int heartbeatTimeSecs;
 
-    @Value("${app.websocket.heartbeat.thread-pool-size:2}")
+    @Value("${app.websocket.heartbeat.thread-pool-size:10}")
     private int heartbeatThreadPoolSize;
 
-    @Value("${app.websocket.stream-bytes-limit:524288}") // 512 * 1024
-    private int streamBytesLimit;
+    @Value("${app.websocket.stream-limit-mb:2}")
+    private int streamLimitMb;
 
     @Value("${app.websocket.http-message-cache-size:1000}")
     private int httpMessageCacheSize;
 
-    @Value("${app.websocket.disconnect-delay:30000}") //30 * 1000
-    private long disconnectDelayMs;
+    @Value("${app.websocket.disconnect-delay-secs:30}")
+    private long disconnectDelaySecs;
 
-    @Value("${app.websocket.message-size-limit-mb:1}")
+    @Value("${app.websocket.message-size-limit-mb:5}")
     private int messageSizeLimitMb;
 
-    @Value("${app.websocket.send-buffer-size-limit-mb:2}")
+    @Value("${app.websocket.send-buffer-size-limit-mb:10}")
     private int sendBufferSizeLimitMb;
 
-    @Value("${app.websocket.send-time-limit-secs:30}")
+    @Value("${app.websocket.send-time-limit-secs:45}")
     private int sendTimeLimitSecs;
 
     @Override
@@ -53,7 +53,7 @@ public class LocalWebsocketConfiguration implements WebSocketMessageBrokerConfig
                 .setUserDestinationPrefix("/user")
                 .setPreservePublishOrder(true)
                 .enableSimpleBroker("/topic", "/user")
-                .setHeartbeatValue(new long[]{heartbeatMs, heartbeatMs * 2})
+                .setHeartbeatValue(new long[]{heartbeatMs, heartbeatMs * 6})
                 .setTaskScheduler(heartBeatScheduler());
     }
 
@@ -61,9 +61,9 @@ public class LocalWebsocketConfiguration implements WebSocketMessageBrokerConfig
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/looping")
                 .withSockJS()
-                .setStreamBytesLimit(streamBytesLimit)
+                .setStreamBytesLimit(streamLimitMb * 1024 * 1024)
                 .setHttpMessageCacheSize(httpMessageCacheSize)
-                .setDisconnectDelay(disconnectDelayMs);
+                .setDisconnectDelay(disconnectDelaySecs * 1000);
     }
 
     @Override

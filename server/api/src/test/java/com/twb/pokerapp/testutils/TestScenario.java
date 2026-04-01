@@ -13,13 +13,17 @@ import com.twb.pokerapp.testutils.validator.Validator;
 import com.twb.pokerapp.testutils.validator.impl.TexasValidator;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @RequiredArgsConstructor
 public class TestScenario {
-    private static final Double DEFAULT_BUY_IN_AMOUNT = 5_000d;
+    private static final double DEFAULT_BUY_IN_AMOUNT = 5_000d;
+    private static final int WAIT_DISCONNECT_TIMEOUT_SECS = 10;
+    private static final int DISCONNECT_SETTLE_PERIOD_MS = 3 * 1000;
     private final TestEnvironment env;
 
     @Getter
@@ -81,6 +85,8 @@ public class TestScenario {
             return this.runner.run();
         } finally {
             waitForSessionsToDisconnect();
+            Thread.sleep(DISCONNECT_SETTLE_PERIOD_MS);
+            this.runner.stop();
         }
     }
 
@@ -97,10 +103,11 @@ public class TestScenario {
     }
 
     private void waitForSessionsToDisconnect() {
-        var timeout = System.currentTimeMillis() + 10000;
+        var timeout = System.currentTimeMillis() + (WAIT_DISCONNECT_TIMEOUT_SECS * 1000);
         while (System.currentTimeMillis() < timeout) {
             var sessions = env.getSqlClient().getPlayerSessions();
             if (sessions.isEmpty()|| isAllDisconnected(sessions)) {
+                log.info("All sessions disconnected, so finishing scenario");
                 return;
             }
             try {

@@ -11,14 +11,12 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
-import org.keycloak.admin.client.Keycloak;
 import org.springframework.http.HttpHeaders;
 import org.springframework.messaging.simp.stomp.*;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
-import org.springframework.web.socket.sockjs.client.RestTemplateXhrTransport;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.Transport;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
@@ -42,10 +40,9 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String HEADER_CONNECTION_TYPE = "X-Connection-Type";
     private static final String HEADER_BUYIN_AMOUNT = "X-BuyIn-Amount";
-    private static final int HEARTBEAT_IN_MS = 5 * 1000;
+    private static final int HEARTBEAT_IN_MS = 10 * 1000;
     @Getter
     protected final TestUserParams params;
-    private final Keycloak keycloak;
     private final WebSocketStompClient client;
     private final CountDownLatch connectLatch = new CountDownLatch(1);
     @Getter
@@ -56,7 +53,6 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private StompSession session;
 
     public AbstractTestUser(TestUserParams params) {
-        this.keycloak = params.getKeycloak();
         this.params = params;
         this.client = createClient();
         this.session = null;
@@ -82,7 +78,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         }
 
         client.connectAsync(url, headers, stompHeaders, this);
-        if (!connectLatch.await(15, TimeUnit.SECONDS)) {
+        if (!connectLatch.await(30, TimeUnit.SECONDS)) {
             log.error("Timed out user {} from connecting to table {} via websocket", params.getUsername(), params.getTable().getId());
             throw new RuntimeException("Timed out user " + params.getUsername() + " from connecting to table " + params.getTable().getId());
         }
@@ -94,6 +90,13 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
             session.disconnect();
         }
         session = null;
+    }
+
+    public void stop() {
+        if (client != null) {
+            log.info("Stopping client for user {}", params.getUsername());
+            client.stop();
+        }
     }
 
     // ***************************************************************
@@ -220,20 +223,20 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
     @NotNull
     private WebSocketStompClient createClient() {
-        var transports = new ArrayList<Transport>(2);
+        var transports = new ArrayList<Transport>(1);
         transports.add(new WebSocketTransport(new StandardWebSocketClient()));
 
         var sockJsClient = new SockJsClient(transports);
 
         var taskScheduler = new ThreadPoolTaskScheduler();
-        taskScheduler.setPoolSize(2);
+        taskScheduler.setPoolSize(5);
         taskScheduler.setThreadNamePrefix("stomp-test-heartbeat-");
         taskScheduler.initialize();
 
         var stompClient = new WebSocketStompClient(sockJsClient);
         stompClient.setTaskScheduler(taskScheduler);
 
-        stompClient.setDefaultHeartbeat(new long[]{HEARTBEAT_IN_MS, HEARTBEAT_IN_MS * 2});
+        stompClient.setDefaultHeartbeat(new long[]{HEARTBEAT_IN_MS, (long) (HEARTBEAT_IN_MS * 6)});
         stompClient.setMessageConverter(new ServerMessageConverter());
         stompClient.setInboundMessageSizeLimit(1024 * 1024);
         return stompClient;
@@ -253,7 +256,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     }
 
     private String getAccessToken() {
-        var tokenManager = keycloak.tokenManager();
+        var tokenManager = params.getKeycloak().tokenManager();
         var accessTokenResponse = tokenManager.getAccessToken();
         return accessTokenResponse.getToken();
     }

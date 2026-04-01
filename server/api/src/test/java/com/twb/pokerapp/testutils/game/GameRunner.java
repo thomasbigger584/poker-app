@@ -8,6 +8,8 @@ import com.twb.pokerapp.testutils.game.player.impl.TestTexasHoldemPlayerUser;
 import com.twb.pokerapp.testutils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.testutils.keycloak.KeycloakClients;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,26 +18,43 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @RequiredArgsConstructor
 public class GameRunner {
+    private static final int CONNECTION_STAGGER_MS = 1000;
     private final GameRunnerParams params;
 
-    public PlayersServerMessages run() throws Exception {
-        var listenerUser = connectListener();
+    private AbstractTestUser listenerUser;
+    private List<AbstractTestUser> playerUsers;
 
-        var playerUsers = getPlayerUsers();
-        connectPlayers(playerUsers);
+    // ***************************************************************
+    // Public Methods
+    // ***************************************************************
+
+    public PlayersServerMessages run() throws Exception {
+        this.listenerUser = connectListener();
+
+        this.playerUsers = getPlayerUsers();
+        connectPlayers();
 
         params.getLatches().roundLatch().await();
 
-        disconnectPlayers(playerUsers);
+        disconnectPlayers();
 
         params.getLatches().gameLatch().await();
 
         listenerUser.disconnect();
 
-        throwExceptionIfOccurred(listenerUser, playerUsers);
+        throwExceptionIfOccurred();
 
         var messages = new PlayersServerMessages(listenerUser, playerUsers);
         return messages.getByNumberOfRounds(params.getNumberOfRounds());
+    }
+
+    public void stop() {
+        if (listenerUser != null) {
+            listenerUser.stop();
+        }
+        for (var player : playerUsers) {
+            player.stop();
+        }
     }
 
     // ***************************************************************
@@ -56,9 +75,10 @@ public class GameRunner {
         return listener;
     }
 
-    private void connectPlayers(List<AbstractTestUser> playerUsers) throws Exception {
+    private void connectPlayers() throws Exception {
         var scenarioPlayers = params.getScenarioParams().getScenarioPlayers();
         for (var clientPlayer : playerUsers) {
+            Thread.sleep(CONNECTION_STAGGER_MS);
             var scenarioPlayerOpt = scenarioPlayers.stream()
                     .filter(scenarioPlayer ->
                             scenarioPlayer.getUsername().equals(clientPlayer.getParams().getUsername()))
@@ -70,8 +90,8 @@ public class GameRunner {
         }
     }
 
-    private void disconnectPlayers(List<AbstractTestUser> players) {
-        for (var player : players) {
+    private void disconnectPlayers() {
+        for (var player : playerUsers) {
             player.disconnect();
         }
     }
@@ -94,16 +114,26 @@ public class GameRunner {
         return playerUsers;
     }
 
-    private void throwExceptionIfOccurred(AbstractTestUser listenerUser, List<AbstractTestUser> players) {
-        var listenerExceptionThrown = listenerUser.getExceptionThrown().get();
-        if (listenerExceptionThrown != null) {
-            throw new RuntimeException("Test Failure for listener: " + listenerUser.getUsername(), listenerExceptionThrown);
+    private void throwExceptionIfOccurred() {
+        var scenario = params.getScenarioParams().getScenario();
+        var listenerThrowable = listenerUser.getExceptionThrown().get();
+        if (listenerThrowable != null) {
+            throw new RuntimeException(getExceptionMessage(listenerUser, scenario, listenerThrowable), listenerThrowable);
         }
-        for (var player : players) {
-            var playerExceptionThrown = player.getExceptionThrown().get();
-            if (playerExceptionThrown != null) {
-                throw new RuntimeException("Test Failure for player: " + player.getUsername(), playerExceptionThrown);
+        for (var player : playerUsers) {
+            var playerException = player.getExceptionThrown().get();
+            if (playerException != null) {
+                throw new RuntimeException(getExceptionMessage(player, scenario, playerException), playerException);
             }
         }
+    }
+
+    private @NonNull String getExceptionMessage(AbstractTestUser player, String scenario, Throwable throwable) {
+        var username = player.getUsername();
+        var message = throwable.getMessage();
+        if (StringUtils.isBlank(scenario)) {
+            return "Failure for user: " + username + ": " + message;
+        }
+        return "Failure for user: " + username + " in scenario: " + scenario;
     }
 }

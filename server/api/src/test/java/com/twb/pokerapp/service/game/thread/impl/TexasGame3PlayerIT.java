@@ -73,6 +73,7 @@ class TexasGame3PlayerIT {
                 ScenarioPlayer.create("user3", user3Hand, user3Start, preFlop, flop, turn, river, user3Win)
         );
         var params = ScenarioParams.builder()
+                .scenario(scenario)
                 .useFixedScenario(true)
                 .scenarioPlayers(players)
                 .communityCards(community)
