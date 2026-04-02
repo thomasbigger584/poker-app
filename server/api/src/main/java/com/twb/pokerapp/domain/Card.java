@@ -57,12 +57,8 @@ public class Card extends Auditable {
     public Card() {
     }
 
-    public Card(@NotNull RankType rankType,
-                @NotNull SuitType suitType) {
-        this.rankType = rankType;
-        this.suitType = suitType;
-        this.rankValue = CardLibraryMapper
-                .toLibraryInt(rankType, suitType);
+    public Card(@NotNull RankType rankType, @NotNull SuitType suitType) {
+        this(rankType, suitType, CardLibraryMapper.toLibraryInt(rankType, suitType));
     }
 
     public Card(@NotNull RankType rankType,
