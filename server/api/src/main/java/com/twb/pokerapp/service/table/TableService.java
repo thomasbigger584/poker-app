@@ -51,6 +51,8 @@ public class TableService {
             var createTableDto1 = new CreateTableDTO();
             createTableDto1.setName("Poker Table 1");
             createTableDto1.setGameType(GameType.TEXAS_HOLDEM);
+            createTableDto1.setSpeedMultiplier(1d);
+            createTableDto1.setTotalRounds(null);
             createTableDto1.setMinPlayers(2);
             createTableDto1.setMaxPlayers(6);
             createTableDto1.setMinBuyin(100d);

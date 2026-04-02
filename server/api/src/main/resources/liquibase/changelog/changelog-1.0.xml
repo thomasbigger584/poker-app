@@ -47,6 +47,8 @@
             <column name="game_type" type="text">
                 <constraints nullable="false"/>
             </column>
+            <column name="speed_multiplier" type="double"/>
+            <column name="total_rounds" type="int"/>
             <column name="min_players" type="int">
                 <constraints nullable="false"/>
             </column>
@@ -327,7 +329,7 @@
             <column name="player_hands" type="jsonb">
                 <constraints nullable="false"/>
             </column>
-            <column name="community_cards" type="text" />
+            <column name="community_cards" type="text"/>
         </createTable>
         <addPrimaryKey columnNames="id" constraintName="pk_fixed_scenario" tableName="fixed_scenario"/>
     </changeSet>

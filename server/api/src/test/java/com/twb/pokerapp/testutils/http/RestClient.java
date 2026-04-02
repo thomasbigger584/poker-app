@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.twb.pokerapp.domain.enumeration.GameType;
 import com.twb.pokerapp.dto.table.CreateTableDTO;
 import com.twb.pokerapp.dto.table.TableDTO;
+import com.twb.pokerapp.testutils.game.params.scenario.ScenarioParams;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import lombok.RequiredArgsConstructor;
@@ -39,11 +40,13 @@ public class RestClient {
         return instance;
     }
 
-    public TableDTO createTable(int minPlayers) throws Exception {
+    public TableDTO createTable(ScenarioParams params) throws Exception {
         var createDto = new CreateTableDTO();
         createDto.setName(UUID.randomUUID().toString());
         createDto.setGameType(GameType.TEXAS_HOLDEM);
-        createDto.setMinPlayers(minPlayers);
+        createDto.setSpeedMultiplier(params.getSpeedMultiplier());
+        createDto.setTotalRounds(params.getTotalRounds());
+        createDto.setMinPlayers(params.getScenarioPlayers().size());
         createDto.setMaxPlayers(6);
         createDto.setMinBuyin(100d);
         createDto.setMaxBuyin(10_000d);

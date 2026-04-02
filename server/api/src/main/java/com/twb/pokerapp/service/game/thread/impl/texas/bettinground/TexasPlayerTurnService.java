@@ -124,7 +124,7 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
                 this.round = texasRoundPotService.reconcilePots(round);
                 this.bettingRound = bettingRoundService.setBettingRoundFinished(br);
                 var roundPots = this.round.getRoundPots();
-                afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, br, roundPots)));
+                afterCommit(() -> dispatcher.send(params.getTable(), messageFactory.bettingRoundUpdated(round, br, roundPots)));
             });
         });
     }
@@ -135,8 +135,9 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
 
     private boolean prePlayerTurn() {
         var shouldContinue = new AtomicBoolean(true);
+        var table = params.getTable();
         readTx.executeWithoutResult(status -> {
-            round = getThrowGameInterrupted(roundRepository.findCurrentByTableId(params.getTableId()), "Round is empty for table");
+            round = getThrowGameInterrupted(roundRepository.findCurrentByTableId(table.getId()), "Round is empty for table");
             bettingRound = getThrowGameInterrupted(bettingRoundRepository.findCurrentByRoundId(round.getId()), "Betting Round is empty for round");
             if (activePlayers.isEmpty()) {
                 activePlayers = getActivePlayers(round);
@@ -230,7 +231,8 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
     }
 
     private List<PlayerSession> getActivePlayers(Round round) {
-        var players = playerSessionRepository.findActivePlayersByTableId(params.getTableId(), round.getId());
+        var table = params.getTable();
+        var players = playerSessionRepository.findActivePlayersByTableId(table.getId(), round.getId());
         if (players.isEmpty()) {
             throw new GameInterruptedException("No Active Players found");
         }

@@ -245,7 +245,6 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private void countdownLatches() {
         countdownLatch(connectLatch);
         var latches = params.getLatches();
-        countdownLatch(latches.roundLatch());
         countdownLatch(latches.gameLatch());
     }
 

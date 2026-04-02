@@ -34,18 +34,14 @@ public class GameRunner {
         this.playerUsers = getPlayerUsers();
         connectPlayers();
 
-        params.getLatches().roundLatch().await();
-
-        disconnectPlayers();
-
         params.getLatches().gameLatch().await();
 
+        disconnectPlayers();
         listenerUser.disconnect();
 
         throwExceptionIfOccurred();
 
-        var messages = new PlayersServerMessages(listenerUser, playerUsers);
-        return messages.getByNumberOfRounds(params.getNumberOfRounds());
+        return new PlayersServerMessages(listenerUser, playerUsers);
     }
 
     public void stop() {
@@ -70,7 +66,7 @@ public class GameRunner {
                 .username(KeycloakClients.VIEWER_USERNAME)
                 .validator(params.getValidator())
                 .build();
-        var listener = new TestGameListenerUser(listenerParams, params.getNumberOfRounds());
+        var listener = new TestGameListenerUser(listenerParams);
         listener.connect();
         return listener;
     }

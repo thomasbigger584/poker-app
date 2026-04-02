@@ -48,7 +48,6 @@ public class TestEnvironment implements AutoCloseable {
     private static final int API_PORT = 8081;
     private static final int API_DEBUG_PORT = 5005;
     private static final String APP_USE_FIXED_SCENARIO = "APP_USE_FIXED_SCENARIO";
-    private static final String APP_SPEED_MULTIPLIER = "APP_SPEED_MULTIPLIER";
 
     // Test Containers
     private static final Network NETWORK = Network.newNetwork();
@@ -88,11 +87,11 @@ public class TestEnvironment implements AutoCloseable {
     // *****************************************************************************************
 
     public TestEnvironment start() {
-        return start(false, 1);
+        return start(false);
     }
 
     // todo: EnvironmentParams
-    public TestEnvironment start(boolean useFixedScenario, int speedMultiplier) {
+    public TestEnvironment start(boolean useFixedScenario) {
         DB_CONTAINER.start();
         KEYCLOAK_CONTAINER.start();
         //noinspection resource
@@ -101,7 +100,6 @@ public class TestEnvironment implements AutoCloseable {
                 .withEnv(KEYCLOAK_SERVER_URL_EXTERNAL_KEY, KEYCLOAK_HOSTNAME)
                 .withEnv(SPRING_DATASOURCE_URL_KEY, DB_DATASOURCE_URL)
                 .withEnv(APP_USE_FIXED_SCENARIO, String.valueOf(useFixedScenario))
-                .withEnv(APP_SPEED_MULTIPLIER, String.valueOf(speedMultiplier))
                 .withExposedPorts(API_PORT)
                 .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(API_SERVICE))
                 .withNetwork(NETWORK)

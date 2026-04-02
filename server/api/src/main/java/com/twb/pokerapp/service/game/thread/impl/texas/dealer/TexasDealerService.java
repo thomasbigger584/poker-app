@@ -29,7 +29,8 @@ public abstract class TexasDealerService {
 
     @Transactional
     public void determineNextDealer(GameThreadParams params) {
-        var playerSessions = playerSessionRepository.findConnectedPlayersByTableId(params.getTableId());
+        var table = params.getTable();
+        var playerSessions = playerSessionRepository.findConnectedPlayersByTableId(table.getId());
         if (CollectionUtils.isEmpty(playerSessions)) {
             throw new GameInterruptedException("No Players Connected");
         }

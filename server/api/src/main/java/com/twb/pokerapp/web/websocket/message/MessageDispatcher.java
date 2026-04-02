@@ -39,7 +39,7 @@ public class MessageDispatcher {
     }
 
     public void send(GameThreadParams params, ServerMessageDTO message) {
-        send(params.getTableId(), message);
+        send(params.getTable(), message);
     }
 
     public void send(UUID tableId, ServerMessageDTO message) {

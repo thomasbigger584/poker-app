@@ -10,6 +10,8 @@ import java.util.List;
 public class ScenarioParams {
     private boolean useFixedScenario;
     private String scenario;
+    private double speedMultiplier;
+    private int totalRounds;
     private List<ScenarioPlayer> scenarioPlayers;
     private String communityCards;
 }

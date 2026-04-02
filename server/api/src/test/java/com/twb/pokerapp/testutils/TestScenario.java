@@ -39,16 +39,14 @@ public class TestScenario {
 
         var sqlClient = env.getSqlClient();
         var keycloakClients = env.getKeycloakClients();
-        
-        var playerCount = params.getScenarioPlayers().size();
         var adminRestClient = env.getAdminRestClient();
-        var table = adminRestClient.createTable(playerCount);
+
+        var table = adminRestClient.createTable(params);
 
         this.validator = new TexasValidator(params, sqlClient);
 
         var gameRunnerParams = GameRunnerParams.builder()
                 .keycloakClients(keycloakClients)
-                .numberOfRounds(1)
                 .latches(GameLatches.create())
                 .table(table)
                 .validator(validator)
@@ -72,6 +70,8 @@ public class TestScenario {
         }
         var scenarioParams = ScenarioParams.builder()
                 .useFixedScenario(false)
+                .speedMultiplier(2)
+                .totalRounds(1)
                 .scenarioPlayers(scenarioPlayers)
                 .build();
         return setup(scenarioParams);

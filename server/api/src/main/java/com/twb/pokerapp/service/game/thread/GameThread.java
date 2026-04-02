@@ -5,6 +5,7 @@ import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.domain.enumeration.BettingRoundState;
+import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.domain.enumeration.RoundState;
 import com.twb.pokerapp.exception.game.GameInterruptedException;
 import com.twb.pokerapp.exception.game.RoundInterruptedException;
@@ -13,9 +14,11 @@ import com.twb.pokerapp.service.game.thread.dto.PlayerTurnLatchDTO;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.user.SimpUser;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -31,7 +34,6 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     // Constants
     // *****************************************************************************************
     private static final int MESSAGE_POLL_DIVISOR = 5;
-    private static final int MINIMUM_PLAYERS_CONNECTED = 1;
     private static final int GAME_STOP_TIMEOUT_IN_SECS = 10;
 
     // *****************************************************************************************
@@ -54,6 +56,8 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     private List<Card> deckOfCards;
     private int deckCardPointer;
 
+    private int roundCount;
+
     @Getter
     private PlayerTurnLatchDTO playerTurnLatch;
 
@@ -64,10 +68,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
             initializeTable();
 
             while (!interruptGame.get()) {
-                waitForPlayersToJoin(MINIMUM_PLAYERS_CONNECTED);
-                checkGameInterrupted();
-
-                waitForMinimumPlayersToJoin();
+                waitForPlayersToJoin();
                 checkGameInterrupted();
 
                 while (isPlayersJoined()) {
@@ -80,12 +81,13 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                     checkRoundInterrupted();
                     finishRound();
                     checkGameInterrupted();
+                    checkTotalRoundsReached();
                 }
             }
         } catch (GameInterruptedException | RoundInterruptedException e) {
-            log.info("Game or Round interrupted for table {}: {}", params.getTableId(), e.getMessage());
+            log.info("Game or Round interrupted for table {}: {}", table.getId(), e.getMessage());
         } catch (Exception e) {
-            log.error("Unexpected error in GameThread for table {}: {}", params.getTableId(), e.getMessage(), e);
+            log.error("Unexpected error in GameThread for table {}: {}", table.getId(), e.getMessage(), e);
         } finally {
             finishRound();
             finishGame();
@@ -93,29 +95,25 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     }
 
     private void initializeThread() {
-        setName(params.getTableId().toString());
+        setName(params.getTable().getId().toString());
         setPriority(Thread.MAX_PRIORITY);
         setDefaultUncaughtExceptionHandler(this);
         interruptGame.set(false);
         gameInProgress.set(true);
         roundInProgress.set(false);
+        roundCount = 0;
         params.getStartLatch().countDown();
     }
 
     private void initializeTable() {
-        this.table = getThrowGameInterrupted(tableRepository.findById(params.getTableId()), "No table found cannot start game");
+        this.table = getThrowGameInterrupted(tableRepository.findById(params.getTable().getId()), "No table found cannot start game");
     }
 
-    private void waitForMinimumPlayersToJoin() {
-        var minPlayers = table.getGameType().getMinPlayerCount();
-        waitForPlayersToJoin(minPlayers);
-    }
-
-    private void waitForPlayersToJoin(int minPlayerCount) {
+    private void waitForPlayersToJoin() {
         var pollCount = 0;
         do {
             checkGameInterrupted();
-            if (isPlayersJoined(minPlayerCount)) {
+            if (isPlayersJoined()) {
                 return;
             }
             if (pollCount % MESSAGE_POLL_DIVISOR == 0) {
@@ -127,7 +125,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     }
 
     private void createNewRound() {
-        var roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
+        var roundOpt = roundRepository.findCurrentByTableId(table.getId());
         if (roundOpt.isPresent()) {
             var round = roundOpt.get();
             this.roundId = round.getId();
@@ -136,22 +134,55 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
             }
         } else {
             writeTx.executeWithoutResult(status -> {
-                this.table = getThrowGameInterrupted(tableRepository.findById(params.getTableId()), "Cannot start as table doesn't exist");
-                var connectedPlayers = playerSessionRepository.findConnectedPlayersByTableId(params.getTableId());
+                this.table = getThrowGameInterrupted(tableRepository.findById(table.getId()), "Cannot start as table doesn't exist");
+                var connectedPlayers = playerSessionRepository.findConnectedPlayersByTableId(table.getId());
                 this.roundId = roundService.create(table, connectedPlayers).getId();
             });
         }
-        gameLogService.sendLogMessage(table, "New Round...");
+        roundCount++;
+        var totalRounds = table.getTotalRounds();
+        if (totalRounds != null) {
+            gameLogService.sendLogMessage(table, "New Round (%d/%d)...".formatted(roundCount, table.getTotalRounds()));
+        } else {
+            gameLogService.sendLogMessage(table, "New Round (%d)...".formatted(roundCount));
+        }
         gameSpeedService.sleep(params.getRoundStartWaitMs());
     }
 
     private boolean isPlayersJoined() {
-        var minPlayers = table.getGameType().getMinPlayerCount();
-        return isPlayersJoined(minPlayers);
-    }
-
-    private boolean isPlayersJoined(int count) {
-        return playerSessionRepository.countConnectedPlayersByTableId(params.getTableId()) >= count;
+        var minPlayerCount = table.getMinPlayers();
+        return readTx.execute(status -> {
+            var connectedPlayers = playerSessionRepository
+                    .findConnectedByTableId(table.getId());
+            var playerPlayerUsers = connectedPlayers.stream()
+                    .filter(playerSession -> playerSession.getConnectionType() == ConnectionType.PLAYER)
+                    .toList();
+            if (playerPlayerUsers.size() < minPlayerCount) {
+                log.info("Waiting for PlayerSessions to connect ({}/{})...", playerPlayerUsers.size(), minPlayerCount);
+                return false;
+            }
+            var websocketUsersCount = connectedPlayers.size();
+            var connectedUsers = userWebsocketService.getConnectedUsers(table);
+            if (connectedUsers.size() < websocketUsersCount) {
+                log.info("Waiting for Websocket Users to connect ({}/{})...", connectedUsers.size(), websocketUsersCount);
+                return false;
+            }
+            if (connectedUsers.size() != websocketUsersCount) {
+                log.warn("Connected PlayerSessions doesnt equal the connected websocket users ({} vs {})", connectedPlayers.size(), websocketUsersCount);
+                return false;
+            }
+            var connectedUsernames = connectedUsers.stream()
+                    .map(SimpUser::getName).toList();
+            var connectedPlayerNames = playerPlayerUsers.stream()
+                    .map(playerSession -> playerSession.getUser().getUsername()).toList();
+            var allPlayersConnected = new HashSet<>(connectedUsernames).containsAll(connectedPlayerNames);
+            if (!allPlayersConnected) {
+                log.warn("Connected PlayerSessions usernames doesnt equal the connected websocket users usernames ({} vs {})", connectedPlayerNames, connectedUsernames);
+                return false;
+            }
+            log.info("Connected PlayerSessions match the connected websocket users ({} vs {})", connectedPlayerNames, connectedUsernames);
+            return true;
+        });
     }
 
     private void initRound() {
@@ -186,7 +217,17 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     private void initBettingRound(RoundState roundState) {
         var bettingRoundTypeOpt = roundState.getBettingRoundType();
         bettingRoundTypeOpt.ifPresent(bettingRoundType ->
-                bettingRoundService.create(params.getTableId(), bettingRoundType));
+                bettingRoundService.create(table.getId(), bettingRoundType));
+    }
+
+    private void checkTotalRoundsReached() {
+        var totalRounds = table.getTotalRounds();
+        if (totalRounds == null || totalRounds <= 0) {
+            return;
+        }
+        if (roundCount >= totalRounds) {
+            throw new GameInterruptedException("Finishing game as total rounds reached: %d/%d".formatted(roundCount, table.getTotalRounds()));
+        }
     }
 
     private void finishRound() {
@@ -199,7 +240,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                         if (bettingRound.getState() != BettingRoundState.FINISHED) {
                             var thisBettingRound = bettingRoundService.setBettingRoundFinished(bettingRound);
                             var roundPots = round.getRoundPots();
-                            afterCommit(() -> dispatcher.send(params, messageFactory.bettingRoundUpdated(round, thisBettingRound, roundPots)));
+                            afterCommit(() -> dispatcher.send(table, messageFactory.bettingRoundUpdated(round, thisBettingRound, roundPots)));
                         }
                     });
                     if (round.getRoundState() != RoundState.FINISHED) {
@@ -209,14 +250,14 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                     afterCommit(() -> dispatcher.send(table, messageFactory.roundFinished(winners)));
                 });
             });
-            gameSpeedService.sleep(params.getRoundEndWaitMs());
+            gameSpeedService.sleep(table, params.getRoundEndWaitMs());
         }
     }
 
     private void finishGame() {
         if (gameInProgress.compareAndSet(true, false)) {
             dispatcher.send(table, messageFactory.gameFinished());
-            threadManager.delete(params.getTableId());
+            threadManager.delete(table.getId());
         }
     }
 
@@ -243,20 +284,20 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     @CallerThread
     @Transactional(propagation = Propagation.MANDATORY)
     public void onPostPlayerAction(PlayerAction playerAction) {
-        var roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
+        var roundOpt = roundRepository.findCurrentByTableId(table.getId());
         if (roundOpt.isEmpty()) {
             // there is no round so ensure we can move to next one
             interruptRound.set(true);
         } else {
             var round = roundOpt.get();
-            var activePlayers = playerSessionRepository.findActivePlayersByTableId(params.getTableId(), round.getId());
+            var activePlayers = playerSessionRepository.findActivePlayersByTableId(table.getId(), round.getId());
             if (activePlayers.size() < 2) {
                 // there is only 1 player left in a started game
                 interruptRound.set(true);
             }
         }
         afterCommit(() -> {
-            dispatcher.send(params, messageFactory.playerActioned(playerAction));
+            dispatcher.send(table, messageFactory.playerActioned(playerAction));
             if (playerTurnLatch != null) {
                 playerTurnLatch.countDown();
                 playerTurnLatch = null;
@@ -294,11 +335,11 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
         try {
             var terminated = params.getEndLatch().await(GAME_STOP_TIMEOUT_IN_SECS, TimeUnit.SECONDS);
             if (!terminated) {
-                log.warn("Game thread for table {} did not terminate within {} seconds. Forcing interrupt...", params.getTableId(), GAME_STOP_TIMEOUT_IN_SECS);
+                log.warn("Game thread for table {} did not terminate within {} seconds. Forcing interrupt...", table.getId(), GAME_STOP_TIMEOUT_IN_SECS);
                 this.interrupt();
             }
         } catch (InterruptedException e) {
-            log.error("Failed to wait for game end latch for table {}", params.getTableId(), e);
+            log.error("Failed to wait for game end latch for table {}", table.getId(), e);
             Thread.currentThread().interrupt();
         }
     }

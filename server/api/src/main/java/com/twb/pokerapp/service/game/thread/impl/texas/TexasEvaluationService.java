@@ -32,14 +32,15 @@ public class TexasEvaluationService {
     private final GameSpeedService gameSpeedService;
 
     public void evaluate(GameThreadParams params) {
+        var tableId = params.getTable().getId();
         writeTx.executeWithoutResult(status -> {
-            var roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
+            var roundOpt = roundRepository.findCurrentByTableId(tableId);
             if (roundOpt.isEmpty()) {
-                gameLogService.sendLogMessage(params.getTableId(), "Round not found for table: " + params.getTableId());
+                gameLogService.sendLogMessage(params, "Round not found for table: " + tableId);
                 return;
             }
             var round = roundOpt.get();
-            var activePlayers = playerSessionRepository.findActivePlayersByTableId(params.getTableId(), round.getId());
+            var activePlayers = playerSessionRepository.findActivePlayersByTableId(tableId, round.getId());
             if (activePlayers.size() == 1) {
                 var winner = activePlayers.getFirst();
                 evaluateLastPlayerStanding(params, winner, round);
@@ -47,7 +48,7 @@ public class TexasEvaluationService {
                 evaluateMultiPlayersStanding(params, round, activePlayers);
             }
         });
-        gameSpeedService.sleep(params.getEvalWaitMs());
+        gameSpeedService.sleep(params.getTable(), params.getEvalWaitMs());
     }
 
     private void evaluateLastPlayerStanding(GameThreadParams params, PlayerSession winner, Round round) {
@@ -60,11 +61,11 @@ public class TexasEvaluationService {
 
         var hand = handRepository.findForPlayerAndRound(winner.getId(), round.getId())
                 .orElse(null);
-        
+
         saveRoundWinner(winner, round, hand, totalWinnings);
 
         var winnerUsername = winner.getUser().getUsername();
-        afterCommit(() -> gameLogService.sendLogMessage(params.getTableId(), "%s wins round with $%.2f"
+        afterCommit(() -> gameLogService.sendLogMessage(params, "%s wins round with $%.2f"
                 .formatted(winnerUsername, totalWinnings)));
     }
 
@@ -166,7 +167,7 @@ public class TexasEvaluationService {
                                List<EvalPlayerHandDTO> winners, double amountPerWinner) {
         var potName = (pot.getPotIndex() == 0) ? "Main Pot" : "Side Pot " + pot.getPotIndex();
         var winnerNames = getReadableWinners(winners);
-        
+
         var handTypeStr = "Unknown";
         if (!winners.isEmpty() && winners.getFirst().getHandType() != null) {
             handTypeStr = winners.getFirst().getHandType().getValue();
@@ -178,7 +179,7 @@ public class TexasEvaluationService {
         } else {
             message = "%s split %s ($%.2f) with a %s (Each gets ~$%.2f)".formatted(winnerNames, potName, pot.getPotAmount(), handTypeStr, amountPerWinner);
         }
-        gameLogService.sendLogMessage(params.getTableId(), message);
+        gameLogService.sendLogMessage(params, message);
     }
 
     private String getReadableWinners(List<EvalPlayerHandDTO> winners) {

@@ -17,6 +17,7 @@ import java.util.List;
 class TexasGame3PlayerIT {
     private final static TestEnvironment env = new TestEnvironment();
     private static final int SPEED_MULTIPLIER = 2;
+    private static final boolean FIXED_SCENARIO = true;
 
     // *****************************************************************************************
     // Lifecycle Methods
@@ -24,7 +25,7 @@ class TexasGame3PlayerIT {
 
     @BeforeAll
     static void beforeAll() {
-        env.start(true, SPEED_MULTIPLIER);
+        env.start(FIXED_SCENARIO);
     }
 
     @AfterEach
@@ -74,7 +75,9 @@ class TexasGame3PlayerIT {
         );
         var params = ScenarioParams.builder()
                 .scenario(scenario)
-                .useFixedScenario(true)
+                .speedMultiplier(SPEED_MULTIPLIER)
+                .totalRounds(1)
+                .useFixedScenario(FIXED_SCENARIO)
                 .scenarioPlayers(players)
                 .communityCards(community)
                 .build();

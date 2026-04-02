@@ -23,6 +23,7 @@ public class PlayersServerMessages extends HashMap<String, List<ServerMessageDTO
         }
     }
 
+    @Deprecated
     public PlayersServerMessages getByNumberOfRounds(int numberOfRounds) {
         var messages = new PlayersServerMessages();
         for (var entry : entrySet()) {

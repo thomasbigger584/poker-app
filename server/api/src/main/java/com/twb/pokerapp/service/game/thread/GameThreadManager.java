@@ -96,8 +96,7 @@ public class GameThreadManager {
     private GameThreadParams getGameThreadParams(PokerTable table) {
         var environment = context.getEnvironment();
         return GameThreadParams.builder()
-                .tableId(table.getId())
-                .gameType(table.getGameType())
+                .table(table)
                 .startLatch(new CountDownLatch(1))
                 .endLatch(new CountDownLatch(1))
                 .dealWaitMs(environment.getRequiredProperty("app.deal-wait-ms", Long.class))
@@ -116,7 +115,7 @@ public class GameThreadManager {
      * @return the created game thread
      */
     private GameThread create(GameThreadParams params) {
-        return params.getGameType()
+        return params.getTable().getGameType()
                 .getGameThread(context, params);
     }
 

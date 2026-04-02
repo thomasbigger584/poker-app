@@ -50,8 +50,7 @@ public class TexasGameThread extends GameThread {
     }
 
     private void initDeal() {
-        var activePlayers = playerSessionRepository
-                .findActivePlayersByTableId(params.getTableId(), roundId);
+        var activePlayers = playerSessionRepository.findActivePlayersByTableId(table.getId(), roundId);
         for (var cardType : CardType.PLAYER_CARDS) {
             for (var playerSession : activePlayers) {
                 checkRoundInterrupted();
@@ -68,7 +67,7 @@ public class TexasGameThread extends GameThread {
             return card;
         });
         dispatcher.send(table, messageFactory.initDeal(playerSession, playerCard));
-        gameSpeedService.sleep(params.getDealWaitMs());
+        gameSpeedService.sleep(table, params.getDealWaitMs());
     }
 
     private void dealFlop() {
@@ -86,7 +85,7 @@ public class TexasGameThread extends GameThread {
             return card;
         });
         dispatcher.send(table, messageFactory.communityCardDeal(communityCard));
-        gameSpeedService.sleep(params.getDealWaitMs());
+        gameSpeedService.sleep(table, params.getDealWaitMs());
     }
 
     @Override
