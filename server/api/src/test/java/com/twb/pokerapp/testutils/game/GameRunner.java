@@ -131,6 +131,6 @@ public class GameRunner {
         if (StringUtils.isBlank(scenario)) {
             return errorMessage;
         }
-        return "(%s)%s".formatted(scenario, errorMessage);
+        return "(%s) %s".formatted(scenario, errorMessage);
     }
 }

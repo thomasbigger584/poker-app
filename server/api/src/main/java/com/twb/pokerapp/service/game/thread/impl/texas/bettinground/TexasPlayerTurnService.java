@@ -141,6 +141,16 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
             bettingRound = getThrowGameInterrupted(bettingRoundRepository.findCurrentByRoundId(round.getId()), "Betting Round is empty for round");
             if (activePlayers.isEmpty()) {
                 activePlayers = getActivePlayers(round);
+            } else {
+                refreshActivePlayers();
+            }
+
+            // Termination Check: No more actionable players
+            long actionableCount = activePlayers.stream().filter(this::isActionable).count();
+            if (actionableCount <= 1) {
+                log.info("Only {} actionable player(s), betting round finished.", actionableCount);
+                shouldContinue.set(false);
+                return;
             }
 
             if (playerIndex >= activePlayers.size()) {
