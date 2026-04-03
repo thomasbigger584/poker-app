@@ -1,7 +1,6 @@
 package com.twb.pokerapp.dto.bettinground;
 
-import com.twb.pokerapp.domain.enumeration.BettingRoundState;
-import com.twb.pokerapp.domain.enumeration.BettingRoundType;
+import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -11,7 +10,7 @@ import java.util.UUID;
 @Data
 public class BettingRoundRefundDTO {
     private UUID id;
-    private BettingRoundType type;
-    private BettingRoundState state;
+    private PlayerSessionDTO playerSession;
+    private Double amount;
     private List<BettingRoundRefundDTO> bettingRoundRefunds = new ArrayList<>();
 }
