@@ -333,4 +333,34 @@
         </createTable>
         <addPrimaryKey columnNames="id" constraintName="pk_fixed_scenario" tableName="fixed_scenario"/>
     </changeSet>
+
+    <changeSet author="tbigg" id="12">
+        <createTable tableName="betting_round_refund">
+            <column name="id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="player_session_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="betting_round_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="double">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date_time" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_date_time" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="pk_betting_round_refund" tableName="betting_round_refund"/>
+        <addForeignKeyConstraint constraintName="fk_betting_round_refund_player_session_id" onDelete="CASCADE"
+                                 baseTableName="betting_round_refund" baseColumnNames="player_session_id"
+                                 referencedTableName="player_session" referencedColumnNames="id"/>
+        <addForeignKeyConstraint constraintName="fk_betting_round_refund_round_id" onDelete="CASCADE"
+                                 baseTableName="betting_round_refund" baseColumnNames="betting_round_id"
+                                 referencedTableName="betting_round" referencedColumnNames="id"/>
+    </changeSet>
 </databaseChangeLog>

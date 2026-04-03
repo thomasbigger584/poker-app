@@ -43,6 +43,9 @@ public class BettingRound extends Auditable {
     @OneToMany(mappedBy = "bettingRound")
     private List<PlayerAction> playerActions = new ArrayList<>();
 
+    @OneToMany(mappedBy = "bettingRound", fetch = FetchType.EAGER) // shouldnt be many returned
+    private List<BettingRoundRefund> bettingRoundRefunds = new ArrayList<>();
+
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

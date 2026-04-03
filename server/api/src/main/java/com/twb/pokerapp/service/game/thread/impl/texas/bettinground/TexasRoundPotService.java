@@ -1,13 +1,9 @@
 package com.twb.pokerapp.service.game.thread.impl.texas.bettinground;
 
-import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.domain.Round;
-import com.twb.pokerapp.domain.RoundPot;
+import com.twb.pokerapp.domain.*;
 import com.twb.pokerapp.domain.enumeration.ActionType;
-import com.twb.pokerapp.repository.PlayerActionRepository;
-import com.twb.pokerapp.repository.PlayerSessionRepository;
-import com.twb.pokerapp.repository.RoundPotRepository;
-import com.twb.pokerapp.repository.RoundRepository;
+import com.twb.pokerapp.repository.*;
+import com.twb.pokerapp.service.BettingRoundService;
 import com.twb.pokerapp.service.game.thread.dto.ContributionDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,9 +22,10 @@ public class TexasRoundPotService {
     private final PlayerActionRepository playerActionRepository;
     private final PlayerSessionRepository playerSessionRepository;
     private final RoundPotRepository roundPotRepository;
+    private final BettingRoundService bettingRoundService;
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public Round reconcilePots(Round round) {
+    public Round reconcilePots(Round round, BettingRound bettingRound) {
         var playerTotalBets = new HashMap<UUID, Double>();
         var playerFoldedStatus = new HashMap<UUID, Boolean>();
         var sessionMap = new HashMap<UUID, PlayerSession>();
@@ -45,7 +42,7 @@ public class TexasRoundPotService {
 
         var contributions = getPlayerContributions(playerTotalBets, sessionMap, playerFoldedStatus);
 
-        return calculatePotSlices(round, contributions);
+        return calculatePotSlices(round, bettingRound, contributions);
     }
 
     private void sumAmountsFromActions(UUID roundId,
@@ -91,7 +88,8 @@ public class TexasRoundPotService {
         return contributions;
     }
 
-    private Round calculatePotSlices(Round round, List<ContributionDTO> contributions) {
+    private Round calculatePotSlices(Round round, BettingRound bettingRound, 
+                                     List<ContributionDTO> contributions) {
         var roundPots = roundPotRepository.findByRound(round.getId());
         if (CollectionUtils.isNotEmpty(roundPots)) {
             roundPotRepository.deleteAll(roundPots);
@@ -105,7 +103,7 @@ public class TexasRoundPotService {
 
         var previousPotLevel = 0d;
 
-        long totalActiveNotFolded = contributions.stream().filter(c -> !c.isFolded()).count();
+        var totalActiveNotFolded = contributions.stream().filter(c -> !c.isFolded()).count();
 
         for (ContributionDTO currentContributor : contributions) {
             var currentContributionAmount = currentContributor.amount();
@@ -132,7 +130,7 @@ public class TexasRoundPotService {
             // 2. OR the only eligible winner is the last player standing (everyone else folded).
             // If there's only one winner at this level but other players are still active (all-in), 
             // it's an over-bet/refund.
-            boolean isUncalledBetByLastPlayer = eligibleWinnersForSlice.size() == 1 && totalActiveNotFolded == 1;
+            var isUncalledBetByLastPlayer = eligibleWinnersForSlice.size() == 1 && totalActiveNotFolded == 1;
             if (contributorsAtOrAboveLevel.size() > 1 || isUncalledBetByLastPlayer) {
                 var totalSliceAmount = sliceAmountPerPlayer * contributorsAtOrAboveLevel.size();
 
@@ -166,7 +164,7 @@ public class TexasRoundPotService {
                         .orElseThrow(() -> new IllegalStateException("PlayerSession not found for refund: " + playerSession.getId()));
                 managedPlayerSession.setFunds(managedPlayerSession.getFunds() + refundAmount);
                 playerSessionRepository.save(managedPlayerSession);
-                // TODO: insert RoundRefund here to be on BettingRound to keep audit of the refund
+                bettingRoundService.createRefund(managedPlayerSession, bettingRound, refundAmount);
                 log.info("Refunding over-bet of {} to player {}", refundAmount, playerSession.getUser().getUsername());
             }
         }

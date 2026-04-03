@@ -71,6 +71,9 @@ public class PlayerSession extends Auditable {
     @JoinColumn(name = "round_id")
     private Round round;
 
+    @OneToMany(mappedBy = "playerSession")
+    private List<BettingRoundRefund> bettingRoundRefunds = new ArrayList<>();
+
     @ManyToMany(mappedBy = "eligiblePlayers")
     private List<RoundPot> roundPots = new ArrayList<>();
 

@@ -1,8 +1,11 @@
 package com.twb.pokerapp.service;
 
 import com.twb.pokerapp.domain.BettingRound;
+import com.twb.pokerapp.domain.BettingRoundRefund;
+import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.enumeration.BettingRoundType;
 import com.twb.pokerapp.mapper.BettingRoundMapper;
+import com.twb.pokerapp.repository.BettingRoundRefundRepository;
 import com.twb.pokerapp.repository.BettingRoundRepository;
 import com.twb.pokerapp.repository.RoundRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +26,7 @@ import static com.twb.pokerapp.repository.RepositoryUtil.getThrowGameInterrupted
 public class BettingRoundService {
     private final RoundRepository roundRepository;
     private final BettingRoundRepository repository;
+    private final BettingRoundRefundRepository refundRepository;
     private final BettingRoundMapper mapper;
 
     @Transactional
@@ -39,6 +43,18 @@ public class BettingRoundService {
         bettingRound = repository.save(bettingRound);
 
         return bettingRound;
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public BettingRoundRefund createRefund(PlayerSession playerSession, BettingRound bettingRound, double refundAmount) {
+        var refund = new BettingRoundRefund();
+        refund.setPlayerSession(playerSession);
+        refund.setBettingRound(bettingRound);
+        refund.setAmount(refundAmount);
+
+        refund = refundRepository.save(refund);
+
+        return refund;
     }
 
     @Transactional(propagation = Propagation.MANDATORY)

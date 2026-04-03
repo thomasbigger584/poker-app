@@ -130,7 +130,7 @@ public class TableGameService {
 
             var threadOpt = threadManager.getIfExists(tableId);
             if (threadOpt.isEmpty()) {
-                log.error("No game thread for table ID: {}", tableId);
+                log.info("No game thread for table ID: {}", tableId);
                 return;
             }
             var gameThread = threadOpt.get();

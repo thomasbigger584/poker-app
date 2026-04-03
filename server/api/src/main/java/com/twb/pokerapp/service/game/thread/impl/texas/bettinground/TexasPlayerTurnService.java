@@ -122,7 +122,7 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
         writeTx.executeWithoutResult(status -> {
             var bettingRoundOpt = bettingRoundRepository.findById(bettingRound.getId());
             bettingRoundOpt.ifPresent(br -> {
-                this.round = texasRoundPotService.reconcilePots(round);
+                this.round = texasRoundPotService.reconcilePots(round, br);
                 this.bettingRound = bettingRoundService.setBettingRoundFinished(br);
                 var roundPots = this.round.getRoundPots();
                 afterCommit(() -> dispatcher.send(params.getTable(), messageFactory.bettingRoundUpdated(round, br, roundPots)));
