@@ -140,14 +140,18 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     public void handleException(@NonNull StompSession session, StompCommand command,
                                 @NonNull StompHeaders headers, byte @NonNull [] payload, @NonNull Throwable exception) {
         log.error("Exception thrown during stomp session", exception);
-        exceptionThrown.set(exception);
+        if (this.session != null) {
+            exceptionThrown.compareAndSet(null, exception);
+        }
         countdownLatches();
     }
 
     @Override
     public void handleTransportError(@NonNull StompSession session, @NonNull Throwable exception) {
         log.error("Exception thrown after connect failure", exception);
-        exceptionThrown.set(exception);
+        if (this.session != null) {
+            exceptionThrown.compareAndSet(null, exception);
+        }
         countdownLatches();
     }
 
