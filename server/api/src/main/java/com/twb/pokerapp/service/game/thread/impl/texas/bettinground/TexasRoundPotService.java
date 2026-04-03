@@ -105,6 +105,8 @@ public class TexasRoundPotService {
 
         var previousPotLevel = 0d;
 
+        long totalActiveNotFolded = contributions.stream().filter(c -> !c.isFolded()).count();
+
         for (ContributionDTO currentContributor : contributions) {
             var currentContributionAmount = currentContributor.amount();
             var sliceAmountPerPlayer = currentContributionAmount - previousPotLevel;
@@ -125,11 +127,13 @@ public class TexasRoundPotService {
                 }
             }
 
-            // A pot slice is formed if multiple players contribute to this level,
-            // OR if there is at least one player eligible to win the uncalled portion.
-            // This ensures that uncalled bets are treated as a "win" rather than a "refund"
-            // for the last player standing, which is necessary for correct ledger/win logging.
-            if (contributorsAtOrAboveLevel.size() > 1 || !eligibleWinnersForSlice.isEmpty()) {
+            // A pot slice is formed if:
+            // 1. Multiple players contributed to this level (contested money).
+            // 2. OR the only eligible winner is the last player standing (everyone else folded).
+            // If there's only one winner at this level but other players are still active (all-in), 
+            // it's an over-bet/refund.
+            boolean isUncalledBetByLastPlayer = eligibleWinnersForSlice.size() == 1 && totalActiveNotFolded == 1;
+            if (contributorsAtOrAboveLevel.size() > 1 || isUncalledBetByLastPlayer) {
                 var totalSliceAmount = sliceAmountPerPlayer * contributorsAtOrAboveLevel.size();
 
                 if (!eligibleWinnersForSlice.isEmpty()) {
@@ -162,6 +166,7 @@ public class TexasRoundPotService {
                         .orElseThrow(() -> new IllegalStateException("PlayerSession not found for refund: " + playerSession.getId()));
                 managedPlayerSession.setFunds(managedPlayerSession.getFunds() + refundAmount);
                 playerSessionRepository.save(managedPlayerSession);
+                // TODO: insert RoundRefund here to be on BettingRound to keep audit of the refund
                 log.info("Refunding over-bet of {} to player {}", refundAmount, playerSession.getUser().getUsername());
             }
         }
