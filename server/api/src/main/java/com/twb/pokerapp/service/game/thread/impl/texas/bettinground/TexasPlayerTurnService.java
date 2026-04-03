@@ -29,6 +29,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -145,12 +146,33 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
                 refreshActivePlayers();
             }
 
-            // Termination Check: No more actionable players
-            long actionableCount = activePlayers.stream().filter(this::isActionable).count();
-            if (actionableCount <= 1) {
-                log.info("Only {} actionable player(s), betting round finished.", actionableCount);
+            List<PlayerSession> actionablePlayers = activePlayers.stream()
+                    .filter(this::isActionable).toList();
+
+            if (actionablePlayers.isEmpty()) {
+                log.info("No actionable players found, skipping betting round.");
                 shouldContinue.set(false);
                 return;
+            }
+
+            if (actionablePlayers.size() == 1) {
+                PlayerSession loneActionable = actionablePlayers.getFirst();
+                var actions = playerActionRepository.findByRoundId(round.getId());
+                var contributions = new HashMap<UUID, Double>();
+                for (var action : actions) {
+                    if (action.getAmount() != null) {
+                        contributions.merge(action.getPlayerSession().getId(), action.getAmount(), Double::sum);
+                    }
+                }
+                double maxContribution = contributions.values().stream().mapToDouble(d -> d).max().orElse(0d);
+                double playerContribution = contributions.getOrDefault(loneActionable.getId(), 0d);
+
+                if (playerContribution >= maxContribution) {
+                    log.info("Only one actionable player {} and they have matched max contribution {}, skipping betting round.",
+                            loneActionable.getUser().getUsername(), maxContribution);
+                    shouldContinue.set(false);
+                    return;
+                }
             }
 
             if (playerIndex >= activePlayers.size()) {

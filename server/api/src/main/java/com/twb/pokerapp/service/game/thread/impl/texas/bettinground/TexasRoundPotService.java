@@ -52,13 +52,22 @@ public class TexasRoundPotService {
                                        Map<UUID, Double> playerTotalBets,
                                        Map<UUID, Boolean> playerFoldedStatus) {
         var allActions = playerActionRepository.findByRoundId(roundId);
+        // Repository returns newest first.
         for (var action : allActions) {
             var playerId = action.getPlayerSession().getId();
             if (action.getAmount() != null) {
                 playerTotalBets.merge(playerId, action.getAmount(), Double::sum);
             }
-            var isFold = action.getActionType() == ActionType.FOLD;
-            playerFoldedStatus.put(playerId, isFold);
+        }
+
+        var processedPlayers = new HashSet<UUID>();
+        for (var action : allActions) {
+            var playerId = action.getPlayerSession().getId();
+            if (!processedPlayers.contains(playerId)) {
+                var isFold = action.getActionType() == ActionType.FOLD;
+                playerFoldedStatus.put(playerId, isFold);
+                processedPlayers.add(playerId);
+            }
         }
     }
 
@@ -72,8 +81,10 @@ public class TexasRoundPotService {
             var amount = entry.getValue();
             if (amount > 0) {
                 var player = sessionMap.get(playerId);
-                var isFolded = playerFoldedStatus.get(playerId);
-                contributions.add(new ContributionDTO(player, amount, isFolded));
+                if (player != null) {
+                    var isFolded = playerFoldedStatus.getOrDefault(playerId, false);
+                    contributions.add(new ContributionDTO(player, amount, isFolded));
+                }
             }
         }
         Collections.sort(contributions);
@@ -87,86 +98,70 @@ public class TexasRoundPotService {
             roundPots.clear();
         }
 
-        // Map to store how much each player has contributed to pots
         var playerAllocatedToPots = new HashMap<UUID, Double>();
         for (var contribution : contributions) {
             playerAllocatedToPots.put(contribution.player().getId(), 0.0);
         }
 
-        // Sort contributions by amount (ascending)
-        Collections.sort(contributions);
-
-        var previousPotLevel = 0d; // Represents the total amount contributed to previous pots by each player
+        var previousPotLevel = 0d;
 
         for (ContributionDTO currentContributor : contributions) {
             var currentContributionAmount = currentContributor.amount();
+            var sliceAmountPerPlayer = currentContributionAmount - previousPotLevel;
 
-            // The amount that forms this pot slice, per player
-            var sliceAmount = currentContributionAmount - previousPotLevel;
-
-            if (sliceAmount <= 0) {
-                // This player has already been fully accounted for in previous pots,
-                // or their contribution is less than or equal to the previous pot level.
-                // Or, if multiple players have the same contribution amount, only the first one
-                // will trigger a new slice.
+            if (sliceAmountPerPlayer <= 0.001) {
                 continue;
             }
 
-            // Determine the players eligible for this slice.
-            var eligiblePlayersForSlice = new ArrayList<PlayerSession>();
+            var contributorsAtOrAboveLevel = new ArrayList<ContributionDTO>();
+            var eligibleWinnersForSlice = new ArrayList<PlayerSession>();
+
             for (var contributor : contributions) {
-                // A player is eligible if their total contribution is at least the currentContributionAmount
-                // and they haven't folded.
-                if (contributor.amount() >= currentContributionAmount && !contributor.isFolded()) {
-                    eligiblePlayersForSlice.add(contributor.player());
+                if (contributor.amount() >= currentContributionAmount) {
+                    contributorsAtOrAboveLevel.add(contributor);
+                    if (!contributor.isFolded()) {
+                        eligibleWinnersForSlice.add(contributor.player());
+                    }
                 }
             }
 
-            if (eligiblePlayersForSlice.size() > 1) {
-                // If more than one player is eligible, form a pot
-                var currentPotTotal = sliceAmount * eligiblePlayersForSlice.size();
-                distributeSliceToPots(round, roundPots, currentPotTotal, eligiblePlayersForSlice);
+            if (contributorsAtOrAboveLevel.size() > 1) {
+                // If there's more than one player who contributed at this level, we form a pot slice.
+                var totalSliceAmount = sliceAmountPerPlayer * contributorsAtOrAboveLevel.size();
 
-                // Update allocated amounts for players who contributed to this slice
-                for (var player : eligiblePlayersForSlice) {
-                    playerAllocatedToPots.merge(player.getId(), sliceAmount, Double::sum);
+                if (!eligibleWinnersForSlice.isEmpty()) {
+                    distributeSliceToPots(round, roundPots, totalSliceAmount, eligibleWinnersForSlice);
+                } else if (!roundPots.isEmpty()) {
+                    // Everyone folded at this level, add to last pot
+                    var lastPot = roundPots.getLast();
+                    lastPot.setPotAmount(lastPot.getPotAmount() + totalSliceAmount);
+                    roundPotRepository.save(lastPot);
                 }
-            } else if (eligiblePlayersForSlice.size() == 1) {
-                // Only one player is eligible for this slice, meaning they over-bet.
-                // This amount should be refunded to that player.
-                var playerToRefund = eligiblePlayersForSlice.getFirst();
-                var refundAmount = sliceAmount;
 
-                // Update the player's funds directly
-                var managedPlayerSession = playerSessionRepository.findById(playerToRefund.getId())
-                        .orElseThrow(() -> new IllegalStateException("PlayerSession not found for refund: " + playerToRefund.getId()));
-                managedPlayerSession.setFunds(managedPlayerSession.getFunds() + refundAmount);
-                playerSessionRepository.save(managedPlayerSession);
-                log.info("Refunding {} to player {}", refundAmount, playerToRefund.getUser().getUsername());
-
-                // The amount is refunded, so it's not allocated to a pot.
-                // playerAllocatedToPots is NOT updated for this player for this sliceAmount.
+                // Mark as allocated for everyone who contributed to this slice
+                for (var contributor : contributorsAtOrAboveLevel) {
+                    playerAllocatedToPots.merge(contributor.player().getId(), sliceAmountPerPlayer, Double::sum);
+                }
             }
-            // If eligiblePlayersForSlice is empty, currentPotTotal would be 0, so nothing to do.
+            // If only one player contributed at this level, it's an over-bet and they aren't "allocated" to a pot.
 
             previousPotLevel = currentContributionAmount;
         }
 
-        // Final check for any remaining unallocated funds.
-        // This should ideally be 0 if the logic is perfect.
+        // Refund Logic: Any contributed funds not allocated to a pot are returned to the player.
         for (var contribution : contributions) {
             var playerId = contribution.player().getId();
             var totalContributed = contribution.amount();
             var allocatedToPots = playerAllocatedToPots.getOrDefault(playerId, 0.0);
             var refundAmount = totalContributed - allocatedToPots;
 
-            if (refundAmount > 0) {
+            if (refundAmount > 0.001) {
                 var playerSession = contribution.player();
                 var managedPlayerSession = playerSessionRepository.findById(playerSession.getId())
                         .orElseThrow(() -> new IllegalStateException("PlayerSession not found for refund: " + playerSession.getId()));
                 managedPlayerSession.setFunds(managedPlayerSession.getFunds() + refundAmount);
                 playerSessionRepository.save(managedPlayerSession);
-                log.warn("Refunding (final check, unexpected) {} to player {}", refundAmount, playerSession.getUser().getUsername());
+                log.info("Refunding over-bet of {} to player {}", refundAmount, playerSession.getUser().getUsername());
             }
         }
 
@@ -181,7 +176,7 @@ public class TexasRoundPotService {
     ) {
         if (!roundPots.isEmpty()) {
             var lastPot = roundPots.getLast();
-            if (CollectionUtils.isEqualCollection(lastPot.getEligiblePlayers(), eligiblePlayers)) {
+            if (new HashSet<>(lastPot.getEligiblePlayers()).equals(new HashSet<>(eligiblePlayers))) {
                 lastPot.setPotAmount(lastPot.getPotAmount() + amount);
                 roundPotRepository.save(lastPot);
                 return;

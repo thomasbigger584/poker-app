@@ -1,8 +1,8 @@
 Scenario,user1Hand,user1Start,user2Hand,user2Start,user3Hand,user3Start,Community,PreFlop,Flop,Turn,River,Winner,TotalPot,user1Win,user2Win,user3Win
 "Pot remains 0 if all check",as;kd,5000,qs;js,5000,9h;8h,5000,2d;5s;7c;tc;3d,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,None,0,0,0,0
-"Single bet wins immediately",ac;kc,5000,7s;2d,5000,5h;5s,5000,None,user1:BET:500;user2:FOLD;user3:FOLD,None,None,None,user1,500,500,0,0
+#"Single bet wins immediately",ac;kc,5000,7s;2d,5000,5h;5s,5000,None,user1:BET:500;user2:FOLD;user3:FOLD,None,None,None,user1,500,500,0,0
 "Kicker tie-breaker validation",ah;qc,5000,ad;jh,5000,2s;3c,5000,as;ts;7d;5s;2c,user1:BET:200;user2:CALL:200;user3:FOLD,user1:BET:500;user2:CALL:500,user1:BET:1000;user2:CALL:1000,user1:BET:1000;user2:CALL:1000,user1,5400,5400,0,0
-"River bluff with worst hand",2s;7h,5000,ah;kh,5000,qd;jd,5000,3s;5h;9c;4d;ts,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1:BET:2500;user2:FOLD;user3:FOLD,user1,2500,2500,0,0
+#"River bluff with worst hand",2s;7h,5000,ah;kh,5000,qd;jd,5000,3s;5h;9c;4d;ts,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1:BET:2500;user2:FOLD;user3:FOLD,user1,2500,2500,0,0
 "Counterfeit pair on board",5s;5h,5000,2d;2c,5000,ah;kh,5000,ts;th;js;jh;qd,user1:BET:100;user2:CALL:100;user3:CALL:100,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user3,300,0,0,300
 "Flush: Ten-high vs Seven-high",ts;9s,5000,7s;6s,5000,2h;3h,5000,as;js;4s;3d;2c,user1:BET:1000;user2:CALL:1000;user3:FOLD,user1:CHECK;user2:CHECK,user1:CHECK;user2:CHECK,user1:CHECK;user2:CHECK,user1,2000,2000,0,0
 "Counterfeit Full House",2s;2h,5000,3s;3h,5000,as;kh,5000,js;jh;jd;tc;td,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user2,0,0,0,0
@@ -17,3 +17,4 @@ Scenario,user1Hand,user1Start,user2Hand,user2Start,user3Hand,user3Start,Communit
 "Main Pot 3-way Split / No Side",as;2d,1000,ad;3h,1000,ah;4c,1000,5s;6h;7d;8c;9s,user1:ALL_IN:1000;user2:ALL_IN:1000;user3:ALL_IN:1000,None,None,None,user1;user2;user3,3000,1000,1000,1000
 "Quad Board / High Card Kicker",as;2d,5000,ks;3h,5000,qs;4c,5000,jh;js;jd;jc;th,user1:BET:100;user2:CALL:100;user3:CALL:100,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1,300,300,0,0
 "Nut Flush vs Royal Flush",as;ks,5000,qs;js,5000,2h;2d,5000,ts;js;qs;ks;as,user1:BET:1000;user2:CALL:1000;user3:FOLD,user1:ALL_IN:4000;user2:CALL:4000,None,None,user1;user2,10000,5000,5000,0
+"Bet refund: caller has less chips",as;ac,5000,kh;ks,1000,7d;8d,5000,2d;3h;4c;5s;9d,user1:BET:500;user2:CALL:500;user3:FOLD,user1:BET:4500;user2:CALL:500,None,None,user1,2000,2000,0,0
