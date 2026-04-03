@@ -125,8 +125,11 @@ public class TexasRoundPotService {
                 }
             }
 
-            if (contributorsAtOrAboveLevel.size() > 1) {
-                // If there's more than one player who contributed at this level, we form a pot slice.
+            // A pot slice is formed if multiple players contribute to this level,
+            // OR if there is at least one player eligible to win the uncalled portion.
+            // This ensures that uncalled bets are treated as a "win" rather than a "refund"
+            // for the last player standing, which is necessary for correct ledger/win logging.
+            if (contributorsAtOrAboveLevel.size() > 1 || !eligibleWinnersForSlice.isEmpty()) {
                 var totalSliceAmount = sliceAmountPerPlayer * contributorsAtOrAboveLevel.size();
 
                 if (!eligibleWinnersForSlice.isEmpty()) {
@@ -137,14 +140,12 @@ public class TexasRoundPotService {
                     lastPot.setPotAmount(lastPot.getPotAmount() + totalSliceAmount);
                     roundPotRepository.save(lastPot);
                 }
-
-                // Mark as allocated for everyone who contributed to this slice
+                
+                // Mark as allocated for everyone who contributed to this slice to prevent it from being refunded
                 for (var contributor : contributorsAtOrAboveLevel) {
                     playerAllocatedToPots.merge(contributor.player().getId(), sliceAmountPerPlayer, Double::sum);
                 }
             }
-            // If only one player contributed at this level, it's an over-bet and they aren't "allocated" to a pot.
-
             previousPotLevel = currentContributionAmount;
         }
 
