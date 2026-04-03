@@ -18,3 +18,7 @@ Scenario,user1Hand,user1Start,user2Hand,user2Start,user3Hand,user3Start,Communit
 "Quad Board / High Card Kicker",as;2d,5000,ks;3h,5000,qs;4c,5000,jh;js;jd;jc;th,user1:BET:100;user2:CALL:100;user3:CALL:100,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1:CHECK;user2:CHECK;user3:CHECK,user1,300,300,0,0
 "Nut Flush vs Royal Flush",as;ks,5000,qs;js,5000,2h;2d,5000,ts;js;qs;ks;as,user1:BET:1000;user2:CALL:1000;user3:FOLD,user1:ALL_IN:4000;user2:CALL:4000,None,None,user1;user2,10000,5000,5000,0
 "Bet refund: caller has less chips",as;ac,5000,kh;ks,1000,7d;8d,5000,2d;3h;4c;5s;9d,user1:BET:500;user2:CALL:500;user3:FOLD,user1:BET:4500;user2:CALL:500,None,None,user1,2000,2000,0,0
+"Dry Side Pot (U2 vs U3)",as;ks,5000,qd;jd,1000,7h;8h,5000,2s;3c;4d;5h;9s,user1:FOLD;user2:ALL_IN:1000;user3:CALL:1000,None,user3:BET:1000;user1:FOLD,user3:CHECK,user2,2000,0,2000,0
+"Multi Side Pot: 3 Different Stacks",as;ah,500,ks;kh,2000,qs;qh,5000,2c;3c;4d;5h;9s,user1:ALL_IN:500;user2:ALL_IN:2000;user3:CALL:2000,None,None,None,user1;user2,4500,1500,3000,0
+"The Overbet Refund",ac;kc,5000,7s;2d,200,5h;5d,5000,ad;9c;3s;2h;jh,user1:BET:5000;user2:CALL:200;user3:FOLD,None,None,None,user1,400,400,0,0
+"Chop Pot with Uneven Entries",as;kd,1500,ad;ks,5000,9h;8h,5000,2c;3c;4c;5c;6c,user1:ALL_IN:1500;user2:CALL:1500;user3:FOLD,None,None,None,user1;user2,3000,1500,1500,0

@@ -53,6 +53,7 @@ public class BettingRoundService {
         refund.setAmount(refundAmount);
 
         refund = refundRepository.save(refund);
+        bettingRound.getBettingRoundRefunds().add(refund);
 
         return refund;
     }
