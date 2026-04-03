@@ -40,7 +40,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String HEADER_CONNECTION_TYPE = "X-Connection-Type";
     private static final String HEADER_BUYIN_AMOUNT = "X-BuyIn-Amount";
-    private static final int HEARTBEAT_IN_MS = 10 * 1000;
+    private static final int HEARTBEAT_IN_MS = 5 * 1000;
     @Getter
     protected final TestUserParams params;
     private final WebSocketStompClient client;
@@ -240,7 +240,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         var stompClient = new WebSocketStompClient(sockJsClient);
         stompClient.setTaskScheduler(taskScheduler);
 
-        stompClient.setDefaultHeartbeat(new long[]{HEARTBEAT_IN_MS, (long) (HEARTBEAT_IN_MS * 6)});
+        stompClient.setDefaultHeartbeat(new long[]{HEARTBEAT_IN_MS, (long) (HEARTBEAT_IN_MS * 3)});
         stompClient.setMessageConverter(new ServerMessageConverter());
         stompClient.setInboundMessageSizeLimit(1024 * 1024);
         return stompClient;

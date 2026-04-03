@@ -18,10 +18,10 @@ import org.springframework.web.socket.config.annotation.WebSocketTransportRegist
 @Profile(ProfileConfiguration.LOCAL_PROFILE)
 public class LocalWebsocketConfiguration implements WebSocketMessageBrokerConfigurer {
 
-    @Value("${app.websocket.heartbeat.time-secs:10}")
+    @Value("${app.websocket.heartbeat.time-secs:5}")
     private int heartbeatTimeSecs;
 
-    @Value("${app.websocket.heartbeat.thread-pool-size:10}")
+    @Value("${app.websocket.heartbeat.thread-pool-size:4}")
     private int heartbeatThreadPoolSize;
 
     @Value("${app.websocket.stream-limit-mb:2}")
@@ -33,13 +33,13 @@ public class LocalWebsocketConfiguration implements WebSocketMessageBrokerConfig
     @Value("${app.websocket.disconnect-delay-secs:30}")
     private long disconnectDelaySecs;
 
-    @Value("${app.websocket.message-size-limit-mb:5}")
-    private int messageSizeLimitMb;
+    @Value("${app.websocket.message-size-limit-kb:256}")
+    private int messageSizeLimitKb;
 
-    @Value("${app.websocket.send-buffer-size-limit-mb:10}")
+    @Value("${app.websocket.send-buffer-size-limit-mb:1}")
     private int sendBufferSizeLimitMb;
 
-    @Value("${app.websocket.send-time-limit-secs:45}")
+    @Value("${app.websocket.send-time-limit-secs:5}")
     private int sendTimeLimitSecs;
 
     @Override
@@ -53,7 +53,7 @@ public class LocalWebsocketConfiguration implements WebSocketMessageBrokerConfig
                 .setUserDestinationPrefix("/user")
                 .setPreservePublishOrder(true)
                 .enableSimpleBroker("/topic", "/user")
-                .setHeartbeatValue(new long[]{heartbeatMs, heartbeatMs * 6})
+                .setHeartbeatValue(new long[]{heartbeatMs, heartbeatMs * 3})
                 .setTaskScheduler(heartBeatScheduler());
     }
 
@@ -68,7 +68,7 @@ public class LocalWebsocketConfiguration implements WebSocketMessageBrokerConfig
 
     @Override
     public void configureWebSocketTransport(WebSocketTransportRegistration registry) {
-        registry.setMessageSizeLimit(messageSizeLimitMb * 1024 * 1024);
+        registry.setMessageSizeLimit(messageSizeLimitKb * 1024);
         registry.setSendBufferSizeLimit(sendBufferSizeLimitMb * 1024 * 1024);
         registry.setSendTimeLimit(sendTimeLimitSecs * 1000);
     }
