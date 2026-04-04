@@ -23,6 +23,12 @@ public class RoundService {
     private final RoundMapper mapper;
 
     @Transactional(propagation = Propagation.MANDATORY)
+    public void reset() {
+        repository.findAll()
+                .forEach(round -> setRoundState(round, RoundState.FINISHED));
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
     public Round create(PokerTable table, List<PlayerSession> playerSessions) {
         var round = new Round();
         round.setRoundState(RoundState.WAITING_FOR_PLAYERS);

@@ -4,6 +4,7 @@ package com.twb.pokerapp.data.model.dto.table;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.UUID;
 
@@ -21,7 +22,9 @@ public class TableDTO {
     private UUID id;
     private String name;
     private String gameType;
+    @Nullable
     private Double speedMultiplier;
+    @Nullable
     private Integer totalRounds;
     private Integer minPlayers;
     private Integer maxPlayers;
@@ -29,12 +32,18 @@ public class TableDTO {
     private Double maxBuyin;
 
     public static TableDTO fromBundle(Bundle bundle) {
-        TableDTO table = new TableDTO();
+        var table = new TableDTO();
         table.setId(UUID.fromString(bundle.getString(KEY_TABLE_ID)));
         table.setName(bundle.getString(KEY_TABLE_NAME));
         table.setGameType(bundle.getString(KEY_GAME_TYPE));
-        table.setSpeedMultiplier(bundle.getDouble(KEY_SPEED_MULTIPLIER));
-        table.setTotalRounds(bundle.getInt(KEY_TOTAL_ROUNDS));
+        var speedMultiplier = bundle.getSerializable(KEY_SPEED_MULTIPLIER);
+        if (speedMultiplier != null) {
+            table.setSpeedMultiplier((Double) speedMultiplier);
+        }
+        var totalRounds = bundle.getSerializable(KEY_TOTAL_ROUNDS);
+        if (totalRounds != null) {
+            table.setTotalRounds((Integer) totalRounds);
+        }
         table.setMinPlayers(bundle.getInt(KEY_MIN_PLAYERS));
         table.setMaxPlayers(bundle.getInt(KEY_MAX_PLAYERS));
         table.setMinBuyin(bundle.getDouble(KEY_MIN_BUYIN));
@@ -48,8 +57,12 @@ public class TableDTO {
         bundle.putString(KEY_TABLE_ID, id.toString());
         bundle.putString(KEY_TABLE_NAME, name);
         bundle.putString(KEY_GAME_TYPE, gameType);
-        bundle.putDouble(KEY_GAME_TYPE, speedMultiplier);
-        bundle.putInt(KEY_GAME_TYPE, totalRounds);
+        if (speedMultiplier != null) {
+            bundle.putDouble(KEY_SPEED_MULTIPLIER, speedMultiplier);
+        }
+        if (totalRounds != null) {
+            bundle.putInt(KEY_TOTAL_ROUNDS, totalRounds);
+        }
         bundle.putInt(KEY_MIN_PLAYERS, minPlayers);
         bundle.putInt(KEY_MAX_PLAYERS, maxPlayers);
         bundle.putDouble(KEY_MIN_BUYIN, minBuyin);

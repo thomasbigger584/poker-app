@@ -52,6 +52,7 @@ public class KeycloakUserService {
                 updatedUsers++;
             } else {
                 var appUser = userMapper.representationToModel(representation);
+                appUser.setTotalFunds(50_000d);
                 userRepository.save(appUser);
                 createdUsers++;
             }

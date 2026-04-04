@@ -25,6 +25,11 @@ public class PlayerSessionService {
     private final PlayerSessionMapper mapper;
 
     @Transactional(propagation = Propagation.MANDATORY)
+    public void reset() {
+        repository.findAll().forEach(this::disconnectUser);
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
     public PlayerSessionDTO connectUserToRound(PokerTable table, AppUser user, ConnectionType connectionType, Double buyInAmount) {
         var sessionOpt = repository.findByTableIdAndUsername(table.getId(), user.getUsername());
         

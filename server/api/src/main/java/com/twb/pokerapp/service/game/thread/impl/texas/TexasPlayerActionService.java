@@ -83,6 +83,10 @@ public class TexasPlayerActionService extends GamePlayerActionService {
         if (lastPlayerActionType == ActionType.CHECK) {
             throw new GamePlayerLogException(playerSession, "Cannot call as previous action was a check");
         }
+        if (createActionDto.getAmount() == null) {
+            log.info("Setting call amount to $%.2f as call amount sent was null".formatted(lastPlayerAction.getAmount()));
+            createActionDto.setAmount(lastPlayerAction.getAmount());
+        }
         if (createActionDto.getAmount() >= playerSession.getFunds()) {
             return allInAction(playerSession, bettingRound, createActionDto);
         }
