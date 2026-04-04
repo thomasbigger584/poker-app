@@ -12,7 +12,6 @@ public class HandDTO {
     private UUID id;
     private String handType;
     private String handTypeStr;
-    private Boolean winner;
     private List<CardDTO> cards = new ArrayList<>();
 
     public UUID getId() {
@@ -39,14 +38,6 @@ public class HandDTO {
         this.handTypeStr = handTypeStr;
     }
 
-    public Boolean getWinner() {
-        return winner;
-    }
-
-    public void setWinner(Boolean winner) {
-        this.winner = winner;
-    }
-
     public List<CardDTO> getCards() {
         return cards;
     }
@@ -62,7 +53,6 @@ public class HandDTO {
                 "id=" + id +
                 ", handType='" + handType + '\'' +
                 ", handTypeStr='" + handTypeStr + '\'' +
-                ", winner=" + winner +
                 ", cards=" + cards +
                 '}';
     }

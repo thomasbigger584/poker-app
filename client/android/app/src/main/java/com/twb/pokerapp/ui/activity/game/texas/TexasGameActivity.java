@@ -316,11 +316,6 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             stringBuilderList.add("with");
             stringBuilderList.add(String.format(Locale.getDefault(), "%.2f", playerAction.getAmount()));
         }
-        var bettingRound = playerAction.getBettingRound();
-        var bettingRoundPot = bettingRound.getPot();
-        if (bettingRoundPot != null && bettingRoundPot > 0) {
-            stringBuilderList.add(String.format(Locale.getDefault(), "(%.2f)", bettingRoundPot));
-        }
         return String.join(" ", stringBuilderList);
     }
 

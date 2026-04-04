@@ -33,6 +33,8 @@ public class TableCreateActivity extends BaseAuthActivity {
     private EditText tableNameEditText;
     private Spinner gameTypeSpinner;
     private EditText minPlayersEditText;
+    private EditText speedMultiplierEditText;
+    private EditText totalRoundsEditText;
     private EditText maxPlayersEditText;
     private EditText minBuyInEditText;
     private EditText maxBuyInEditText;
@@ -64,6 +66,8 @@ public class TableCreateActivity extends BaseAuthActivity {
 
         tableNameEditText = findViewById(R.id.edit_table_name);
         gameTypeSpinner = findViewById(R.id.spinner_game_type);
+        speedMultiplierEditText = findViewById(R.id.edit_speed_multiplier);
+        totalRoundsEditText = findViewById(R.id.edit_total_rounds);
         minPlayersEditText = findViewById(R.id.edit_min_players);
         maxPlayersEditText = findViewById(R.id.edit_max_players);
         minBuyInEditText = findViewById(R.id.edit_min_buyin);
@@ -99,6 +103,28 @@ public class TableCreateActivity extends BaseAuthActivity {
         var gameType = gameTypesArray[gameTypeSelectedPosition];
         createTableDTO.setGameType(gameType);
 
+        var speedMultiplier = speedMultiplierEditText.getText().toString().trim();
+        if (speedMultiplier.isBlank()) {
+            Toast.makeText(this, "Please enter a speed multiplier", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            createTableDTO.setSpeedMultiplier(Double.parseDouble(speedMultiplier));
+        } catch (NumberFormatException e) {
+            Toast.makeText(this, "Please enter a valid speed multiplier", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        var totalRounds = totalRoundsEditText.getText().toString().trim();
+        if (totalRounds.isBlank()) {
+            Toast.makeText(this, "Please enter a total number of rounds", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            createTableDTO.setTotalRounds(Integer.parseInt(totalRounds));
+        } catch (NumberFormatException e) {
+            Toast.makeText(this, "Please enter a valid total number of rounds", Toast.LENGTH_SHORT).show();
+            return;
+        }
         var minPlayersString = minPlayersEditText.getText().toString().trim();
         if (minPlayersString.isBlank()) {
             Toast.makeText(this, "Please enter a minimum number of players", Toast.LENGTH_SHORT).show();

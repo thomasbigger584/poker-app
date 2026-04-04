@@ -11,6 +11,8 @@ public class TableDTO {
     private static final String KEY_TABLE_ID = "table_id";
     private static final String KEY_TABLE_NAME = "table_name";
     private static final String KEY_GAME_TYPE = "game_type";
+    private static final String KEY_SPEED_MULTIPLIER = "speed_multiplier";
+    private static final String KEY_TOTAL_ROUNDS = "total_rounds";
     private static final String KEY_MIN_PLAYERS = "min_players";
     private static final String KEY_MAX_PLAYERS = "max_players";
     private static final String KEY_MIN_BUYIN = "min_buyin";
@@ -19,6 +21,8 @@ public class TableDTO {
     private UUID id;
     private String name;
     private String gameType;
+    private Double speedMultiplier;
+    private Integer totalRounds;
     private Integer minPlayers;
     private Integer maxPlayers;
     private Double minBuyin;
@@ -29,6 +33,8 @@ public class TableDTO {
         table.setId(UUID.fromString(bundle.getString(KEY_TABLE_ID)));
         table.setName(bundle.getString(KEY_TABLE_NAME));
         table.setGameType(bundle.getString(KEY_GAME_TYPE));
+        table.setSpeedMultiplier(bundle.getDouble(KEY_SPEED_MULTIPLIER));
+        table.setTotalRounds(bundle.getInt(KEY_TOTAL_ROUNDS));
         table.setMinPlayers(bundle.getInt(KEY_MIN_PLAYERS));
         table.setMaxPlayers(bundle.getInt(KEY_MAX_PLAYERS));
         table.setMinBuyin(bundle.getDouble(KEY_MIN_BUYIN));
@@ -42,6 +48,8 @@ public class TableDTO {
         bundle.putString(KEY_TABLE_ID, id.toString());
         bundle.putString(KEY_TABLE_NAME, name);
         bundle.putString(KEY_GAME_TYPE, gameType);
+        bundle.putDouble(KEY_GAME_TYPE, speedMultiplier);
+        bundle.putInt(KEY_GAME_TYPE, totalRounds);
         bundle.putInt(KEY_MIN_PLAYERS, minPlayers);
         bundle.putInt(KEY_MAX_PLAYERS, maxPlayers);
         bundle.putDouble(KEY_MIN_BUYIN, minBuyin);
@@ -71,6 +79,22 @@ public class TableDTO {
 
     public void setGameType(String gameType) {
         this.gameType = gameType;
+    }
+
+    public Double getSpeedMultiplier() {
+        return speedMultiplier;
+    }
+
+    public void setSpeedMultiplier(Double speedMultiplier) {
+        this.speedMultiplier = speedMultiplier;
+    }
+
+    public Integer getTotalRounds() {
+        return totalRounds;
+    }
+
+    public void setTotalRounds(Integer totalRounds) {
+        this.totalRounds = totalRounds;
     }
 
     public Integer getMinPlayers() {
@@ -112,6 +136,8 @@ public class TableDTO {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", gameType='" + gameType + '\'' +
+                ", speedMultiplier=" + speedMultiplier +
+                ", totalRounds=" + totalRounds +
                 ", minPlayers=" + minPlayers +
                 ", maxPlayers=" + maxPlayers +
                 ", minBuyin=" + minBuyin +

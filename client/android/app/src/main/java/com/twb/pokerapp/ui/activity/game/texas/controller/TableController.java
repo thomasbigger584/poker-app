@@ -8,6 +8,7 @@ import androidx.annotation.Nullable;
 
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
+import com.twb.pokerapp.data.model.dto.roundpot.RoundPotDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.BettingRoundUpdatedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.DealCommunityCardDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.DealPlayerCardDTO;
@@ -15,9 +16,11 @@ import com.twb.pokerapp.data.websocket.message.server.payload.RoundFinishedDTO;
 import com.twb.pokerapp.ui.layout.texas.CardPairLayout;
 import com.twb.pokerapp.ui.layout.texas.CommunityCardLayout;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class TableController {
     private static final String TAG = TableController.class.getSimpleName();
@@ -121,12 +124,20 @@ public class TableController {
     }
 
     public void updateBettingRound(BettingRoundUpdatedDTO bettingRoundUpdated) {
-        var round = bettingRoundUpdated.getRound();
-        var pot = 0d;
-        if (round != null && round.getPot() != null) {
-            pot = round.getPot();
+        var roundPots = bettingRoundUpdated.getRoundPots()
+                .stream()
+                .sorted(Comparator.comparing(RoundPotDTO::getPotIndex))
+                .collect(Collectors.toList());
+        var sb = new StringBuilder();
+        for (int i = 0; i < roundPots.size(); i++) {
+            var roundPot = roundPots.get(i);
+            sb.append("Pot ").append(i + 1).append(": ");
+            sb.append(String.format(Locale.getDefault(), "$%.2f", roundPot.getPotAmount()));
+            if (i < roundPots.size() - 1) {
+                sb.append(", ");
+            }
         }
-        potSizeText.setText(String.format(Locale.getDefault(), "$%.2f", pot));
+        potSizeText.setText(sb.toString());
     }
 
     public void reset(RoundFinishedDTO roundFinished) {
