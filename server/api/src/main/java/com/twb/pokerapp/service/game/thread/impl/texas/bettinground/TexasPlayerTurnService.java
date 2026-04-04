@@ -156,7 +156,7 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
             }
 
             if (actionablePlayers.size() == 1) {
-                PlayerSession loneActionable = actionablePlayers.getFirst();
+                var loneActionable = actionablePlayers.getFirst();
                 var actions = playerActionRepository.findByRoundId(round.getId());
                 var contributions = new HashMap<UUID, Double>();
                 for (var action : actions) {
@@ -164,8 +164,8 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
                         contributions.merge(action.getPlayerSession().getId(), action.getAmount(), Double::sum);
                     }
                 }
-                double maxContribution = contributions.values().stream().mapToDouble(d -> d).max().orElse(0d);
-                double playerContribution = contributions.getOrDefault(loneActionable.getId(), 0d);
+                var maxContribution = contributions.values().stream().mapToDouble(d -> d).max().orElse(0d);
+                var playerContribution = contributions.getOrDefault(loneActionable.getId(), 0d);
 
                 if (playerContribution >= maxContribution) {
                     log.info("Only one actionable player {} and they have matched max contribution {}, skipping betting round.",
