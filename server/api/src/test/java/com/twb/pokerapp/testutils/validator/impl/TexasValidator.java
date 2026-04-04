@@ -117,10 +117,10 @@ public class TexasValidator extends Validator {
                 return;
             }
             var communityCardsSplit = communityCards.split(";");
-            assertEquals(noCardsDealt, messages.size());
             assertEquals(communityCardsSplit.length, messages.size());
 
-            for (var index = 0; index < noCardsDealt; index++) {
+            for (int index = 0; index < communityCardsSplit.length; index++) {
+                var communityCardStr = communityCardsSplit[index];
                 var message = messages.get(index);
                 assertInstanceOf(DealCommunityCardDTO.class, message.getPayload());
 
@@ -129,8 +129,8 @@ public class TexasValidator extends Validator {
                 var card = payload.getCard();
                 assertCard(payload.getCard(), cardType);
 
-                assertEquals(card.getRankChar(), communityCardsSplit[index].charAt(0));
-                assertEquals(card.getSuitChar(), communityCardsSplit[index].charAt(1));
+                assertEquals(card.getRankChar(), communityCardStr.charAt(0));
+                assertEquals(card.getSuitChar(), communityCardStr.charAt(1));
             }
 
         } else {

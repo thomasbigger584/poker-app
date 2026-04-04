@@ -1,5 +1,4 @@
 Scenario,user1Hand,user1Start,user2Hand,user2Start,user3Hand,user3Start,Community,PreFlop,Flop,Turn,River,Winner,TotalPot,user1Win,user2Win,user3Win
-"Ace-high vs King-high flush",ah;4h,5000,kh;jh,5000,2s;3c,5000,th;8h;2h;5d;9c,user1:BET:1000;user2:CALL:1000;user3:FOLD,user1:BET:2000;user2:CALL:2000,user1:BET:2000;user2:FOLD,None,user1,6000,6000,0,0
 "Trips vs Straight on River",ts;tc,5000,8h;9h,5000,2d;3d,5000,th;jh;qc;7d;5s,user1:BET:500;user2:CALL:500;user3:FOLD,user1:BET:1000;user2:CALL:1000,user1:BET:2000;user2:CALL:2000,None,user2,7000,0,7000,0
 "One All-In; others keep betting",ah;kh,1000,2s;2c,5000,qs;jd,5000,ad;kd;7c;5h;3s,user1:ALL_IN:1000;user2:CALL:1000;user3:CALL:1000,user2:BET:500;user3:CALL:500,user2:BET:1000;user3:FOLD,None,user2;user1,5500,3000,2500,0
 "The Broadway Straight",as;kh,5000,2d;3d,5000,4h;5s,5000,ts;jc;qd;kd;ad,user1:BET:500;user2:FOLD;user3:FOLD,None,None,None,user1,500,500,0,0

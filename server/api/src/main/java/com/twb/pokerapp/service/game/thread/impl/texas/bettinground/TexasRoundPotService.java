@@ -30,7 +30,6 @@ public class TexasRoundPotService {
         var playerFoldedStatus = new HashMap<UUID, Boolean>();
         var sessionMap = new HashMap<UUID, PlayerSession>();
 
-        // Fetch all sessions once at the start
         var playerSessions = playerSessionRepository.findPlayersOnRound(round.getId());
 
         for (var session : playerSessions) {
@@ -56,15 +55,8 @@ public class TexasRoundPotService {
             if (action.getAmount() != null) {
                 playerTotalBets.merge(playerId, action.getAmount(), Double::sum);
             }
-        }
-
-        var processedPlayers = new HashSet<UUID>();
-        for (var action : allActions) {
-            var playerId = action.getPlayerSession().getId();
-            if (!processedPlayers.contains(playerId)) {
-                var isFold = action.getActionType() == ActionType.FOLD;
-                playerFoldedStatus.put(playerId, isFold);
-                processedPlayers.add(playerId);
+            if (action.getActionType() == ActionType.FOLD) {
+                playerFoldedStatus.put(playerId, true);
             }
         }
     }
@@ -84,7 +76,6 @@ public class TexasRoundPotService {
                 }
             }
         }
-        // Ensure ContributionDTO implements Comparable<ContributionDTO> based on amount
         Collections.sort(contributions);
         return contributions;
     }
@@ -104,8 +95,6 @@ public class TexasRoundPotService {
         }
 
         var previousPotLevel = 0d;
-        var totalActiveNotFolded = contributions.stream().filter(c -> !c.isFolded()).count();
-
         for (ContributionDTO currentContributor : contributions) {
             var currentContributionAmount = currentContributor.amount();
             var sliceAmountPerPlayer = currentContributionAmount - previousPotLevel;
@@ -126,28 +115,35 @@ public class TexasRoundPotService {
                 }
             }
 
-            // A pot slice is formed if multiple people contested it, or it's uncalled by the last standing player.
-            var isUncalledBetByLastPlayer = eligibleWinnersForSlice.size() == 1 && totalActiveNotFolded == 1;
+            // 1. Is this slice "Contested"? (More than one person put money in at this level)
+            var isContested = contributorsAtOrAboveLevel.size() > 1;
 
-            if (contributorsAtOrAboveLevel.size() > 1 || isUncalledBetByLastPlayer) {
+            // 2. Is this the ONLY money in the round? (Handles "Single bet wins immediately")
+            // If the pot is currently empty and this is the first slice, we must count it.
+            var isInitialBet = roundPots.isEmpty();
+
+            // 3. Special Case: If everyone folded to a bet, the "Uncalled" part of that bet
+            // should only be added to the pot if it was actually called/matched.
+            // In your "Ace-high" scenario:
+            // At the 5000 level, only User 1 exists. isContested = false.
+            // Since roundPots is NOT empty (it has the 1k and 2k levels), this is NOT added.
+
+            if (isContested || isInitialBet) {
                 var totalSliceAmount = sliceAmountPerPlayer * contributorsAtOrAboveLevel.size();
 
                 if (!eligibleWinnersForSlice.isEmpty()) {
                     distributeSliceToPots(round, roundPots, totalSliceAmount, eligibleWinnersForSlice);
-                } else if (!roundPots.isEmpty()) {
-                    var lastPot = roundPots.getLast();
-                    lastPot.setPotAmount(lastPot.getPotAmount() + totalSliceAmount);
-                    roundPotRepository.save(lastPot);
-                }
 
-                for (var contributor : contributorsAtOrAboveLevel) {
-                    playerAllocatedToPots.merge(contributor.player().getId(), sliceAmountPerPlayer, Double::sum);
+                    for (var contributor : contributorsAtOrAboveLevel) {
+                        playerAllocatedToPots.merge(contributor.player().getId(), sliceAmountPerPlayer, Double::sum);
+                    }
                 }
             }
+
             previousPotLevel = currentContributionAmount;
         }
 
-        // Refund Logic: Refined to use the sessionMap, avoiding unnecessary findById calls.
+        // Refund Logic
         for (var contribution : contributions) {
             var playerId = contribution.player().getId();
             var totalContributed = contribution.amount();
@@ -155,14 +151,12 @@ public class TexasRoundPotService {
             var refundAmount = totalContributed - allocatedToPots;
 
             if (refundAmount > 0.001) {
-                // We use the existing sessionMap to get the managed entity from the current transaction
                 var managedPlayerSession = sessionMap.get(playerId);
-
                 managedPlayerSession.setFunds(managedPlayerSession.getFunds() + refundAmount);
                 playerSessionRepository.save(managedPlayerSession);
 
                 bettingRoundService.createRefund(managedPlayerSession, bettingRound, refundAmount);
-                log.info("Refunding over-bet of {} to player {}", refundAmount, managedPlayerSession.getUser().getUsername());
+                log.info("Refunding uncalled/over-bet portion of {} to player {}", refundAmount, managedPlayerSession.getUser().getUsername());
             }
         }
 
@@ -176,7 +170,6 @@ public class TexasRoundPotService {
                                        List<PlayerSession> eligiblePlayers) {
         if (!roundPots.isEmpty()) {
             var lastPot = roundPots.getLast();
-            // Use set-based equality to ensure order doesn't break pot merging
             if (new HashSet<>(lastPot.getEligiblePlayers()).equals(new HashSet<>(eligiblePlayers))) {
                 lastPot.setPotAmount(lastPot.getPotAmount() + amount);
                 roundPotRepository.save(lastPot);
