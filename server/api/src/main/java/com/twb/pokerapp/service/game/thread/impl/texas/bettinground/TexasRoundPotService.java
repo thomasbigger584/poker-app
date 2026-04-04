@@ -4,6 +4,7 @@ import com.twb.pokerapp.domain.*;
 import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.repository.*;
 import com.twb.pokerapp.service.BettingRoundService;
+import com.twb.pokerapp.service.game.thread.GameLogService;
 import com.twb.pokerapp.service.game.thread.dto.ContributionDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
+import static com.twb.pokerapp.util.TransactionUtil.afterCommit;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -23,6 +26,7 @@ public class TexasRoundPotService {
     private final PlayerSessionRepository playerSessionRepository;
     private final RoundPotRepository roundPotRepository;
     private final BettingRoundService bettingRoundService;
+    private final GameLogService gameLogService;
 
     @Transactional(propagation = Propagation.MANDATORY)
     public Round reconcilePots(Round round, BettingRound bettingRound) {
@@ -154,9 +158,8 @@ public class TexasRoundPotService {
                 var managedPlayerSession = sessionMap.get(playerId);
                 managedPlayerSession.setFunds(managedPlayerSession.getFunds() + refundAmount);
                 playerSessionRepository.save(managedPlayerSession);
-
                 bettingRoundService.createRefund(managedPlayerSession, bettingRound, refundAmount);
-                log.info("Refunding uncalled/over-bet portion of {} to player {}", refundAmount, managedPlayerSession.getUser().getUsername());
+                afterCommit(() -> gameLogService.sendLogMessage(round.getPokerTable(), "Refunded $%.2f to %s".formatted(refundAmount, managedPlayerSession.getUser().getUsername())));
             }
         }
 
