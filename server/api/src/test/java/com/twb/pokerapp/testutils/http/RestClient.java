@@ -48,7 +48,7 @@ public class RestClient {
         createDto.setTotalRounds(params.getTotalRounds());
         createDto.setMinPlayers(params.getScenarioPlayers().size());
         createDto.setMaxPlayers(6);
-        createDto.setMinBuyin(100d);
+        createDto.setMinBuyin(params.getMinBuyIn());
         createDto.setMaxBuyin(10_000d);
 
         var createResponse = post(TableDTO.class, createDto, "/poker-table");

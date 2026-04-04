@@ -21,7 +21,7 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 public class TestScenario {
-    private static final double DEFAULT_BUY_IN_AMOUNT = 5_000d;
+    public static final double DEFAULT_BUY_IN_AMOUNT = 5_000d;
     private static final int WAIT_DISCONNECT_TIMEOUT_SECS = 10;
     private static final int DISCONNECT_SETTLE_PERIOD_MS = 3 * 1000;
     private final TestEnvironment env;
