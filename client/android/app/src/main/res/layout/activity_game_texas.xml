@@ -125,77 +125,86 @@
         app:layout_constraintEnd_toStartOf="@+id/playerCardPairLayout"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <LinearLayout
+    <androidx.gridlayout.widget.GridLayout
         android:id="@+id/actionButtonsContainer"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:gravity="end"
         android:orientation="horizontal"
+        app:columnCount="4"
+        app:useDefaultMargins="false"
+        app:alignmentMode="alignMargins"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/playerCardPairLayout">
 
         <Button
             android:id="@+id/checkButton"
-            android:layout_width="0dp"
-            android:layout_height="50dp"
-            android:layout_marginEnd="4dp"
-            android:layout_weight="1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:backgroundTint="#43A047"
             android:onClick="onCheckClick"
             android:text="CHECK"
+            android:textColor="#FFFFFF"
             android:textStyle="bold"
             android:visibility="gone" />
 
         <Button
             android:id="@+id/callButton"
-            android:layout_width="0dp"
-            android:layout_height="50dp"
-            android:layout_marginEnd="4dp"
-            android:layout_weight="1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:backgroundTint="#43A047"
             android:onClick="onCallClick"
             android:text="CALL"
+            android:textColor="#FFFFFF"
             android:textStyle="bold"
             android:visibility="gone" />
 
         <Button
             android:id="@+id/betButton"
-            android:layout_width="0dp"
-            android:layout_height="50dp"
-            android:layout_marginEnd="4dp"
-            android:layout_weight="1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:backgroundTint="#1E88E5"
             android:onClick="onBetClick"
             android:text="BET"
+            android:textColor="#FFFFFF"
             android:textStyle="bold"
             android:visibility="gone" />
 
         <Button
             android:id="@+id/raiseButton"
-            android:layout_width="0dp"
-            android:layout_height="50dp"
-            android:layout_marginEnd="4dp"
-            android:layout_weight="1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:backgroundTint="#1E88E5"
             android:onClick="onRaiseClick"
             android:text="RAISE"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/allInButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#6A1B9A"
+            android:onClick="onRaiseClick"
+            android:text="ALL IN"
+            android:textColor="#FFFFFF"
             android:textStyle="bold"
             android:visibility="gone" />
 
         <Button
             android:id="@+id/foldButton"
-            android:layout_width="0dp"
-            android:layout_height="50dp"
-            android:layout_weight="1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:backgroundTint="#E53935"
             android:onClick="onFoldClick"
             android:text="FOLD"
+            android:textColor="#FFFFFF"
             android:textStyle="bold"
             android:visibility="gone" />
 
-    </LinearLayout>
+    </androidx.gridlayout.widget.GridLayout>
 
     <ProgressBar
         android:id="@+id/secondsLeftProgressBar"

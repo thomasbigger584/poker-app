@@ -69,12 +69,12 @@ public class BetRaiseGameDialog extends BaseGameDialog {
         switch (type) {
             case BET: {
                 titleTextView.setText(String.format(Locale.getDefault(),
-                        "Bet: %.2f", amountSelected));
+                        "Bet: $%.2f", amountSelected));
                 break;
             }
             case RAISE: {
                 titleTextView.setText(String.format(Locale.getDefault(),
-                        "Raise: %.2f", amountSelected));
+                        "Raise: $%.2f", amountSelected));
                 break;
             }
         }

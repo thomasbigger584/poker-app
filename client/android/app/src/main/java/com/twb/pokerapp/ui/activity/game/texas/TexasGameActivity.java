@@ -98,7 +98,12 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             DialogHelper.dismiss(loadingSpinner);
             var alertModalDialog = AlertModalDialog
                     .newInstance(AlertModalDialog.AlertModalType.ERROR, throwable.getMessage(), null);
-            alertModalDialog.show(getSupportFragmentManager(), "error_modal");
+            var prev = getSupportFragmentManager().findFragmentByTag("error_modal");
+            if (prev == null) {
+                alertModalDialog.show(getSupportFragmentManager(), "error_modal");
+            } else {
+                Log.d("DEBUG", "Dialog error_modal already visible!");
+            }
             chatBoxAdapter.add(throwable.getMessage());
         });
         viewModel.closedConnection.observe(this, aVoid -> {
@@ -106,7 +111,12 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             var message = "Lost connection with server";
             var alertModalDialog = AlertModalDialog
                     .newInstance(AlertModalDialog.AlertModalType.ERROR, message, new FinishActivityOnClickListener(this));
-            alertModalDialog.show(getSupportFragmentManager(), "closed_connection_modal");
+            var prev = getSupportFragmentManager().findFragmentByTag("closed_connection_modal");
+            if (prev == null) {
+                alertModalDialog.show(getSupportFragmentManager(), "closed_connection_modal");
+            } else {
+                Log.d("DEBUG", "Dialog closed_connection_modal already visible!");
+            }
             chatBoxAdapter.add(message);
         });
         viewModel.playerSubscribed.observe(this, playerSubscribed -> {
@@ -184,7 +194,12 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             var clickListener = new FinishActivityOnClickListener(this);
             var alertModalDialog = AlertModalDialog
                     .newInstance(AlertModalDialog.AlertModalType.INFO, "Game Finished", clickListener);
-            alertModalDialog.show(getSupportFragmentManager(), "game_finished_modal");
+            var prev = getSupportFragmentManager().findFragmentByTag("game_finished_modal");
+            if (prev == null) {
+                alertModalDialog.show(getSupportFragmentManager(), "game_finished_modal");
+            } else {
+                Log.d("DEBUG", "Dialog game_finished_modal already visible!");
+            }
             chatBoxAdapter.add("Game Finished");
         });
         viewModel.chatMessage.observe(this, chatMessage -> {
@@ -246,7 +261,12 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         var minimumBet = 10d;
         var maximumBet = tableController.getPlayerCardPairLayout().getFunds();
         betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.BET, maximumBet, minimumBet, this);
-        betRaisePokerGameDialog.show(getSupportFragmentManager(), "bet_dialog");
+        var prev = getSupportFragmentManager().findFragmentByTag("bet_dialog");
+        if (prev == null) {
+            betRaisePokerGameDialog.show(getSupportFragmentManager(), "bet_dialog");
+        } else {
+            Log.d("DEBUG", "Dialog bet_dialog already visible!");
+        }
     }
 
     public void onCallClick(View view) {
@@ -257,7 +277,17 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         dismissDialogs();
         var minimumBet = getRaiseMinimumBet();
         betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.RAISE, buyInAmount, minimumBet, this);
-        betRaisePokerGameDialog.show(getSupportFragmentManager(), "raise_dialog");
+        var prev = getSupportFragmentManager().findFragmentByTag("raise_dialog");
+        if (prev == null) {
+            betRaisePokerGameDialog.show(getSupportFragmentManager(), "raise_dialog");
+        } else {
+            Log.d("DEBUG", "Dialog raise_dialog already visible!");
+        }
+    }
+
+    public void onAllInClick(View view) {
+        dismissDialogs();
+        viewModel.onPlayerAction(ActionType.ALL_IN);
     }
 
     /*
@@ -315,7 +345,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         var amount = playerAction.getAmount();
         if (amount != null && amount > 0d) {
             stringBuilderList.add("with");
-            stringBuilderList.add(String.format(Locale.getDefault(), "%.2f", playerAction.getAmount()));
+            stringBuilderList.add(String.format(Locale.getDefault(), "$%.2f", playerAction.getAmount()));
         }
         return String.join(" ", stringBuilderList);
     }
@@ -325,7 +355,13 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         var clickListener = new FinishActivityOnClickListener(this);
         var alertModalDialog = AlertModalDialog
                 .newInstance(AlertModalDialog.AlertModalType.ERROR, message, clickListener);
-        alertModalDialog.show(getSupportFragmentManager(), "error_modal");
+        var prev = getSupportFragmentManager().findFragmentByTag("error_modal");
+        if (prev == null) {
+            alertModalDialog.show(getSupportFragmentManager(), "error_modal");
+        } else {
+            Log.d("DEBUG", "Dialog error_modal already visible!");
+        }
+
         chatBoxAdapter.add(message);
     }
 
