@@ -15,7 +15,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel;
 @HiltViewModel
 public class TableCreateViewModel extends ViewModel {
     public final LiveData<Throwable> errors;
-    public final MutableLiveData<TableDTO> createdTableLiveData;
+    public final LiveData<TableDTO> createdTableLiveData;
     private final TableRepository repository;
 
     @Inject
