@@ -28,6 +28,7 @@ public class CardPairLayout extends ConstraintLayout {
     private TextView fundsTextView;
     private View dealerChipLayout;
     private View inflatedView;
+    private Double funds;
 
     public CardPairLayout(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
@@ -95,8 +96,10 @@ public class CardPairLayout extends ConstraintLayout {
     public void updateDetails(PlayerSessionDTO playerSession) {
         var user = playerSession.getUser();
         displayNameTextView.setText(user.getUsername());
-        if (playerSession.getFunds() != null) {
-            fundsTextView.setText(String.format(Locale.getDefault(), "$%.2f", playerSession.getFunds()));
+        var funds = playerSession.getFunds();
+        if (funds != null) {
+            fundsTextView.setText(String.format(Locale.getDefault(), "$%.2f", funds));
+            this.funds = funds;
         }
     }
 
@@ -127,5 +130,9 @@ public class CardPairLayout extends ConstraintLayout {
 
     public String getUsername() {
         return displayNameTextView.getText().toString();
+    }
+
+    public Double getFunds() {
+        return funds;
     }
 }

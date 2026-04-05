@@ -152,6 +152,11 @@ public class TableController {
         potSizeText.setText("$00.00");
     }
 
+    @NonNull
+    public CardPairLayout getPlayerCardPairLayout() {
+        return cardPairLayouts[0];
+    }
+
     // ------------------------------------------------------------------------------
 
     @Nullable

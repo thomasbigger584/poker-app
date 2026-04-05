@@ -2,6 +2,7 @@ package com.twb.pokerapp.ui.activity.table.list;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -68,8 +69,12 @@ public class TableListActivity extends BaseAuthActivity implements TableListAdap
                             endSession();
                         }
                     });
-            alertModalDialog.show(getSupportFragmentManager(), "error_dialog");
-
+            var prev = getSupportFragmentManager().findFragmentByTag("error_dialog");
+            if (prev == null) {
+                alertModalDialog.show(getSupportFragmentManager(), "error_dialog");
+            } else {
+                Log.d("DEBUG", "Dialog error_dialog already visible!");
+            }
         });
     }
 

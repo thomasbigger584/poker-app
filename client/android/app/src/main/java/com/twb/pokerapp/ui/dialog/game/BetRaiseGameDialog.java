@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -22,18 +21,18 @@ public class BetRaiseGameDialog extends BaseGameDialog {
     private ActionType type;
     private TextView titleTextView;
     private SeekBar betRaiseSeekBar;
-    private double playerCurrentFunds;
+    private double maximumBet;
     private double minimumBet;
     private double amountSelected;
 
     public static BetRaiseGameDialog newInstance(ActionType type,
-                                                 double playerCurrentFunds, double minimumBet,
+                                                 double maximumBet, double minimumBet,
                                                  BetRaiseClickListener listener) {
         var fragment = new BetRaiseGameDialog();
         fragment.betRaiseListener = listener;
         fragment.type = type;
         fragment.minimumBet = minimumBet;
-        fragment.playerCurrentFunds = playerCurrentFunds;
+        fragment.maximumBet = maximumBet;
         fragment.setStyle(DialogFragment.STYLE_NO_TITLE, 0);
         var bundle = new Bundle();
         fragment.setArguments(bundle);
@@ -61,7 +60,7 @@ public class BetRaiseGameDialog extends BaseGameDialog {
             dismissAllowingStateLoss();
         });
 
-        setSeekBar(playerCurrentFunds);
+        setSeekBar(maximumBet);
         return inflatedView;
     }
 
