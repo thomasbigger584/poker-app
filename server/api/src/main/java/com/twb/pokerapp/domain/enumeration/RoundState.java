@@ -82,6 +82,11 @@ public enum RoundState {
         public RoundState nextTexasState() {
             return null;
         }
+    }, FAILED {
+        @Override
+        public RoundState nextTexasState() {
+            return null;
+        }
     };
 
     public Optional<BettingRoundType> getBettingRoundType() {

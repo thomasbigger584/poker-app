@@ -4,6 +4,7 @@ import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.Round;
 import com.twb.pokerapp.domain.enumeration.ActionType;
+import com.twb.pokerapp.domain.enumeration.BettingRoundState;
 import com.twb.pokerapp.exception.game.GameInterruptedException;
 import com.twb.pokerapp.exception.game.RoundInterruptedException;
 import com.twb.pokerapp.repository.BettingRoundRepository;
@@ -123,7 +124,7 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
             var bettingRoundOpt = bettingRoundRepository.findById(bettingRound.getId());
             bettingRoundOpt.ifPresent(br -> {
                 this.round = texasRoundPotService.reconcilePots(round, br);
-                this.bettingRound = bettingRoundService.setBettingRoundFinished(br);
+                this.bettingRound = bettingRoundService.setState(br, BettingRoundState.FINISHED);
                 var roundPots = this.round.getRoundPots();
                 afterCommit(() -> dispatcher.send(params.getTable(), messageFactory.bettingRoundUpdated(round, br, roundPots)));
             });

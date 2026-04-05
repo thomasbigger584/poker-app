@@ -102,7 +102,16 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
         gameInProgress.set(true);
         roundInProgress.set(false);
         roundCount = 0;
+        resetDbState();
         params.getStartLatch().countDown();
+    }
+
+    private void resetDbState() {
+        var tableId = params.getTable().getId();
+        writeTx.executeWithoutResult(status -> {
+            roundService.reset(tableId);
+            bettingRoundService.reset(tableId);
+        });
     }
 
     private void initializeTable() {
@@ -238,13 +247,13 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                     var bettingRoundOpt = bettingRoundRepository.findCurrentByRoundId(roundId);
                     bettingRoundOpt.ifPresent(bettingRound -> {
                         if (bettingRound.getState() != BettingRoundState.FINISHED) {
-                            var thisBettingRound = bettingRoundService.setBettingRoundFinished(bettingRound);
+                            var thisBettingRound = bettingRoundService.setState(bettingRound, BettingRoundState.FINISHED);
                             var roundPots = round.getRoundPots();
                             afterCommit(() -> dispatcher.send(table, messageFactory.bettingRoundUpdated(round, thisBettingRound, roundPots)));
                         }
                     });
                     if (round.getRoundState() != RoundState.FINISHED) {
-                        roundService.setRoundState(round, RoundState.FINISHED);
+                        roundService.setState(round, RoundState.FINISHED);
                     }
                     var winners = roundWinnerRepository.findByRound(round.getId());
                     afterCommit(() -> dispatcher.send(table, messageFactory.roundFinished(winners)));
@@ -308,7 +317,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     private void saveRoundState(RoundState roundState) {
         writeTx.executeWithoutResult(transactionStatus -> {
             var roundOpt = roundRepository.findById(roundId);
-            roundOpt.ifPresent(round -> roundService.setRoundState(round, roundState));
+            roundOpt.ifPresent(round -> roundService.setState(round, roundState));
         });
     }
 

@@ -3,6 +3,7 @@ package com.twb.pokerapp.service;
 import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.BettingRoundRefund;
 import com.twb.pokerapp.domain.PlayerSession;
+import com.twb.pokerapp.domain.enumeration.BettingRoundState;
 import com.twb.pokerapp.domain.enumeration.BettingRoundType;
 import com.twb.pokerapp.mapper.BettingRoundMapper;
 import com.twb.pokerapp.repository.BettingRoundRefundRepository;
@@ -17,8 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
-import static com.twb.pokerapp.domain.enumeration.BettingRoundState.FINISHED;
-import static com.twb.pokerapp.domain.enumeration.BettingRoundState.IN_PROGRESS;
+import static com.twb.pokerapp.domain.enumeration.BettingRoundState.*;
 import static com.twb.pokerapp.repository.RepositoryUtil.getThrowGameInterrupted;
 
 @Slf4j
@@ -30,10 +30,16 @@ public class BettingRoundService {
     private final BettingRoundRefundRepository refundRepository;
     private final BettingRoundMapper mapper;
 
-    @PostConstruct
+    @Transactional(propagation = Propagation.MANDATORY)
     public void reset() {
         repository.findAll()
-                .forEach(this::setBettingRoundFinished);
+                .forEach(bettingRound -> setState(bettingRound, FAILED));
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void reset(UUID tableId) {
+        repository.findCurrentByTableId(tableId)
+                .ifPresent(bettingRound -> setState(bettingRound, FAILED));
     }
 
     @Transactional
@@ -66,8 +72,8 @@ public class BettingRoundService {
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public BettingRound setBettingRoundFinished(BettingRound bettingRound) {
-        bettingRound.setState(FINISHED);
+    public BettingRound setState(BettingRound bettingRound, BettingRoundState state) {
+        bettingRound.setState(state);
         return repository.save(bettingRound);
     }
 }

@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Component
 @Transactional
@@ -25,7 +26,13 @@ public class RoundService {
     @Transactional(propagation = Propagation.MANDATORY)
     public void reset() {
         repository.findAll()
-                .forEach(round -> setRoundState(round, RoundState.FINISHED));
+                .forEach(round -> setState(round, RoundState.FAILED));
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void reset(UUID tableId) {
+        repository.findCurrentByTableId(tableId)
+                .ifPresent(round -> setState(round, RoundState.FAILED));
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
@@ -44,7 +51,7 @@ public class RoundService {
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public void setRoundState(Round round, RoundState roundState) {
+    public void setState(Round round, RoundState roundState) {
         round.setRoundState(roundState);
         repository.save(round);
     }
