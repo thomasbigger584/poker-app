@@ -129,7 +129,7 @@
                         android:id="@+id/edit_total_rounds"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Total Rounds"
+                        android:hint="Total Rounds (Optional for infinity)"
                         android:inputType="number" />
                 </LinearLayout>
             </LinearLayout>

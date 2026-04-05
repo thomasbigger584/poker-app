@@ -14,6 +14,7 @@ import android.widget.ProgressBar;
 import androidx.gridlayout.widget.GridLayout;
 
 import com.twb.pokerapp.R;
+import com.twb.pokerapp.data.model.enumeration.ActionType;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerTurnDTO;
 
 import java.util.ArrayList;
@@ -33,7 +34,6 @@ public class ControlsController {
 
     public ControlsController(Activity activity) {
         actionButtonsContainer = activity.findViewById(R.id.actionButtonsContainer);
-
         checkButton = actionButtonsContainer.findViewById(R.id.checkButton);
         callButton = actionButtonsContainer.findViewById(R.id.callButton);
         betButton = actionButtonsContainer.findViewById(R.id.betButton);
@@ -52,97 +52,97 @@ public class ControlsController {
     }
 
     public void show(PlayerTurnDTO playerTurn) {
-        hide(); // This sets all buttons to GONE
-
-        for (String action : playerTurn.getNextActions()) {
-            switch (action) {
-                case "CHECK":
-                    setVisible(checkButton);
-                    break;
-                case "BET":
-                    setVisible(betButton);
-                    break;
-                case "CALL":
-                    setVisible(callButton);
-                    break;
-                case "RAISE":
-                    setVisible(raiseButton);
-                    break;
-                case "ALL_IN":
-                    setVisible(allInButton);
-                    break;
-                case "FOLD":
-                    setVisible(foldButton);
-                    break;
-            }
-        }
-
+        hide();
+        showActionTypeButtons(playerTurn);
         updateGridSpan();
         startSecondsLeftProgressBar(playerTurn);
     }
 
+    public void hide() {
+        for (var button : allButtons) {
+            setGone(button);
+        }
+        setInvisible(secondsLeftProgressBar);
+    }
+
+    private void showActionTypeButtons(PlayerTurnDTO playerTurn) {
+        try {
+            for (var action : playerTurn.getNextActions()) {
+                var actionType = ActionType.valueOf(action);
+                switch (actionType) {
+                    case CHECK:
+                        setVisible(checkButton);
+                        break;
+                    case BET:
+                        setVisible(betButton);
+                        break;
+                    case CALL:
+                        setVisible(callButton);
+                        break;
+                    case RAISE:
+                        setVisible(raiseButton);
+                        break;
+                    case ALL_IN:
+                        setVisible(allInButton);
+                        break;
+                    case FOLD:
+                        setVisible(foldButton);
+                        break;
+                }
+            }
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid action type: " + e.getMessage());
+        }
+    }
+
     private void updateGridSpan() {
-        // 1. Identify which buttons need to be shown
-        List<Button> visibleButtons = new ArrayList<>();
-        for (Button btn : allButtons) {
-            if (btn.getVisibility() == View.VISIBLE) {
-                visibleButtons.add(btn);
+        var visibleButtons = new ArrayList<Button>();
+        for (var button : allButtons) {
+            if (button.getVisibility() == View.VISIBLE) {
+                visibleButtons.add(button);
             }
         }
 
-        int count = visibleButtons.size();
+        var count = visibleButtons.size();
         if (count == 0) return;
 
-        // 2. Remove all buttons from the grid to reset internal indices
         actionButtonsContainer.removeAllViews();
 
-        // 3. Configure the Grid
-        int columns = (count == 4) ? 2 : count;
+        var columns = (count == 4) ? 2 : count;
         actionButtonsContainer.setColumnCount(columns);
         actionButtonsContainer.setOrientation(GridLayout.HORIZONTAL);
 
-        // 4. Re-add only the visible buttons with fresh LayoutParams
-        for (Button btn : visibleButtons) {
-            GridLayout.LayoutParams params = new GridLayout.LayoutParams(
-                    GridLayout.spec(GridLayout.UNDEFINED, 1f), // Row spec
-                    GridLayout.spec(GridLayout.UNDEFINED, 1f)  // Column spec + Weight
+        for (var button : visibleButtons) {
+            var params = new GridLayout.LayoutParams(
+                    GridLayout.spec(GridLayout.UNDEFINED, 1f),
+                    GridLayout.spec(GridLayout.UNDEFINED, 1f)
             );
-
-            params.width = 0; // Required for the 1f weight to work
+            params.width = 0;
             params.height = dpToPx(50);
 
-            int margin = dpToPx(4);
+            var margin = dpToPx(4);
             params.setMargins(margin, margin, margin, margin);
-
-            // Re-add the button to the layout
-            actionButtonsContainer.addView(btn, params);
+            actionButtonsContainer.addView(button, params);
         }
     }
 
     private int dpToPx(int dp) {
-        float density = actionButtonsContainer.getContext().getResources().getDisplayMetrics().density;
+        var density = actionButtonsContainer.getContext().getResources().getDisplayMetrics().density;
         return Math.round((float) dp * density);
     }
 
     private void startSecondsLeftProgressBar(PlayerTurnDTO playerTurn) {
-        int max = 100;
+        var max = 100;
         secondsLeftProgressBar.setMax(max);
-        ValueAnimator animator = ValueAnimator.ofInt(max, 0);
-        double countdownTimeInMs = playerTurn.getPlayerTurnWaitMs() * 0.95;
+        var animator = ValueAnimator.ofInt(max, 0);
+        var countdownTimeInMs = playerTurn.getPlayerTurnWaitMs() * 0.95;
         animator.setDuration((long) countdownTimeInMs);
         animator.setInterpolator(new LinearInterpolator());
         animator.addUpdateListener(animation -> {
-            int progress = (int) animation.getAnimatedValue();
+            var progress = (int) animation.getAnimatedValue();
             secondsLeftProgressBar.setProgress(progress);
         });
         animator.start();
         setVisible(secondsLeftProgressBar);
-    }
-
-    public void hide() {
-        for (Button btn : allButtons) {
-            setGone(btn);
-        }
-        setInvisible(secondsLeftProgressBar);
     }
 }

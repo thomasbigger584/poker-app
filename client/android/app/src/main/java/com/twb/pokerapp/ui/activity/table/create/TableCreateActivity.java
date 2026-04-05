@@ -116,8 +116,7 @@ public class TableCreateActivity extends BaseAuthActivity {
         }
         var totalRounds = totalRoundsEditText.getText().toString().trim();
         if (totalRounds.isBlank()) {
-            Toast.makeText(this, "Please enter a total number of rounds", Toast.LENGTH_SHORT).show();
-            return;
+            totalRounds = "-1"; // infinite
         }
         try {
             createTableDTO.setTotalRounds(Integer.parseInt(totalRounds));

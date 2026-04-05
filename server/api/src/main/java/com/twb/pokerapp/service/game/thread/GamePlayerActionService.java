@@ -42,7 +42,7 @@ public abstract class GamePlayerActionService {
     @Transactional(propagation = Propagation.MANDATORY)
     public void playerAction(PlayerSession playerSession, GameThread gameThread, CreatePlayerActionDTO createDto) {
         if (gameThread.isStopping()) {
-            log.info("Game Thread is stopping so ignoring player action {} for user {}", createDto.getAction(), playerSession.getUser().getUsername());
+            log.warn("Game Thread is stopping so ignoring player action {} for user {}", createDto.getAction(), playerSession.getUser().getUsername());
             return;
         }
         log.info("Player Action: {} - {}", playerSession.getUser().getUsername(), createDto);

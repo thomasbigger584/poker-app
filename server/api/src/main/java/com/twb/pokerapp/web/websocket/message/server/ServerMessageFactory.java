@@ -3,6 +3,7 @@ package com.twb.pokerapp.web.websocket.message.server;
 import com.twb.pokerapp.domain.*;
 import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.mapper.*;
+import com.twb.pokerapp.service.game.thread.GameSpeedService;
 import com.twb.pokerapp.service.game.thread.impl.texas.dto.NextActionsDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.*;
 import com.twb.pokerapp.web.websocket.message.server.payload.validation.ValidationDTO;
@@ -21,6 +22,8 @@ public class ServerMessageFactory {
     private final RoundPotMapper roundPotMapper;
     private final CardMapper cardMapper;
     private final RoundWinnerMapper roundWinnerMapper;
+
+    private final GameSpeedService gameSpeedService;
 
     public ServerMessageDTO playerSubscribed(List<PlayerSession> playerSessions) {
         var payload = new PlayerSubscribedDTO();
@@ -62,7 +65,7 @@ public class ServerMessageFactory {
         payload.setBettingRound(bettingRoundMapper.modelToDto(bettingRound));
         payload.setNextActions(nextActionsDto.nextActions());
         payload.setAmountToCall(nextActionsDto.amountToCall());
-        payload.setPlayerTurnWaitMs(playerTurnWaitMs);
+        payload.setPlayerTurnWaitMs(gameSpeedService.getPlayerTurnWait(bettingRound, playerTurnWaitMs));
         return ServerMessageDTO.create(ServerMessageType.PLAYER_TURN, payload);
     }
 

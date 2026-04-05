@@ -259,7 +259,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     public void onBetClick(View view) {
         dismissDialogs();
         var minimumBet = 10d;
-        var maximumBet = tableController.getPlayerCardPairLayout().getFunds();
+        var maximumBet = tableController.getPlayerCardPairLayout().getPlayerSession().getFunds();
         betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.BET, maximumBet, minimumBet, this);
         var prev = getSupportFragmentManager().findFragmentByTag("bet_dialog");
         if (prev == null) {

@@ -104,7 +104,7 @@ public class TexasRoundPotService {
         }
 
         var previousPotLevel = 0d;
-        for (ContributionDTO currentContributor : contributions) {
+        for (var currentContributor : contributions) {
             var currentContributionAmount = currentContributor.amount();
             var sliceAmountPerPlayer = currentContributionAmount - previousPotLevel;
 

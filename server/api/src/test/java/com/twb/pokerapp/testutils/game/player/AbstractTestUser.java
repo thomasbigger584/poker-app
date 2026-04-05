@@ -41,6 +41,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private static final String HEADER_CONNECTION_TYPE = "X-Connection-Type";
     private static final String HEADER_BUYIN_AMOUNT = "X-BuyIn-Amount";
     private static final int HEARTBEAT_IN_MS = 5 * 1000;
+    private static final int CONNECT_LATCH_TIMEOUT_SECS = 30;
     @Getter
     protected final TestUserParams params;
     private final WebSocketStompClient client;
@@ -78,7 +79,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         }
 
         client.connectAsync(url, headers, stompHeaders, this);
-        if (!connectLatch.await(30, TimeUnit.SECONDS)) {
+        if (!connectLatch.await(CONNECT_LATCH_TIMEOUT_SECS, TimeUnit.SECONDS)) {
             log.error("Timed out user {} from connecting to table {} via websocket", params.getUsername(), params.getTable().getId());
             throw new RuntimeException("Timed out user " + params.getUsername() + " from connecting to table " + params.getTable().getId());
         }

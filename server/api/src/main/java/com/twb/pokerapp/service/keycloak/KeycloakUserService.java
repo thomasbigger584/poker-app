@@ -16,6 +16,7 @@ import java.util.UUID;
 @Slf4j
 @Component
 public class KeycloakUserService {
+    private static final double INITIAL_USER_FUNDS = 50_000d;
 
     @Autowired
     @Qualifier("userGroupResource")
@@ -50,7 +51,7 @@ public class KeycloakUserService {
                 updatedUsers++;
             } else {
                 var appUser = userMapper.representationToModel(representation);
-                appUser.setTotalFunds(50_000d);
+                appUser.setTotalFunds(INITIAL_USER_FUNDS);
                 userRepository.save(appUser);
                 createdUsers++;
             }

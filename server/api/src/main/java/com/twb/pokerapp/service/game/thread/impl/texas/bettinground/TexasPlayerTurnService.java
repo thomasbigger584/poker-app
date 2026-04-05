@@ -18,7 +18,6 @@ import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
 import com.twb.pokerapp.service.game.thread.impl.texas.TexasPlayerActionService;
 import com.twb.pokerapp.service.game.thread.impl.texas.dealer.TexasDealerService;
-import com.twb.pokerapp.service.game.thread.impl.texas.dealer.impl.DefaultTexasDealerService;
 import com.twb.pokerapp.service.game.thread.impl.texas.dto.NextActionsDTO;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
@@ -162,20 +161,25 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
             }
 
             if (actionablePlayers.size() == 1) {
-                var loneActionable = actionablePlayers.getFirst();
-                var actions = playerActionRepository.findByRoundId(round.getId());
+                var loneActionablePlayer = actionablePlayers.getFirst();
+                var roundActions = playerActionRepository.findByRoundId(round.getId());
                 var contributions = new HashMap<UUID, Double>();
-                for (var action : actions) {
+                for (var action : roundActions) {
                     if (action.getAmount() != null) {
                         contributions.merge(action.getPlayerSession().getId(), action.getAmount(), Double::sum);
                     }
                 }
-                var maxContribution = contributions.values().stream().mapToDouble(d -> d).max().orElse(0d);
-                var playerContribution = contributions.getOrDefault(loneActionable.getId(), 0d);
+                var maxContribution = contributions.values()
+                        .stream()
+                        .mapToDouble(d -> d)
+                        .max()
+                        .orElse(0d);
+                var playerContribution = contributions
+                        .getOrDefault(loneActionablePlayer.getId(), 0d);
 
                 if (playerContribution >= maxContribution) {
                     log.info("Only one actionable player {} and they have matched max contribution {}, skipping betting round.",
-                            loneActionable.getUser().getUsername(), maxContribution);
+                            loneActionablePlayer.getUser().getUsername(), maxContribution);
                     shouldContinue.set(false);
                     return;
                 }

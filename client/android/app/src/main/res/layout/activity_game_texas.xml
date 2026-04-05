@@ -187,7 +187,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:backgroundTint="#6A1B9A"
-            android:onClick="onRaiseClick"
+            android:onClick="onAllInClick"
             android:text="ALL IN"
             android:textColor="#FFFFFF"
             android:textStyle="bold"

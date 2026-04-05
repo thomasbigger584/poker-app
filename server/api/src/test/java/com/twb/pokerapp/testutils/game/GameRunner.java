@@ -127,7 +127,7 @@ public class GameRunner {
     private @NonNull String getExceptionMessage(AbstractTestUser player, String scenario, Throwable throwable) {
         var username = player.getUsername();
         var message = throwable.getMessage();
-        String errorMessage = "Failure for user %s with %s".formatted(username, message);
+        var errorMessage = "Failure for user %s with %s".formatted(username, message);
         if (StringUtils.isBlank(scenario)) {
             return errorMessage;
         }

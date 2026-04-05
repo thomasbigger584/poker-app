@@ -26,7 +26,8 @@ public class BetRaiseGameDialog extends BaseGameDialog {
     private double amountSelected;
 
     public static BetRaiseGameDialog newInstance(ActionType type,
-                                                 double maximumBet, double minimumBet,
+                                                 double maximumBet,
+                                                 double minimumBet,
                                                  BetRaiseClickListener listener) {
         var fragment = new BetRaiseGameDialog();
         fragment.betRaiseListener = listener;
