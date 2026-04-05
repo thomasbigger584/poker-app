@@ -8,11 +8,10 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.twb.pokerapp.R;
 import com.twb.pokerapp.databinding.TableListItemBinding;
 import com.twb.pokerapp.data.model.dto.table.AvailableTableDTO;
 import com.twb.pokerapp.data.model.dto.table.TableDTO;
-
-import java.util.Locale;
 
 public class TableListAdapter extends ListAdapter<AvailableTableDTO, TableListAdapter.ViewHolder> {
     private final TableClickListener clickListener;
@@ -62,9 +61,10 @@ public class TableListAdapter extends ListAdapter<AvailableTableDTO, TableListAd
 
         public void bind(AvailableTableDTO availableTable) {
             var table = availableTable.getTable();
+            var context = binding.getRoot().getContext();
             binding.nameTextView.setText(table.getName());
             binding.gameTypeTextView.setText(table.getGameType());
-            binding.playersTextView.setText(String.format(Locale.getDefault(), "%d/%d", availableTable.getPlayersConnected(), table.getMaxPlayers()));
+            binding.playersTextView.setText(context.getString(R.string.player_count_format, availableTable.getPlayersConnected(), table.getMaxPlayers()));
             binding.connectButton.setOnClickListener(v -> clickListener.onTableClicked(table));
         }
     }

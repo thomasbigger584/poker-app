@@ -22,6 +22,8 @@ public class ControlsController {
     private final ActivityGameTexasBinding binding;
     private final List<Button> allButtons = new ArrayList<>();
 
+    private ValueAnimator animator;
+
     public ControlsController(ActivityGameTexasBinding binding) {
         this.binding = binding;
 
@@ -41,6 +43,9 @@ public class ControlsController {
     }
 
     public void hide() {
+        if (animator != null) {
+            animator.cancel();
+        }
         for (var button : allButtons) {
             setGone(button);
         }
@@ -114,9 +119,12 @@ public class ControlsController {
     }
 
     private void startSecondsLeftProgressBar(PlayerTurnDTO playerTurn) {
+        if (animator != null) {
+            animator.cancel();
+        }
         var max = 100;
         binding.secondsLeftProgressBar.setMax(max);
-        var animator = ValueAnimator.ofInt(max, 0);
+        animator = ValueAnimator.ofInt(max, 0);
         var countdownTimeInMs = playerTurn.getPlayerTurnWaitMs() * 0.95;
         animator.setDuration((long) countdownTimeInMs);
         animator.setInterpolator(new LinearInterpolator());

@@ -69,13 +69,11 @@ public class BetRaiseGameDialog extends BaseGameDialog {
         amountSelected = round(amount);
         switch (type) {
             case BET: {
-                titleTextView.setText(String.format(Locale.getDefault(),
-                        "Bet: $%.2f", amountSelected));
+                titleTextView.setText(getString(R.string.bet_amount_format, amountSelected));
                 break;
             }
             case RAISE: {
-                titleTextView.setText(String.format(Locale.getDefault(),
-                        "Raise: $%.2f", amountSelected));
+                titleTextView.setText(getString(R.string.raise_amount_format, amountSelected));
                 break;
             }
         }

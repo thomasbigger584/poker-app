@@ -19,10 +19,7 @@ import com.twb.pokerapp.data.model.dto.card.CardDTO;
 import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.ui.util.CardDrawableUtil;
 
-import java.util.Locale;
-
 public class CardPairLayout extends ConstraintLayout {
-    private static final String PLAYER_NOT_CONNECTED_TEXT = "--";
     private final ImageView[] cardImageViews = new ImageView[2];
     private TextView displayNameTextView;
     private TextView fundsTextView;
@@ -101,14 +98,15 @@ public class CardPairLayout extends ConstraintLayout {
 
         var funds = playerSession.getFunds();
         if (funds != null) {
-            fundsTextView.setText(String.format(Locale.getDefault(), "$%.2f", funds));
+            fundsTextView.setText(getContext().getString(R.string.currency_format, funds));
         }
     }
 
     public void deleteDetails() {
         reset();
-        displayNameTextView.setText(PLAYER_NOT_CONNECTED_TEXT);
-        fundsTextView.setText(PLAYER_NOT_CONNECTED_TEXT);
+        var notConnectedText = getContext().getString(R.string.not_connected_text);
+        displayNameTextView.setText(notConnectedText);
+        fundsTextView.setText(notConnectedText);
     }
 
     public void updateDealerChip(boolean dealer) {

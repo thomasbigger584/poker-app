@@ -2,6 +2,7 @@ package com.twb.pokerapp.ui.activity.game.texas;
 
 import android.util.Log;
 
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
@@ -40,23 +41,56 @@ public class TexasGameViewModel extends ViewModel
     private static final String TAG = TexasGameViewModel.class.getSimpleName();
     private final WebSocketClient webSocketClient;
 
-    public MutableLiveData<Throwable> errors = new MutableLiveData<>();
-    public MutableLiveData<PlayerSubscribedDTO> playerSubscribed = new MutableLiveData<>();
-    public MutableLiveData<PlayerConnectedDTO> playerConnected = new MutableLiveData<>();
-    public MutableLiveData<DealerDeterminedDTO> dealerDetermined = new MutableLiveData<>();
-    public MutableLiveData<DealPlayerCardDTO> dealPlayerCard = new MutableLiveData<>();
-    public MutableLiveData<DealCommunityCardDTO> dealCommunityCard = new MutableLiveData<>();
-    public MutableLiveData<PlayerTurnDTO> playerTurn = new MutableLiveData<>();
-    public MutableLiveData<PlayerActionedDTO> playerActioned = new MutableLiveData<>();
-    public MutableLiveData<BettingRoundUpdatedDTO> bettingRoundUpdated = new MutableLiveData<>();
-    public MutableLiveData<RoundFinishedDTO> roundFinished = new MutableLiveData<>();
-    public MutableLiveData<GameFinishedDTO> gameFinished = new MutableLiveData<>();
-    public MutableLiveData<ChatMessageDTO> chatMessage = new MutableLiveData<>();
-    public MutableLiveData<LogMessageDTO> logMessage = new MutableLiveData<>();
-    public MutableLiveData<ErrorMessageDTO> errorMessage = new MutableLiveData<>();
-    public MutableLiveData<ValidationDTO> validationMessage = new MutableLiveData<>();
-    public MutableLiveData<PlayerDisconnectedDTO> playerDisconnected = new MutableLiveData<>();
-    public MutableLiveData<Void> closedConnection = new MutableLiveData<>();
+    private final MutableLiveData<Throwable> _errors = new MutableLiveData<>();
+    public final LiveData<Throwable> errors = _errors;
+
+    private final MutableLiveData<PlayerSubscribedDTO> _playerSubscribed = new MutableLiveData<>();
+    public final LiveData<PlayerSubscribedDTO> playerSubscribed = _playerSubscribed;
+
+    private final MutableLiveData<PlayerConnectedDTO> _playerConnected = new MutableLiveData<>();
+    public final LiveData<PlayerConnectedDTO> playerConnected = _playerConnected;
+
+    private final MutableLiveData<DealerDeterminedDTO> _dealerDetermined = new MutableLiveData<>();
+    public final LiveData<DealerDeterminedDTO> dealerDetermined = _dealerDetermined;
+
+    private final MutableLiveData<DealPlayerCardDTO> _dealPlayerCard = new MutableLiveData<>();
+    public final LiveData<DealPlayerCardDTO> dealPlayerCard = _dealPlayerCard;
+
+    private final MutableLiveData<DealCommunityCardDTO> _dealCommunityCard = new MutableLiveData<>();
+    public final LiveData<DealCommunityCardDTO> dealCommunityCard = _dealCommunityCard;
+
+    private final MutableLiveData<PlayerTurnDTO> _playerTurn = new MutableLiveData<>();
+    public final LiveData<PlayerTurnDTO> playerTurn = _playerTurn;
+
+    private final MutableLiveData<PlayerActionedDTO> _playerActioned = new MutableLiveData<>();
+    public final LiveData<PlayerActionedDTO> playerActioned = _playerActioned;
+
+    private final MutableLiveData<BettingRoundUpdatedDTO> _bettingRoundUpdated = new MutableLiveData<>();
+    public final LiveData<BettingRoundUpdatedDTO> bettingRoundUpdated = _bettingRoundUpdated;
+
+    private final MutableLiveData<RoundFinishedDTO> _roundFinished = new MutableLiveData<>();
+    public final LiveData<RoundFinishedDTO> roundFinished = _roundFinished;
+
+    private final MutableLiveData<GameFinishedDTO> _gameFinished = new MutableLiveData<>();
+    public final LiveData<GameFinishedDTO> gameFinished = _gameFinished;
+
+    private final MutableLiveData<ChatMessageDTO> _chatMessage = new MutableLiveData<>();
+    public final LiveData<ChatMessageDTO> chatMessage = _chatMessage;
+
+    private final MutableLiveData<LogMessageDTO> _logMessage = new MutableLiveData<>();
+    public final LiveData<LogMessageDTO> logMessage = _logMessage;
+
+    private final MutableLiveData<ErrorMessageDTO> _errorMessage = new MutableLiveData<>();
+    public final LiveData<ErrorMessageDTO> errorMessage = _errorMessage;
+
+    private final MutableLiveData<ValidationDTO> _validationMessage = new MutableLiveData<>();
+    public final LiveData<ValidationDTO> validationMessage = _validationMessage;
+
+    private final MutableLiveData<PlayerDisconnectedDTO> _playerDisconnected = new MutableLiveData<>();
+    public final LiveData<PlayerDisconnectedDTO> playerDisconnected = _playerDisconnected;
+
+    private final MutableLiveData<Void> _closedConnection = new MutableLiveData<>();
+    public final LiveData<Void> closedConnection = _closedConnection;
 
     private UUID tableId;
 
@@ -83,63 +117,67 @@ public class TexasGameViewModel extends ViewModel
     public void onMessage(ServerMessageDTO<?> message) {
         switch (message.getType()) {
             case PLAYER_SUBSCRIBED: {
-                playerSubscribed.setValue((PlayerSubscribedDTO) message.getPayload());
+                _playerSubscribed.setValue((PlayerSubscribedDTO) message.getPayload());
                 break;
             }
             case PLAYER_CONNECTED: {
-                playerConnected.setValue((PlayerConnectedDTO) message.getPayload());
+                _playerConnected.setValue((PlayerConnectedDTO) message.getPayload());
                 break;
             }
             case DEALER_DETERMINED: {
-                dealerDetermined.setValue((DealerDeterminedDTO) message.getPayload());
+                _dealerDetermined.setValue((DealerDeterminedDTO) message.getPayload());
                 break;
             }
             case DEAL_INIT: {
-                dealPlayerCard.setValue((DealPlayerCardDTO) message.getPayload());
+                _dealPlayerCard.setValue((DealPlayerCardDTO) message.getPayload());
                 break;
             }
             case DEAL_COMMUNITY: {
-                dealCommunityCard.setValue((DealCommunityCardDTO) message.getPayload());
+                _dealCommunityCard.setValue((DealCommunityCardDTO) message.getPayload());
                 break;
             }
             case PLAYER_TURN: {
-                playerTurn.setValue((PlayerTurnDTO) message.getPayload());
+                _playerTurn.setValue((PlayerTurnDTO) message.getPayload());
                 break;
             }
             case PLAYER_ACTIONED: {
-                playerActioned.setValue((PlayerActionedDTO) message.getPayload());
+                _playerActioned.setValue((PlayerActionedDTO) message.getPayload());
                 break;
             }
             case BETTING_ROUND_UPDATED: {
-                bettingRoundUpdated.setValue((BettingRoundUpdatedDTO) message.getPayload());
+                _bettingRoundUpdated.setValue((BettingRoundUpdatedDTO) message.getPayload());
                 break;
             }
             case ROUND_FINISHED: {
-                roundFinished.setValue((RoundFinishedDTO) message.getPayload());
+                _roundFinished.setValue((RoundFinishedDTO) message.getPayload());
                 break;
             }
             case GAME_FINISHED: {
-                gameFinished.setValue((GameFinishedDTO) message.getPayload());
+                _gameFinished.setValue((GameFinishedDTO) message.getPayload());
                 break;
             }
             case CHAT: {
-                chatMessage.setValue((ChatMessageDTO) message.getPayload());
+                _chatMessage.setValue((ChatMessageDTO) message.getPayload());
                 break;
             }
             case LOG: {
-                logMessage.setValue((LogMessageDTO) message.getPayload());
+                _logMessage.setValue((LogMessageDTO) message.getPayload());
                 break;
             }
             case ERROR: {
-                errorMessage.setValue((ErrorMessageDTO) message.getPayload());
+                _errorMessage.setValue((ErrorMessageDTO) message.getPayload());
+                break;
+            }
+            case VALIDATION: {
+                _validationMessage.setValue((ValidationDTO) message.getPayload());
                 break;
             }
             case PLAYER_DISCONNECTED: {
-                playerDisconnected.setValue((PlayerDisconnectedDTO) message.getPayload());
+                _playerDisconnected.setValue((PlayerDisconnectedDTO) message.getPayload());
                 break;
             }
             default:
-                throw new IllegalStateException("Unexpected Game Event Value: " + message.getType());
+                Log.w(TAG, "Unexpected Game Event Value: " + message.getType());
         }
     }
 
@@ -167,10 +205,11 @@ public class TexasGameViewModel extends ViewModel
 
     @Override
     public void onClosed(LifecycleEvent event) {
-        closedConnection.setValue(null);
+        _closedConnection.setValue(null);
     }
 
     public void disconnect() {
+        tableId = null;
         webSocketClient.disconnect();
     }
 
@@ -190,12 +229,12 @@ public class TexasGameViewModel extends ViewModel
 
     @Override
     public void onSubscribeError(Throwable throwable) {
-        errors.setValue(throwable);
+        _errors.setValue(throwable);
     }
 
     @Override
     public void onSendFailure(Throwable throwable) {
-        errors.setValue(throwable);
+        _errors.setValue(throwable);
     }
 
     // Helper Methods
@@ -203,9 +242,9 @@ public class TexasGameViewModel extends ViewModel
 
     private void publishLifecycleEventError(LifecycleEvent event) {
         if (event.getException() == null) {
-            errors.setValue(new RuntimeException(event.getMessage()));
+            _errors.setValue(new RuntimeException(event.getMessage()));
         } else {
-            errors.setValue(event.getException());
+            _errors.setValue(event.getException());
         }
     }
 }

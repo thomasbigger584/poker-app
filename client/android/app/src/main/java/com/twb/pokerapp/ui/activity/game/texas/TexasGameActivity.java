@@ -212,7 +212,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             chatBoxAdapter.add(getString(R.string.game_finished));
         });
         viewModel.chatMessage.observe(this, chatMessage -> {
-            chatBoxAdapter.add(chatMessage.getUsername() + ": " + chatMessage.getMessage());
+            chatBoxAdapter.add(getString(R.string.chat_message_format, chatMessage.getUsername(), chatMessage.getMessage()));
         });
         viewModel.logMessage.observe(this, logMessage -> {
             chatBoxAdapter.add(logMessage.getMessage());
@@ -237,10 +237,19 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     }
 
     private void initClickListeners() {
-        binding.foldButton.setOnClickListener(v -> viewModel.onPlayerAction(ActionType.FOLD));
-        binding.checkButton.setOnClickListener(v -> viewModel.onPlayerAction(ActionType.CHECK));
+        binding.foldButton.setOnClickListener(v -> {
+            dismissDialogs();
+            viewModel.onPlayerAction(ActionType.FOLD);
+        });
+        binding.checkButton.setOnClickListener(v -> {
+            dismissDialogs();
+            viewModel.onPlayerAction(ActionType.CHECK);
+        });
         binding.betButton.setOnClickListener(v -> onBetClick());
-        binding.callButton.setOnClickListener(v -> viewModel.onPlayerAction(ActionType.CALL));
+        binding.callButton.setOnClickListener(v -> {
+            dismissDialogs();
+            viewModel.onPlayerAction(ActionType.CALL);
+        });
         binding.raiseButton.setOnClickListener(v -> onRaiseClick());
         binding.allInButton.setOnClickListener(v -> {
             dismissDialogs();

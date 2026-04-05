@@ -43,9 +43,8 @@ public class TableListActivity extends BaseAuthActivity implements TableListAdap
         adapter = new TableListAdapter(this);
         binding.recyclerView.setAdapter(adapter);
 
-        binding.swipeRefreshLayout.setOnRefreshListener(() -> viewModel.refresh());
-
         viewModel = new ViewModelProvider(this).get(TableListViewModel.class);
+        binding.swipeRefreshLayout.setOnRefreshListener(() -> viewModel.refresh());
         viewModel.getTables().observe(this, tables -> {
             adapter.submitList(tables);
             binding.swipeRefreshLayout.setRefreshing(false);
