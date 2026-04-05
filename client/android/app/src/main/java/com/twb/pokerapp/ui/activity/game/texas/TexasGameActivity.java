@@ -12,6 +12,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.databinding.ActivityGameTexasBinding;
@@ -91,8 +92,14 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         layoutManager.setStackFromEnd(true);
         binding.chatBoxRecyclerView.setLayoutManager(layoutManager);
 
-        chatBoxAdapter = new ChatBoxRecyclerAdapter(layoutManager);
+        chatBoxAdapter = new ChatBoxRecyclerAdapter();
         binding.chatBoxRecyclerView.setAdapter(chatBoxAdapter);
+        chatBoxAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onItemRangeInserted(int positionStart, int itemCount) {
+                binding.chatBoxRecyclerView.smoothScrollToPosition(chatBoxAdapter.getItemCount() - 1);
+            }
+        });
 
         viewModel = new ViewModelProvider(this).get(TexasGameViewModel.class);
         viewModel.errors.observe(this, throwable -> {

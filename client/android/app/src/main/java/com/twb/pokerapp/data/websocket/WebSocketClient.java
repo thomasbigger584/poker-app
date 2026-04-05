@@ -79,7 +79,7 @@ public class WebSocketClient {
         var websocketUrl = protocol + BuildConfig.API_BASE_URL + WEBSOCKET_ENDPOINT;
         stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, websocketUrl, null, okHttpClient);
 
-       var headers = new ArrayList<StompHeader>();
+        var headers = new ArrayList<StompHeader>();
         headers.add(new StompHeader(AUTHORIZATION_HEADER, BEARER_PREFIX + accessToken));
         headers.add(new StompHeader(CONNECTION_TYPE_HEADER, connectionType));
         headers.add(new StompHeader(BUY_IN_AMOUNT_HEADER, String.format(Locale.getDefault(), "%.2f", buyInAmount)));
