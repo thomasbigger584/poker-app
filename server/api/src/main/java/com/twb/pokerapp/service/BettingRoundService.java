@@ -9,7 +9,6 @@ import com.twb.pokerapp.mapper.BettingRoundMapper;
 import com.twb.pokerapp.repository.BettingRoundRefundRepository;
 import com.twb.pokerapp.repository.BettingRoundRepository;
 import com.twb.pokerapp.repository.RoundRepository;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -32,7 +31,7 @@ public class BettingRoundService {
 
     @Transactional(propagation = Propagation.MANDATORY)
     public void reset() {
-        repository.findAll()
+        repository.findAllCurrent()
                 .forEach(bettingRound -> setState(bettingRound, FAILED));
     }
 

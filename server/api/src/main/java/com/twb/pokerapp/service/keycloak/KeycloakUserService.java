@@ -2,7 +2,6 @@ package com.twb.pokerapp.service.keycloak;
 
 import com.twb.pokerapp.mapper.UserMapper;
 import com.twb.pokerapp.repository.UserRepository;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -31,7 +30,6 @@ public class KeycloakUserService {
     /*
      * Synchronizing users api database with those stored in keycloak on application startup
      */
-    @PostConstruct
     public void init() {
         log.info("Synchronizing Keycloak users...");
         var userMembers = userGroupResource.members();

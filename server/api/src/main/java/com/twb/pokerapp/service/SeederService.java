@@ -1,5 +1,6 @@
 package com.twb.pokerapp.service;
 
+import com.twb.pokerapp.service.keycloak.KeycloakUserService;
 import com.twb.pokerapp.service.table.TableService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class SeederService {
+    private final KeycloakUserService keycloakUserService;
     private final PlayerSessionService playerSessionService;
     private final RoundService roundService;
     private final BettingRoundService bettingRoundService;
@@ -18,6 +20,7 @@ public class SeederService {
     @Transactional
     @EventListener(ApplicationReadyEvent.class)
     public void onStartup() {
+        keycloakUserService.init();
         playerSessionService.reset();
         roundService.reset();
         bettingRoundService.reset();

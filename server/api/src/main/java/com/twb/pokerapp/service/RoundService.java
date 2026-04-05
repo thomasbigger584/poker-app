@@ -25,7 +25,7 @@ public class RoundService {
 
     @Transactional(propagation = Propagation.MANDATORY)
     public void reset() {
-        repository.findAll()
+        repository.findAllCurrent()
                 .forEach(round -> setState(round, RoundState.FAILED));
     }
 

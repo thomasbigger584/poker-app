@@ -6,11 +6,20 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface RoundRepository extends JpaRepository<Round, UUID> {
+
+    @Query("""
+            SELECT r
+            FROM Round r
+            WHERE r.roundState <> com.twb.pokerapp.domain.enumeration.RoundState.FINISHED
+            AND r.roundState <> com.twb.pokerapp.domain.enumeration.RoundState.FAILED
+            """)
+    List<Round> findAllCurrent();
 
     @Query("""
             SELECT r
