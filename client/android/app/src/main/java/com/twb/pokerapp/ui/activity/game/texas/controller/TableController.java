@@ -1,5 +1,6 @@
 package com.twb.pokerapp.ui.activity.game.texas.controller;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.widget.TextView;
 
@@ -16,10 +17,10 @@ import com.twb.pokerapp.data.websocket.message.server.payload.RoundFinishedDTO;
 import com.twb.pokerapp.ui.layout.texas.CardPairLayout;
 import com.twb.pokerapp.ui.layout.texas.CommunityCardLayout;
 
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class TableController {
@@ -47,7 +48,7 @@ public class TableController {
 
         positionCardPairs.clear();
 
-        int index = 0;
+        var index = 0;
         for (var thisPosition = playerPosition; thisPosition <= TABLE_SIZE; thisPosition++, index++) {
             positionCardPairs.put(thisPosition, cardPairLayouts[index]);
         }
@@ -124,28 +125,31 @@ public class TableController {
     }
 
     public void updateBettingRound(BettingRoundUpdatedDTO bettingRoundUpdated) {
-        var roundPots = bettingRoundUpdated.getRoundPots()
+        var totalPotAmount = bettingRoundUpdated.getRoundPots()
                 .stream()
-                .sorted(Comparator.comparing(RoundPotDTO::getPotIndex))
-                .collect(Collectors.toList());
-        var sb = new StringBuilder();
-        for (int i = 0; i < roundPots.size(); i++) {
-            var roundPot = roundPots.get(i);
-            sb.append("Pot ").append(i + 1).append(": ");
-            sb.append(String.format(Locale.getDefault(), "$%.2f", roundPot.getPotAmount()));
-            if (i < roundPots.size() - 1) {
-                sb.append(", ");
-            }
-        }
-        potSizeText.setText(sb.toString());
+                .mapToDouble(RoundPotDTO::getPotAmount)
+                .sum();
+        potSizeText.setText(String.format(Locale.getDefault(), "$%.2f", totalPotAmount));
     }
 
-    public void reset(RoundFinishedDTO roundFinished) {
+    @SuppressLint("SetTextI18n")
+    public void update(RoundFinishedDTO roundFinished) {
         hidePlayerTurns();
         communityCardLayout.reset();
-        for (var cardPairLayout : cardPairLayouts) {
+        for (var posCardPairEntry : positionCardPairs.entrySet()) {
+            var position = posCardPairEntry.getKey();
+            var cardPairLayout = posCardPairEntry.getValue();
             cardPairLayout.reset();
+            var winnerAtPositionList = roundFinished.getWinners()
+                    .stream()
+                    .filter(roundWinnerDTO -> Objects.equals(roundWinnerDTO.getPlayerSession().getPosition(), position))
+                    .collect(Collectors.toList());
+            if (winnerAtPositionList.size() == 1) {
+                var winnerAtPosition = winnerAtPositionList.get(0);
+                cardPairLayout.updateDetails(winnerAtPosition.getPlayerSession());
+            }
         }
+        potSizeText.setText("$00.00");
     }
 
     // ------------------------------------------------------------------------------

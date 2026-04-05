@@ -178,7 +178,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             dismissDialogs();
             tableController.hidePlayerTurns();
             controlsController.hide();
-            tableController.reset(roundFinished);
+            tableController.update(roundFinished);
         });
         viewModel.gameFinished.observe(this, gameFinished -> {
             var clickListener = new FinishActivityOnClickListener(this);

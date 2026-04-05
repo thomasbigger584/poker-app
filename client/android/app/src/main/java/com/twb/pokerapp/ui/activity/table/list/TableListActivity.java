@@ -107,7 +107,7 @@ public class TableListActivity extends BaseAuthActivity implements TableListAdap
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
+        var id = item.getItemId();
         if (id == R.id.action_create_table) {
             var intent = new Intent(this, TableCreateActivity.class);
             startActivity(intent);

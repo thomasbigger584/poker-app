@@ -53,8 +53,8 @@ public class ViewUtil {
         }
         if (view instanceof ViewGroup) {
             var viewGroup = (ViewGroup) view;
-            for (int i = 0; i < viewGroup.getChildCount(); i++) {
-                applyScaleRecursive(viewGroup.getChildAt(i), layoutScale, textScale);
+            for (var index = 0; index < viewGroup.getChildCount(); index++) {
+                applyScaleRecursive(viewGroup.getChildAt(index), layoutScale, textScale);
             }
         }
     }
