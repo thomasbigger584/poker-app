@@ -11,7 +11,6 @@ import com.twb.pokerapp.data.retrofit.api.TableApi;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -32,8 +31,7 @@ public class TableRepository extends BaseRepository {
     }
 
     public void refreshAvailableTables() {
-        var queryParams = new HashMap<String, Integer>();
-        api.getAvailableTables(queryParams).enqueue(new Callback<>() {
+        api.getAvailableTables(new HashMap<>()).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<List<AvailableTableDTO>> call, @NonNull Response<List<AvailableTableDTO>> response) {
                 if (response.isSuccessful()) {
@@ -57,7 +55,7 @@ public class TableRepository extends BaseRepository {
                 if (response.isSuccessful()) {
                     createdTableLiveData.setValue(response.body());
                 } else {
-                    errorLiveData.setValue(new RuntimeException("Failed to create table"));
+                    errorLiveData.setValue(new RuntimeException("Failed to create table: " + response.code()));
                 }
             }
 
@@ -68,7 +66,7 @@ public class TableRepository extends BaseRepository {
         });
     }
 
-    public MutableLiveData<TableDTO> getCreatedTableLiveData() {
+    public LiveData<TableDTO> getCreatedTableLiveData() {
         return createdTableLiveData;
     }
 }

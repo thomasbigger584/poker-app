@@ -3,14 +3,12 @@ package com.twb.pokerapp.data.auth;
 import android.content.Context;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
 import com.auth0.android.jwt.JWT;
 import com.twb.pokerapp.data.model.dto.appuser.AppUserDTO;
 
 import net.openid.appauth.AppAuthConfiguration;
-import net.openid.appauth.AuthState;
 import net.openid.appauth.AuthorizationService;
 import net.openid.appauth.ClientAuthentication;
 import net.openid.appauth.TokenRequest;
@@ -37,20 +35,25 @@ public class AuthService {
 
     public String getCurrentUser() {
         var jwt = getJwt();
+        if (jwt == null) return null;
         return jwt.getClaim(USERNAME_CLAIM).asString();
     }
 
     public boolean isCurrentUser(AppUserDTO user) {
-        return user.getUsername().equals(getCurrentUser());
+        String currentUser = getCurrentUser();
+        return currentUser != null && currentUser.equals(user.getUsername());
     }
 
     public String getAccessToken() {
-        return getJwt().toString();
+        var jwt = getJwt();
+        return (jwt != null) ? jwt.toString() : null;
     }
 
     @WorkerThread // blocks until a new token is retrieved
     public String getAccessTokenWithRefresh() {
         var jwt = getJwt();
+        if (jwt == null) return null;
+        
         if (jwt.isExpired(TOKEN_EXPIRY_LEEWAY_SECONDS)) {
             var latch = new CountDownLatch(1);
             var currentAuthState = authStateManager.getCurrent();
@@ -82,12 +85,13 @@ public class AuthService {
         authService.performTokenRequest(request, clientAuthentication, callback);
     }
 
-    @NonNull
     private JWT getJwt() {
         var currentAuthState = authStateManager.getCurrent();
-        if (currentAuthState.getAccessToken() == null) {
-            throw new RuntimeException("Cannot get access token as it is null");
+        var accessToken = currentAuthState.getAccessToken();
+        if (accessToken == null) {
+            Log.w(TAG, "Cannot get access token as it is null");
+            return null;
         }
-        return new JWT(currentAuthState.getAccessToken());
+        return new JWT(accessToken);
     }
 }

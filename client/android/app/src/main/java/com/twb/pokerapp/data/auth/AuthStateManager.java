@@ -136,10 +136,7 @@ public class AuthStateManager {
             } else {
                 editor.putString(KEY_STATE, state.jsonSerializeString());
             }
-
-            if (!editor.commit()) {
-                throw new IllegalStateException("Failed to write state to shared prefs");
-            }
+            editor.apply();
         } finally {
             prefsLock.unlock();
         }

@@ -16,7 +16,6 @@ import com.twb.stomplib.stomp.Stomp;
 import com.twb.stomplib.stomp.StompClient;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -142,10 +141,12 @@ public class WebSocketClient {
     }
 
     public void disconnect() {
-        stompClient.disconnect();
-
+        if (stompClient != null) {
+            stompClient.disconnect();
+        }
         if (compositeDisposable != null) {
             compositeDisposable.dispose();
+            compositeDisposable = null;
         }
     }
 
