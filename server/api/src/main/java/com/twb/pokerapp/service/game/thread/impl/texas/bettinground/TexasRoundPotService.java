@@ -35,24 +35,29 @@ public class TexasRoundPotService {
         var sessionMap = new HashMap<UUID, PlayerSession>();
 
         var playerSessions = playerSessionRepository.findPlayersOnRound(round.getId());
-
-        for (var session : playerSessions) {
-            playerTotalBets.put(session.getId(), 0.0);
-            playerFoldedStatus.put(session.getId(), false);
-            sessionMap.put(session.getId(), session);
-        }
-
-        sumAmountsFromActions(round.getId(), playerTotalBets, playerFoldedStatus);
+        fillMapsWithStartingDefaults(playerSessions, playerTotalBets, playerFoldedStatus, sessionMap);
+        sumAmountsFromActions(round, playerTotalBets, playerFoldedStatus);
 
         var contributions = getPlayerContributions(playerTotalBets, sessionMap, playerFoldedStatus);
 
         return calculatePotSlices(round, bettingRound, contributions, sessionMap);
     }
 
-    private void sumAmountsFromActions(UUID roundId,
+    private void fillMapsWithStartingDefaults(List<PlayerSession> playerSessions,
+                                              Map<UUID, Double> playerTotalBets,
+                                              Map<UUID, Boolean> playerFoldedStatus,
+                                              Map<UUID, PlayerSession> sessionMap) {
+        for (var session : playerSessions) {
+            playerTotalBets.put(session.getId(), 0.0);
+            playerFoldedStatus.put(session.getId(), false);
+            sessionMap.put(session.getId(), session);
+        }
+    }
+
+    private void sumAmountsFromActions(Round round,
                                        Map<UUID, Double> playerTotalBets,
                                        Map<UUID, Boolean> playerFoldedStatus) {
-        var allActions = playerActionRepository.findByRoundId(roundId);
+        var allActions = playerActionRepository.findByRoundId(round.getId());
 
         for (var action : allActions) {
             var playerId = action.getPlayerSession().getId();
@@ -148,20 +153,7 @@ public class TexasRoundPotService {
         }
 
         // Refund Logic
-        for (var contribution : contributions) {
-            var playerId = contribution.player().getId();
-            var totalContributed = contribution.amount();
-            var allocatedToPots = playerAllocatedToPots.getOrDefault(playerId, 0.0);
-            var refundAmount = totalContributed - allocatedToPots;
-
-            if (refundAmount > 0.001) {
-                var managedPlayerSession = sessionMap.get(playerId);
-                managedPlayerSession.setFunds(managedPlayerSession.getFunds() + refundAmount);
-                playerSessionRepository.save(managedPlayerSession);
-                bettingRoundService.createRefund(managedPlayerSession, bettingRound, refundAmount);
-                afterCommit(() -> gameLogService.sendLogMessage(round.getPokerTable(), "Refunded $%.2f to %s".formatted(refundAmount, managedPlayerSession.getUser().getUsername())));
-            }
-        }
+        handleRefunds(round, bettingRound, contributions, sessionMap, playerAllocatedToPots);
 
         round.setRoundPots(roundPots);
         return roundRepository.save(round);
@@ -173,7 +165,7 @@ public class TexasRoundPotService {
                                        List<PlayerSession> eligiblePlayers) {
         if (!roundPots.isEmpty()) {
             var lastPot = roundPots.getLast();
-            if (new HashSet<>(lastPot.getEligiblePlayers()).equals(new HashSet<>(eligiblePlayers))) {
+            if (isEligiblePlayersSame(eligiblePlayers, lastPot)) {
                 lastPot.setPotAmount(lastPot.getPotAmount() + amount);
                 roundPotRepository.save(lastPot);
                 return;
@@ -188,5 +180,34 @@ public class TexasRoundPotService {
 
         roundPot = roundPotRepository.save(roundPot);
         roundPots.add(roundPot);
+    }
+
+    private void handleRefunds(Round round, BettingRound bettingRound,
+                               List<ContributionDTO> contributions,
+                               Map<UUID, PlayerSession> sessionMap,
+                               Map<UUID, Double> playerAllocatedToPots) {
+        for (var contribution : contributions) {
+            var playerId = contribution.player().getId();
+            var totalContributed = contribution.amount();
+            var allocatedToPots = playerAllocatedToPots.getOrDefault(playerId, 0.0);
+            var refundAmount = totalContributed - allocatedToPots;
+
+            if (refundAmount > 0.001) {
+                var managedPlayerSession = sessionMap.get(playerId);
+                managedPlayerSession.setFunds(managedPlayerSession.getFunds() + refundAmount);
+                playerSessionRepository.save(managedPlayerSession);
+                bettingRoundService.createRefund(managedPlayerSession, bettingRound, refundAmount);
+                afterCommit(() -> gameLogService.sendLogMessage(round.getPokerTable(), "Refunded $%.2f to %s".formatted(refundAmount, managedPlayerSession.getUser().getUsername())));
+            }
+        }
+    }
+
+    private boolean isEligiblePlayersSame(List<PlayerSession> eligiblePlayers, RoundPot lastPot) {
+        var lastPotEligiblePlayers = new HashSet<>(lastPot.getEligiblePlayers());
+        var thisEligiblePlayers = new HashSet<>(eligiblePlayers);
+        if (lastPotEligiblePlayers.size() != thisEligiblePlayers.size()) {
+            return false;
+        }
+        return lastPotEligiblePlayers.equals(thisEligiblePlayers);
     }
 }
