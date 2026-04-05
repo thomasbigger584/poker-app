@@ -2,24 +2,18 @@ package com.twb.pokerapp.ui.activity.table.connect;
 
 import android.content.Intent;
 import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.RadioGroup;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
-import androidx.lifecycle.ViewModelProvider;
 
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.model.dto.table.TableDTO;
+import com.twb.pokerapp.databinding.ActivityTableConnectBinding;
 import com.twb.pokerapp.ui.activity.game.texas.TexasGameActivity;
 import com.twb.pokerapp.ui.activity.login.BaseAuthActivity;
 
@@ -30,13 +24,19 @@ import dagger.hilt.android.AndroidEntryPoint;
 @AndroidEntryPoint
 public class TableConnectActivity extends BaseAuthActivity {
 
+    private ActivityTableConnectBinding binding;
     private TableDTO table;
-    private EditText buyInEditText;
-    private RadioGroup connectTypeRadioGroup;
+
+    @Override
+    protected View getContentView() {
+        binding = ActivityTableConnectBinding.inflate(getLayoutInflater());
+        return binding.getRoot();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setupToolbar();
         var intent = getIntent();
         if (intent == null) {
@@ -50,25 +50,19 @@ public class TableConnectActivity extends BaseAuthActivity {
         }
         table = TableDTO.fromBundle(extras);
 
-        var connectToTableTextView = (TextView) findViewById(R.id.text_connect_to_table);
-        connectToTableTextView.setText(String.format("Connect to %s", table.getName()));
+        binding.textConnectToTable.setText(getString(R.string.connect_to_table_format, table.getName()));
 
-        var buyInLinearLayout = findViewById(R.id.buy_in_linear_layout);
-        connectTypeRadioGroup = findViewById(R.id.connect_Type_radio_group);
-        connectTypeRadioGroup.setOnCheckedChangeListener((radioGroup, radioButtonSelectedId) -> {
+        binding.connectTypeRadioGroup.setOnCheckedChangeListener((radioGroup, radioButtonSelectedId) -> {
             if (radioButtonSelectedId == R.id.radio_viewer) {
-                buyInLinearLayout.setVisibility(View.GONE);
+                binding.buyInLinearLayout.setVisibility(View.GONE);
             } else {
-                buyInLinearLayout.setVisibility(View.VISIBLE);
+                binding.buyInLinearLayout.setVisibility(View.VISIBLE);
             }
         });
 
-        buyInEditText = findViewById(R.id.buy_in_edit_text);
-    }
-
-    @Override
-    protected int getContentView() {
-        return R.layout.activity_table_connect;
+        binding.buttonMinBuyIn.setOnClickListener(this::onMinBuyInClick);
+        binding.buttonMaxBuyIn.setOnClickListener(this::onMaxBuyInClick);
+        binding.buttonConnectTable.setOnClickListener(this::onConnectTableClick);
     }
 
     @Override
@@ -82,19 +76,20 @@ public class TableConnectActivity extends BaseAuthActivity {
     }
 
     public void onConnectTableClick(View view) {
-        var buyInStr = buyInEditText.getText().toString().trim();
+        var buyInStr = binding.buyInEditText.getText().toString().trim();
         if (buyInStr.isBlank()) {
-            Toast.makeText(this, "Cannot choose blank buy-in amount", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.error_blank_buy_in, Toast.LENGTH_SHORT).show();
             return;
         }
         var buyIn = Double.parseDouble(buyInStr);
         if (buyIn < table.getMinBuyin() || buyIn > table.getMaxBuyin()) {
-            Toast.makeText(this, "Buy-in amount must be between " + table.getMinBuyin() + " and " + table.getMaxBuyin(), Toast.LENGTH_SHORT).show();
+            var message = getString(R.string.error_buy_in_range, table.getMinBuyin(), table.getMaxBuyin());
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
             return;
         }
-        var radioButtonSelectedId = connectTypeRadioGroup.getCheckedRadioButtonId();
+        var radioButtonSelectedId = binding.connectTypeRadioGroup.getCheckedRadioButtonId();
         if (radioButtonSelectedId == -1) {
-            Toast.makeText(this, "Must Select a Connection Type", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.error_select_connection_type, Toast.LENGTH_SHORT).show();
             return;
         }
         var connectionType = "PLAYER";
@@ -103,13 +98,13 @@ public class TableConnectActivity extends BaseAuthActivity {
             buyIn = 0d;
         }
         if (connectionType.equals("LISTENER")) {
-            Toast.makeText(this, "Listener connection type not fully available yet", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.error_listener_unavailable, Toast.LENGTH_SHORT).show();
             return;
         }
         if (table.getGameType().equals("TEXAS_HOLDEM")) {
             TexasGameActivity.startActivity(this, table, connectionType, buyIn);
         } else {
-            Toast.makeText(this, "Unsupported Game Type", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.error_unsupported_game_type, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -123,8 +118,7 @@ public class TableConnectActivity extends BaseAuthActivity {
     }
 
     private void setupToolbar() {
-        var toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        setSupportActionBar(binding.toolbar);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -139,10 +133,10 @@ public class TableConnectActivity extends BaseAuthActivity {
     }
 
     public void onMinBuyInClick(View view) {
-        buyInEditText.setText(String.format(Locale.getDefault(), "%.2f", table.getMinBuyin()));
+        binding.buyInEditText.setText(String.format(Locale.getDefault(), "%.2f", table.getMinBuyin()));
     }
 
     public void onMaxBuyInClick(View view) {
-        buyInEditText.setText(String.format(Locale.getDefault(), "%.2f", table.getMaxBuyin()));
+        binding.buyInEditText.setText(String.format(Locale.getDefault(), "%.2f", table.getMaxBuyin()));
     }
 }

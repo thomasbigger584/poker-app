@@ -4,10 +4,10 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.CallSuper;
-import androidx.annotation.LayoutRes;
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -81,7 +81,10 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
                 .setSkipIssuerHttpsCheck(!authConfiguration.isHttpsRequired())
                 .build());
 
-        setContentView(getContentView());
+        var view = getContentView();
+        if (view != null) {
+            setContentView(view);
+        }
 
         if (savedInstanceState != null) {
             try {
@@ -234,8 +237,8 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
         finish();
     }
 
-    @LayoutRes
-    protected abstract int getContentView();
+    @Nullable
+    protected abstract View getContentView();
 
     protected abstract void onAuthorized();
 

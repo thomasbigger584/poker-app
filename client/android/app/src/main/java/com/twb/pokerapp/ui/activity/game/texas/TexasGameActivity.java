@@ -12,9 +12,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.twb.pokerapp.R;
+import com.twb.pokerapp.databinding.ActivityGameTexasBinding;
 import com.twb.pokerapp.data.auth.AuthService;
 import com.twb.pokerapp.data.model.dto.table.TableDTO;
 import com.twb.pokerapp.data.model.enumeration.ActionType;
@@ -31,7 +31,6 @@ import com.twb.pokerapp.ui.dialog.DialogHelper;
 import com.twb.pokerapp.ui.dialog.FinishActivityOnClickListener;
 
 import java.util.ArrayList;
-import java.util.Locale;
 
 import javax.inject.Inject;
 
@@ -46,6 +45,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     @Inject
     AuthService authService;
 
+    private ActivityGameTexasBinding binding;
     private TexasGameViewModel viewModel;
     private TableDTO table;
     private AlertDialog loadingSpinner;
@@ -67,8 +67,9 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     }
 
     @Override
-    protected int getContentView() {
-        return R.layout.activity_game_texas;
+    protected View getContentView() {
+        binding = ActivityGameTexasBinding.inflate(getLayoutInflater());
+        return binding.getRoot();
     }
 
     @Override
@@ -81,16 +82,17 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         loadingSpinner = DialogHelper.createLoadingSpinner(this);
         DialogHelper.show(loadingSpinner);
 
-        tableController = new TableController(this);
-        controlsController = new ControlsController(this);
+        tableController = new TableController(binding);
+        controlsController = new ControlsController(binding);
 
-        var chatBoxRecyclerView = (RecyclerView) findViewById(R.id.chatBoxRecyclerView);
+        initClickListeners();
+
         var layoutManager = new LinearLayoutManager(this);
         layoutManager.setStackFromEnd(true);
-        chatBoxRecyclerView.setLayoutManager(layoutManager);
+        binding.chatBoxRecyclerView.setLayoutManager(layoutManager);
 
         chatBoxAdapter = new ChatBoxRecyclerAdapter(layoutManager);
-        chatBoxRecyclerView.setAdapter(chatBoxAdapter);
+        binding.chatBoxRecyclerView.setAdapter(chatBoxAdapter);
 
         viewModel = new ViewModelProvider(this).get(TexasGameViewModel.class);
         viewModel.errors.observe(this, throwable -> {
@@ -108,7 +110,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         });
         viewModel.closedConnection.observe(this, aVoid -> {
             dismissDialogs();
-            var message = "Lost connection with server";
+            var message = getString(R.string.lost_connection);
             var alertModalDialog = AlertModalDialog
                     .newInstance(AlertModalDialog.AlertModalType.ERROR, message, new FinishActivityOnClickListener(this));
             var prev = getSupportFragmentManager().findFragmentByTag("closed_connection_modal");
@@ -129,14 +131,14 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
                     tableController.connectOtherPlayer(playerSession);
                 }
             }
-            chatBoxAdapter.add("Connected: " + currentUsername);
+            chatBoxAdapter.add(getString(R.string.connected_format, currentUsername));
             dismissDialogs();
         });
         viewModel.playerConnected.observe(this, playerConnected -> {
             var playerSession = playerConnected.getPlayerSession();
             if (!authService.isCurrentUser(playerSession.getUser())) {
                 tableController.connectOtherPlayer(playerSession);
-                chatBoxAdapter.add("Connected: " + playerSession.getUser().getUsername());
+                chatBoxAdapter.add(getString(R.string.connected_format, playerSession.getUser().getUsername()));
             }
         });
         viewModel.dealerDetermined.observe(this, dealerDetermined -> {
@@ -193,14 +195,14 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         viewModel.gameFinished.observe(this, gameFinished -> {
             var clickListener = new FinishActivityOnClickListener(this);
             var alertModalDialog = AlertModalDialog
-                    .newInstance(AlertModalDialog.AlertModalType.INFO, "Game Finished", clickListener);
+                    .newInstance(AlertModalDialog.AlertModalType.INFO, getString(R.string.game_finished), clickListener);
             var prev = getSupportFragmentManager().findFragmentByTag("game_finished_modal");
             if (prev == null) {
                 alertModalDialog.show(getSupportFragmentManager(), "game_finished_modal");
             } else {
                 Log.d("DEBUG", "Dialog game_finished_modal already visible!");
             }
-            chatBoxAdapter.add("Game Finished");
+            chatBoxAdapter.add(getString(R.string.game_finished));
         });
         viewModel.chatMessage.observe(this, chatMessage -> {
             chatBoxAdapter.add(chatMessage.getUsername() + ": " + chatMessage.getMessage());
@@ -213,17 +215,29 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         });
         viewModel.validationMessage.observe(this, validation -> {
             Log.w(TAG, "VALIDATION: Invalid PlayerAction Request: " + validation.toString());
-            Toast.makeText(this, "Invalid PlayerAction Request", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.invalid_player_action), Toast.LENGTH_SHORT).show();
         });
         viewModel.playerDisconnected.observe(this, playerDisconnected -> {
             var username = playerDisconnected.getUsername();
-            chatBoxAdapter.add("Disconnected: " + username);
+            chatBoxAdapter.add(getString(R.string.disconnected_format, username));
             var current = authService.getCurrentUser();
             if (username.equals(current)) {
                 finish();
             } else {
                 tableController.disconnectOtherPlayer(username);
             }
+        });
+    }
+
+    private void initClickListeners() {
+        binding.foldButton.setOnClickListener(v -> viewModel.onPlayerAction(ActionType.FOLD));
+        binding.checkButton.setOnClickListener(v -> viewModel.onPlayerAction(ActionType.CHECK));
+        binding.betButton.setOnClickListener(v -> onBetClick());
+        binding.callButton.setOnClickListener(v -> viewModel.onPlayerAction(ActionType.CALL));
+        binding.raiseButton.setOnClickListener(v -> onRaiseClick());
+        binding.allInButton.setOnClickListener(v -> {
+            dismissDialogs();
+            viewModel.onPlayerAction(ActionType.ALL_IN);
         });
     }
 
@@ -248,15 +262,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
      * ****************************************************************************
      */
 
-    public void onFoldClick(View view) {
-        viewModel.onPlayerAction(ActionType.FOLD);
-    }
-
-    public void onCheckClick(View view) {
-        viewModel.onPlayerAction(ActionType.CHECK);
-    }
-
-    public void onBetClick(View view) {
+    private void onBetClick() {
         dismissDialogs();
         var minimumBet = 10d;
         var maximumBet = tableController.getPlayerCardPairLayout().getPlayerSession().getFunds();
@@ -269,11 +275,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         }
     }
 
-    public void onCallClick(View view) {
-        viewModel.onPlayerAction(ActionType.CALL);
-    }
-
-    public void onRaiseClick(View view) {
+    private void onRaiseClick() {
         dismissDialogs();
         var minimumBet = getRaiseMinimumBet();
         betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.RAISE, buyInAmount, minimumBet, this);
@@ -283,11 +285,6 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         } else {
             Log.d("DEBUG", "Dialog raise_dialog already visible!");
         }
-    }
-
-    public void onAllInClick(View view) {
-        dismissDialogs();
-        viewModel.onPlayerAction(ActionType.ALL_IN);
     }
 
     /*
@@ -337,15 +334,15 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         var user = playerAction.getPlayerSession().getUser();
         var stringBuilderList = new ArrayList<String>();
         if (authService.isCurrentUser(user)) {
-            stringBuilderList.add("You");
+            stringBuilderList.add(getString(R.string.player_action_you));
         } else {
             stringBuilderList.add(user.getUsername());
         }
         stringBuilderList.add(playerAction.getActionType().toLowerCase().replace("_", " "));
         var amount = playerAction.getAmount();
         if (amount != null && amount > 0d) {
-            stringBuilderList.add("with");
-            stringBuilderList.add(String.format(Locale.getDefault(), "$%.2f", playerAction.getAmount()));
+            stringBuilderList.add(getString(R.string.player_action_with));
+            stringBuilderList.add(getString(R.string.currency_format, playerAction.getAmount()));
         }
         return String.join(" ", stringBuilderList);
     }

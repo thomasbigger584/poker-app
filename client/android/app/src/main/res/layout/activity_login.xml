@@ -45,9 +45,9 @@
         app:layout_constraintGuide_percent="0.9177" />
 
     <Button
+        android:id="@+id/loginButton"
         style="@style/PrimaryLightOutlineButton"
         android:layout_width="0dp"
-        android:onClick="onLoginClick"
         android:text="@string/login_register"
         app:layout_constraintLeft_toRightOf="@id/leftVerticalGuideline"
         app:layout_constraintRight_toLeftOf="@id/rightVerticalGuideline"
@@ -61,12 +61,12 @@
         app:layout_constraintGuide_percent="0.9761" />
 
     <TextView
+        android:id="@+id/websiteTextView"
         style="@style/LinkTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="17.35dp"
-        android:onClick="onWebsiteClick"
-        android:text="made by twb"
+        android:text="@string/made_by"
         app:layout_constraintBottom_toTopOf="@id/bottomHorizontalGuideline" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

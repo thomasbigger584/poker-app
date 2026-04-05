@@ -23,7 +23,11 @@ public class TableListViewModel extends ViewModel {
         this.errors = repository.getErrors();
     }
 
-    public LiveData<List<AvailableTableDTO>> getAvailableTables() {
-        return repository.getAvailableTables();
+    public LiveData<List<AvailableTableDTO>> getTables() {
+        return repository.getTables();
+    }
+
+    public void refresh() {
+        repository.refreshAvailableTables();
     }
 }

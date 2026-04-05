@@ -1,11 +1,8 @@
 package com.twb.pokerapp.data.model.dto.table;
 
-
-import android.os.Bundle;
-
 import androidx.annotation.NonNull;
 
-import java.util.UUID;
+import java.util.Objects;
 
 public class AvailableTableDTO {
     private TableDTO table;
@@ -25,6 +22,19 @@ public class AvailableTableDTO {
 
     public void setPlayersConnected(Integer playersConnected) {
         this.playersConnected = playersConnected;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AvailableTableDTO that = (AvailableTableDTO) o;
+        return Objects.equals(table, that.table) && Objects.equals(playersConnected, that.playersConnected);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(table, playersConnected);
     }
 
     @NonNull

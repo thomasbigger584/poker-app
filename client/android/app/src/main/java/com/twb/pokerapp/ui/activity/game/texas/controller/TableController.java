@@ -1,13 +1,12 @@
 package com.twb.pokerapp.ui.activity.game.texas.controller;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.twb.pokerapp.R;
+import com.twb.pokerapp.databinding.ActivityGameTexasBinding;
 import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.data.model.dto.roundpot.RoundPotDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.BettingRoundUpdatedDTO;
@@ -15,7 +14,6 @@ import com.twb.pokerapp.data.websocket.message.server.payload.DealCommunityCardD
 import com.twb.pokerapp.data.websocket.message.server.payload.DealPlayerCardDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.RoundFinishedDTO;
 import com.twb.pokerapp.ui.layout.texas.CardPairLayout;
-import com.twb.pokerapp.ui.layout.texas.CommunityCardLayout;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -28,19 +26,16 @@ public class TableController {
     private static final int TABLE_SIZE = 6;
     private final CardPairLayout[] cardPairLayouts = new CardPairLayout[TABLE_SIZE];
     private final Map<Integer, CardPairLayout> positionCardPairs = new HashMap<>();
+    private final ActivityGameTexasBinding binding;
 
-    private final CommunityCardLayout communityCardLayout;
-    private final TextView potSizeText;
-
-    public TableController(Activity activity) {
-        cardPairLayouts[0] = activity.findViewById(R.id.playerCardPairLayout);
-        cardPairLayouts[1] = activity.findViewById(R.id.tablePlayer1CardPairLayout);
-        cardPairLayouts[2] = activity.findViewById(R.id.tablePlayer2CardPairLayout);
-        cardPairLayouts[3] = activity.findViewById(R.id.tablePlayer3CardPairLayout);
-        cardPairLayouts[4] = activity.findViewById(R.id.tablePlayer4CardPairLayout);
-        cardPairLayouts[5] = activity.findViewById(R.id.tablePlayer5CardPairLayout);
-        communityCardLayout = activity.findViewById(R.id.communityCardLayout);
-        potSizeText = activity.findViewById(R.id.potSizeText);
+    public TableController(ActivityGameTexasBinding binding) {
+        this.binding = binding;
+        cardPairLayouts[0] = binding.playerCardPairLayout;
+        cardPairLayouts[1] = binding.tablePlayer1CardPairLayout;
+        cardPairLayouts[2] = binding.tablePlayer2CardPairLayout;
+        cardPairLayouts[3] = binding.tablePlayer3CardPairLayout;
+        cardPairLayouts[4] = binding.tablePlayer4CardPairLayout;
+        cardPairLayouts[5] = binding.tablePlayer5CardPairLayout;
     }
 
     public void connectCurrentPlayer(PlayerSessionDTO playerSession) {
@@ -121,7 +116,7 @@ public class TableController {
     }
 
     public void dealCommunityCard(DealCommunityCardDTO dealCommunityCard) {
-        communityCardLayout.dealCard(dealCommunityCard.getCard());
+        binding.communityCardLayout.dealCard(dealCommunityCard.getCard());
     }
 
     public void updateBettingRound(BettingRoundUpdatedDTO bettingRoundUpdated) {
@@ -129,13 +124,14 @@ public class TableController {
                 .stream()
                 .mapToDouble(RoundPotDTO::getPotAmount)
                 .sum();
-        potSizeText.setText(String.format(Locale.getDefault(), "$%.2f", totalPotAmount));
+        binding.potSizeText.setText(binding.getRoot().getContext()
+                .getString(R.string.currency_format, totalPotAmount));
     }
 
     @SuppressLint("SetTextI18n")
     public void update(RoundFinishedDTO roundFinished) {
         hidePlayerTurns();
-        communityCardLayout.reset();
+        binding.communityCardLayout.reset();
         for (var posCardPairEntry : positionCardPairs.entrySet()) {
             var position = posCardPairEntry.getKey();
             var cardPairLayout = posCardPairEntry.getValue();
@@ -149,7 +145,7 @@ public class TableController {
                 cardPairLayout.updateDetails(winnerAtPosition.getPlayerSession());
             }
         }
-        potSizeText.setText("$00.00");
+        binding.potSizeText.setText(binding.getRoot().getContext().getString(R.string.default_pot_size));
     }
 
     @NonNull

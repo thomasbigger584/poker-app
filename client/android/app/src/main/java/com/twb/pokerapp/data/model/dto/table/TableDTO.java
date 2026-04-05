@@ -6,6 +6,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.Objects;
 import java.util.UUID;
 
 public class TableDTO {
@@ -140,6 +141,19 @@ public class TableDTO {
 
     public void setMaxBuyin(Double maxBuyin) {
         this.maxBuyin = maxBuyin;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TableDTO tableDTO = (TableDTO) o;
+        return Objects.equals(id, tableDTO.id) && Objects.equals(name, tableDTO.name) && Objects.equals(gameType, tableDTO.gameType) && Objects.equals(speedMultiplier, tableDTO.speedMultiplier) && Objects.equals(totalRounds, tableDTO.totalRounds) && Objects.equals(minPlayers, tableDTO.minPlayers) && Objects.equals(maxPlayers, tableDTO.maxPlayers) && Objects.equals(minBuyin, tableDTO.minBuyin) && Objects.equals(maxBuyin, tableDTO.maxBuyin);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, gameType, speedMultiplier, totalRounds, minPlayers, maxPlayers, minBuyin, maxBuyin);
     }
 
     @NonNull

@@ -35,6 +35,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.auth.AuthConfiguration;
 import com.twb.pokerapp.data.auth.AuthStateManager;
+import com.twb.pokerapp.databinding.ActivityLoginBinding;
 import com.twb.pokerapp.ui.activity.table.list.TableListActivity;
 
 import net.openid.appauth.AppAuthConfiguration;
@@ -71,6 +72,7 @@ public final class LoginActivity extends AppCompatActivity {
     public AuthStateManager authStateManager;
     @Inject
     public AuthConfiguration authConfiguration;
+    private ActivityLoginBinding binding;
     private CountDownLatch authIntentLatch = new CountDownLatch(1);
     private AuthorizationService authService;
     private ExecutorService executor;
@@ -93,7 +95,11 @@ public final class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        setContentView(R.layout.activity_login);
+        binding = ActivityLoginBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        binding.loginButton.setOnClickListener(this::onLoginClick);
+        binding.websiteTextView.setOnClickListener(this::onWebsiteClick);
 
         if (!authConfiguration.isValid()) {
             displayError(authConfiguration.getConfigurationError(), false);
@@ -147,7 +153,7 @@ public final class LoginActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_CANCELED) {
-            Snackbar.make(findViewById(R.id.parent),
+            Snackbar.make(binding.getRoot(),
                     "Authorization canceled", Snackbar.LENGTH_SHORT).show();
         }
     }
@@ -283,12 +289,12 @@ public final class LoginActivity extends AppCompatActivity {
 
     @MainThread
     private void displaySnackbarMessage(String message) {
-        Snackbar.make(findViewById(R.id.parent), message, Snackbar.LENGTH_SHORT).show();
+        Snackbar.make(binding.getRoot(), message, Snackbar.LENGTH_SHORT).show();
     }
 
     @MainThread
     private void displayError(String message, boolean recoverable) {
-        Snackbar.make(findViewById(R.id.parent), message, Snackbar.LENGTH_SHORT).show();
+        Snackbar.make(binding.getRoot(), message, Snackbar.LENGTH_SHORT).show();
     }
 
     // WrongThread inference is incorrect in this case

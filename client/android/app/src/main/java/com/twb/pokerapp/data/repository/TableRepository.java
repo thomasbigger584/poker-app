@@ -20,22 +20,26 @@ import retrofit2.Response;
 public class TableRepository extends BaseRepository {
     private static final String TAG = TableRepository.class.getSimpleName();
     private final TableApi api;
-    private final MutableLiveData<List<AvailableTableDTO>> getTablesLiveData = new MutableLiveData<>();
+    private final MutableLiveData<List<AvailableTableDTO>> tablesLiveData = new MutableLiveData<>();
     private final MutableLiveData<TableDTO> createdTableLiveData = new MutableLiveData<>();
 
     public TableRepository(TableApi api) {
         this.api = api;
     }
 
-    public LiveData<List<AvailableTableDTO>> getAvailableTables() {
+    public LiveData<List<AvailableTableDTO>> getTables() {
+        return tablesLiveData;
+    }
+
+    public void refreshAvailableTables() {
         var queryParams = new HashMap<String, Integer>();
         api.getAvailableTables(queryParams).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<List<AvailableTableDTO>> call, @NonNull Response<List<AvailableTableDTO>> response) {
                 if (response.isSuccessful()) {
-                    getTablesLiveData.setValue(response.body());
+                    tablesLiveData.setValue(response.body());
                 } else {
-                    errorLiveData.setValue(new RuntimeException("Failed to get tables"));
+                    errorLiveData.setValue(new RuntimeException("Failed to get tables: " + response.code()));
                 }
             }
 
@@ -44,7 +48,6 @@ public class TableRepository extends BaseRepository {
                 errorLiveData.setValue(throwable);
             }
         });
-        return getTablesLiveData;
     }
 
     public void createTable(CreateTableDTO dto) {

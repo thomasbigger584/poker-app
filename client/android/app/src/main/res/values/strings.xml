@@ -54,5 +54,59 @@
     <string name="cancel">Cancel</string>
     <string name="create_table">Create Table</string>
     <string name="connect">Connect</string>
+    <string name="made_by">made by twb</string>
+
+    <string name="connect_to_table_format">Connect to %s</string>
+    <string name="connect_as_player">Connect as Player</string>
+    <string name="connect_as_viewer">Connect as Viewer</string>
+    <string name="choose_buy_in_amount">Choose Buy-in Amount</string>
+    <string name="enter_buy_in_amount">Enter buy-in amount</string>
+    <string name="min_buy_in">Min Buy-in</string>
+    <string name="max_buy_in">Max Buy-in</string>
+    <string name="connect_table">Connect Table</string>
+    <string name="error_blank_buy_in">Cannot choose blank buy-in amount</string>
+    <string name="error_buy_in_range">Buy-in amount must be between %1$.2f and %2$.2f</string>
+    <string name="error_select_connection_type">Must Select a Connection Type</string>
+    <string name="error_listener_unavailable">Listener connection type not fully available yet</string>
+    <string name="error_unsupported_game_type">Unsupported Game Type</string>
+
+    <string name="create_new_table">Create New Table</string>
+    <string name="table_name">Table Name</string>
+    <string name="enter_table_name">Enter table name</string>
+    <string name="game_type">Game Type</string>
+    <string name="speed_multiplier">Speed Multiplier</string>
+    <string name="speed_hint">Speed</string>
+    <string name="total_rounds">Total Rounds</string>
+    <string name="total_rounds_hint">Total Rounds (Optional for infinity)</string>
+    <string name="min_players">Min Players</string>
+    <string name="max_players">Max Players</string>
+    <string name="min_buyin_label">Min Buy-In</string>
+    <string name="max_buyin_label">Max Buy-In</string>
+    <string name="min_hint">Min</string>
+    <string name="max_hint">Max</string>
+    <string name="error_blank_table_name">Please enter a table name</string>
+    <string name="error_blank_speed_multiplier">Please enter a speed multiplier</string>
+    <string name="error_invalid_speed_multiplier">Please enter a valid speed multiplier</string>
+    <string name="error_invalid_total_rounds">Please enter a valid total number of rounds</string>
+    <string name="error_blank_min_players">Please enter a minimum number of players</string>
+    <string name="error_invalid_min_players">Please enter a valid minimum number of players</string>
+    <string name="error_blank_max_players">Please enter a maximum number of players</string>
+    <string name="error_invalid_max_players">Please enter a valid maximum number of players</string>
+    <string name="error_blank_min_buyin">Please enter a minimum buy-in amount</string>
+    <string name="error_invalid_min_buyin">Please enter a valid minimum buy-in amount</string>
+    <string name="error_blank_max_buyin">Please enter a maximum buy-in amount</string>
+    <string name="error_invalid_max_buyin">Please enter a valid maximum buy-in amount</string>
+    <string name="table_not_created">Table not created</string>
+    <string name="created_table">Created Table</string>
+
+    <string name="lost_connection">Lost connection with server</string>
+    <string name="game_finished">Game Finished</string>
+    <string name="connected_format">Connected: %s</string>
+    <string name="disconnected_format">Disconnected: %s</string>
+    <string name="invalid_player_action">Invalid PlayerAction Request</string>
+    <string name="player_action_you">You</string>
+    <string name="player_action_with">with</string>
+    <string name="currency_format">$%.2f</string>
+    <string name="default_pot_size">$00.00</string>
 
 </resources>
