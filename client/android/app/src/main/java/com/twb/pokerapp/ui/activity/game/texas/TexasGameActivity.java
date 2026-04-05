@@ -341,7 +341,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         } else {
             stringBuilderList.add(user.getUsername());
         }
-        stringBuilderList.add(playerAction.getActionType().toLowerCase());
+        stringBuilderList.add(playerAction.getActionType().toLowerCase().replace("_", " "));
         var amount = playerAction.getAmount();
         if (amount != null && amount > 0d) {
             stringBuilderList.add("with");
