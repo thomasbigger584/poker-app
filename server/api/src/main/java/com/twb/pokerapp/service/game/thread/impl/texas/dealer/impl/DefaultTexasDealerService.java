@@ -14,12 +14,49 @@ import java.util.Optional;
 @ConditionalOnProperty(name = "app.use-fixed-scenario", havingValue = "false", matchIfMissing = true)
 public class DefaultTexasDealerService extends TexasDealerService {
 
+    // *****************************************************************************************
+    // Lifecycle Methods
+    // *****************************************************************************************
+
     @Override
     protected PlayerSession nextDealerReorder(List<PlayerSession> playerSessions) {
         var nextDealer = getNextDealer(playerSessions);
         setNextDealer(playerSessions, nextDealer);
         return nextDealer;
     }
+
+    // *****************************************************************************************
+    // Public Methods
+    // *****************************************************************************************
+
+    public Optional<DealerWithIndexDTO> getCurrentDealerWithIndex(List<PlayerSession> playerSessions) {
+        for (var index = 0; index < playerSessions.size(); index++) {
+            var playerSession = playerSessions.get(index);
+            if (Boolean.TRUE.equals(playerSession.getDealer())) {
+                return Optional.of(new DealerWithIndexDTO(index, playerSession));
+            }
+        }
+        return Optional.empty();
+    }
+
+    public List<PlayerSession> sortDealerLast(List<PlayerSession> playerSessions, int dealerIndex) {
+        var start = dealerIndex + 1;
+        if (start > playerSessions.size()) {
+            start = 0;
+        }
+        var dealerSortedList = new ArrayList<PlayerSession>();
+        for (var index = start; index < playerSessions.size(); index++) {
+            dealerSortedList.add(playerSessions.get(index));
+        }
+        for (var index = 0; index < start; index++) {
+            dealerSortedList.add(playerSessions.get(index));
+        }
+        return dealerSortedList;
+    }
+
+    // *****************************************************************************************
+    // Helper Methods
+    // *****************************************************************************************
 
     private PlayerSession getNextDealer(List<PlayerSession> playerSessions) {
         playerSessions = new ArrayList<>(playerSessions);
@@ -51,31 +88,6 @@ public class DefaultTexasDealerService extends TexasDealerService {
         throw new GameInterruptedException("Failed to get next dealer");
     }
 
-    private Optional<DealerWithIndexDTO> getCurrentDealerWithIndex(List<PlayerSession> playerSessions) {
-        for (var index = 0; index < playerSessions.size(); index++) {
-            var playerSession = playerSessions.get(index);
-            if (Boolean.TRUE.equals(playerSession.getDealer())) {
-                return Optional.of(new DealerWithIndexDTO(index, playerSession));
-            }
-        }
-        return Optional.empty();
-    }
-
-    private List<PlayerSession> sortDealerLast(List<PlayerSession> playerSessions, int dealerIndex) {
-        var start = dealerIndex + 1;
-        if (start > playerSessions.size()) {
-            start = 0;
-        }
-        var dealerSortedList = new ArrayList<PlayerSession>();
-        for (var index = start; index < playerSessions.size(); index++) {
-            dealerSortedList.add(playerSessions.get(index));
-        }
-        for (var index = 0; index < start; index++) {
-            dealerSortedList.add(playerSessions.get(index));
-        }
-        return dealerSortedList;
-    }
-
-    private record DealerWithIndexDTO(int index, PlayerSession dealerPlayerSession) {
+    public record DealerWithIndexDTO(int index, PlayerSession dealerPlayerSession) {
     }
 }

@@ -17,6 +17,7 @@ import com.twb.pokerapp.service.game.thread.GamePlayerTurnService;
 import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
 import com.twb.pokerapp.service.game.thread.impl.texas.TexasPlayerActionService;
+import com.twb.pokerapp.service.game.thread.impl.texas.dealer.impl.DefaultTexasDealerService;
 import com.twb.pokerapp.service.game.thread.impl.texas.dto.NextActionsDTO;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
@@ -53,6 +54,9 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
 
     @Autowired
     private RoundRepository roundRepository;
+
+    @Autowired
+    private DefaultTexasDealerService dealerService;
 
     @Autowired
     private BettingRoundRepository bettingRoundRepository;
@@ -265,12 +269,18 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
 
     private List<PlayerSession> getActivePlayers(Round round) {
         var table = params.getTable();
-        var players = playerSessionRepository.findActivePlayersByTableId(table.getId(), round.getId());
+        var players = playerSessionRepository
+                .findActivePlayersByTableId(table.getId(), round.getId());
         if (players.isEmpty()) {
             throw new GameInterruptedException("No Active Players found");
         }
         if (players.size() == 1) {
             throw new RoundInterruptedException("Only one active player, skipping betting round");
+        }
+        var dealerWithIndexOpt = dealerService.getCurrentDealerWithIndex(players);
+        if (dealerWithIndexOpt.isPresent()) {
+            var dealerWithIndex = dealerWithIndexOpt.get();
+            return dealerService.sortDealerLast(players, dealerWithIndex.index());
         }
         return players;
     }
