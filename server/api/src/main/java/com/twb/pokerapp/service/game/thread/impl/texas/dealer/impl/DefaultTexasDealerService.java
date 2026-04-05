@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Component
 @ConditionalOnProperty(name = "app.use-fixed-scenario", havingValue = "false", matchIfMissing = true)
@@ -23,35 +22,6 @@ public class DefaultTexasDealerService extends TexasDealerService {
         var nextDealer = getNextDealer(playerSessions);
         setNextDealer(playerSessions, nextDealer);
         return nextDealer;
-    }
-
-    // *****************************************************************************************
-    // Public Methods
-    // *****************************************************************************************
-
-    public Optional<DealerWithIndexDTO> getCurrentDealerWithIndex(List<PlayerSession> playerSessions) {
-        for (var index = 0; index < playerSessions.size(); index++) {
-            var playerSession = playerSessions.get(index);
-            if (Boolean.TRUE.equals(playerSession.getDealer())) {
-                return Optional.of(new DealerWithIndexDTO(index, playerSession));
-            }
-        }
-        return Optional.empty();
-    }
-
-    public List<PlayerSession> sortDealerLast(List<PlayerSession> playerSessions, int dealerIndex) {
-        var start = dealerIndex + 1;
-        if (start > playerSessions.size()) {
-            start = 0;
-        }
-        var dealerSortedList = new ArrayList<PlayerSession>();
-        for (var index = start; index < playerSessions.size(); index++) {
-            dealerSortedList.add(playerSessions.get(index));
-        }
-        for (var index = 0; index < start; index++) {
-            dealerSortedList.add(playerSessions.get(index));
-        }
-        return dealerSortedList;
     }
 
     // *****************************************************************************************
@@ -86,8 +56,5 @@ public class DefaultTexasDealerService extends TexasDealerService {
             }
         }
         throw new GameInterruptedException("Failed to get next dealer");
-    }
-
-    public record DealerWithIndexDTO(int index, PlayerSession dealerPlayerSession) {
     }
 }
