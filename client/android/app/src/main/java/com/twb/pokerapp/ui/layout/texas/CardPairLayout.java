@@ -94,12 +94,14 @@ public class CardPairLayout extends ConstraintLayout {
     }
 
     public void updateDetails(PlayerSessionDTO playerSession) {
+        this.playerSession = playerSession;
+
         var user = playerSession.getUser();
         displayNameTextView.setText(user.getUsername());
+
         var funds = playerSession.getFunds();
         if (funds != null) {
             fundsTextView.setText(String.format(Locale.getDefault(), "$%.2f", funds));
-            this.playerSession = playerSession;
         }
     }
 

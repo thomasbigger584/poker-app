@@ -79,7 +79,7 @@ public class GameThreadManager {
 
     @PreDestroy
     public void shutdown() {
-        log.info("SShutting down GameThreadManagerr, stopping all game threads...");
+        log.info("Shutting down GameThreadManager, stopping all game threads...");
         for (var thread : GAME_THREAD_MAP.values()) {
             thread.stopGame();
         }

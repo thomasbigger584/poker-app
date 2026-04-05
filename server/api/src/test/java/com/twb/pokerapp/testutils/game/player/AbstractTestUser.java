@@ -51,7 +51,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private final AtomicReference<Throwable> exceptionThrown = new AtomicReference<>();
     @Getter
     private final List<ServerMessageDTO> receivedMessages = Collections.synchronizedList(new ArrayList<>());
-    private StompSession session;
+    protected StompSession session;
 
     public AbstractTestUser(TestUserParams params) {
         this.params = params;

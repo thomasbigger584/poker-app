@@ -24,7 +24,9 @@ public class TestGameListenerUser extends AbstractTestUser {
                 validator.validateHandleMessage(message);
             } catch (Exception | AssertionFailedError e) {
                 log.error("Validation on handle message failed", e);
-                getExceptionThrown().compareAndSet(null, e);
+                if (session != null) {
+                    getExceptionThrown().compareAndSet(null, e);
+                }
             }
         }
 
