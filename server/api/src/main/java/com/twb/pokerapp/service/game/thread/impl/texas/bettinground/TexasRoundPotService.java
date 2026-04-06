@@ -25,6 +25,7 @@ public class TexasRoundPotService {
     private final PlayerActionRepository playerActionRepository;
     private final PlayerSessionRepository playerSessionRepository;
     private final RoundPotRepository roundPotRepository;
+    private final BettingRoundRefundRepository bettingRoundRefundRepository;
     private final BettingRoundService bettingRoundService;
     private final GameLogService gameLogService;
 
@@ -186,11 +187,19 @@ public class TexasRoundPotService {
                                List<ContributionDTO> contributions,
                                Map<UUID, PlayerSession> sessionMap,
                                Map<UUID, Double> playerAllocatedToPots) {
+        var previousRefunds = bettingRoundRefundRepository.findByRoundId(round.getId());
+        var totalPreviousRefunded = new HashMap<UUID, Double>();
+        for (var previousRefund : previousRefunds) {
+            totalPreviousRefunded.merge(previousRefund.getPlayerSession().getId(), previousRefund.getAmount(), Double::sum);
+        }
+
         for (var contribution : contributions) {
             var playerId = contribution.player().getId();
             var totalContributed = contribution.amount();
             var allocatedToPots = playerAllocatedToPots.getOrDefault(playerId, 0.0);
-            var refundAmount = totalContributed - allocatedToPots;
+            var previouslyRefunded = totalPreviousRefunded.getOrDefault(playerId, 0.0);
+
+            var refundAmount = totalContributed - allocatedToPots - previouslyRefunded;
 
             if (refundAmount > 0.001) {
                 var managedPlayerSession = sessionMap.get(playerId);
