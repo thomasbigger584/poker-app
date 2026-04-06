@@ -374,7 +374,6 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         } else {
             Log.d("DEBUG", "Dialog error_modal already visible!");
         }
-
         chatBoxAdapter.add(message);
     }
 
