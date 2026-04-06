@@ -236,7 +236,6 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         });
     }
 
-
     @Override
     protected void onStart() {
         super.onStart();
@@ -244,11 +243,9 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     }
 
     private void showCurrentWidth() {
-        int width = getResources().getConfiguration().screenWidthDp;
-        String msg = "Startup/Resize Width: " + width + "dp";
-
+        var width = getResources().getConfiguration().screenWidthDp;
+        var msg = "Width: " + width + "dp";
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-        android.util.Log.d("DEBUG_WIDTH", msg);
     }
 
     private void initClickListeners() {

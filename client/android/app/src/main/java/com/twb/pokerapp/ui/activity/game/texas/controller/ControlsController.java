@@ -95,13 +95,17 @@ public class ControlsController {
 
         binding.actionButtonsContainer.removeAllViews();
 
-        var columns = (count == 4) ? 2 : count;
+        int columns;
+        if (count <= 3) {
+            columns = count;
+        } else {
+            columns = (count == 4) ? 2 : 3;
+        }
         binding.actionButtonsContainer.setColumnCount(columns);
-        binding.actionButtonsContainer.setOrientation(GridLayout.HORIZONTAL);
 
         for (var button : visibleButtons) {
             var params = new GridLayout.LayoutParams(
-                    GridLayout.spec(GridLayout.UNDEFINED, 1f),
+                    GridLayout.spec(GridLayout.UNDEFINED),
                     GridLayout.spec(GridLayout.UNDEFINED, 1f)
             );
             params.width = 0;
