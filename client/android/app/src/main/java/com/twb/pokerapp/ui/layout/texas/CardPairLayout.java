@@ -129,7 +129,10 @@ public class CardPairLayout extends ConstraintLayout {
     }
 
     public String getUsername() {
-        return playerSession.getUser().getUsername();
+        if (playerSession != null) {
+            return playerSession.getUser().getUsername();
+        }
+        return displayNameTextView.getText().toString();
     }
 
     public PlayerSessionDTO getPlayerSession() {
