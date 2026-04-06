@@ -38,6 +38,7 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             WHERE s.pokerTable.id = :tableId
             AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
             AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
+            AND s.funds IS NOT NULL AND s.funds > 0
             ORDER BY s.position ASC
             """)
     List<PlayerSession> findConnectedPlayersByTableId(@Param("tableId") UUID tableId);
@@ -48,6 +49,7 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             WHERE s.pokerTable.id = :tableId
             AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
             AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
+            AND s.funds IS NOT NULL AND s.funds > 0
             """)
     int countConnectedPlayersByTableId(@Param("tableId") UUID tableId);
 

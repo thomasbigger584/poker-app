@@ -165,6 +165,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                     .findConnectedByTableId(table.getId());
             var playerPlayerUsers = connectedPlayers.stream()
                     .filter(playerSession -> playerSession.getConnectionType() == ConnectionType.PLAYER)
+                    .filter(playerSession -> playerSession.getFunds() != null && playerSession.getFunds() > 0)
                     .toList();
             if (playerPlayerUsers.size() < minPlayerCount) {
                 log.info("Waiting for PlayerSessions to connect ({}/{})...", playerPlayerUsers.size(), minPlayerCount);
