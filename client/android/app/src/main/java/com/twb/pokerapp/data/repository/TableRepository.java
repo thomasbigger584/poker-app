@@ -19,15 +19,14 @@ import retrofit2.Response;
 public class TableRepository extends BaseRepository {
     private static final String TAG = TableRepository.class.getSimpleName();
     private final TableApi api;
-    private final MutableLiveData<List<AvailableTableDTO>> tablesLiveData = new MutableLiveData<>();
-    private final MutableLiveData<TableDTO> createdTableLiveData = new MutableLiveData<>();
+    private final MutableLiveData<List<AvailableTableDTO>> _tablesLiveData = new MutableLiveData<>();
+    public final LiveData<List<AvailableTableDTO>> tablesLiveData = _tablesLiveData;
+
+    private final MutableLiveData<TableDTO> _createdTableLiveData = new MutableLiveData<>();
+    public final LiveData<TableDTO> createTableLiveData = _createdTableLiveData;
 
     public TableRepository(TableApi api) {
         this.api = api;
-    }
-
-    public LiveData<List<AvailableTableDTO>> getTables() {
-        return tablesLiveData;
     }
 
     public void refreshAvailableTables() {
@@ -35,15 +34,15 @@ public class TableRepository extends BaseRepository {
             @Override
             public void onResponse(@NonNull Call<List<AvailableTableDTO>> call, @NonNull Response<List<AvailableTableDTO>> response) {
                 if (response.isSuccessful()) {
-                    tablesLiveData.setValue(response.body());
+                    _tablesLiveData.setValue(response.body());
                 } else {
-                    errorLiveData.setValue(new RuntimeException("Failed to get tables: " + response.code()));
+                    _errorLiveData.setValue(new RuntimeException("Failed to get tables: " + response.code()));
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<List<AvailableTableDTO>> call, @NonNull Throwable throwable) {
-                errorLiveData.setValue(throwable);
+                _errorLiveData.setValue(throwable);
             }
         });
     }
@@ -53,21 +52,17 @@ public class TableRepository extends BaseRepository {
             @Override
             public void onResponse(@NonNull Call<TableDTO> call, @NonNull Response<TableDTO> response) {
                 if (response.isSuccessful()) {
-                    createdTableLiveData.setValue(response.body());
+                    _createdTableLiveData.setValue(response.body());
                 } else {
-                    errorLiveData.setValue(new RuntimeException("Failed to create table: " + response.code()));
+                    _errorLiveData.setValue(new RuntimeException("Failed to create table: " + response.code()));
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<TableDTO> call, @NonNull Throwable throwable) {
-                errorLiveData.setValue(throwable);
+                _errorLiveData.setValue(throwable);
             }
         });
-    }
-
-    public LiveData<TableDTO> getCreatedTableLiveData() {
-        return createdTableLiveData;
     }
 }
 

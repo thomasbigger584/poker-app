@@ -45,12 +45,12 @@ public class TableListActivity extends BaseAuthActivity implements TableListAdap
 
         viewModel = new ViewModelProvider(this).get(TableListViewModel.class);
         binding.swipeRefreshLayout.setOnRefreshListener(() -> viewModel.refresh());
-        viewModel.getTables().observe(this, tables -> {
+        viewModel.tablesLiveData.observe(this, tables -> {
             adapter.submitList(tables);
             binding.swipeRefreshLayout.setRefreshing(false);
         });
 
-        viewModel.errors.observe(this, throwable -> {
+        viewModel.errorLiveData.observe(this, throwable -> {
             if (throwable == null) return;
             binding.swipeRefreshLayout.setRefreshing(false);
             var alertModalDialog = AlertModalDialog

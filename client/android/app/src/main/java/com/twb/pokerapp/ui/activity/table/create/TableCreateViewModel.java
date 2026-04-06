@@ -26,8 +26,8 @@ public class TableCreateViewModel extends ViewModel {
     @Inject
     public TableCreateViewModel(TableRepository repository) {
         this.repository = repository;
-        this.errors = repository.getErrors();
-        this.createdTableLiveData = repository.getCreatedTableLiveData();
+        this.errors = repository.errorLiveData;
+        this.createdTableLiveData = repository.createTableLiveData;
     }
 
     public void validateAndCreate(String name,
