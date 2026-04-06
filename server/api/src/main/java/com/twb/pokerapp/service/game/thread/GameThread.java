@@ -84,8 +84,10 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                     checkTotalRoundsReached();
                 }
             }
-        } catch (GameInterruptedException | RoundInterruptedException e) {
-            log.info("Game or Round interrupted for table {}: {}", table.getId(), e.getMessage());
+        } catch (GameInterruptedException e) {
+            log.info("Game interrupted for table {}: {}", table.getId(), e.getMessage());
+        } catch (RoundInterruptedException e) {
+            log.info("Round interrupted for table {}: {}", table.getId(), e.getMessage());
         } catch (Exception e) {
             log.error("Unexpected error in GameThread for table {}: {}", table.getId(), e.getMessage(), e);
         } finally {
@@ -168,13 +170,13 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                     .filter(playerSession -> playerSession.getFunds() != null && playerSession.getFunds() > 0)
                     .toList();
             if (playerPlayerUsers.size() < minPlayerCount) {
-                log.info("Waiting for PlayerSessions to connect ({}/{})...", playerPlayerUsers.size(), minPlayerCount);
+                log.debug("Waiting for PlayerSessions to connect ({}/{})...", playerPlayerUsers.size(), minPlayerCount);
                 return false;
             }
             var websocketUsersCount = connectedPlayers.size();
             var connectedUsers = userWebsocketService.getConnectedUsers(table);
             if (connectedUsers.size() < websocketUsersCount) {
-                log.info("Waiting for Websocket Users to connect ({}/{})...", connectedUsers.size(), websocketUsersCount);
+                log.debug("Waiting for Websocket Users to connect ({}/{})...", connectedUsers.size(), websocketUsersCount);
                 return false;
             }
             if (connectedUsers.size() != websocketUsersCount) {
@@ -190,7 +192,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                 log.warn("Connected PlayerSessions usernames doesnt equal the connected websocket users usernames ({} vs {})", connectedPlayerNames, connectedUsernames);
                 return false;
             }
-            log.info("Connected PlayerSessions match the connected websocket users ({} vs {})", connectedPlayerNames, connectedUsernames);
+            log.debug("Connected PlayerSessions match the connected websocket users ({} vs {})", connectedPlayerNames, connectedUsernames);
             return true;
         });
     }
