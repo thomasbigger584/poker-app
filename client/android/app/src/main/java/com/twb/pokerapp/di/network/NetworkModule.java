@@ -40,6 +40,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 @Module(includes = AuthModule.class)
 @InstallIn(SingletonComponent.class)
 public class NetworkModule {
+    private static final String TAG = NetworkModule.class.getSimpleName();
     private static final String OKHTTP_CACHE_FILE = "okhttp_cache";
     private static final int MAX_CACHE_SIZE = 10 * 1024 * 1024; //10MB Cache
     private static final int TIMEOUT_SECONDS = 30;
@@ -70,14 +71,14 @@ public class NetworkModule {
     @Authenticated
     public OkHttpClient okHttpClientAuthenticated(HttpLoggingInterceptor loggingInterceptor,
                                                   Cache cache, AuthInterceptor authInterceptor) {
-        OkHttpClient.Builder builder = getOkHttpClientBuilder(loggingInterceptor, cache);
+        var builder = getOkHttpClientBuilder(loggingInterceptor, cache);
         builder.addInterceptor(authInterceptor);
         return builder.build();
     }
 
     @NonNull
     private Retrofit getRetrofit(OkHttpClient okHttpClient, Gson gson, AuthConfiguration authConfiguration) {
-        String protocol = authConfiguration.isHttpsRequired() ? "https://" : "http://";
+        var protocol = authConfiguration.isHttpsRequired() ? "https://" : "http://";
         return new Retrofit.Builder()
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create(gson))
@@ -101,9 +102,11 @@ public class NetworkModule {
     public Gson gson() {
         var gsonBuilder = new GsonBuilder();
         gsonBuilder.registerTypeAdapter(Date.class, (JsonDeserializer<Date>) (json, typeOfT, context) -> {
+            var dateAsDouble = json.getAsJsonPrimitive().getAsDouble();
             try {
-                return new Date((long) (json.getAsJsonPrimitive().getAsDouble() * 1000));
+                return new Date((long) (dateAsDouble * 1000));
             } catch (Exception e) {
+                Log.e(TAG, "Failed to parse date: " + dateAsDouble, e);
                 return null;
             }
         });

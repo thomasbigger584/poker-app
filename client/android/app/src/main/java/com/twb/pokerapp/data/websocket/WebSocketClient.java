@@ -75,7 +75,7 @@ public class WebSocketClient {
         if (accessToken == null) {
             throw new RuntimeException("Cannot connect to websocket as access token is null");
         }
-        String protocol = authConfiguration.isHttpsRequired() ? "wss://" : "ws://";
+        var protocol = authConfiguration.isHttpsRequired() ? "wss://" : "ws://";
         var websocketUrl = protocol + BuildConfig.API_BASE_URL + WEBSOCKET_ENDPOINT;
         stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, websocketUrl, null, okHttpClient);
 
@@ -118,7 +118,7 @@ public class WebSocketClient {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(topicMessage -> {
-                    String payloadJson = topicMessage.getPayload();
+                    var payloadJson = topicMessage.getPayload();
                     Log.i(TAG, "SUBSCRIBE: MESSAGE: " + payloadJson);
                     listener.onMessage(gson.fromJson(payloadJson, ServerMessageDTO.class));
                 }, throwable -> {
@@ -132,7 +132,7 @@ public class WebSocketClient {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(topicMessage -> {
-                    String payloadJson = topicMessage.getPayload();
+                    var payloadJson = topicMessage.getPayload();
                     Log.i(TAG, "USER SUBSCRIBE: MESSAGE: " + payloadJson);
                     listener.onMessage(gson.fromJson(payloadJson, ServerMessageDTO.class));
                 }, throwable -> {

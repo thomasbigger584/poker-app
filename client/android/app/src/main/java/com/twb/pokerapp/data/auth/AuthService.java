@@ -40,7 +40,7 @@ public class AuthService {
     }
 
     public boolean isCurrentUser(AppUserDTO user) {
-        String currentUser = getCurrentUser();
+        var currentUser = getCurrentUser();
         return currentUser != null && currentUser.equals(user.getUsername());
     }
 
