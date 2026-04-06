@@ -1,10 +1,11 @@
 package com.twb.pokerapp.ui.layout.texas;
 
 
+import static com.twb.pokerapp.ui.util.ViewUtil.applyScaleRecursive;
+
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.util.AttributeSet;
-import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
 import com.twb.pokerapp.R;
@@ -29,17 +30,28 @@ public class CommunityCardLayout extends LinearLayout {
 
     public CommunityCardLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init();
+        init(context, attrs);
     }
 
-    private void init() {
+    private void init(Context context, AttributeSet attrs) {
         var inflatedView = inflate(getContext(), R.layout.community_cards, this);
         community1CardLayout = inflatedView.findViewById(R.id.community1CardLayout);
         community2CardLayout = inflatedView.findViewById(R.id.community2CardLayout);
         community3CardLayout = inflatedView.findViewById(R.id.community3CardLayout);
         community4CardLayout = inflatedView.findViewById(R.id.community4CardLayout);
         community5CardLayout = inflatedView.findViewById(R.id.community5CardLayout);
-        setInvisible();
+        setAttributes(context, attrs);
+        if (!isInEditMode()) {
+            setInvisible();
+        }
+    }
+
+    private void setAttributes(Context context, AttributeSet attrs) {
+        if (attrs == null) return;
+        try (TypedArray communityCardLayoutAttributes = context.obtainStyledAttributes(attrs, R.styleable.CommunityCardLayout)) {
+            var layoutScale = communityCardLayoutAttributes.getFloat(R.styleable.CommunityCardLayout_layout_scale, 1f);
+            applyScaleRecursive(this, layoutScale, 1.0f);
+        }
     }
 
     public void reset() {

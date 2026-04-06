@@ -50,6 +50,12 @@ public class CardPairLayout extends ConstraintLayout {
         dealerChipLayout = inflatedView.findViewById(R.id.dealerChipLayout);
         setAttributes(context, attrs);
         reset();
+        if (isInEditMode()) {
+            displayNameTextView.setText("Player 1");
+            fundsTextView.setText("$10000.00");
+            updateCardImageView(R.drawable.sa);
+            updateCardImageView(R.drawable.sk);
+        }
     }
 
     private void setAttributes(Context context, AttributeSet attrs) {

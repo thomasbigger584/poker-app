@@ -17,6 +17,7 @@
         android:text="D"
         android:textColor="#000"
         android:textStyle="bold"
+        android:textSize="12sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

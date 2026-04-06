@@ -1,0 +1,14 @@
+
+<!-- Desktop / Ultra-wide -->
+<resources>
+
+    <!-- Layout Scale -->
+    <fraction name="current_player_podium_layout_scale">2.8</fraction>
+    <fraction name="other_player_podium_layout_scale">2.1</fraction>
+    <fraction name="community_cards_layout_scale">2.4</fraction>
+
+    <!-- Text Scale -->
+    <fraction name="current_player_podium_text_scale">2.5</fraction>
+    <fraction name="other_player_podium_text_scale">1.9</fraction>
+
+</resources>

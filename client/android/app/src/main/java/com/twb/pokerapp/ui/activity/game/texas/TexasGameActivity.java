@@ -234,7 +234,21 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
                 tableController.disconnectOtherPlayer(username);
             }
         });
+    }
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
         showCurrentWidth();
+    }
+
+    private void showCurrentWidth() {
+        int width = getResources().getConfiguration().screenWidthDp;
+        String msg = "Startup/Resize Width: " + width + "dp";
+
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+        android.util.Log.d("DEBUG_WIDTH", msg);
     }
 
     private void initClickListeners() {
@@ -362,13 +376,6 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             stringBuilderList.add(getString(R.string.currency_format, playerAction.getAmount()));
         }
         return String.join(" ", stringBuilderList);
-    }
-
-    private void showCurrentWidth() {
-        int width = getResources().getConfiguration().screenWidthDp;
-        String msg = "Width: " + width + "dp";
-        Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
-        Log.d("DEBUG_WIDTH", msg);
     }
 
     private void handleErrorMessage(String message) {

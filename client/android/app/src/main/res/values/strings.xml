@@ -114,5 +114,12 @@
     <string name="not_connected_text">--</string>
     <string name="chat_message_format">%1$s: %2$s</string>
     <string name="log_message_format">%s</string>
+    <string name="fold">FOLD</string>
+    <string name="all_in">ALL IN</string>
+    <string name="raise">RAISE</string>
+    <string name="bet">BET</string>
+    <string name="call">CALL</string>
+    <string name="check">CHECK</string>
+    <string name="no_funds">$00.00</string>
 
 </resources>

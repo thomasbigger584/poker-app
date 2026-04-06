@@ -23,6 +23,10 @@ public class CardLayout extends FrameLayout {
     public CardLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init();
+        if (isInEditMode()) {
+            cardImageView.setImageResource(R.drawable.da);
+            cardImageView.setVisibility(VISIBLE);
+        }
     }
 
     private void init() {

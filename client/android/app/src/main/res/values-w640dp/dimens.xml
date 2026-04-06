@@ -1,0 +1,14 @@
+
+<!-- Small Emulator (LD Player) -->
+<resources>
+
+    <!-- Layout Scale -->
+    <fraction name="current_player_podium_layout_scale">0.9</fraction>
+    <fraction name="other_player_podium_layout_scale">0.7</fraction>
+    <fraction name="community_cards_layout_scale">0.8</fraction>
+
+    <!-- Text Scale -->
+    <fraction name="current_player_podium_text_scale">0.9</fraction>
+    <fraction name="other_player_podium_text_scale">0.6</fraction>
+
+</resources>

@@ -41,8 +41,21 @@ public class ViewUtil {
                 marginParams.rightMargin = (int) (marginParams.rightMargin * layoutScale);
                 marginParams.topMargin = (int) (marginParams.topMargin * layoutScale);
                 marginParams.bottomMargin = (int) (marginParams.bottomMargin * layoutScale);
+                marginParams.setMarginStart((int) (marginParams.getMarginStart() * layoutScale));
+                marginParams.setMarginEnd((int) (marginParams.getMarginEnd() * layoutScale));
             }
             view.setLayoutParams(layoutParams);
+        }
+        if (layoutScale != 1f) {
+            view.setPadding(
+                    (int) (view.getPaddingLeft() * layoutScale),
+                    (int) (view.getPaddingTop() * layoutScale),
+                    (int) (view.getPaddingRight() * layoutScale),
+                    (int) (view.getPaddingBottom() * layoutScale)
+            );
+            view.setMinimumWidth((int) (view.getMinimumWidth() * layoutScale));
+            view.setMinimumHeight((int) (view.getMinimumHeight() * layoutScale));
+            view.setElevation(view.getElevation() * layoutScale);
         }
         if (textScale != 1f) {
             if (view instanceof TextView) {
