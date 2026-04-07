@@ -212,7 +212,11 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             chatBoxAdapter.add(getString(R.string.game_finished));
         });
         viewModel.chatMessage.observe(this, chatMessage -> {
-            chatBoxAdapter.add(getString(R.string.chat_message_format, chatMessage.getUsername(), chatMessage.getMessage()));
+            var user = chatMessage.getUsername();
+            if (chatMessage.getUsername().equals(authService.getCurrentUser())) {
+               user = "You";
+            }
+            chatBoxAdapter.add(getString(R.string.chat_message_format, user, chatMessage.getMessage()));
         });
         viewModel.logMessage.observe(this, logMessage -> {
             chatBoxAdapter.add(logMessage.getMessage());
@@ -267,6 +271,8 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             dismissDialogs();
             viewModel.onPlayerAction(ActionType.ALL_IN);
         });
+        binding.chatBoxRecyclerView.setOnClickListener(v -> onChatClick());
+        binding.chatButton.setOnClickListener(v -> onChatClick());
     }
 
     @Override
@@ -313,6 +319,24 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         } else {
             Log.d("DEBUG", "Dialog raise_dialog already visible!");
         }
+    }
+
+    private void onChatClick() {
+        var builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.send_chat_message);
+
+        var input = new android.widget.EditText(this);
+        input.setHint(R.string.enter_message);
+        builder.setView(input);
+
+        builder.setPositiveButton(R.string.confirm, (dialog, which) -> {
+            var message = input.getText().toString().trim();
+            if (!message.isEmpty()) {
+                viewModel.sendChatMessage(message);
+            }
+        });
+        builder.setNegativeButton(R.string.cancel, (dialog, which) -> dialog.cancel());
+        builder.show();
     }
 
     /*

@@ -113,6 +113,8 @@
     <string name="player_count_format">%1$d/%2$d</string>
     <string name="not_connected_text">--</string>
     <string name="chat_message_format">%1$s: %2$s</string>
+    <string name="send_chat_message">Send Chat Message</string>
+    <string name="enter_message">Enter message</string>
     <string name="log_message_format">%s</string>
     <string name="fold">FOLD</string>
     <string name="all_in">ALL IN</string>
