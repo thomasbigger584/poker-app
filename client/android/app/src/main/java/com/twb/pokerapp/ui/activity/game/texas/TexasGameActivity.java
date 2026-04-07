@@ -250,18 +250,6 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         });
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        showCurrentWidth();
-    }
-
-    private void showCurrentWidth() {
-        var width = getResources().getConfiguration().screenWidthDp;
-        var msg = "Width: " + width + "dp";
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-    }
-
     private void initClickListeners() {
         binding.foldButton.setOnClickListener(v -> {
             dismissDialogs();
@@ -358,8 +346,13 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     }
 
     private boolean onMenuItemClick(MenuItem item) {
-        if (item.getItemId() == R.id.action_leave_table) {
+        var itemId = item.getItemId();
+        if (itemId == R.id.action_leave_table) {
             onLeaveTable();
+            return true;
+        } else if (itemId == R.id.action_show_current_width) {
+            var width = getResources().getConfiguration().screenWidthDp;
+            Toast.makeText(this, "Width: " + width + "dp", Toast.LENGTH_SHORT).show();
             return true;
         }
         return false;

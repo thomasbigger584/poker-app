@@ -128,4 +128,7 @@
     <string name="leave_table">Leave Table</string>
     <string name="leave_table_confirm">Are you sure you wish to leave the table?</string>
 
+    <string name="developer">Developer</string>
+    <string name="show_current_width">Show Current Width</string>
+
 </resources>
