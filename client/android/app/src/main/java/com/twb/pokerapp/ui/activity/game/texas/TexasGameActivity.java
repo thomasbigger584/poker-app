@@ -4,10 +4,13 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.PopupMenu;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.lifecycle.ViewModelProvider;
@@ -87,6 +90,13 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         controlsController = new ControlsController(binding);
 
         initClickListeners();
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                onLeaveTable();
+            }
+        });
 
         var layoutManager = new LinearLayoutManager(this);
         layoutManager.setStackFromEnd(true);
@@ -273,6 +283,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         });
         binding.chatBoxRecyclerView.setOnClickListener(v -> onChatClick());
         binding.chatButton.setOnClickListener(v -> onChatClick());
+        binding.menuButton.setOnClickListener(this::onMenuClick);
     }
 
     @Override
@@ -337,6 +348,33 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         });
         builder.setNegativeButton(R.string.cancel, (dialog, which) -> dialog.cancel());
         builder.show();
+    }
+
+    private void onMenuClick(View view) {
+        var popup = new PopupMenu(this, view);
+        popup.getMenuInflater().inflate(R.menu.game_menu, popup.getMenu());
+        popup.setOnMenuItemClickListener(this::onMenuItemClick);
+        popup.show();
+    }
+
+    private boolean onMenuItemClick(MenuItem item) {
+        if (item.getItemId() == R.id.action_leave_table) {
+            onLeaveTable();
+            return true;
+        }
+        return false;
+    }
+
+    private void onLeaveTable() {
+        var listener = new FinishActivityOnClickListener(this);
+        var dialog = AlertModalDialog.newInstance(AlertModalDialog.AlertModalType.CONFIRM,
+                        getString(R.string.leave_table_confirm), listener);
+        var prev = getSupportFragmentManager().findFragmentByTag("leave_table_modal");
+        if (prev == null) {
+            dialog.show(getSupportFragmentManager(), "leave_table_modal");
+        } else {
+            Log.d("DEBUG", "Dialog leave_table_modal already visible!");
+        }
     }
 
     /*

@@ -124,4 +124,8 @@
     <string name="check">CHECK</string>
     <string name="no_funds">$00.00</string>
 
+    <string name="menu">Menu</string>
+    <string name="leave_table">Leave Table</string>
+    <string name="leave_table_confirm">Are you sure you wish to leave the table?</string>
+
 </resources>
