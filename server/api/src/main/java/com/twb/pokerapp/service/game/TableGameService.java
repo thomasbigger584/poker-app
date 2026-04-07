@@ -1,10 +1,10 @@
 package com.twb.pokerapp.service.game;
 
 import com.antkorwin.xsync.XSync;
-import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.exception.game.GamePlayerErrorLogException;
 import com.twb.pokerapp.exception.game.GamePlayerLogException;
+import com.twb.pokerapp.repository.BettingRoundRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.TableRepository;
 import com.twb.pokerapp.repository.UserRepository;
@@ -42,6 +42,7 @@ public class TableGameService {
     private final XSync<UUID> mutex;
     private final ApplicationContext context;
     private final TransactionTemplate writeTx;
+    private final BettingRoundRepository bettingRoundRepository;
 
     public ServerMessageDTO onUserConnected(UUID tableId, ConnectionType connectionType, String username, Double buyInAmount) {
         return mutex.evaluate(tableId, () -> {
@@ -134,17 +135,15 @@ public class TableGameService {
                 return;
             }
             var gameThread = threadOpt.get();
-
-            var playerSessions = playerSessionRepository.findConnectedPlayersByTableId(tableId);
-            if (playerSessions.size() >= table.getMinPlayers()) {
-                if (playerSession.getConnectionType() == ConnectionType.PLAYER) {
-                    var playerActionService = table.getGameType().getPlayerActionService(context);
-                    var action = new CreatePlayerActionDTO();
-                    action.setAction(ActionType.FOLD);
-                    playerActionService.playerAction(playerSession, gameThread, action);
+            if (playerSession.getConnectionType() == ConnectionType.PLAYER) {
+                var playerTurnLatch = gameThread.getPlayerTurnLatch();
+                if (playerTurnLatch != null && username.equals(playerTurnLatch.playerSession().getUser().getUsername())) {
+                    var bettingRoundOpt = bettingRoundRepository.findCurrentByTableId(tableId);
+                    bettingRoundOpt.ifPresent(bettingRound -> {
+                        table.getGameType().getPlayerActionService(context)
+                                .onExecuteAutoAction(playerSession, bettingRound, gameThread);
+                    });
                 }
-            } else {
-                afterCommit(gameThread::stopGame);
             }
         }));
     }

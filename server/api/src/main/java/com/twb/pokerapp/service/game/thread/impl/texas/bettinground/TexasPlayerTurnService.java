@@ -3,7 +3,6 @@ package com.twb.pokerapp.service.game.thread.impl.texas.bettinground;
 import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.Round;
-import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.domain.enumeration.BettingRoundState;
 import com.twb.pokerapp.exception.game.GameInterruptedException;
 import com.twb.pokerapp.exception.game.RoundInterruptedException;
@@ -13,6 +12,7 @@ import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.RoundRepository;
 import com.twb.pokerapp.service.BettingRoundService;
 import com.twb.pokerapp.service.PlayerActionService;
+import com.twb.pokerapp.service.UserWebsocketService;
 import com.twb.pokerapp.service.game.thread.GamePlayerTurnService;
 import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
@@ -20,7 +20,6 @@ import com.twb.pokerapp.service.game.thread.impl.texas.TexasPlayerActionService;
 import com.twb.pokerapp.service.game.thread.impl.texas.dealer.TexasDealerService;
 import com.twb.pokerapp.service.game.thread.impl.texas.dto.NextActionsDTO;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
-import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,6 +84,9 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
     @Autowired
     private ServerMessageFactory messageFactory;
 
+    @Autowired
+    private UserWebsocketService userWebsocketService;
+
     private final GameThread gameThread;
     private final GameThreadParams params;
 
@@ -111,9 +113,8 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
         if (!prePlayerTurn()) {
             return false;
         }
-
         gameThread.checkRoundInterrupted();
-        waitPlayerTurn();
+        runPlayerTurn();
         postPlayerTurn();
 
         return true;
@@ -229,6 +230,22 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
         return shouldContinue.get();
     }
 
+    private void runPlayerTurn() {
+        if (isPlayerDisconnected(currentPlayer)) {
+            log.debug("Player {} disconnected, auto-folding/checking...", currentPlayer.getUser().getUsername());
+            handleDisconnectedPlayerTurn();
+        } else {
+            waitPlayerTurn();
+        }
+    }
+
+    private void handleDisconnectedPlayerTurn() {
+        writeTx.executeWithoutResult(status -> {
+            var playerSessionManaged = getThrowGameInterrupted(playerSessionRepository.findById(currentPlayer.getId()), "Player Session not found");
+            texasPlayerActionService.onExecuteAutoAction(playerSessionManaged, bettingRound, gameThread);
+        });
+    }
+
     private void waitPlayerTurn() {
         dispatcher.send(params, messageFactory.playerTurn(currentPlayer, bettingRound, nextActions, params.getPlayerTurnWaitMs()));
         waitPlayerTurn(params, gameThread, currentPlayer);
@@ -285,6 +302,10 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
         return dealerService.sortDealerLast(players);
     }
 
+    private boolean isPlayerDisconnected(PlayerSession playerSession) {
+        return !userWebsocketService.isUserConnected(params.getTable(), playerSession);
+    }
+
     private void refreshActivePlayers() {
         var latestPlayers = playerSessionRepository.findPlayersOnRound(round.getId());
         for (var index = 0; index < activePlayers.size(); index++) {
@@ -312,11 +333,9 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
     }
 
     private void onPlayerTurnWaited(GameThread gameThread, PlayerSession playerSession) {
-        var createActionDto = new CreatePlayerActionDTO();
-        createActionDto.setAction(ActionType.FOLD);
         writeTx.executeWithoutResult(status -> {
             var playerSessionManaged = getThrowGameInterrupted(playerSessionRepository.findById(playerSession.getId()), "Player Session not found");
-            texasPlayerActionService.playerAction(playerSessionManaged, gameThread, createActionDto);
+            texasPlayerActionService.onExecuteAutoAction(playerSessionManaged, bettingRound, gameThread);
         });
     }
 }

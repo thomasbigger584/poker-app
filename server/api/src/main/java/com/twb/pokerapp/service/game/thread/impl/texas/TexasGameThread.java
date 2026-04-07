@@ -50,10 +50,15 @@ public class TexasGameThread extends GameThread {
     }
 
     private void initDeal() {
-        var activePlayers = playerSessionRepository.findActivePlayersByTableId(table.getId(), roundId);
+        var activePlayers = playerSessionRepository
+                .findActivePlayersByTableId(table.getId(), roundId);
         for (var cardType : CardType.PLAYER_CARDS) {
             for (var playerSession : activePlayers) {
                 checkRoundInterrupted();
+                if (!userWebsocketService.isUserConnected(table, playerSession)) {
+                    log.debug("Skipping dealing {} to disconnected player: {}", cardType, playerSession.getUser().getUsername());
+                    continue;
+                }
                 dealPlayerCard(cardType, playerSession);
             }
         }

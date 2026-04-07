@@ -56,6 +56,9 @@ app:
   player-turn-wait-ms: 30000
   round-start-wait-ms: 3000
   round-end-wait-ms: 3000
+logging:
+  level:
+    com.twb.pokerapp: DEBUG
 
 ---
 spring:

@@ -8,9 +8,7 @@ import com.twb.pokerapp.exception.game.GamePlayerLogException;
 import com.twb.pokerapp.repository.BettingRoundRepository;
 import com.twb.pokerapp.repository.RoundRepository;
 import com.twb.pokerapp.service.idepetency.IdempotencyService;
-import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
-import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Propagation;
@@ -25,19 +23,13 @@ import static com.twb.pokerapp.repository.RepositoryUtil.getThrowPlayerLog;
 public abstract class GamePlayerActionService {
 
     @Autowired
-    private RoundRepository roundRepository;
+    protected RoundRepository roundRepository;
 
     @Autowired
-    private BettingRoundRepository bettingRoundRepository;
+    protected BettingRoundRepository bettingRoundRepository;
 
     @Autowired
     private IdempotencyService idempotencyService;
-
-    @Autowired
-    private ServerMessageFactory messageFactory;
-
-    @Autowired
-    private MessageDispatcher dispatcher;
 
     @Transactional(propagation = Propagation.MANDATORY)
     public void playerAction(PlayerSession playerSession, GameThread gameThread, CreatePlayerActionDTO createDto) {
@@ -63,6 +55,8 @@ public abstract class GamePlayerActionService {
         }
         idempotencyService.recordAction(playerSession.getId(), round.getId(), createDto.getAction());
     }
+
+    public abstract void onExecuteAutoAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread);
 
     protected abstract PlayerAction onPlayerAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread, CreatePlayerActionDTO createDto);
 }
