@@ -28,7 +28,7 @@ public class SessionEventListener {
 
     @EventListener
     public void handleEvent(SessionConnectEvent event) {
-        log.info("Attempting to connect: {}", event);
+        log.debug("Attempting to connect: {}", event);
 
         var headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
         var connectionTypeHeader = headerAccessor.getNativeHeader(HEADER_CONNECTION_TYPE);
@@ -51,24 +51,24 @@ public class SessionEventListener {
 
     @EventListener
     public void handleEvent(SessionConnectedEvent event) {
-        log.info("Connected: {}", event);
+        log.debug("Connected: {}", event);
     }
 
     @EventListener
     public void handleEvent(SessionSubscribeEvent event) {
-        log.info("New Subscription: {}", event);
+        log.debug("New Subscription: {}", event);
         var headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
         dispatcher.sendReceipt(headerAccessor);
     }
 
     @EventListener
     public void handleEvent(SessionUnsubscribeEvent event) {
-        log.info("Un-subscription: {}", event);
+        log.debug("Un-subscription: {}", event);
     }
 
     @EventListener
     public void handleEvent(SessionDisconnectEvent event) {
-        log.info("Disconnecting: {}", event);
+        log.debug("Disconnecting: {}", event);
         var principal = event.getUser();
         if (principal == null) {
             log.warn("Session disconnect cannot disconnect player as principal is null");

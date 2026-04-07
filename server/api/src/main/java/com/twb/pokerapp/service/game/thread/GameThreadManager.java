@@ -41,7 +41,7 @@ public class GameThreadManager {
                 if (!thread.isStopping()) {
                     return thread;
                 }
-                log.info("Game thread for table {} is stopping, waiting for it to finish before creating a new one.", table.getId());
+                log.warn("Game thread for table {} is stopping, waiting for it to finish before creating a new one.", table.getId());
                 thread.stopGame();
             }
             var params = getGameThreadParams(table);

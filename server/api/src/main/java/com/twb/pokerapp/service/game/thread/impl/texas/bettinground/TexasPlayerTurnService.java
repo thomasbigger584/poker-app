@@ -155,7 +155,7 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
                     .filter(this::isActionable).toList();
 
             if (actionablePlayers.isEmpty()) {
-                log.info("No actionable players found, skipping betting round.");
+                log.debug("No actionable players found, skipping betting round.");
                 shouldContinue.set(false);
                 return;
             }
@@ -178,7 +178,7 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
                         .getOrDefault(loneActionablePlayer.getId(), 0d);
 
                 if (playerContribution >= maxContribution) {
-                    log.info("Only one actionable player {} and they have matched max contribution {}, skipping betting round.",
+                    log.debug("Only one actionable player {} and they have matched max contribution {}, skipping betting round.",
                             loneActionablePlayer.getUser().getUsername(), maxContribution);
                     shouldContinue.set(false);
                     return;
@@ -186,14 +186,14 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
             }
 
             if (playerIndex >= activePlayers.size()) {
-                log.info("Wrapping index with size: {}...", activePlayers.size());
+                log.debug("Wrapping index with size: {}...", activePlayers.size());
                 playerIndex = 0;
                 isFirstPass = false;
             }
 
             // Termination Check: Last Aggressor
             if (activePlayers.get(playerIndex).getId().equals(lastAggressorId)) {
-                log.info("Returned to last aggressor {}, betting round finished.", lastAggressorId);
+                log.debug("Returned to last aggressor {}, betting round finished.", lastAggressorId);
                 shouldContinue.set(false);
                 return;
             }
@@ -207,19 +207,19 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
                     isFirstPass = false;
                 }
                 if (activePlayers.get(playerIndex).getId().equals(lastAggressorId)) {
-                    log.info("Skipped to last aggressor {}, betting round finished.", lastAggressorId);
+                    log.debug("Skipped to last aggressor {}, betting round finished.", lastAggressorId);
                     shouldContinue.set(false);
                     return;
                 }
                 if (playerIndex == startPlayerIndex) {
-                    log.info("No actionable players found, betting round finished.");
+                    log.debug("No actionable players found, betting round finished.");
                     shouldContinue.set(false);
                     return;
                 }
             }
             currentPlayer = activePlayers.get(playerIndex);
             if (lastAggressorId == null && !isFirstPass) {
-                log.info("Checked around, betting round finished.");
+                log.debug("Checked around, betting round finished.");
                 shouldContinue.set(false);
                 return;
             }

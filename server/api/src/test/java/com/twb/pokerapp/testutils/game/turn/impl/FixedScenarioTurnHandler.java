@@ -64,7 +64,7 @@ public class FixedScenarioTurnHandler implements TurnHandler {
             throw new IllegalStateException("No action defined for " + bettingRoundType + " for user " + user.getUsername());
         }
         var action = actions.poll();
-        log.info("Handling action for user {}: {} - {}", user.getUsername(), bettingRoundType, action);
+        log.debug("Handling action for user {}: {} - {}", user.getUsername(), bettingRoundType, action);
         if (action != null) {
             user.sendPlayerAction(action);
         }

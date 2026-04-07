@@ -47,7 +47,11 @@ public class TestEnvironment implements AutoCloseable {
     private static final String KEYCLOAK_SERVER_URL_EXTERNAL_KEY = "KEYCLOAK_SERVER_URL_EXTERNAL";
     private static final int API_PORT = 8081;
     private static final int API_DEBUG_PORT = 5005;
-    private static final String APP_USE_FIXED_SCENARIO = "APP_USE_FIXED_SCENARIO";
+    private static final String APP_USE_FIXED_SCENARIO_KEY = "APP_USE_FIXED_SCENARIO";
+    private static final String ENV_POKERAPP_LOG_LEVEL = "POKERAPP_LOG_LEVEL";
+    private static final String DEFAULT_POKERAPP_LOG_LEVEL = "DEBUG";
+    private static final String POKERAPP_LOG_LEVEL_KEY = "LOGGING_LEVEL_COM_TWB_POKERAPP";
+
 
     // Test Containers
     private static final Network NETWORK = Network.newNetwork();
@@ -94,12 +98,14 @@ public class TestEnvironment implements AutoCloseable {
     public TestEnvironment start(boolean useFixedScenario) {
         DB_CONTAINER.start();
         KEYCLOAK_CONTAINER.start();
+
         //noinspection resource
         API_CONTAINER = new GenericContainer<>("%s:%s".formatted(API_IMAGE_NAME, API_IMAGE_VERSION))
                 .withEnv(KEYCLOAK_SERVER_URL_INTERNAL_KEY, KEYCLOAK_HOSTNAME)
                 .withEnv(KEYCLOAK_SERVER_URL_EXTERNAL_KEY, KEYCLOAK_HOSTNAME)
                 .withEnv(SPRING_DATASOURCE_URL_KEY, DB_DATASOURCE_URL)
-                .withEnv(APP_USE_FIXED_SCENARIO, String.valueOf(useFixedScenario))
+                .withEnv(APP_USE_FIXED_SCENARIO_KEY, String.valueOf(useFixedScenario))
+                .withEnv(POKERAPP_LOG_LEVEL_KEY, System.getenv().getOrDefault(ENV_POKERAPP_LOG_LEVEL, DEFAULT_POKERAPP_LOG_LEVEL))
                 .withExposedPorts(API_PORT)
                 .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(API_SERVICE))
                 .withNetwork(NETWORK)

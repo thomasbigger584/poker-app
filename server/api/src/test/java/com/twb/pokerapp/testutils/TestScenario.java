@@ -107,7 +107,7 @@ public class TestScenario {
         while (System.currentTimeMillis() < timeout) {
             var sessions = env.getSqlClient().getPlayerSessions();
             if (sessions.isEmpty()|| isAllDisconnected(sessions)) {
-                log.info("All sessions disconnected, so finishing scenario");
+                log.debug("All sessions disconnected, so finishing scenario");
                 return;
             }
             try {

@@ -32,7 +32,7 @@ public class KeycloakUserService {
      * Synchronizing users api database with those stored in keycloak on application startup
      */
     public void init() {
-        log.info("Synchronizing Keycloak users...");
+        log.debug("Synchronizing Keycloak users...");
         var userMembers = userGroupResource.members();
         var databaseUsersFetched = new ArrayList<>(userRepository.findAll());
 
@@ -40,13 +40,13 @@ public class KeycloakUserService {
         var createdUsers = 0;
 
         for (var representation : userMembers) {
-            log.info(ReflectionToStringBuilder.toString(representation, ToStringStyle.JSON_STYLE));
+            log.debug(ReflectionToStringBuilder.toString(representation, ToStringStyle.JSON_STYLE));
 
             var id = UUID.fromString(representation.getId());
             var userOpt = userRepository.findById(id);
             if (userOpt.isPresent()) {
                 var appUser = userOpt.get();
-                log.info("User {} already exists in database - todo: consider updating user here", appUser.getId());
+                log.debug("User {} already exists in database - todo: consider updating user here", appUser.getId());
                 databaseUsersFetched.remove(appUser);
                 updatedUsers++;
             } else {

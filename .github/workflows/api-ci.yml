@@ -45,3 +45,5 @@ jobs:
         run: chmod +x ./mvnw
       - name: 🏗️ Build with Maven
         run: DOCKER_BUILDKIT=1 ./mvnw --no-transfer-progress clean verify -P run-tests
+        env:
+          POKERAPP_LOG_LEVEL: INFO

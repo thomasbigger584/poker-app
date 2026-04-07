@@ -85,9 +85,9 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                 }
             }
         } catch (GameInterruptedException e) {
-            log.info("Game interrupted for table {}: {}", table.getId(), e.getMessage());
+            log.debug("Game interrupted for table {}: {}", table.getId(), e.getMessage());
         } catch (RoundInterruptedException e) {
-            log.info("Round interrupted for table {}: {}", table.getId(), e.getMessage());
+            log.warn("Round interrupted for table {}: {}", table.getId(), e.getMessage());
         } catch (Exception e) {
             log.error("Unexpected error in GameThread for table {}: {}", table.getId(), e.getMessage(), e);
         } finally {
@@ -216,7 +216,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                 onRunRound(roundState);
                 roundState = getNextRoundState(roundState);
             } catch (RoundInterruptedException e) {
-                log.info(e.getMessage());
+                log.debug(e.getMessage());
                 interruptRound.set(false);
                 if (roundState != RoundState.EVAL) {
                     roundState = RoundState.EVAL;

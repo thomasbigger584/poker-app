@@ -23,8 +23,10 @@ public class RankEvaluator {
             }
         } catch (UnsatisfiedLinkError e) {
             log.error("Failed to load native library", e);
+            throw e;
         } catch (Throwable t) {
             log.error("Unexpected error loading native library", t);
+            throw t;
         }
     }
 

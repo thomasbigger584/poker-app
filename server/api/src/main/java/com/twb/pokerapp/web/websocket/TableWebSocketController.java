@@ -46,7 +46,7 @@ public class TableWebSocketController {
         sessionService.putPokerTableId(headerAccessor, tableId);
         var connectionType = getConnectionType(headerAccessor);
         var buyInAmount = getBuyInAmount(headerAccessor);
-        log.info(">>>> userSubscribed - Table: {}, User: {}, Connection: {}, BuyIn: {}", tableId, principal.getName(), connectionType, buyInAmount);
+        log.debug(">>>> userSubscribed - Table: {}, User: {}, Connection: {}, BuyIn: {}", tableId, principal.getName(), connectionType, buyInAmount);
         try {
             return tableGameService.onUserConnected(tableId, connectionType, principal.getName(), buyInAmount);
         } catch (Exception e) {
@@ -73,7 +73,7 @@ public class TableWebSocketController {
     // not returning here as called from multiple places
     @MessageMapping(INBOUND_MESSAGE_PREFIX + SEND_DISCONNECT_PLAYER)
     public void sendDisconnectPlayer(Principal principal, StompHeaderAccessor headerAccessor, @DestinationVariable(TABLE_ID) UUID tableId) {
-        log.info(">>>> sendDisconnectPlayer - Poker Table: {} - User: {}", tableId, principal.getName());
+        log.debug(">>>> sendDisconnectPlayer - Poker Table: {} - User: {}", tableId, principal.getName());
         tableGameService.onUserDisconnected(tableId, principal.getName());
     }
 

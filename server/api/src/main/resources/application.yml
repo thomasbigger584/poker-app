@@ -56,10 +56,12 @@ app:
   player-turn-wait-ms: 30000
   round-start-wait-ms: 3000
   round-end-wait-ms: 3000
-#logging:
-#  level:
-#    org.springframework.messaging.simp.broker: DEBUG
-#    org.springframework.messaging.simp.stomp: DEBUG
-#    org.springframework.messaging.support: DEBUG
-#    org.springframework.web.socket: DEBUG
-#    org.springframework.security: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: cloud
+logging:
+  level:
+    com.twb.pokerapp: INFO

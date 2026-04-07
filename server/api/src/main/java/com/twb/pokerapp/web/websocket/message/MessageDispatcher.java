@@ -47,7 +47,7 @@ public class MessageDispatcher {
             var destination = GAME_TOPIC.formatted(tableId);
             var payload = objectMapper.writeValueAsString(message);
             template.convertAndSend(destination, payload);
-            log.info("<<<< {}", payload);
+            log.debug("<<<< {}", payload);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to send message", e);
         }
@@ -57,7 +57,7 @@ public class MessageDispatcher {
         try {
             var payload = objectMapper.writeValueAsString(message);
             template.convertAndSendToUser(username, USER_NOTIFICATION_TOPIC, payload);
-            log.info("<<<< [{}] {}", username, payload);
+            log.debug("<<<< [{}] {}", username, payload);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to send message", e);
         }

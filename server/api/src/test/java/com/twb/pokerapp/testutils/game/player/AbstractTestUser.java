@@ -68,7 +68,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     }
 
     public void connect(Double buyInAmount) throws InterruptedException {
-        log.info("Connecting {} to {}", params.getUsername(), params.getTable().getId());
+        log.debug("Connecting {} to {}", params.getUsername(), params.getTable().getId());
         var url = URI.create(CONNECTION_URL);
         var headers = new WebSocketHttpHeaders();
         var stompHeaders = new StompHeaders();
@@ -87,7 +87,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
     public void disconnect() {
         if (session != null && session.isConnected()) {
-            log.info("Disconnecting {} from {}", params.getUsername(), params.getTable().getId());
+            log.debug("Disconnecting {} from {}", params.getUsername(), params.getTable().getId());
             session.disconnect();
         }
         session = null;
@@ -95,7 +95,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
     public void stop() {
         if (client != null) {
-            log.info("Stopping client for user {}", params.getUsername());
+            log.debug("Stopping client for user {}", params.getUsername());
             client.stop();
         }
     }
@@ -117,7 +117,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
         var gameReceipt = session.subscribe(gameHeaders, this);
         gameReceipt.addReceiptTask(() -> {
-            log.info("Receipt received for subscription on user {} destination {}", params.getUsername(), gameTopic);
+            log.debug("Receipt received for subscription on user {} destination {}", params.getUsername(), gameTopic);
 
             var notificationHeaders = new StompHeaders();
             notificationHeaders.setDestination(notificationTopic);
@@ -125,7 +125,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
             var notificationReceipt = session.subscribe(notificationHeaders, this);
             notificationReceipt.addReceiptTask(() -> {
-                log.info("Receipt received for subscription on user {} destination {}", params.getUsername(), notificationTopic);
+                log.debug("Receipt received for subscription on user {} destination {}", params.getUsername(), notificationTopic);
                 countdownLatch(connectLatch);
             });
             notificationReceipt.addReceiptLostTask(() -> {
@@ -175,10 +175,10 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
                 log.error("{} received error message: {}", params.getUsername(), errorDto.getMessage());
                 return;
             } else if (message.getPayload() instanceof LogMessageDTO logDto) {
-                log.info("{} received log message: {}", params.getUsername(), logDto.getMessage());
+                log.debug("{} received log message: {}", params.getUsername(), logDto.getMessage());
                 return;
             } else if (message.getPayload() instanceof ValidationDTO validationDto) {
-                log.info("{} received validation message: {}", params.getUsername(), validationDto.getFields());
+                log.debug("{} received validation message: {}", params.getUsername(), validationDto.getFields());
                 return;
             }
             handleMessage(headers, message);
@@ -201,14 +201,14 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
             log.warn("Cannot send to destination {} for user {} as not connected", destination, params.getUsername());
             return;
         }
-        log.info(">>>> [{}] sending {}", params.getUsername(), dto);
+        log.debug(">>>> [{}] sending {}", params.getUsername(), dto);
 
         var headers = new StompHeaders();
         headers.setDestination(destination);
         headers.setReceipt("receipt-" + params.getUsername() + "-send-" + UUID.randomUUID());
 
         var receiptable = session.send(headers, dto);
-        receiptable.addReceiptTask(() -> log.info("Receipt received for user {} destination {} and payload {}", params.getUsername(), destination, dto));
+        receiptable.addReceiptTask(() -> log.debug("Receipt received for user {} destination {} and payload {}", params.getUsername(), destination, dto));
         receiptable.addReceiptLostTask(() -> {
             throw new RuntimeException(String.format("Failed to receive receipt for user %s destination %s and payload %s", params.getUsername(), destination, dto));
         });

@@ -45,7 +45,7 @@ public abstract class GamePlayerActionService {
             log.warn("Game Thread is stopping so ignoring player action {} for user {}", createDto.getAction(), playerSession.getUser().getUsername());
             return;
         }
-        log.info("Player Action: {} - {}", playerSession.getUser().getUsername(), createDto);
+        log.debug("Player Action: {} - {}", playerSession.getUser().getUsername(), createDto);
 
         var table = getThrowPlayerErrorLog(Optional.ofNullable(playerSession.getPokerTable()), playerSession, "Table Not Found");
         var round = getThrowPlayerLog(roundRepository.findCurrentByTableId(table.getId()), playerSession, "Round Not Found");
