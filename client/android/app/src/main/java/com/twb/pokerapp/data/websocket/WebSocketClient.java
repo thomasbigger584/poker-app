@@ -24,6 +24,7 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import io.reactivex.CompletableTransformer;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
@@ -71,10 +72,22 @@ public class WebSocketClient {
         if (stompClient != null && stompClient.isConnected()) {
             return;
         }
-        var accessToken = authService.getAccessToken();
-        if (accessToken == null) {
-            throw new RuntimeException("Cannot connect to websocket as access token is null");
-        }
+
+        resetSubscriptions();
+
+        compositeDisposable.add(Single.fromCallable(authService::getAccessTokenWithRefresh)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(accessToken -> {
+                    if (accessToken == null) {
+                        Log.e(TAG, "Cannot connect to websocket as access token is null");
+                        return;
+                    }
+                    connectInternal(accessToken, tableId, listener, connectionType, buyInAmount);
+                }, throwable -> Log.e(TAG, "Error refreshing token", throwable)));
+    }
+
+    private void connectInternal(String accessToken, UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount) {
         var protocol = authConfiguration.isHttpsRequired() ? "wss://" : "ws://";
         var websocketUrl = protocol + BuildConfig.API_BASE_URL + WEBSOCKET_ENDPOINT;
         stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, websocketUrl, null, okHttpClient);
@@ -86,8 +99,6 @@ public class WebSocketClient {
 
         stompClient.withClientHeartbeat(CLIENT_HEARTBEAT_MS)
                 .withServerHeartbeat(SERVER_HEARTBEAT_MS);
-
-        resetSubscriptions();
 
         compositeDisposable.add(stompClient.lifecycle()
                 .subscribeOn(Schedulers.io())
