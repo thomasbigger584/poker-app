@@ -11,4 +11,10 @@ public record GameLatches(
         var gameLatch = new CountDownLatch(SINGLE);
         return new GameLatches(gameLatch);
     }
+
+    public static void countdown(CountDownLatch latch) {
+        while (latch.getCount() > 0) {
+            latch.countDown();
+        }
+    }
 }

@@ -43,12 +43,12 @@ public class TexasPlayerActionService extends GamePlayerActionService {
 
     @Transactional(propagation = Propagation.MANDATORY)
     public void onExecuteAutoAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread) {
-        var playersnotFolded = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId());
-        var amountToCall = playerActionService.getAmountToCall(playerSession, playersnotFolded);
+        var playersNotFolded = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId());
+        var amountToCall = playerActionService.getAmountToCall(playerSession, playersNotFolded);
 
         var createActionDto = new CreatePlayerActionDTO();
         createActionDto.setAction((amountToCall > 0) ? ActionType.FOLD : ActionType.CHECK);
-        onPlayerAction(playerSession, bettingRound, gameThread, createActionDto);
+        super.playerAction(playerSession, gameThread, createActionDto);
     }
 
     private PlayerAction foldAction(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {

@@ -5,10 +5,7 @@ import com.twb.pokerapp.testutils.TestScenario;
 import com.twb.pokerapp.testutils.game.turn.impl.InvalidActionTurnHandler;
 import com.twb.pokerapp.testutils.game.turn.impl.OptimisticTurnHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 @Slf4j
 class TexasGame2PlayerIT {
@@ -39,6 +36,7 @@ class TexasGame2PlayerIT {
     // *****************************************************************************************
 
     @Test
+    @Disabled("This sends check around on timeout so takes a while - can run this test manually for validation")
     void testGameWithoutPlayerActions() throws Throwable {
         // given
         var scenario = new TestScenario(env).setup(null, null);

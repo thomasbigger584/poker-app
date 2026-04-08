@@ -243,7 +243,7 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
 
     private void handleDisconnectedPlayerTurn() {
         writeTx.executeWithoutResult(status -> {
-            var playerSessionManaged = getThrowGameInterrupted(playerSessionRepository.findById(currentPlayer.getId()), "Player Session not found");
+            var playerSessionManaged = getThrowGameInterrupted(playerSessionRepository.findById(currentPlayer.getId()), "Player Session not found during handling disconnected during player turn: " + currentPlayer.getId());
             texasPlayerActionService.onExecuteAutoAction(playerSessionManaged, bettingRound, gameThread);
         });
     }
@@ -338,7 +338,7 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
 
     private void onPlayerTurnWaited(GameThread gameThread, PlayerSession playerSession) {
         writeTx.executeWithoutResult(status -> {
-            var playerSessionManaged = getThrowGameInterrupted(playerSessionRepository.findById(playerSession.getId()), "Player Session not found");
+            var playerSessionManaged = getThrowGameInterrupted(playerSessionRepository.findById(playerSession.getId()), "Player Session not found during player turn waited: " + playerSession.getId());
             texasPlayerActionService.onExecuteAutoAction(playerSessionManaged, bettingRound, gameThread);
         });
     }

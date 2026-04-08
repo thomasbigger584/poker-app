@@ -1,6 +1,7 @@
 package com.twb.pokerapp.testutils.game.player;
 
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
+import com.twb.pokerapp.testutils.game.GameLatches;
 import com.twb.pokerapp.testutils.http.message.ServerMessageConverter;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
@@ -171,14 +172,16 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
             var message = (ServerMessageDTO) payload;
             receivedMessages.add(message);
 
+            var gameLatch = params.getLatches().gameLatch();
             if (message.getPayload() instanceof ErrorMessageDTO errorDto) {
-                log.error("{} received error message: {}", params.getUsername(), errorDto.getMessage());
+                GameLatches.countdown(gameLatch);
                 return;
             } else if (message.getPayload() instanceof LogMessageDTO logDto) {
                 log.debug("{} received log message: {}", params.getUsername(), logDto.getMessage());
                 return;
             } else if (message.getPayload() instanceof ValidationDTO validationDto) {
                 log.debug("{} received validation message: {}", params.getUsername(), validationDto.getFields());
+                GameLatches.countdown(gameLatch);
                 return;
             }
             handleMessage(headers, message);
