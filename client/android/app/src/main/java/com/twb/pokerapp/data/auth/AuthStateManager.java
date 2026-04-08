@@ -21,6 +21,8 @@ import android.util.Log;
 import androidx.annotation.AnyThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.security.crypto.EncryptedSharedPreferences;
+import androidx.security.crypto.MasterKey;
 
 import net.openid.appauth.AuthState;
 import net.openid.appauth.AuthorizationException;
@@ -48,7 +50,7 @@ public class AuthStateManager {
     private final AtomicReference<AuthState> currentAuthState;
 
     public AuthStateManager(Context context) {
-        prefs = context.getSharedPreferences(STORE_NAME, Context.MODE_PRIVATE);
+        prefs = createEncryptedSharedPreferences(context);
         prefsLock = new ReentrantLock();
         currentAuthState = new AtomicReference<>();
     }
@@ -139,6 +141,25 @@ public class AuthStateManager {
             editor.apply();
         } finally {
             prefsLock.unlock();
+        }
+    }
+
+    private SharedPreferences createEncryptedSharedPreferences(Context context) {
+        try {
+            MasterKey masterKey = new MasterKey.Builder(context)
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                    .build();
+
+            return EncryptedSharedPreferences.create(
+                    context,
+                    STORE_NAME,
+                    masterKey,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            );
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to create EncryptedSharedPreferences", e);
+            return context.getSharedPreferences(STORE_NAME, Context.MODE_PRIVATE);
         }
     }
 }

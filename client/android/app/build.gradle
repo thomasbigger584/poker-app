@@ -89,6 +89,7 @@ dependencies {
     implementation 'joda-time:joda-time:2.12.5'
     implementation 'net.openid:appauth:0.11.1'
     implementation 'com.auth0.android:jwtdecode:2.0.2'
+    implementation 'androidx.security:security-crypto:1.1.0'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'

@@ -29,7 +29,7 @@ public class CardLayout extends FrameLayout {
     }
 
     private void init() {
-        binding = CardBinding.inflate(LayoutInflater.from(getContext()), this, true);
+        binding = CardBinding.inflate(LayoutInflater.from(getContext()), this);
         reset();
     }
 

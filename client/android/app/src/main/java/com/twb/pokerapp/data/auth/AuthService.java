@@ -15,6 +15,7 @@ import net.openid.appauth.TokenRequest;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class AuthService {
     private static final String TAG = AuthService.class.getSimpleName();
@@ -23,6 +24,7 @@ public class AuthService {
     private static final int REFRESH_TIMEOUT_SECONDS = 3;
     private final AuthStateManager authStateManager;
     private final AuthorizationService authService;
+    private final ReentrantLock refreshLock = new ReentrantLock();
 
     public AuthService(Context context, AuthStateManager authStateManager,
                        AuthConfiguration authConfiguration) {
@@ -51,27 +53,42 @@ public class AuthService {
 
     @WorkerThread // blocks until a new token is retrieved
     public String getAccessTokenWithRefresh() {
-        var jwt = getJwt();
-        if (jwt == null) return null;
-        
-        if (jwt.isExpired(TOKEN_EXPIRY_LEEWAY_SECONDS)) {
-            var latch = new CountDownLatch(1);
-            var currentAuthState = authStateManager.getCurrent();
-            var tokenRefreshRequest = currentAuthState.createTokenRefreshRequest();
-            performTokenRequest(tokenRefreshRequest, (response, ex) -> {
-                authStateManager.updateAfterTokenResponse(response, ex);
-                latch.countDown();
-            });
-            try {
-                if (latch.await(REFRESH_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-                    return currentAuthState.getAccessToken();
+        refreshLock.lock();
+        try {
+            var jwt = getJwt();
+            if (jwt == null) return null;
+
+            if (jwt.isExpired(TOKEN_EXPIRY_LEEWAY_SECONDS)) {
+                var latch = new CountDownLatch(1);
+                var currentAuthState = authStateManager.getCurrent();
+                var tokenRefreshRequest = currentAuthState.createTokenRefreshRequest();
+
+                Log.d(TAG, "Refreshing access token...");
+                performTokenRequest(tokenRefreshRequest, (response, ex) -> {
+                    authStateManager.updateAfterTokenResponse(response, ex);
+                    if (ex != null) {
+                        Log.e(TAG, "Token refresh failed", ex);
+                    }
+                    latch.countDown();
+                });
+
+                try {
+                    if (latch.await(REFRESH_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+                        // After refresh, get the new state
+                        return authStateManager.getCurrent().getAccessToken();
+                    } else {
+                        Log.e(TAG, "Timeout waiting for token refresh");
+                    }
+                } catch (InterruptedException e) {
+                    Log.e(TAG, "Interrupted while waiting for refresh token", e);
+                    Thread.currentThread().interrupt();
                 }
-            } catch (InterruptedException e) {
-                Log.e(TAG, "Failed to wait for refresh token", e);
+                return null;
             }
-            return null;
+            return jwt.toString();
+        } finally {
+            refreshLock.unlock();
         }
-        return jwt.toString();
     }
 
     private void performTokenRequest(TokenRequest request, AuthorizationService.TokenResponseCallback callback) {
