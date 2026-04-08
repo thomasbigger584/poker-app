@@ -49,7 +49,11 @@ public class BetRaiseGameDialog extends BaseGameDialog {
         betRaiseSeekBar.setOnSeekBarChangeListener(new SeekBarChangeListener() {
             @Override
             public void onProgressChanged(int progress) {
-                setTitleTextView(((float) progress) / 100f);
+                var amount = ((double) progress) / 100.0;
+                if (amount < minimumBet) {
+                    amount = minimumBet;
+                }
+                setTitleTextView(amount);
             }
         });
 
@@ -80,13 +84,13 @@ public class BetRaiseGameDialog extends BaseGameDialog {
     }
 
     private void setSeekBar(double amount) {
-        var seekbarAmount = amount * 100;
-        betRaiseSeekBar.setMax((int) seekbarAmount);
+        int seekbarMax = (int) Math.round(amount * 100);
+        betRaiseSeekBar.setMax(seekbarMax);
 
-        var thisMinimumBet = minimumBet * 100;
-        betRaiseSeekBar.setProgress((int) thisMinimumBet);
+        int seekbarProgress = (int) Math.round(minimumBet * 100);
+        betRaiseSeekBar.setProgress(seekbarProgress);
 
-        setTitleTextView(thisMinimumBet / 100);
+        setTitleTextView((double) seekbarProgress / 100.0);
     }
 
     private double round(double amount) {

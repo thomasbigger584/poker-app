@@ -298,8 +298,8 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
 
     private void onBetClick() {
         dismissDialogs();
-        var minimumBet = 10d;
         var maximumBet = tableController.getPlayerCardPairLayout().getPlayerSession().getFunds();
+        var minimumBet = Math.min(10d, maximumBet);
         betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.BET, maximumBet, minimumBet, this);
         var prev = getSupportFragmentManager().findFragmentByTag("bet_dialog");
         if (prev == null) {
@@ -311,8 +311,9 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
 
     private void onRaiseClick() {
         dismissDialogs();
-        var minimumBet = getRaiseMinimumBet();
-        betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.RAISE, buyInAmount, minimumBet, this);
+        var maximumBet = tableController.getPlayerCardPairLayout().getPlayerSession().getFunds();
+        var minimumBet = Math.min(getRaiseMinimumBet(), maximumBet);
+        betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.RAISE, maximumBet, minimumBet, this);
         var prev = getSupportFragmentManager().findFragmentByTag("raise_dialog");
         if (prev == null) {
             betRaisePokerGameDialog.show(getSupportFragmentManager(), "raise_dialog");
