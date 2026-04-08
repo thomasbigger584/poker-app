@@ -40,14 +40,6 @@ import javax.inject.Inject;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
-
-/**
- * Displays the authorized state of the user. This activity is provided with the outcome of the
- * authorization flow, which it uses to negotiate the final authorized state,
- * by performing an authorization code exchange if necessary. After this, the activity provides
- * additional post-authorization operations if available, such as fetching user info and refreshing
- * access tokens.
- */
 @AndroidEntryPoint
 public abstract class BaseAuthActivity extends AppCompatActivity {
     private static final String TAG = BaseAuthActivity.class.getSimpleName();
@@ -63,7 +55,6 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
     public AuthConfiguration authConfiguration;
 
     private AuthorizationService authService;
-
     private ExecutorService executor;
 
     @Override
@@ -73,7 +64,6 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
         executor = Executors.newSingleThreadExecutor();
 
         if (authConfiguration.hasConfigurationChanged()) {
-            Toast.makeText(this, "Configuration change detected", Toast.LENGTH_SHORT).show();
             signOut();
             return;
         }
@@ -88,20 +78,17 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
             setContentView(view);
         }
 
-        if (savedInstanceState != null) {
+        if (savedInstanceState != null && savedInstanceState.containsKey(KEY_USER_INFO)) {
             try {
-                if (savedInstanceState.containsKey(KEY_USER_INFO)) {
-                    var userInfo = savedInstanceState.getString(KEY_USER_INFO);
-                    if (userInfo != null) {
-                        userInfoJson.set(new JSONObject(userInfo));
-                    }
+                var userInfo = savedInstanceState.getString(KEY_USER_INFO);
+                if (userInfo != null) {
+                    userInfoJson.set(new JSONObject(userInfo));
                 }
             } catch (JSONException ex) {
-                Log.e(TAG, "Failed to parse saved user info JSON, discarding", ex);
+                Log.e(TAG, "Failed to parse saved user info JSON", ex);
             }
         }
     }
-
 
     @Override
     @CallSuper
@@ -112,13 +99,13 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
             executor = Executors.newSingleThreadExecutor();
         }
 
+        // 1. Check if we already have a valid authorized state
         if (authStateManager.getCurrent().isAuthorized()) {
             onAuthorized();
             return;
         }
 
-        // the stored AuthState is incomplete, so check if we are currently receiving the result of
-        // the authorization flow from the browser.
+        // 2. Check if we are returning from the browser with an auth code
         var response = AuthorizationResponse.fromIntent(getIntent());
         var ex = AuthorizationException.fromIntent(getIntent());
 
@@ -127,34 +114,13 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
         }
 
         if (response != null && response.authorizationCode != null) {
-            // authorization code exchange is required
-            authStateManager.updateAfterAuthorization(response, ex);
             exchangeAuthorizationCode(response);
         } else if (ex != null) {
             onNotAuthorized("Authorization flow failed", ex);
         } else {
-            onNotAuthorized("No authorization state retained - reauthorization required", null);
+            // No state and no response in intent means we are just not logged in
+            onNotAuthorized("No authorization state retained", null);
         }
-    }
-
-    @Override
-    @CallSuper
-    protected void onSaveInstanceState(@NonNull Bundle state) {
-        super.onSaveInstanceState(state);
-        // user info is retained to survive activity restarts, such as when rotating the
-        // device or switching apps. This isn't essential, but it helps provide a less
-        // jarring UX when these events occur - data does not just disappear from the view.
-        if (userInfoJson.get() != null) {
-            state.putString(KEY_USER_INFO, userInfoJson.toString());
-        }
-    }
-
-    @Override
-    @CallSuper
-    protected void onDestroy() {
-        super.onDestroy();
-        authService.dispose();
-        executor.shutdownNow();
     }
 
     @MainThread
@@ -166,14 +132,12 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
     }
 
     @MainThread
-    private void performTokenRequest(TokenRequest request,
-                                     AuthorizationService.TokenResponseCallback callback) {
+    protected void performTokenRequest(TokenRequest request,
+                                       AuthorizationService.TokenResponseCallback callback) {
         ClientAuthentication clientAuthentication;
         try {
             clientAuthentication = authStateManager.getCurrent().getClientAuthentication();
         } catch (ClientAuthentication.UnsupportedAuthenticationMethod ex) {
-            Log.d(TAG, "Token request cannot be made, client authentication for the token "
-                    + "endpoint could not be constructed (%s)", ex);
             onNotAuthorized("Client authentication method is unsupported", ex);
             return;
         }
@@ -185,30 +149,45 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
     private void handleCodeExchangeResponse(@Nullable TokenResponse tokenResponse,
                                             @Nullable AuthorizationException authException) {
         authStateManager.updateAfterTokenResponse(tokenResponse, authException);
+
+        if (authException != null && "invalid_grant".equals(authException.error)) {
+            // The refresh token is dead; clean up and bail
+            runOnUiThread(this::signOut);
+            return;
+        }
+
         if (!authStateManager.getCurrent().isAuthorized()) {
-            runOnUiThread(() -> onNotAuthorized("Authorization Code exchange failed", authException));
+            runOnUiThread(() -> onNotAuthorized("Authorization failed", authException));
         } else {
             runOnUiThread(this::onAuthorized);
         }
     }
 
-
-    @Override
-    @CallSuper
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == END_SESSION_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-            signOut();
-            finish();
-        }
+    /**
+     * Helper for child activities to run actions with a guaranteed fresh token.
+     */
+    @MainThread
+    protected void performActionWithFreshTokens(@NonNull AuthState.AuthStateAction action) {
+        authStateManager.getCurrent().performActionWithFreshTokens(
+                authService,
+                (accessToken, idToken, ex) -> {
+                    if (ex != null) {
+                        if ("invalid_grant".equals(ex.error)) {
+                            signOut();
+                        } else {
+                            handleUnauthorizedException(ex);
+                        }
+                        return;
+                    }
+                    action.execute(accessToken, idToken, null);
+                });
     }
 
     @MainThread
     protected void endSession() {
         var currentState = authStateManager.getCurrent();
         var config = currentState.getAuthorizationServiceConfiguration();
-        if (config != null && config.endSessionEndpoint != null
-                && currentState.getIdToken() != null) {
+        if (config != null && config.endSessionEndpoint != null && currentState.getIdToken() != null) {
             var endSessionIntent = authService.getEndSessionRequestIntent(
                     new EndSessionRequest.Builder(config)
                             .setIdTokenHint(currentState.getIdToken())
@@ -220,31 +199,58 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
         }
     }
 
+    @MainThread
+    protected void signOut() {
+        var currentState = authStateManager.getCurrent();
+        var config = currentState.getAuthorizationServiceConfiguration();
+
+        // Clear auth state but keep config if possible
+        AuthState clearedState = (config != null) ? new AuthState(config) : new AuthState();
+        if (currentState.getLastRegistrationResponse() != null) {
+            clearedState.update(currentState.getLastRegistrationResponse());
+        }
+
+        authStateManager.replace(clearedState);
+
+        Intent loginIntent = new Intent(this, LoginActivity.class);
+        loginIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(loginIntent);
+        finish();
+    }
+
     protected void handleUnauthorizedException(Throwable throwable) {
-        if (throwable instanceof UnauthorizedException) {
+        if (throwable instanceof UnauthorizedException ||
+                (throwable instanceof AuthorizationException &&
+                        "invalid_grant".equals(((AuthorizationException) throwable).error))) {
             signOut();
             Toast.makeText(this, R.string.you_have_been_signed_out, Toast.LENGTH_SHORT).show();
         }
     }
 
-    @MainThread
-    private void signOut() {
-        // discard the authorization and token state, but retain the configuration and
-        // dynamic client registration (if applicable), to save from retrieving them again.
-        var currentState = authStateManager.getCurrent();
-        var config = currentState.getAuthorizationServiceConfiguration();
-        if (config != null) {
-            var clearedState = new AuthState(config);
-            if (currentState.getLastRegistrationResponse() != null) {
-                clearedState.update(currentState.getLastRegistrationResponse());
-            }
-            authStateManager.replace(clearedState);
+    @Override
+    @CallSuper
+    protected void onSaveInstanceState(@NonNull Bundle state) {
+        super.onSaveInstanceState(state);
+        JSONObject currentInfo = userInfoJson.get();
+        if (currentInfo != null) {
+            state.putString(KEY_USER_INFO, currentInfo.toString());
         }
+    }
 
-        var mainIntent = new Intent(this, LoginActivity.class);
-        mainIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(mainIntent);
-        finish();
+    @Override
+    @CallSuper
+    protected void onDestroy() {
+        super.onDestroy();
+        if (authService != null) authService.dispose();
+        if (executor != null) executor.shutdownNow();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == END_SESSION_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            signOut();
+        }
     }
 
     @Nullable
