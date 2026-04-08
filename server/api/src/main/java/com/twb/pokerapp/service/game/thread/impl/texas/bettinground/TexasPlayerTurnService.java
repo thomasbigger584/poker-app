@@ -4,6 +4,8 @@ import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.Round;
 import com.twb.pokerapp.domain.enumeration.BettingRoundState;
+import com.twb.pokerapp.domain.enumeration.ConnectionType;
+import com.twb.pokerapp.domain.enumeration.SessionState;
 import com.twb.pokerapp.exception.game.GameInterruptedException;
 import com.twb.pokerapp.exception.game.RoundInterruptedException;
 import com.twb.pokerapp.repository.BettingRoundRepository;
@@ -286,7 +288,9 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
 
     private boolean isActionable(PlayerSession playerSession) {
         return Boolean.TRUE.equals(playerSession.getActive()) &&
-                playerSession.getFunds() != null && playerSession.getFunds() > 0;
+                playerSession.getFunds() != null && playerSession.getFunds() > 0
+                && playerSession.getSessionState() == SessionState.CONNECTED
+                && playerSession.getConnectionType() == ConnectionType.PLAYER;
     }
 
     private List<PlayerSession> getActivePlayers(Round round) {

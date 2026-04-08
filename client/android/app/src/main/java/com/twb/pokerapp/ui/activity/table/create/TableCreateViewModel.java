@@ -52,11 +52,9 @@ public class TableCreateViewModel extends ViewModel {
             return;
         }
 
-        int totalRounds;
+        Integer totalRounds = null;
         try {
-            if (totalRoundsStr == null || totalRoundsStr.isBlank()) {
-                totalRounds = -1;
-            } else {
+            if (totalRoundsStr != null && !totalRoundsStr.isBlank()) {
                 totalRounds = Integer.parseInt(totalRoundsStr.trim());
             }
         } catch (NumberFormatException e) {
