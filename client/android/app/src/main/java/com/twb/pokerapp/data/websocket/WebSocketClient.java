@@ -8,6 +8,7 @@ import com.google.gson.Gson;
 import com.twb.pokerapp.BuildConfig;
 import com.twb.pokerapp.data.auth.AuthConfiguration;
 import com.twb.pokerapp.data.auth.AuthService;
+import com.twb.pokerapp.data.exception.UnauthorizedException;
 import com.twb.pokerapp.di.network.qualifiers.Authenticated;
 import com.twb.pokerapp.data.websocket.message.client.SendChatMessageDTO;
 import com.twb.pokerapp.data.websocket.message.client.SendPlayerActionDTO;
@@ -80,11 +81,19 @@ public class WebSocketClient {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(accessToken -> {
                     if (accessToken == null) {
-                        Log.e(TAG, "Cannot connect to websocket as access token is null");
+                        // This might happen if refresh timed out but isn't "invalid"
+                        listener.onConnectError(new LifecycleEvent(LifecycleEvent.Type.ERROR));
                         return;
                     }
                     connectInternal(accessToken, tableId, listener, connectionType, buyInAmount);
-                }, throwable -> Log.e(TAG, "Error refreshing token", throwable)));
+                }, throwable -> {
+                    Log.e(TAG, "Error refreshing token", throwable);
+                    // This is critical: Notify the listener about the specific auth error
+                    if (throwable instanceof UnauthorizedException || throwable.getCause() instanceof UnauthorizedException) {
+                        // You can add a new method to your WebSocketListener: onAuthFailure(throwable)
+                        listener.onSubscribeError(throwable);
+                    }
+                }));
     }
 
     private void connectInternal(String accessToken, UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount) {

@@ -172,11 +172,7 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
                 authService,
                 (accessToken, idToken, ex) -> {
                     if (ex != null) {
-                        if ("invalid_grant".equals(ex.error)) {
-                            signOut();
-                        } else {
-                            handleUnauthorizedException(ex);
-                        }
+                        handleUnauthorizedException(ex);
                         return;
                     }
                     action.execute(accessToken, idToken, null);
@@ -199,6 +195,27 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
         }
     }
 
+    protected void handleUnauthorizedException(Throwable throwable) {
+        if (throwable == null) return;
+        if (isAuthFailure(throwable) || (throwable.getCause() != null && isAuthFailure(throwable.getCause()))) {
+            Log.e(TAG, "Auth failure detected, signing out...", throwable);
+            signOut();
+            Toast.makeText(this, R.string.you_have_been_signed_out, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private boolean isAuthFailure(@NonNull Throwable t) {
+        if (t instanceof UnauthorizedException) {
+            return true;
+        }
+        // Check for AppAuth's specific error code
+        if (t instanceof AuthorizationException) {
+            var authEx = (AuthorizationException) t;
+            return "invalid_grant".equals(authEx.error);
+        }
+        return false;
+    }
+
     @MainThread
     protected void signOut() {
         var currentState = authStateManager.getCurrent();
@@ -218,14 +235,6 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
         finish();
     }
 
-    protected void handleUnauthorizedException(Throwable throwable) {
-        if (throwable instanceof UnauthorizedException ||
-                (throwable instanceof AuthorizationException &&
-                        "invalid_grant".equals(((AuthorizationException) throwable).error))) {
-            signOut();
-            Toast.makeText(this, R.string.you_have_been_signed_out, Toast.LENGTH_SHORT).show();
-        }
-    }
 
     @Override
     @CallSuper

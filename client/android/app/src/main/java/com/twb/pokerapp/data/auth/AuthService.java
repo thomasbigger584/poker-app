@@ -6,15 +6,18 @@ import android.util.Log;
 import androidx.annotation.WorkerThread;
 
 import com.auth0.android.jwt.JWT;
+import com.twb.pokerapp.data.exception.UnauthorizedException;
 import com.twb.pokerapp.data.model.dto.appuser.AppUserDTO;
 
 import net.openid.appauth.AppAuthConfiguration;
+import net.openid.appauth.AuthorizationException;
 import net.openid.appauth.AuthorizationService;
 import net.openid.appauth.ClientAuthentication;
 import net.openid.appauth.TokenRequest;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class AuthService {
@@ -52,7 +55,7 @@ public class AuthService {
     }
 
     @WorkerThread // blocks until a new token is retrieved
-    public String getAccessTokenWithRefresh() {
+    public String getAccessTokenWithRefresh() throws UnauthorizedException {
         refreshLock.lock();
         try {
             var jwt = getJwt();
@@ -60,27 +63,31 @@ public class AuthService {
 
             if (jwt.isExpired(TOKEN_EXPIRY_LEEWAY_SECONDS)) {
                 var latch = new CountDownLatch(1);
+                final var errorRef = new AtomicReference<AuthorizationException>();
+
                 var currentAuthState = authStateManager.getCurrent();
                 var tokenRefreshRequest = currentAuthState.createTokenRefreshRequest();
 
-                Log.d(TAG, "Refreshing access token...");
                 performTokenRequest(tokenRefreshRequest, (response, ex) -> {
                     authStateManager.updateAfterTokenResponse(response, ex);
                     if (ex != null) {
-                        Log.e(TAG, "Token refresh failed", ex);
+                        errorRef.set(ex);
                     }
                     latch.countDown();
                 });
 
                 try {
                     if (latch.await(REFRESH_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-                        // After refresh, get the new state
+                        if (errorRef.get() != null) {
+                            // Check for the specific "invalid_grant" error
+                            if ("invalid_grant".equals(errorRef.get().error)) {
+                                throw new UnauthorizedException("Session expired", errorRef.get());
+                            }
+                            return null;
+                        }
                         return authStateManager.getCurrent().getAccessToken();
-                    } else {
-                        Log.e(TAG, "Timeout waiting for token refresh");
                     }
                 } catch (InterruptedException e) {
-                    Log.e(TAG, "Interrupted while waiting for refresh token", e);
                     Thread.currentThread().interrupt();
                 }
                 return null;
