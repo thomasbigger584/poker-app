@@ -169,12 +169,15 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                     .filter(playerSession -> playerSession.getConnectionType() == ConnectionType.PLAYER)
                     .filter(playerSession -> playerSession.getFunds() != null && playerSession.getFunds() > 0)
                     .toList();
+            var connectedUsers = userWebsocketService.getConnectedUsers(table);
+            if (playerPlayerUsers.isEmpty() && connectedUsers.isEmpty()) {
+                throw new GameInterruptedException("No players connected to table so stopping");
+            }
             if (playerPlayerUsers.size() < minPlayerCount) {
                 log.debug("Waiting for PlayerSessions to connect ({}/{})...", playerPlayerUsers.size(), minPlayerCount);
                 return false;
             }
             var websocketUsersCount = connectedPlayers.size();
-            var connectedUsers = userWebsocketService.getConnectedUsers(table);
             if (connectedUsers.size() < websocketUsersCount) {
                 log.debug("Waiting for Websocket Users to connect ({}/{})...", connectedUsers.size(), websocketUsersCount);
                 return false;
