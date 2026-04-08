@@ -28,7 +28,7 @@ public class AvailableTableDTO {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        AvailableTableDTO that = (AvailableTableDTO) o;
+        var that = (AvailableTableDTO) o;
         return Objects.equals(table, that.table) && Objects.equals(playersConnected, that.playersConnected);
     }
 

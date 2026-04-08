@@ -63,7 +63,7 @@ public class TableListAdapter extends ListAdapter<AvailableTableDTO, TableListAd
             var table = availableTable.getTable();
             var context = binding.getRoot().getContext();
             binding.nameTextView.setText(table.getName());
-            binding.gameTypeTextView.setText(table.getGameType());
+            binding.gameTypeTextView.setText(table.getGameTypeDisplayName(context));
             binding.playersTextView.setText(context.getString(R.string.player_count_format, availableTable.getPlayersConnected(), table.getMaxPlayers()));
             binding.connectButton.setOnClickListener(v -> clickListener.onTableClicked(table));
         }

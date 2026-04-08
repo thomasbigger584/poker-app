@@ -271,7 +271,9 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
 
     private void finishGame() {
         if (gameInProgress.compareAndSet(true, false)) {
-            dispatcher.send(table, messageFactory.gameFinished());
+            if (!userWebsocketService.getConnectedUsers(table).isEmpty()) {
+                dispatcher.send(table, messageFactory.gameFinished());
+            }
             threadManager.delete(table.getId());
         }
     }

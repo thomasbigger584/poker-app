@@ -1,10 +1,13 @@
 package com.twb.pokerapp.data.model.dto.table;
 
 
+import android.content.Context;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import com.twb.pokerapp.R;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -91,6 +94,19 @@ public class TableDTO {
         return gameType;
     }
 
+    public String getGameTypeDisplayName(Context context) {
+        var gameTypes = context.getResources().getStringArray(R.array.game_types_array);
+        var gameTypeDisplays = context.getResources().getStringArray(R.array.game_types_str_array);
+        for (var index = 0; index < gameTypes.length; index++) {
+            if (gameTypes[index].equalsIgnoreCase(gameType)) {
+                if (index < gameTypeDisplays.length) {
+                    return gameTypeDisplays[index];
+                }
+            }
+        }
+        return gameType;
+    }
+
     public void setGameType(String gameType) {
         this.gameType = gameType;
     }
@@ -147,7 +163,7 @@ public class TableDTO {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        TableDTO tableDTO = (TableDTO) o;
+        var tableDTO = (TableDTO) o;
         return Objects.equals(id, tableDTO.id) && Objects.equals(name, tableDTO.name) && Objects.equals(gameType, tableDTO.gameType) && Objects.equals(speedMultiplier, tableDTO.speedMultiplier) && Objects.equals(totalRounds, tableDTO.totalRounds) && Objects.equals(minPlayers, tableDTO.minPlayers) && Objects.equals(maxPlayers, tableDTO.maxPlayers) && Objects.equals(minBuyin, tableDTO.minBuyin) && Objects.equals(maxBuyin, tableDTO.maxBuyin);
     }
 
