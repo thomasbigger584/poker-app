@@ -130,5 +130,6 @@
 
     <string name="developer">Developer</string>
     <string name="show_current_width">Show Current Width</string>
+    <string name="you_have_been_signed_out">You have been signed out</string>
 
 </resources>

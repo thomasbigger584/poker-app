@@ -27,6 +27,10 @@ public class AuthInterceptor implements Interceptor {
                     .header(AUTHORIZATION_HEADER, BEARER_PREFIX + accessToken)
                     .build();
         }
-        return chain.proceed(request);
+        var response = chain.proceed(request);
+        if (response.code() == 401) {
+            throw new com.twb.pokerapp.data.exception.UnauthorizedException("Unauthorized: 401");
+        }
+        return response;
     }
 }

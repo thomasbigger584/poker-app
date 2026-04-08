@@ -13,15 +13,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.auth.AuthConfiguration;
 import com.twb.pokerapp.data.auth.AuthStateManager;
+import com.twb.pokerapp.data.exception.UnauthorizedException;
 
 import net.openid.appauth.AppAuthConfiguration;
 import net.openid.appauth.AuthState;
 import net.openid.appauth.AuthorizationException;
 import net.openid.appauth.AuthorizationResponse;
 import net.openid.appauth.AuthorizationService;
-import net.openid.appauth.AuthorizationServiceConfiguration;
 import net.openid.appauth.ClientAuthentication;
 import net.openid.appauth.EndSessionRequest;
 import net.openid.appauth.TokenRequest;
@@ -205,7 +207,8 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
     protected void endSession() {
         var currentState = authStateManager.getCurrent();
         var config = currentState.getAuthorizationServiceConfiguration();
-        if (config != null && config.endSessionEndpoint != null) {
+        if (config != null && config.endSessionEndpoint != null
+                && currentState.getIdToken() != null) {
             var endSessionIntent = authService.getEndSessionRequestIntent(
                     new EndSessionRequest.Builder(config)
                             .setIdTokenHint(currentState.getIdToken())
@@ -214,6 +217,13 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
             startActivityForResult(endSessionIntent, END_SESSION_REQUEST_CODE);
         } else {
             signOut();
+        }
+    }
+
+    protected void handleUnauthorizedException(Throwable throwable) {
+        if (throwable instanceof UnauthorizedException) {
+            signOut();
+            Toast.makeText(this, R.string.you_have_been_signed_out, Toast.LENGTH_SHORT).show();
         }
     }
 

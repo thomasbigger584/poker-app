@@ -67,8 +67,9 @@ public class AuthService {
                     return currentAuthState.getAccessToken();
                 }
             } catch (InterruptedException e) {
-                throw new RuntimeException("Failed to wait for refresh token", e);
+                Log.e(TAG, "Failed to wait for refresh token", e);
             }
+            return null;
         }
         return jwt.toString();
     }
