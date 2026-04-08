@@ -332,6 +332,8 @@ public final class LoginActivity extends AppCompatActivity {
                 clientId.get(),
                 ResponseTypeValues.CODE,
                 authConfiguration.getRedirectUri())
-                .setScope(authConfiguration.getScope()).build());
+                .setScope(authConfiguration.getScope())
+                .setPrompt("login")
+                .build());
     }
 }
