@@ -4,25 +4,24 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
 import com.twb.pokerapp.R;
+import com.twb.pokerapp.databinding.FragmentAlertDialogBinding;
 
 public class AlertModalDialog extends DialogFragment {
     private static final String KEY_ALERT_MODAL_TYPE = "com.twb.pokerapp.AlertModalType";
     private static final String KEY_ALERT_SUBTITLE = "com.twb.pokerapp.Subtitle";
     private OnAlertClickListener listener;
+    private FragmentAlertDialogBinding binding;
 
     public static AlertModalDialog newInstance(
             AlertModalType alertModalType, String subtitle, OnAlertClickListener listener) {
         var fragment = new AlertModalDialog();
-        fragment.setListener(listener);
+        fragment.listener = listener;
         fragment.setStyle(DialogFragment.STYLE_NO_TITLE, 0);
         fragment.setCancelable(false);
         var bundle = new Bundle();
@@ -32,59 +31,55 @@ public class AlertModalDialog extends DialogFragment {
         return fragment;
     }
 
-    private void setListener(OnAlertClickListener listener) {
-        this.listener = listener;
-    }
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
+        binding = FragmentAlertDialogBinding.inflate(inflater, container, false);
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
         var args = getArguments();
-        if (args == null) {
-            return null;
-        }
-        var inflatedView = inflater.inflate(R.layout.fragment_alert_dialog, container, false);
+        if (args == null) return;
 
         var alertModalType = (AlertModalType) args.getSerializable(KEY_ALERT_MODAL_TYPE);
-
         if (alertModalType == null) {
             alertModalType = AlertModalType.INFO;
         }
-
-        var iconImageView = (ImageView) inflatedView.findViewById(R.id.iconImageView);
-        var titleTextView = (TextView) inflatedView.findViewById(R.id.titleTextView);
 
         var successButtonClickText = getString(R.string.confirm);
         var shouldShowCancelButton = false;
 
         switch (alertModalType) {
             case WARNING: {
-                iconImageView.setImageResource(R.drawable.ic_warning);
-                titleTextView.setText(R.string.warning);
+                binding.iconImageView.setImageResource(R.drawable.ic_warning);
+                binding.titleTextView.setText(R.string.warning);
                 shouldShowCancelButton = true;
                 break;
             }
             case CONFIRM: {
-                iconImageView.setImageResource(R.drawable.ic_confirm);
-                titleTextView.setText(R.string.are_you_sure);
+                binding.iconImageView.setImageResource(R.drawable.ic_confirm);
+                binding.titleTextView.setText(R.string.are_you_sure);
                 shouldShowCancelButton = true;
                 break;
             }
             case INFO: {
-                iconImageView.setImageResource(R.drawable.ic_info);
-                titleTextView.setText(R.string.info);
+                binding.iconImageView.setImageResource(R.drawable.ic_info);
+                binding.titleTextView.setText(R.string.info);
                 successButtonClickText = getString(R.string.ok_got_it);
                 break;
             }
             case SUCCESS: {
-                iconImageView.setImageResource(R.drawable.ic_success);
-                titleTextView.setText(R.string.success);
+                binding.iconImageView.setImageResource(R.drawable.ic_success);
+                binding.titleTextView.setText(R.string.success);
                 successButtonClickText = getString(R.string.close);
                 break;
             }
             case ERROR: {
-                iconImageView.setImageResource(R.drawable.ic_error);
-                titleTextView.setText(R.string.error_occurred);
+                binding.iconImageView.setImageResource(R.drawable.ic_error);
+                binding.titleTextView.setText(R.string.error_occurred);
                 successButtonClickText = getString(R.string.close);
                 break;
             }
@@ -92,32 +87,33 @@ public class AlertModalDialog extends DialogFragment {
 
         var subtitle = args.getString(KEY_ALERT_SUBTITLE);
         subtitle = capitalize(subtitle);
-        var subtitleTextView = (TextView) inflatedView.findViewById(R.id.subtitleTextView);
-        subtitleTextView.setText(subtitle);
+        binding.subtitleTextView.setText(subtitle);
 
-        var cancelButton = inflatedView.findViewById(R.id.cancelButton);
         if (shouldShowCancelButton) {
-            cancelButton.setVisibility(View.VISIBLE);
-            cancelButton.setOnClickListener(v -> {
+            binding.cancelButton.setVisibility(View.VISIBLE);
+            binding.cancelButton.setOnClickListener(v -> {
                 if (listener != null) {
                     listener.onCancelClick();
                 }
-                dismissAllowingStateLoss();
+                dismiss();
             });
         } else {
-            cancelButton.setVisibility(View.GONE);
+            binding.cancelButton.setVisibility(View.GONE);
         }
 
-        var successButton = (Button) inflatedView.findViewById(R.id.successButton);
-        successButton.setText(successButtonClickText);
-        successButton.setOnClickListener(v -> {
+        binding.successButton.setText(successButtonClickText);
+        binding.successButton.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onSuccessClick();
             }
-            dismissAllowingStateLoss();
+            dismiss();
         });
+    }
 
-        return inflatedView;
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
     }
 
     private String capitalize(String string) {
