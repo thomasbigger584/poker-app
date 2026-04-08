@@ -4,13 +4,13 @@ package com.twb.pokerapp.ui.layout.texas;
 import static com.twb.pokerapp.ui.util.ViewUtil.applyScaleRecursive;
 
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.util.AttributeSet;
+import android.view.LayoutInflater;
 import android.widget.LinearLayout;
 
 import com.twb.pokerapp.R;
+import com.twb.pokerapp.databinding.CommunityCardsBinding;
 import com.twb.pokerapp.data.model.dto.card.CardDTO;
-import com.twb.pokerapp.ui.layout.CardLayout;
 
 public class CommunityCardLayout extends LinearLayout {
     private static final String FLOP_CARD_1 = "FLOP_CARD_1";
@@ -18,11 +18,7 @@ public class CommunityCardLayout extends LinearLayout {
     private static final String FLOP_CARD_3 = "FLOP_CARD_3";
     private static final String TURN_CARD = "TURN_CARD";
     private static final String RIVER_CARD = "RIVER_CARD";
-    private CardLayout community1CardLayout;
-    private CardLayout community2CardLayout;
-    private CardLayout community3CardLayout;
-    private CardLayout community4CardLayout;
-    private CardLayout community5CardLayout;
+    private CommunityCardsBinding binding;
 
     public CommunityCardLayout(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
@@ -34,12 +30,7 @@ public class CommunityCardLayout extends LinearLayout {
     }
 
     private void init(Context context, AttributeSet attrs) {
-        var inflatedView = inflate(getContext(), R.layout.community_cards, this);
-        community1CardLayout = inflatedView.findViewById(R.id.community1CardLayout);
-        community2CardLayout = inflatedView.findViewById(R.id.community2CardLayout);
-        community3CardLayout = inflatedView.findViewById(R.id.community3CardLayout);
-        community4CardLayout = inflatedView.findViewById(R.id.community4CardLayout);
-        community5CardLayout = inflatedView.findViewById(R.id.community5CardLayout);
+        binding = CommunityCardsBinding.inflate(LayoutInflater.from(context), this);
         setAttributes(context, attrs);
         if (!isInEditMode()) {
             setInvisible();
@@ -48,7 +39,7 @@ public class CommunityCardLayout extends LinearLayout {
 
     private void setAttributes(Context context, AttributeSet attrs) {
         if (attrs == null) return;
-        try (TypedArray communityCardLayoutAttributes = context.obtainStyledAttributes(attrs, R.styleable.CommunityCardLayout)) {
+        try (var communityCardLayoutAttributes = context.obtainStyledAttributes(attrs, R.styleable.CommunityCardLayout)) {
             var layoutScale = communityCardLayoutAttributes.getFloat(R.styleable.CommunityCardLayout_layout_scale, 1f);
             applyScaleRecursive(this, layoutScale, 1.0f);
         }
@@ -56,60 +47,60 @@ public class CommunityCardLayout extends LinearLayout {
 
     public void reset() {
         setInvisible();
-        community1CardLayout.reset();
-        community2CardLayout.reset();
-        community3CardLayout.reset();
-        community4CardLayout.reset();
-        community5CardLayout.reset();
+        binding.community1CardLayout.reset();
+        binding.community2CardLayout.reset();
+        binding.community3CardLayout.reset();
+        binding.community4CardLayout.reset();
+        binding.community5CardLayout.reset();
     }
 
     public void dealCard(CardDTO card) {
         switch (card.getCardType()) {
             case FLOP_CARD_1: {
                 setFlopVisibility();
-                community1CardLayout.update(card);
+                binding.community1CardLayout.update(card);
                 break;
             }
             case FLOP_CARD_2: {
-                community2CardLayout.update(card);
+                binding.community2CardLayout.update(card);
                 break;
             }
             case FLOP_CARD_3: {
-                community3CardLayout.update(card);
+                binding.community3CardLayout.update(card);
                 break;
             }
             case TURN_CARD: {
                 setTurnVisibility();
-                community4CardLayout.update(card);
+                binding.community4CardLayout.update(card);
                 break;
             }
             case RIVER_CARD: {
                 setRiverVisibility();
-                community5CardLayout.update(card);
+                binding.community5CardLayout.update(card);
                 break;
             }
         }
     }
 
     public void setFlopVisibility() {
-        community1CardLayout.setVisibility(VISIBLE);
-        community2CardLayout.setVisibility(VISIBLE);
-        community3CardLayout.setVisibility(VISIBLE);
+        binding.community1CardLayout.setVisibility(VISIBLE);
+        binding.community2CardLayout.setVisibility(VISIBLE);
+        binding.community3CardLayout.setVisibility(VISIBLE);
     }
 
     public void setTurnVisibility() {
-        community4CardLayout.setVisibility(VISIBLE);
+        binding.community4CardLayout.setVisibility(VISIBLE);
     }
 
     public void setRiverVisibility() {
-        community5CardLayout.setVisibility(VISIBLE);
+        binding.community5CardLayout.setVisibility(VISIBLE);
     }
 
     public void setInvisible() {
-        this.community1CardLayout.setVisibility(INVISIBLE);
-        this.community2CardLayout.setVisibility(INVISIBLE);
-        this.community3CardLayout.setVisibility(INVISIBLE);
-        this.community4CardLayout.setVisibility(INVISIBLE);
-        this.community5CardLayout.setVisibility(INVISIBLE);
+        binding.community1CardLayout.setVisibility(INVISIBLE);
+        binding.community2CardLayout.setVisibility(INVISIBLE);
+        binding.community3CardLayout.setVisibility(INVISIBLE);
+        binding.community4CardLayout.setVisibility(INVISIBLE);
+        binding.community5CardLayout.setVisibility(INVISIBLE);
     }
 }

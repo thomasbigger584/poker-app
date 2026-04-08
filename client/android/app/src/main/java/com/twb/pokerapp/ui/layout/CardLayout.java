@@ -2,19 +2,18 @@ package com.twb.pokerapp.ui.layout;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.view.View;
+import android.view.LayoutInflater;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 
 import androidx.annotation.DrawableRes;
 
 import com.twb.pokerapp.R;
+import com.twb.pokerapp.databinding.CardBinding;
 import com.twb.pokerapp.data.model.dto.card.CardDTO;
 import com.twb.pokerapp.ui.util.CardDrawableUtil;
 
-
 public class CardLayout extends FrameLayout {
-    private ImageView cardImageView;
+    private CardBinding binding;
 
     public CardLayout(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
@@ -24,29 +23,24 @@ public class CardLayout extends FrameLayout {
         super(context, attrs, defStyleAttr);
         init();
         if (isInEditMode()) {
-            cardImageView.setImageResource(R.drawable.da);
-            cardImageView.setVisibility(VISIBLE);
+            binding.cardImageView.setImageResource(R.drawable.da);
+            binding.cardImageView.setVisibility(VISIBLE);
         }
     }
 
     private void init() {
-        var inflatedView = inflate(getContext(), R.layout.card, this);
-        cardImageView = inflatedView.findViewById(R.id.cardImageView);
+        binding = CardBinding.inflate(LayoutInflater.from(getContext()), this, true);
         reset();
     }
 
     public void update(CardDTO card) {
-        post(() -> {
-            var cardDrawResId = CardDrawableUtil.getDrawable(getContext(), card);
-            cardImageView.setImageResource(cardDrawResId);
-            cardImageView.setVisibility(VISIBLE);
-        });
+        var cardDrawResId = CardDrawableUtil.getDrawable(getContext(), card);
+        binding.cardImageView.setImageResource(cardDrawResId);
+        binding.cardImageView.setVisibility(VISIBLE);
     }
 
     public void reset() {
-        post(() -> {
-            cardImageView.setImageDrawable(null);
-            cardImageView.setVisibility(INVISIBLE);
-        });
+        binding.cardImageView.setImageDrawable(null);
+        binding.cardImageView.setVisibility(INVISIBLE);
     }
 }
