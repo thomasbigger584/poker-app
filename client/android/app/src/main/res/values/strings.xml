@@ -124,6 +124,17 @@
     <string name="check">CHECK</string>
     <string name="no_funds">$00.00</string>
 
+    <string name="card_content_description">Card</string>
+    <string name="left_card_content_description">Left Card</string>
+    <string name="right_card_content_description">Right Card</string>
+    <string name="dealer_chip_text">D</string>
+    <string name="player_players_format">Players: %1$d / %2$d</string>
+    <string name="player_name_placeholder">Player 1</string>
+    <string name="player_funds_placeholder">$10000.00</string>
+    <string name="tables_title">Tables</string>
+    <string name="connect_to_table_title">Connect To Table</string>
+    <string name="loading_content_description">Loading Spinner</string>
+
     <string name="menu">Menu</string>
     <string name="leave_table">Leave Table</string>
     <string name="leave_table_confirm">Are you sure you wish to leave the table?</string>
