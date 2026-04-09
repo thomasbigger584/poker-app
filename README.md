@@ -12,8 +12,7 @@ secure, scalable architecture.
 
 ## Download APK
 
-You can download the latest pre-built Android APK from our [**GitHub Releases page
-**](https://github.com/thomasbigger584/poker-app/releases).
+You can download the latest pre-built Android APK from our [**GitHub Releases page**](https://github.com/thomasbigger584/poker-app/releases).
 
 > **Warning:** The application is currently in a test phase and under active development. To use the downloaded APK
 without modification it requires connecting to a specific tailnet for now. You may encounter bugs or incomplete
@@ -115,8 +114,8 @@ Follow these instructions to get the project running on your local machine for d
 
 2. **Run the App:**
     - Once the project has synced, you can run the app on an emulator or a physical device.
-    - For multiplayer testing, consider using [Genymotion](https://www.genymotion.com/) to easily manage and run
-      multiple virtual devices.
+    - For multiplayer testing, consider using [LDPlayer](https://www.ldplayer.net/) as it has good support for running
+      multiple Android emulators simultaneously.
 
 ---
 
