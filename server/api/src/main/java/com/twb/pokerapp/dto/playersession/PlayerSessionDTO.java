@@ -6,6 +6,7 @@ import com.twb.pokerapp.dto.appuser.AppUserDTO;
 import com.twb.pokerapp.dto.table.TableDTO;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Data
@@ -15,7 +16,7 @@ public class PlayerSessionDTO {
     private TableDTO pokerTable;
     private Integer position;
     private Boolean dealer;
-    private Double funds;
+    private BigDecimal funds;
     private SessionState sessionState;
     private ConnectionType connectionType;
 }

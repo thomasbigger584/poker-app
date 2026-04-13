@@ -19,6 +19,7 @@ import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
+import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.UUID;
 
@@ -85,7 +86,7 @@ public class TableWebSocketController {
         return sessionService.getConnectionType(headerAccessor).orElse(ConnectionType.LISTENER);
     }
 
-    private Double getBuyInAmount(StompHeaderAccessor headerAccessor) {
+    private BigDecimal getBuyInAmount(StompHeaderAccessor headerAccessor) {
         return sessionService.getBuyInAmount(headerAccessor).orElse(null);
     }
 }

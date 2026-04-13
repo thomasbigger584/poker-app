@@ -1,6 +1,5 @@
 package com.twb.pokerapp.testutils.validator.impl;
 
-import com.google.common.base.Splitter;
 import com.twb.pokerapp.domain.enumeration.CardType;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.testutils.game.params.scenario.ScenarioParams;
@@ -15,8 +14,8 @@ import com.twb.pokerapp.web.websocket.message.server.payload.DealPlayerCardDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.DealerDeterminedDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.RoundFinishedDTO;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -41,7 +40,7 @@ public class TexasValidator extends Validator {
                 if (params.isUseFixedScenario()) {
                     var winningScenarioPlayers = params.getScenarioPlayers().stream()
                             .filter(scenarioPlayer -> scenarioPlayer.getWinAmount() != null
-                                    && scenarioPlayer.getWinAmount() != 0d)
+                                    && scenarioPlayer.getWinAmount().compareTo(BigDecimal.ZERO) != 0)
                             .sorted(Comparator.comparing(ScenarioPlayer::getUsername))
                             .toList();
                     var roundWinners = payload.getWinners().stream()
@@ -53,7 +52,7 @@ public class TexasValidator extends Validator {
                         var scenarioPlayer = winningScenarioPlayers.get(index);
                         var roundWinner = roundWinners.get(index);
                         assertEquals(scenarioPlayer.getUsername(), roundWinner.getPlayerSession().getUser().getUsername());
-                        assertEquals(scenarioPlayer.getWinAmount(), roundWinner.getAmount());
+                        assertEquals(0, scenarioPlayer.getWinAmount().compareTo(roundWinner.getAmount()));
                     }
                 } else {
                     log.warn("Not a fixed scenario so cannot assert on ROUND_FINISHED");

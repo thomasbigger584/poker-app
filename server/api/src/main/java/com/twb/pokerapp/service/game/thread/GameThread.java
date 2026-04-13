@@ -18,6 +18,7 @@ import org.springframework.messaging.simp.user.SimpUser;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
@@ -167,7 +168,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                     .findConnectedByTableId(table.getId());
             var playerPlayerUsers = connectedPlayers.stream()
                     .filter(playerSession -> playerSession.getConnectionType() == ConnectionType.PLAYER)
-                    .filter(playerSession -> playerSession.getFunds() != null && playerSession.getFunds() > 0)
+                    .filter(playerSession -> playerSession.getFunds() != null && playerSession.getFunds().compareTo(BigDecimal.ZERO) > 0)
                     .toList();
             var connectedUsers = userWebsocketService.getConnectedUsers(table);
             if (playerPlayerUsers.isEmpty() && connectedUsers.isEmpty()) {

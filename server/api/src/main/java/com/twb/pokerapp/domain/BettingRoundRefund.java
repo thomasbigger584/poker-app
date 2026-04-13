@@ -7,6 +7,7 @@ import lombok.Setter;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
@@ -30,7 +31,7 @@ public class BettingRoundRefund extends Auditable {
     private BettingRound bettingRound;
 
     @Column(name = "amount")
-    private Double amount;
+    private BigDecimal amount;
 
     @Override
     public boolean equals(Object o) {

@@ -9,6 +9,7 @@ import lombok.Setter;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
@@ -37,7 +38,7 @@ public class PlayerAction extends Auditable {
     private ActionType actionType;
 
     @Column(name = "amount")
-    private Double amount;
+    private BigDecimal amount;
 
     @Override
     public boolean equals(Object o) {

@@ -12,6 +12,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -54,7 +55,7 @@ public class AppUser extends Auditable {
     // -----------------------------------------------------------------
 
     @Column(name = "total_funds")
-    private Double totalFunds = 0d;
+    private BigDecimal totalFunds = BigDecimal.ZERO;
 
     @Override
     public boolean equals(Object o) {

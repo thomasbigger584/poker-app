@@ -15,13 +15,14 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
 public class TestScenario {
-    public static final double DEFAULT_BUY_IN_AMOUNT = 5_000d;
+    public static final BigDecimal DEFAULT_BUY_IN_AMOUNT = BigDecimal.valueOf(5_000);
     private static final int WAIT_DISCONNECT_TIMEOUT_SECS = 10;
     private static final int DISCONNECT_SETTLE_PERIOD_MS = 3 * 1000;
     private static final int SESSION_DISCONNECT_STAGGER_MS = 200;

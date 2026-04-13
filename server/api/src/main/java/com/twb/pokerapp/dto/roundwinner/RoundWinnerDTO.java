@@ -5,6 +5,7 @@ import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.dto.round.RoundDTO;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Data
@@ -13,5 +14,5 @@ public class RoundWinnerDTO {
     private PlayerSessionDTO playerSession;
     private RoundDTO round;
     private HandDTO hand;
-    private Double amount;
+    private BigDecimal amount;
 }

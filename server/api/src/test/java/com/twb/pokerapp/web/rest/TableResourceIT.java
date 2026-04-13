@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -51,8 +52,8 @@ class TableResourceIT {
         createDto.setGameType(GameType.TEXAS_HOLDEM);
         createDto.setMinPlayers(2);
         createDto.setMaxPlayers(6);
-        createDto.setMinBuyin(100d);
-        createDto.setMaxBuyin(10_000d);
+        createDto.setMinBuyin(BigDecimal.valueOf(100));
+        createDto.setMaxBuyin(BigDecimal.valueOf(10_000));
 
         // when
         var adminRestClient = env.getAdminRestClient();

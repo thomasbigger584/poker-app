@@ -23,6 +23,7 @@ import org.springframework.web.socket.sockjs.client.Transport;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -67,15 +68,15 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         connect(null);
     }
 
-    public void connect(Double buyInAmount) throws InterruptedException {
+    public void connect(BigDecimal buyInAmount) throws InterruptedException {
         log.debug("Connecting {} to {}", params.getUsername(), params.getTable().getId());
         var url = URI.create(CONNECTION_URL);
         var headers = new WebSocketHttpHeaders();
         var stompHeaders = new StompHeaders();
         stompHeaders.add(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken());
         stompHeaders.put(HEADER_CONNECTION_TYPE, Collections.singletonList(getConnectionType().toString()));
-        if (getConnectionType() == ConnectionType.PLAYER) {
-            stompHeaders.put(HEADER_BUYIN_AMOUNT, Collections.singletonList(Double.toString(buyInAmount)));
+        if (getConnectionType() == ConnectionType.PLAYER && buyInAmount != null) {
+            stompHeaders.put(HEADER_BUYIN_AMOUNT, Collections.singletonList(buyInAmount.toString()));
         }
 
         client.connectAsync(url, headers, stompHeaders, this);

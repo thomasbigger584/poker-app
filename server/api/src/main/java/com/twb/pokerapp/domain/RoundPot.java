@@ -7,6 +7,7 @@ import lombok.Setter;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -24,7 +25,7 @@ public class RoundPot extends Auditable {
     private UUID id;
 
     @Column(name = "pot_amount")
-    private Double potAmount;
+    private BigDecimal potAmount;
 
     @Column(name = "pot_index")
     private Integer potIndex; // 0 for Main Pot, 1+ for Side Pots

@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.Keycloak;
 import org.springframework.http.HttpStatus;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -49,7 +50,7 @@ public class RestClient {
         createDto.setMinPlayers(params.getScenarioPlayers().size());
         createDto.setMaxPlayers(6);
         createDto.setMinBuyin(params.getMinBuyIn());
-        createDto.setMaxBuyin(10_000d);
+        createDto.setMaxBuyin(BigDecimal.valueOf(10_000));
 
         var createResponse = post(TableDTO.class, createDto, "/poker-table");
         assertEquals(HttpStatus.CREATED.value(), createResponse.httpResponse().statusCode());

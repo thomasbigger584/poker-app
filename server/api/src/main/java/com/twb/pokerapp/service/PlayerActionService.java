@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,8 +30,8 @@ public class PlayerActionService {
     @Transactional(propagation = Propagation.MANDATORY)
     public PlayerAction create(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createDto) {
         var amount = createDto.getAmount();
-        if (amount != null && amount > 0d) {
-            playerSession.setFunds(playerSession.getFunds() - amount);
+        if (amount != null && amount.compareTo(BigDecimal.ZERO) > 0) {
+            playerSession.setFunds(playerSession.getFunds().subtract(amount));
             playerSession = playerSessionRepository.save(playerSession);
         }
 
@@ -53,25 +54,26 @@ public class PlayerActionService {
     @Transactional(propagation = Propagation.MANDATORY, readOnly = true)
     public NextActionsDTO getNextActions(PlayerSession playerSession, List<PlayerAction> prevPlayerActions) {
         var nextActions = ActionType.getDefaultActions();
-        var amountToCall = 0d;
+        var amountToCall = BigDecimal.ZERO;
         if (!prevPlayerActions.isEmpty()) {
             var previousPlayerAction = prevPlayerActions.getFirst();
             var previousPlayerActionType = previousPlayerAction.getActionType();
             nextActions = previousPlayerActionType.getNextActions();
             amountToCall = getAmountToCall(playerSession, prevPlayerActions);
         }
-        if (amountToCall > playerSession.getFunds()) {
+        if (amountToCall.compareTo(playerSession.getFunds()) > 0) {
             nextActions = ActionType.getAllInActions();
         }
         return new NextActionsDTO(amountToCall, nextActions);
     }
 
     @Transactional(propagation = Propagation.MANDATORY, readOnly = true)
-    public double getAmountToCall(PlayerSession playerSession, List<PlayerAction> prevPlayerActions) {
+    public BigDecimal getAmountToCall(PlayerSession playerSession, List<PlayerAction> prevPlayerActions) {
         var playerContributions = getPlayerContributions(prevPlayerActions);
-        var maxBet = playerContributions.values().stream().max(Double::compare).orElse(0d);
-        var currentContribution = playerContributions.getOrDefault(playerSession.getId(), 0d);
-        return Math.max(0d, maxBet - currentContribution);
+        var maxBet = playerContributions.values().stream().max(BigDecimal::compareTo).orElse(BigDecimal.ZERO);
+        var currentContribution = playerContributions.getOrDefault(playerSession.getId(), BigDecimal.ZERO);
+        var result = maxBet.subtract(currentContribution);
+        return result.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : result;
     }
 
     @Transactional(propagation = Propagation.MANDATORY, readOnly = true)
@@ -95,24 +97,24 @@ public class PlayerActionService {
             var playerContributions = getPlayerContributions(actions);
 
             var currentPlayerId = playerAction.getPlayerSession().getId();
-            var currentPlayerTotal = playerContributions.getOrDefault(currentPlayerId, 0d);
+            var currentPlayerTotal = playerContributions.getOrDefault(currentPlayerId, BigDecimal.ZERO);
             var maxOtherTotal = playerContributions.entrySet().stream()
                     .filter(entry -> !entry.getKey().equals(currentPlayerId))
-                    .mapToDouble(Map.Entry::getValue)
-                    .max()
-                    .orElse(0d);
-            if (currentPlayerTotal > maxOtherTotal) {
+                    .map(Map.Entry::getValue)
+                    .max(BigDecimal::compareTo)
+                    .orElse(BigDecimal.ZERO);
+            if (currentPlayerTotal.compareTo(maxOtherTotal) > 0) {
                 isAggressive = true;
             }
         }
         return isAggressive;
     }
 
-    private Map<UUID, Double> getPlayerContributions(List<PlayerAction> prevPlayerActions) {
-        var playerContributions = new HashMap<UUID, Double>();
+    private Map<UUID, BigDecimal> getPlayerContributions(List<PlayerAction> prevPlayerActions) {
+        var playerContributions = new HashMap<UUID, BigDecimal>();
         for (var action : prevPlayerActions) {
-            var thisAmount = action.getAmount() == null ? 0d : action.getAmount();
-            playerContributions.merge(action.getPlayerSession().getId(), thisAmount, Double::sum);
+            var thisAmount = action.getAmount() == null ? BigDecimal.ZERO : action.getAmount();
+            playerContributions.merge(action.getPlayerSession().getId(), thisAmount, BigDecimal::add);
         }
         return playerContributions;
     }

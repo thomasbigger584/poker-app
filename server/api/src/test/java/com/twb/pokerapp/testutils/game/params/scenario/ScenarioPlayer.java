@@ -5,14 +5,16 @@ import com.twb.pokerapp.testutils.game.turn.impl.FixedScenarioTurnHandler;
 import lombok.Builder;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 @Builder
 public class ScenarioPlayer {
     private String username;
     private String handCards;
-    private Double buyIn;
+    private BigDecimal buyIn;
     private TurnHandler turnHandler;
-    private Double winAmount;
+    private BigDecimal winAmount;
 
     public static ScenarioPlayer create(String username,
                                         String hand,
@@ -28,9 +30,9 @@ public class ScenarioPlayer {
         return ScenarioPlayer.builder()
                 .username(username)
                 .handCards(hand)
-                .buyIn(startAmount)
+                .buyIn(BigDecimal.valueOf(startAmount))
                 .turnHandler(turnHandler)
-                .winAmount(winAmount)
+                .winAmount(BigDecimal.valueOf(winAmount))
                 .build();
     }
 }

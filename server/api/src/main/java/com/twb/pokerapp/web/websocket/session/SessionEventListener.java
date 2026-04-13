@@ -11,6 +11,8 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.*;
 
+import java.math.BigDecimal;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -40,7 +42,7 @@ public class SessionEventListener {
 
             if (connectionType == ConnectionType.PLAYER) {
                 if (buyInAmountHeader != null && !buyInAmountHeader.isEmpty()) {
-                    var buyInAmount = Double.parseDouble(buyInAmountHeader.getFirst());
+                    var buyInAmount = new BigDecimal(buyInAmountHeader.getFirst());
                     sessionService.putBuyInAmount(headerAccessor, buyInAmount);
                 }
             }
