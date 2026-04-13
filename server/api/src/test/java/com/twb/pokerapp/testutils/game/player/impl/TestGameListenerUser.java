@@ -19,6 +19,7 @@ public class TestGameListenerUser extends AbstractTestUser {
     @Override
     protected void handleMessage(StompHeaders headers, ServerMessageDTO message) {
         var validator = params.getValidator();
+        var latches = params.getLatches();
         if (validator != null) {
             try {
                 validator.validateHandleMessage(message);
@@ -26,12 +27,12 @@ public class TestGameListenerUser extends AbstractTestUser {
                 log.error("Validation on handle message failed", e);
                 if (session != null) {
                     getExceptionThrown().compareAndSet(null, e);
+                    countdownLatch(latches.gameLatch());
+                    return;
                 }
             }
         }
-
         var payload = message.getPayload();
-        var latches = params.getLatches();
         if (payload instanceof GameFinishedDTO dto) {
             countdownLatch(latches.gameLatch());
         }

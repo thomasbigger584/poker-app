@@ -48,7 +48,6 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private final WebSocketStompClient client;
     private final CountDownLatch connectLatch = new CountDownLatch(1);
     @Getter
-    @SuppressWarnings("WriteOnlyObject")
     private final AtomicReference<Throwable> exceptionThrown = new AtomicReference<>();
     @Getter
     private final List<ServerMessageDTO> receivedMessages = Collections.synchronizedList(new ArrayList<>());
