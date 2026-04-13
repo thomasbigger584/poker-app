@@ -9,6 +9,7 @@ import lombok.Setter;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -54,13 +55,13 @@ public class PokerTable extends Auditable {
 
     @NotNull
     @Positive
-    @Column(name = "min_buyin")
-    private Double minBuyin;
+    @Column(name = "min_buyin", precision = 19, scale = 2)
+    private BigDecimal minBuyin;
 
     @NotNull
     @Positive
-    @Column(name = "max_buyin")
-    private Double maxBuyin;
+    @Column(name = "max_buyin", precision = 19, scale = 2)
+    private BigDecimal maxBuyin;
 
     @OneToMany(mappedBy = "pokerTable", cascade = CascadeType.ALL)
     private List<Round> rounds = new ArrayList<>();

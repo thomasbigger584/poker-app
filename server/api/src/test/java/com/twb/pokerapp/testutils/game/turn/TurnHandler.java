@@ -6,6 +6,7 @@ import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.PlayerTurnDTO;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,7 +22,7 @@ public interface TurnHandler {
         return userToTurnHandlers;
     }
 
-    static void sendPlayerAction(AbstractTestUser user, ActionType action, double amount) {
+    static void sendPlayerAction(AbstractTestUser user, ActionType action, BigDecimal amount) {
         var createActionDto = new CreatePlayerActionDTO();
         createActionDto.setAction(action);
         createActionDto.setAmount(amount);

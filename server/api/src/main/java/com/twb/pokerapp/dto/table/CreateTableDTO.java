@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 public class CreateTableDTO {
     @NotNull(message = "Table Name is required")
@@ -31,9 +33,9 @@ public class CreateTableDTO {
 
     @NotNull(message = "Min Buy-In is required")
     @Positive(message = "Min Buy-In should be a positive number")
-    private Double minBuyin;
+    private BigDecimal minBuyin;
 
     @NotNull(message = "Max Buy-In is required")
     @Positive(message = "Max Buy-In should be a positive number")
-    private Double maxBuyin;
+    private BigDecimal maxBuyin;
 }

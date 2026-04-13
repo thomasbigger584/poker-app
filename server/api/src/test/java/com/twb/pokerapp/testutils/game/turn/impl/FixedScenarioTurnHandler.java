@@ -9,6 +9,7 @@ import com.twb.pokerapp.web.websocket.message.server.payload.PlayerTurnDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 
+import java.math.BigDecimal;
 import java.util.ArrayDeque;
 import java.util.EnumMap;
 import java.util.Map;
@@ -50,7 +51,7 @@ public class FixedScenarioTurnHandler implements TurnHandler {
             action.setAction(ActionType.valueOf(parts[1].trim()));
 
             if (parts.length > 2) {
-                action.setAmount(Double.parseDouble(parts[2].trim()));
+                action.setAmount(new BigDecimal(parts[2].trim()));
             }
             bettingRoundActions.add(action);
         }

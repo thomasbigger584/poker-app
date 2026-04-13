@@ -2,7 +2,9 @@ package com.twb.pokerapp.service.game.thread.dto;
 
 import com.twb.pokerapp.domain.PlayerSession;
 
-public record ContributionDTO(PlayerSession player, Double amount,
+import java.math.BigDecimal;
+
+public record ContributionDTO(PlayerSession player, BigDecimal amount,
                               boolean isFolded) implements Comparable<ContributionDTO> {
     @Override
     public int compareTo(ContributionDTO other) {

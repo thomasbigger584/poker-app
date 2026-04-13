@@ -2,12 +2,10 @@ package com.twb.pokerapp.service.table;
 
 import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.domain.enumeration.GameType;
-import com.twb.pokerapp.domain.enumeration.RoundState;
 import com.twb.pokerapp.dto.table.AvailableTableDTO;
 import com.twb.pokerapp.dto.table.CreateTableDTO;
 import com.twb.pokerapp.mapper.TableMapper;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
-import com.twb.pokerapp.repository.RoundRepository;
 import com.twb.pokerapp.repository.TableRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
@@ -16,6 +14,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
 
 @Component
 
@@ -39,8 +39,8 @@ public class TableService {
             createTableDto1.setTotalRounds(null);
             createTableDto1.setMinPlayers(2);
             createTableDto1.setMaxPlayers(6);
-            createTableDto1.setMinBuyin(100d);
-            createTableDto1.setMaxBuyin(10_000d);
+            createTableDto1.setMinBuyin(BigDecimal.valueOf(100));
+            createTableDto1.setMaxBuyin(BigDecimal.valueOf(10_000));
             create(createTableDto1);
         }
     }

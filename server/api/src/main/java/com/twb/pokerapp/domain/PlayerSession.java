@@ -11,6 +11,7 @@ import lombok.Setter;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -48,8 +49,8 @@ public class PlayerSession extends Auditable {
     @Column(name = "active")
     private Boolean active;
 
-    @Column(name = "funds")
-    private Double funds;
+    @Column(name = "funds", precision = 19, scale = 2)
+    private BigDecimal funds;
 
     @NotNull
     @Enumerated(EnumType.STRING)

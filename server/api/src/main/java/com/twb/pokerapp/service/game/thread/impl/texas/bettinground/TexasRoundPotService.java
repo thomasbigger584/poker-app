@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 import static com.twb.pokerapp.util.TransactionUtil.afterCommit;
@@ -31,7 +32,7 @@ public class TexasRoundPotService {
 
     @Transactional(propagation = Propagation.MANDATORY)
     public Round reconcilePots(Round round, BettingRound bettingRound) {
-        var playerTotalBets = new HashMap<UUID, Double>();
+        var playerTotalBets = new HashMap<UUID, BigDecimal>();
         var playerFoldedStatus = new HashMap<UUID, Boolean>();
         var sessionMap = new HashMap<UUID, PlayerSession>();
 
@@ -45,25 +46,25 @@ public class TexasRoundPotService {
     }
 
     private void fillMapsWithStartingDefaults(List<PlayerSession> playerSessions,
-                                              Map<UUID, Double> playerTotalBets,
+                                              Map<UUID, BigDecimal> playerTotalBets,
                                               Map<UUID, Boolean> playerFoldedStatus,
                                               Map<UUID, PlayerSession> sessionMap) {
         for (var session : playerSessions) {
-            playerTotalBets.put(session.getId(), 0.0);
+            playerTotalBets.put(session.getId(), BigDecimal.ZERO);
             playerFoldedStatus.put(session.getId(), false);
             sessionMap.put(session.getId(), session);
         }
     }
 
     private void sumAmountsFromActions(Round round,
-                                       Map<UUID, Double> playerTotalBets,
+                                       Map<UUID, BigDecimal> playerTotalBets,
                                        Map<UUID, Boolean> playerFoldedStatus) {
         var allActions = playerActionRepository.findByRoundId(round.getId());
 
         for (var action : allActions) {
             var playerId = action.getPlayerSession().getId();
             if (action.getAmount() != null) {
-                playerTotalBets.merge(playerId, action.getAmount(), Double::sum);
+                playerTotalBets.merge(playerId, action.getAmount(), BigDecimal::add);
             }
             if (action.getActionType() == ActionType.FOLD) {
                 playerFoldedStatus.put(playerId, true);
@@ -71,14 +72,14 @@ public class TexasRoundPotService {
         }
     }
 
-    private List<ContributionDTO> getPlayerContributions(Map<UUID, Double> playerTotalBets,
+    private List<ContributionDTO> getPlayerContributions(Map<UUID, BigDecimal> playerTotalBets,
                                                          Map<UUID, PlayerSession> sessionMap,
                                                          Map<UUID, Boolean> playerFoldedStatus) {
         var contributions = new ArrayList<ContributionDTO>();
         for (var entry : playerTotalBets.entrySet()) {
             var playerId = entry.getKey();
             var amount = entry.getValue();
-            if (amount > 0) {
+            if (amount.compareTo(BigDecimal.ZERO) > 0) {
                 var player = sessionMap.get(playerId);
                 if (player != null) {
                     var isFolded = playerFoldedStatus.getOrDefault(playerId, false);
@@ -99,17 +100,17 @@ public class TexasRoundPotService {
             roundPots.clear();
         }
 
-        var playerAllocatedToPots = new HashMap<UUID, Double>();
+        var playerAllocatedToPots = new HashMap<UUID, BigDecimal>();
         for (var contribution : contributions) {
-            playerAllocatedToPots.put(contribution.player().getId(), 0.0);
+            playerAllocatedToPots.put(contribution.player().getId(), BigDecimal.ZERO);
         }
 
-        var previousPotLevel = 0d;
+        var previousPotLevel = BigDecimal.ZERO;
         for (var currentContributor : contributions) {
             var currentContributionAmount = currentContributor.amount();
-            var sliceAmountPerPlayer = currentContributionAmount - previousPotLevel;
+            var sliceAmountPerPlayer = currentContributionAmount.subtract(previousPotLevel);
 
-            if (sliceAmountPerPlayer <= 0.001) {
+            if (sliceAmountPerPlayer.compareTo(BigDecimal.valueOf(0.001)) <= 0) {
                 continue;
             }
 
@@ -117,7 +118,7 @@ public class TexasRoundPotService {
             var eligibleWinnersForSlice = new ArrayList<PlayerSession>();
 
             for (var contributor : contributions) {
-                if (contributor.amount() >= currentContributionAmount) {
+                if (contributor.amount().compareTo(currentContributionAmount) >= 0) {
                     contributorsAtOrAboveLevel.add(contributor);
                     if (!contributor.isFolded()) {
                         eligibleWinnersForSlice.add(contributor.player());
@@ -139,13 +140,13 @@ public class TexasRoundPotService {
             // Since roundPots is NOT empty (it has the 1k and 2k levels), this is NOT added.
 
             if (isContested || isInitialBet) {
-                var totalSliceAmount = sliceAmountPerPlayer * contributorsAtOrAboveLevel.size();
+                var totalSliceAmount = sliceAmountPerPlayer.multiply(BigDecimal.valueOf(contributorsAtOrAboveLevel.size()));
 
                 if (!eligibleWinnersForSlice.isEmpty()) {
                     distributeSliceToPots(round, roundPots, totalSliceAmount, eligibleWinnersForSlice);
 
                     for (var contributor : contributorsAtOrAboveLevel) {
-                        playerAllocatedToPots.merge(contributor.player().getId(), sliceAmountPerPlayer, Double::sum);
+                        playerAllocatedToPots.merge(contributor.player().getId(), sliceAmountPerPlayer, BigDecimal::add);
                     }
                 }
             }
@@ -162,12 +163,12 @@ public class TexasRoundPotService {
 
     private void distributeSliceToPots(Round round,
                                        List<RoundPot> roundPots,
-                                       double amount,
+                                       BigDecimal amount,
                                        List<PlayerSession> eligiblePlayers) {
         if (!roundPots.isEmpty()) {
             var lastPot = roundPots.getLast();
             if (isEligiblePlayersSame(eligiblePlayers, lastPot)) {
-                lastPot.setPotAmount(lastPot.getPotAmount() + amount);
+                lastPot.setPotAmount(lastPot.getPotAmount().add(amount));
                 roundPotRepository.save(lastPot);
                 return;
             }
@@ -186,24 +187,24 @@ public class TexasRoundPotService {
     private void handleRefunds(Round round, BettingRound bettingRound,
                                List<ContributionDTO> contributions,
                                Map<UUID, PlayerSession> sessionMap,
-                               Map<UUID, Double> playerAllocatedToPots) {
+                               Map<UUID, BigDecimal> playerAllocatedToPots) {
         var previousRefunds = bettingRoundRefundRepository.findByRoundId(round.getId());
-        var totalPreviousRefunded = new HashMap<UUID, Double>();
+        var totalPreviousRefunded = new HashMap<UUID, BigDecimal>();
         for (var previousRefund : previousRefunds) {
-            totalPreviousRefunded.merge(previousRefund.getPlayerSession().getId(), previousRefund.getAmount(), Double::sum);
+            totalPreviousRefunded.merge(previousRefund.getPlayerSession().getId(), previousRefund.getAmount(), BigDecimal::add);
         }
 
         for (var contribution : contributions) {
             var playerId = contribution.player().getId();
             var totalContributed = contribution.amount();
-            var allocatedToPots = playerAllocatedToPots.getOrDefault(playerId, 0.0);
-            var previouslyRefunded = totalPreviousRefunded.getOrDefault(playerId, 0.0);
+            var allocatedToPots = playerAllocatedToPots.getOrDefault(playerId, BigDecimal.ZERO);
+            var previouslyRefunded = totalPreviousRefunded.getOrDefault(playerId, BigDecimal.ZERO);
 
-            var refundAmount = totalContributed - allocatedToPots - previouslyRefunded;
+            var refundAmount = totalContributed.subtract(allocatedToPots).subtract(previouslyRefunded);
 
-            if (refundAmount > 0.001) {
+            if (refundAmount.compareTo(BigDecimal.valueOf(0.001)) > 0) {
                 var managedPlayerSession = sessionMap.get(playerId);
-                managedPlayerSession.setFunds(managedPlayerSession.getFunds() + refundAmount);
+                managedPlayerSession.setFunds(managedPlayerSession.getFunds().add(refundAmount));
                 playerSessionRepository.save(managedPlayerSession);
                 bettingRoundService.createRefund(managedPlayerSession, bettingRound, refundAmount);
                 afterCommit(() -> gameLogService.sendLogMessage(round.getPokerTable(), "Refunded $%.2f to %s".formatted(refundAmount, managedPlayerSession.getUser().getUsername())));

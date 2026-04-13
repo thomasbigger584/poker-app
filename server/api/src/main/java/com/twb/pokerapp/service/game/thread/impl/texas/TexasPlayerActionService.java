@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Slf4j
@@ -47,7 +48,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
         var amountToCall = playerActionService.getAmountToCall(playerSession, playersNotFolded);
 
         var createActionDto = new CreatePlayerActionDTO();
-        createActionDto.setAction((amountToCall > 0) ? ActionType.FOLD : ActionType.CHECK);
+        createActionDto.setAction((amountToCall.compareTo(BigDecimal.ZERO) > 0) ? ActionType.FOLD : ActionType.CHECK);
         super.playerAction(playerSession, gameThread, createActionDto);
     }
 
@@ -62,15 +63,15 @@ public class TexasPlayerActionService extends GamePlayerActionService {
         if (!canPerformCheck) {
             throw new GamePlayerLogException(playerSession, "Cannot check as previous actions was not a check");
         }
-        createActionDto.setAmount(0d);
+        createActionDto.setAmount(BigDecimal.ZERO);
         return playerActionService.create(playerSession, bettingRound, createActionDto);
     }
 
     private PlayerAction betAction(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
-        if (createActionDto.getAmount() <= 0) {
+        if (createActionDto.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new GamePlayerLogException(playerSession, "Cannot bet $%.2f as amount is less than or equal to zero".formatted(createActionDto.getAmount()));
         }
-        if (createActionDto.getAmount() >= playerSession.getFunds()) {
+        if (createActionDto.getAmount().compareTo(playerSession.getFunds()) >= 0) {
             return allInAction(playerSession, bettingRound, createActionDto);
         }
         var lastPlayerActions = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId());
@@ -97,11 +98,11 @@ public class TexasPlayerActionService extends GamePlayerActionService {
             log.debug("Setting call amount to $%.2f as call amount sent was null".formatted(lastPlayerAction.getAmount()));
             createActionDto.setAmount(lastPlayerAction.getAmount());
         }
-        if (createActionDto.getAmount() >= playerSession.getFunds()) {
+        if (createActionDto.getAmount().compareTo(playerSession.getFunds()) >= 0) {
             return allInAction(playerSession, bettingRound, createActionDto);
         }
         var amountToCall = playerActionService.getAmountToCall(playerSession, lastPlayerActions);
-        if (createActionDto.getAmount() != amountToCall) {
+        if (createActionDto.getAmount().compareTo(amountToCall) != 0) {
             log.warn("Call amount sent $%.2f not equalled to actual amount to call $%.2f so setting it".formatted(createActionDto.getAmount(), amountToCall));
             createActionDto.setAmount(amountToCall);
         }
@@ -119,10 +120,10 @@ public class TexasPlayerActionService extends GamePlayerActionService {
             throw new GamePlayerLogException(playerSession, "Cannot raise as previous action was a check");
         }
         var amountToCall = playerActionService.getAmountToCall(playerSession, lastPlayerActions);
-        if (createActionDto.getAmount() <= amountToCall) {
+        if (createActionDto.getAmount().compareTo(amountToCall) <= 0) {
             throw new GamePlayerLogException(playerSession, "Cannot raise as $%.2f is less than or equal to $%.2f".formatted(createActionDto.getAmount(), amountToCall));
         }
-        if (createActionDto.getAmount() >= playerSession.getFunds()) {
+        if (createActionDto.getAmount().compareTo(playerSession.getFunds()) >= 0) {
             return allInAction(playerSession, bettingRound, createActionDto);
         }
         return playerActionService.create(playerSession, bettingRound, createActionDto);
@@ -131,7 +132,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
     private PlayerAction allInAction(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
         var playerSessionFunds = playerSession.getFunds();
         var createActionAmount = createActionDto.getAmount();
-        if (createActionAmount == null || createActionAmount.doubleValue() != playerSessionFunds) {
+        if (createActionAmount == null || createActionAmount.compareTo(playerSessionFunds) != 0) {
             log.warn("All-In amount sent $%.2f not equalled to actual amount to All-In $%.2f so setting it".formatted(createActionDto.getAmount(), playerSessionFunds));
             createActionDto.setAmount(playerSession.getFunds());
         }

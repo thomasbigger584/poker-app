@@ -31,6 +31,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -166,21 +167,20 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
             if (actionablePlayers.size() == 1) {
                 var loneActionablePlayer = actionablePlayers.getFirst();
                 var roundActions = playerActionRepository.findByRoundId(round.getId());
-                var contributions = new HashMap<UUID, Double>();
+                var contributions = new HashMap<UUID, BigDecimal>();
                 for (var action : roundActions) {
                     if (action.getAmount() != null) {
-                        contributions.merge(action.getPlayerSession().getId(), action.getAmount(), Double::sum);
+                        contributions.merge(action.getPlayerSession().getId(), action.getAmount(), BigDecimal::add);
                     }
                 }
                 var maxContribution = contributions.values()
                         .stream()
-                        .mapToDouble(d -> d)
-                        .max()
-                        .orElse(0d);
+                        .max(BigDecimal::compareTo)
+                        .orElse(BigDecimal.ZERO);
                 var playerContribution = contributions
-                        .getOrDefault(loneActionablePlayer.getId(), 0d);
+                        .getOrDefault(loneActionablePlayer.getId(), BigDecimal.ZERO);
 
-                if (playerContribution >= maxContribution) {
+                if (playerContribution.compareTo(maxContribution) >= 0) {
                     log.debug("Only one actionable player {} and they have matched max contribution {}, skipping betting round.",
                             loneActionablePlayer.getUser().getUsername(), maxContribution);
                     shouldContinue.set(false);
@@ -288,7 +288,7 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
 
     private boolean isActionable(PlayerSession playerSession) {
         return Boolean.TRUE.equals(playerSession.getActive()) &&
-                playerSession.getFunds() != null && playerSession.getFunds() > 0
+                playerSession.getFunds() != null && playerSession.getFunds().compareTo(BigDecimal.ZERO) > 0
                 && playerSession.getSessionState() == SessionState.CONNECTED
                 && playerSession.getConnectionType() == ConnectionType.PLAYER;
     }

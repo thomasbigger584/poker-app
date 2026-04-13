@@ -26,7 +26,7 @@ public abstract class TableValidationService {
     }
 
     private void validateBuyIn(CreateTableDTO dto) {
-        if (dto.getMinBuyin() > dto.getMaxBuyin()) {
+        if (dto.getMinBuyin().compareTo(dto.getMaxBuyin()) > 0) {
             throw new RuntimeException("Min Buy-In should be smaller or equaled to Max Players");
         }
     }

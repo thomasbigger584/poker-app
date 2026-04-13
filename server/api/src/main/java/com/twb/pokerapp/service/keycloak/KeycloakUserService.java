@@ -10,13 +10,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.UUID;
 
 @Slf4j
 @Component
 public class KeycloakUserService {
-    private static final double INITIAL_USER_FUNDS = 50_000d;
+    private static final BigDecimal INITIAL_USER_FUNDS = BigDecimal.valueOf(50_000);
 
     @Autowired
     @Qualifier("userGroupResource")

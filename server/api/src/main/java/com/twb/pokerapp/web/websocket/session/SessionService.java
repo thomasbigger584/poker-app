@@ -4,6 +4,7 @@ import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -28,7 +29,7 @@ public class SessionService {
         put(headerAccessor, SESSION_TABLE_ID, tableId);
     }
 
-    public void putBuyInAmount(StompHeaderAccessor headerAccessor, Double buyInAmount) {
+    public void putBuyInAmount(StompHeaderAccessor headerAccessor, BigDecimal buyInAmount) {
         put(headerAccessor, SESSION_BUYIN_AMOUNT, buyInAmount);
     }
 
@@ -44,7 +45,7 @@ public class SessionService {
         return get(headerAccessor, SESSION_TABLE_ID);
     }
 
-    public Optional<Double> getBuyInAmount(StompHeaderAccessor headerAccessor) {
+    public Optional<BigDecimal> getBuyInAmount(StompHeaderAccessor headerAccessor) {
         return get(headerAccessor, SESSION_BUYIN_AMOUNT);
     }
 

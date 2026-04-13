@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import static com.twb.pokerapp.domain.enumeration.BettingRoundState.*;
@@ -58,7 +59,7 @@ public class BettingRoundService {
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public BettingRoundRefund createRefund(PlayerSession playerSession, BettingRound bettingRound, double refundAmount) {
+    public BettingRoundRefund createRefund(PlayerSession playerSession, BettingRound bettingRound, BigDecimal refundAmount) {
         var refund = new BettingRoundRefund();
         refund.setPlayerSession(playerSession);
         refund.setBettingRound(bettingRound);

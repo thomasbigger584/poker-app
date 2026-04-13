@@ -8,10 +8,13 @@ import com.twb.pokerapp.service.game.eval.dto.EvalPlayerHandDTO;
 import com.twb.pokerapp.service.game.thread.GameLogService;
 import com.twb.pokerapp.service.game.thread.GameSpeedService;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
+import com.twb.pokerapp.service.game.thread.impl.texas.dealer.TexasDealerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,6 +33,7 @@ public class TexasEvaluationService {
     private final HandEvaluator handEvaluator;
     private final GameLogService gameLogService;
     private final GameSpeedService gameSpeedService;
+    private final TexasDealerService dealerService;
 
     public void evaluate(GameThreadParams params) {
         var tableId = params.getTable().getId();
@@ -54,9 +58,9 @@ public class TexasEvaluationService {
     private void evaluateLastPlayerStanding(GameThreadParams params, PlayerSession winner, Round round) {
         var pots = roundPotRepository.findByRound(round.getId());
         var totalWinnings = pots.stream()
-                .mapToDouble(RoundPot::getPotAmount)
-                .sum();
-        winner.setFunds(winner.getFunds() + totalWinnings);
+                .map(RoundPot::getPotAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        winner.setFunds(winner.getFunds().add(totalWinnings));
         playerSessionRepository.save(winner);
 
         var hand = handRepository.findForPlayerAndRound(winner.getId(), round.getId())
@@ -123,36 +127,50 @@ public class TexasEvaluationService {
         var winnerCount = winners.size();
         if (winnerCount == 0) return;
 
+        // Sort winners by proximity to the dealer button (clockwise)
+        // In Hold'em, the odd chip goes to the first player to the left of the button.
+        var playerSessions = winners.stream().map(EvalPlayerHandDTO::getPlayerSession).toList();
+        var sortedWinnersSessions = dealerService.sortDealerLast(playerSessions);
+        
+        // Match original DTOs to the sorted session order
+        var sortedWinners = new ArrayList<EvalPlayerHandDTO>();
+        for (var session : sortedWinnersSessions) {
+            winners.stream()
+                .filter(w -> w.getPlayerSession().getId().equals(session.getId()))
+                .findFirst()
+                .ifPresent(sortedWinners::add);
+        }
+
         // Calculate split in cents to handle odd chips correctly
-        var totalCents = Math.round(potAmount * 100);
+        var totalCents = potAmount.multiply(BigDecimal.valueOf(100)).setScale(0, RoundingMode.HALF_UP).longValue();
         var splitCents = totalCents / winnerCount;
         var remainderCents = totalCents % winnerCount;
-        var splitAmount = splitCents / 100.0;
+        var splitAmount = BigDecimal.valueOf(splitCents).divide(BigDecimal.valueOf(100), 2, RoundingMode.UNNECESSARY);
 
         for (var index = 0; index < winnerCount; index++) {
-            var winnerHand = winners.get(index);
-            // Add 1 cent to the award amount for each winner until the remainder is exhausted
-            var extraCent = (index < remainderCents) ? 0.01 : 0.0;
-            var awardAmount = splitAmount + extraCent;
+            var winnerHand = sortedWinners.get(index);
+            // Add 1 cent to the award amount for each winner (starting from the left of the button) until the remainder is exhausted
+            var extraCent = (index < remainderCents) ? BigDecimal.valueOf(0.01) : BigDecimal.ZERO;
+            var awardAmount = splitAmount.add(extraCent);
 
             var playerSession = winnerHand.getPlayerSession();
-            playerSession.setFunds(playerSession.getFunds() + awardAmount);
+            playerSession.setFunds(playerSession.getFunds().add(awardAmount));
             playerSessionRepository.save(playerSession);
 
             saveRoundWinner(playerSession, round, winnerHand.getHand(), awardAmount);
         }
 
-        afterCommit(() -> logPotWinners(params, pot, winners, splitAmount));
+        afterCommit(() -> logPotWinners(params, pot, sortedWinners, splitAmount));
     }
 
     private void saveRoundWinner(PlayerSession playerSession, Round round,
-                                 Hand hand, double amount) {
+                                 Hand hand, BigDecimal amount) {
         var roundWinnerOpt = roundWinnerRepository
                 .findByRoundAndPlayerSession(round.getId(), playerSession.getId());
         RoundWinner roundWinner;
         if (roundWinnerOpt.isPresent()) {
             roundWinner = roundWinnerOpt.get();
-            roundWinner.setAmount(roundWinner.getAmount() + amount);
+            roundWinner.setAmount(roundWinner.getAmount().add(amount));
         } else {
             roundWinner = new RoundWinner();
             roundWinner.setPlayerSession(playerSession);
@@ -164,7 +182,7 @@ public class TexasEvaluationService {
     }
 
     private void logPotWinners(GameThreadParams params, RoundPot pot,
-                               List<EvalPlayerHandDTO> winners, double amountPerWinner) {
+                               List<EvalPlayerHandDTO> winners, BigDecimal amountPerWinner) {
         var potName = (pot.getPotIndex() == 0) ? "Main Pot" : "Side Pot " + pot.getPotIndex();
         var winnerNames = getReadableWinners(winners);
 

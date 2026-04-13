@@ -8,6 +8,7 @@ import lombok.Setter;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
@@ -35,8 +36,8 @@ public class RoundWinner extends Auditable {
     @JoinColumn(name = "hand_id")
     private Hand hand;
 
-    @Column(name = "amount")
-    private Double amount;
+    @Column(name = "amount", precision = 19, scale = 2)
+    private BigDecimal amount;
 
     @Override
     public boolean equals(Object o) {

@@ -16,6 +16,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -30,7 +32,7 @@ public class PlayerSessionService {
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public PlayerSessionDTO connectUserToRound(PokerTable table, AppUser user, ConnectionType connectionType, Double buyInAmount) {
+    public PlayerSessionDTO connectUserToRound(PokerTable table, AppUser user, ConnectionType connectionType, BigDecimal buyInAmount) {
         var sessionOpt = repository.findByTableIdAndUsername(table.getId(), user.getUsername());
         
         if (sessionOpt.isPresent() && sessionOpt.get().getSessionState() == SessionState.CONNECTED) {
@@ -51,7 +53,7 @@ public class PlayerSessionService {
             session.setPosition(position);
             session.setFunds(buyInAmount);
 
-            user.setTotalFunds(user.getTotalFunds() - buyInAmount);
+            user.setTotalFunds(user.getTotalFunds().subtract(buyInAmount));
             userRepository.save(user);
         }
 
@@ -67,7 +69,7 @@ public class PlayerSessionService {
 
         if (session.getConnectionType() == ConnectionType.PLAYER && session.getFunds() != null) {
             var user = session.getUser();
-            user.setTotalFunds(user.getTotalFunds() + session.getFunds());
+            user.setTotalFunds(user.getTotalFunds().add(session.getFunds()));
             userRepository.save(user);
         }
 
