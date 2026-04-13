@@ -1,10 +1,9 @@
 package com.twb.pokerapp.configuration.websocket;
 
-import com.twb.pokerapp.configuration.ProfileConfiguration;
+import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -13,13 +12,31 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
 
+@EnableRabbit
 @Configuration
 @EnableWebSocketMessageBroker
-@Profile(ProfileConfiguration.LOCAL_PROFILE)
-public class LocalWebsocketConfiguration implements WebSocketMessageBrokerConfigurer {
+public class RabbitMqConfiguration implements WebSocketMessageBrokerConfigurer {
 
-    @Value("${app.websocket.heartbeat.time-secs:5}")
-    private int heartbeatTimeSecs;
+    @Value("${app.relay.host:rabbitmq}")
+    private String relayHost;
+
+    @Value("${app.relay.port:61613}")
+    private int relayPort;
+
+    @Value("${app.relay.virtual-host:/}")
+    private String virtualHost;
+
+    @Value("${app.relay.client.login:admin}")
+    private String clientLogin;
+
+    @Value("${app.relay.client.passcode:admin}")
+    private String clientPasscode;
+
+    @Value("${app.relay.system.login:admin}")
+    private String systemLogin;
+
+    @Value("${app.relay.system.passcode:admin}")
+    private String systemPasscode;
 
     @Value("${app.websocket.heartbeat.thread-pool-size:4}")
     private int heartbeatThreadPoolSize;
@@ -44,17 +61,19 @@ public class LocalWebsocketConfiguration implements WebSocketMessageBrokerConfig
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        // - /app used for MessageMapping
-        // - /topic used for SubscribeMapping
-        // - /user/{username}/{destination} for users to receive specific notifications
-        //     (client connects directly to topic so we wait to forward this into application)
-        var heartbeatMs = heartbeatTimeSecs * 1000L;
         registry.setApplicationDestinationPrefixes("/app", "/topic")
-                .setUserDestinationPrefix("/user")
-                .setPreservePublishOrder(true)
-                .enableSimpleBroker("/topic", "/user")
-                .setHeartbeatValue(new long[]{heartbeatMs, heartbeatMs * 3})
+                .setUserDestinationPrefix("/user");
+
+        registry.enableStompBrokerRelay("/topic", "/user")
+                .setRelayHost(relayHost)
+                .setRelayPort(relayPort)
+                .setVirtualHost(virtualHost)
+                .setClientLogin(clientLogin)
+                .setClientPasscode(clientPasscode)
+                .setSystemLogin(systemLogin)
+                .setSystemPasscode(systemPasscode)
                 .setTaskScheduler(heartBeatScheduler());
+        registry.setPreservePublishOrder(true);
     }
 
     @Override

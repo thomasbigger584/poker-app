@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public abstract class AbstractTestUser implements StompSessionHandler, StompFrameHandler {
     private static final String CONNECTION_URL = "ws://localhost:8081/looping";
     private static final String GAME_TOPIC_SUFFIX = "/topic/loops.%s";
-    private static final String NOTIFICATION_TOPIC_SUFFIX = "/user/%s/notifications";
+    private static final String NOTIFICATION_TOPIC = "/user/notifications";
     private static final String SEND_PLAYER_ACTION = "/app/pokerTable/%s/sendPlayerAction";
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String HEADER_CONNECTION_TYPE = "X-Connection-Type";
@@ -73,6 +73,10 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         var url = URI.create(CONNECTION_URL);
         var headers = new WebSocketHttpHeaders();
         var stompHeaders = new StompHeaders();
+        
+        // RabbitMQ STOMP requires 'host' header for virtual host routing
+        stompHeaders.setHost("/"); 
+        
         stompHeaders.add(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken());
         stompHeaders.put(HEADER_CONNECTION_TYPE, Collections.singletonList(getConnectionType().toString()));
         if (getConnectionType() == ConnectionType.PLAYER && buyInAmount != null) {
@@ -110,7 +114,6 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         this.session = session;
 
         var gameTopic = GAME_TOPIC_SUFFIX.formatted(params.getTable().getId());
-        var notificationTopic = NOTIFICATION_TOPIC_SUFFIX.formatted(params.getUsername());
 
         var gameHeaders = new StompHeaders();
         gameHeaders.setDestination(gameTopic);
@@ -121,7 +124,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
             log.debug("Receipt received for subscription on user {} destination {}", params.getUsername(), gameTopic);
 
             var notificationHeaders = new StompHeaders();
-            notificationHeaders.setDestination(notificationTopic);
+            notificationHeaders.setDestination(NOTIFICATION_TOPIC);
             notificationHeaders.setReceipt("receipt-" + params.getUsername() + "-notifications-" + UUID.randomUUID());
 
             var notificationReceipt = session.subscribe(notificationHeaders, this);

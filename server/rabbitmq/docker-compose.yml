@@ -3,6 +3,7 @@ services:
   rabbitmq-base:
     build: .
     container_name: rabbitmq
+    image: com.twb.pokerapp/rabbitmq
     healthcheck:
       test: [ "CMD", "rabbitmq-diagnostics", "status" ]
       interval: 10s

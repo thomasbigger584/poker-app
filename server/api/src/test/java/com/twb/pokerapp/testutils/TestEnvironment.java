@@ -9,8 +9,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
+import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.postgresql.PostgreSQLContainer;
+import org.testcontainers.utility.DockerImageName;
 
 import java.util.List;
 
@@ -19,6 +21,8 @@ import static java.lang.management.ManagementFactory.getRuntimeMXBean;
 @Getter
 public class TestEnvironment implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger("TEST");
+
+    private static final String IMAGE_REPOSITORY = "com.twb.pokerapp";
 
     // Keycloak Constants
     private static final String KEYCLOAK_SERVICE = "keycloak";
@@ -35,12 +39,18 @@ public class TestEnvironment implements AutoCloseable {
     private static final String DB_PASSWORD = "password";
     private static final String DB_NAME = "db";
     private static final int DB_PORT = 5432;
-
     private static final String SPRING_DATASOURCE_URL_KEY = "SPRING_DATASOURCE_URL";
     private static final String DB_DATASOURCE_URL = "jdbc:postgresql://%s:%d/%s".formatted(DB_SERVICE, DB_PORT, DB_NAME);
 
+    // RabbitMQ Constants
+    private static final String RABBITMQ_IMAGE_NAME = IMAGE_REPOSITORY + "/rabbitmq";
+    private static final String RABBITMQ_SERVICE = "rabbitmq";
+    private static final int RABBITMQ_STOMP_PORT = 61613;
+    private static final String APP_RELAY_HOST_KEY = "APP_RELAY_HOST";
+    private static final String APP_RELAY_PORT_KEY = "APP_RELAY_PORT";
+
     // API Constants
-    private static final String API_IMAGE_NAME = "com.twb.pokerapp/api";
+    private static final String API_IMAGE_NAME = IMAGE_REPOSITORY + "/api";
     private static final String API_IMAGE_VERSION = "latest";
     private static final String API_SERVICE = "api";
     private static final String KEYCLOAK_SERVER_URL_INTERNAL_KEY = "KEYCLOAK_SERVER_URL_INTERNAL";
@@ -64,6 +74,7 @@ public class TestEnvironment implements AutoCloseable {
                     .withNetworkAliases(KEYCLOAK_SERVICE)
                     .withEnv(KEYCLOAK_HOSTNAME_KEY, KEYCLOAK_HOSTNAME)
                     .withVerboseOutput();
+
     private static final PostgreSQLContainer DB_CONTAINER =
             new PostgreSQLContainer("%s:%s".formatted(DB_IMAGE_NAME, DB_IMAGE_VERSION))
                     .withUsername(DB_USERNAME)
@@ -75,6 +86,12 @@ public class TestEnvironment implements AutoCloseable {
                     .withNetworkAliases(DB_SERVICE)
                     .dependsOn(KEYCLOAK_CONTAINER);
 
+    private static final RabbitMQContainer RABBITMQ_CONTAINER =
+            new RabbitMQContainer(DockerImageName.parse(RABBITMQ_IMAGE_NAME).asCompatibleSubstituteFor("rabbitmq"))
+                    .withNetwork(NETWORK)
+                    .withNetworkAliases(RABBITMQ_SERVICE)
+                    .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(RABBITMQ_SERVICE));
+
     private static GenericContainer<?> API_CONTAINER;
 
     private KeycloakClients keycloakClients;
@@ -84,6 +101,10 @@ public class TestEnvironment implements AutoCloseable {
     static {
         DB_CONTAINER.setPortBindings(
                 List.of(getPortBindingString(DB_PORT)));
+        RABBITMQ_CONTAINER.setPortBindings(
+                List.of(getPortBindingString(RABBITMQ_STOMP_PORT),
+                        getPortBindingString(5672),
+                        getPortBindingString(15672)));
     }
 
     // *****************************************************************************************
@@ -98,19 +119,22 @@ public class TestEnvironment implements AutoCloseable {
     public TestEnvironment start(boolean useFixedScenario) {
         DB_CONTAINER.start();
         KEYCLOAK_CONTAINER.start();
+        RABBITMQ_CONTAINER.start();
 
         //noinspection resource
         API_CONTAINER = new GenericContainer<>("%s:%s".formatted(API_IMAGE_NAME, API_IMAGE_VERSION))
                 .withEnv(KEYCLOAK_SERVER_URL_INTERNAL_KEY, KEYCLOAK_HOSTNAME)
                 .withEnv(KEYCLOAK_SERVER_URL_EXTERNAL_KEY, KEYCLOAK_HOSTNAME)
                 .withEnv(SPRING_DATASOURCE_URL_KEY, DB_DATASOURCE_URL)
+                .withEnv(APP_RELAY_HOST_KEY, RABBITMQ_SERVICE)
+                .withEnv(APP_RELAY_PORT_KEY, String.valueOf(RABBITMQ_STOMP_PORT))
                 .withEnv(APP_USE_FIXED_SCENARIO_KEY, String.valueOf(useFixedScenario))
                 .withEnv(POKERAPP_LOG_LEVEL_KEY, System.getenv().getOrDefault(ENV_POKERAPP_LOG_LEVEL, DEFAULT_POKERAPP_LOG_LEVEL))
                 .withExposedPorts(API_PORT)
                 .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(API_SERVICE))
                 .withNetwork(NETWORK)
                 .withNetworkAliases(API_SERVICE)
-                .dependsOn(KEYCLOAK_CONTAINER, DB_CONTAINER);
+                .dependsOn(KEYCLOAK_CONTAINER, DB_CONTAINER, RABBITMQ_CONTAINER);
         boolean isDebug = getRuntimeMXBean()
                 .getInputArguments().toString().contains("jdwp");
         if (isDebug) {
@@ -142,6 +166,7 @@ public class TestEnvironment implements AutoCloseable {
     public void close() {
         API_CONTAINER.stop();
         KEYCLOAK_CONTAINER.stop();
+        RABBITMQ_CONTAINER.stop();
         DB_CONTAINER.stop();
     }
 
