@@ -230,7 +230,7 @@ public final class LoginActivity extends AppCompatActivity {
         cancelIntent.putExtra(EXTRA_FAILED, true);
         cancelIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
-        int flags = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) ? PendingIntent.FLAG_MUTABLE : 0;
+        var flags = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) ? PendingIntent.FLAG_MUTABLE : 0;
 
         var completedIntent = PendingIntent.getActivity(this, 0, completionIntent, flags);
         var canceledIntent = PendingIntent.getActivity(this, 0, cancelIntent, flags);
