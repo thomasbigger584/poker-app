@@ -17,7 +17,7 @@ import org.springframework.web.socket.config.annotation.WebSocketTransportRegist
 @EnableWebSocketMessageBroker
 public class RabbitMqConfiguration implements WebSocketMessageBrokerConfigurer {
 
-    @Value("${app.relay.host:rabbitmq}")
+    @Value("${app.relay.host:localhost}")
     private String relayHost;
 
     @Value("${app.relay.port:61613}")
@@ -61,10 +61,10 @@ public class RabbitMqConfiguration implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.setApplicationDestinationPrefixes("/app", "/topic")
+        registry.setApplicationDestinationPrefixes("/app")
                 .setUserDestinationPrefix("/user");
 
-        registry.enableStompBrokerRelay("/topic", "/user")
+        registry.enableStompBrokerRelay("/topic", "/queue")
                 .setRelayHost(relayHost)
                 .setRelayPort(relayPort)
                 .setVirtualHost(virtualHost)
@@ -73,6 +73,7 @@ public class RabbitMqConfiguration implements WebSocketMessageBrokerConfigurer {
                 .setSystemLogin(systemLogin)
                 .setSystemPasscode(systemPasscode)
                 .setTaskScheduler(heartBeatScheduler());
+
         registry.setPreservePublishOrder(true);
     }
 

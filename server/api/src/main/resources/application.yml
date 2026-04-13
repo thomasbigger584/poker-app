@@ -50,8 +50,6 @@ server:
     websocket:
       idle-timeout: 300000
 app:
-  relay:
-    host: localhost
   deal-wait-ms: 1000
   db-poll-wait-ms: 1000
   eval-wait-ms: 4000
@@ -67,9 +65,6 @@ spring:
   config:
     activate:
       on-profile: cloud
-app:
-  relay:
-    host: rabbitmq
 logging:
   level:
     com.twb.pokerapp: INFO

@@ -73,9 +73,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         var url = URI.create(CONNECTION_URL);
         var headers = new WebSocketHttpHeaders();
         var stompHeaders = new StompHeaders();
-        
-        // RabbitMQ STOMP requires 'host' header for virtual host routing
-        stompHeaders.setHost("/"); 
+        stompHeaders.setHost("/");
         
         stompHeaders.add(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken());
         stompHeaders.put(HEADER_CONNECTION_TYPE, Collections.singletonList(getConnectionType().toString()));
@@ -129,11 +127,11 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
             var notificationReceipt = session.subscribe(notificationHeaders, this);
             notificationReceipt.addReceiptTask(() -> {
-                log.debug("Receipt received for subscription on user {} destination {}", params.getUsername(), notificationTopic);
+                log.debug("Receipt received for subscription on user {} destination {}", params.getUsername(), NOTIFICATION_TOPIC);
                 countdownLatch(connectLatch);
             });
             notificationReceipt.addReceiptLostTask(() -> {
-                throw new RuntimeException("Failed to receive notification receipt for subscription on user " + params.getUsername() + " destination " + notificationTopic);
+                throw new RuntimeException("Failed to receive notification receipt for subscription on user " + params.getUsername() + " destination " + NOTIFICATION_TOPIC);
             });
         });
         gameReceipt.addReceiptLostTask(() -> {

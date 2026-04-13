@@ -81,16 +81,19 @@ public class TestEnvironment implements AutoCloseable {
                     .withPassword(DB_PASSWORD)
                     .withDatabaseName(DB_NAME)
                     .withExposedPorts(DB_PORT)
-                    .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(DB_SERVICE))
+                    .withLogConsumer(new Slf4jLogConsumer(logger)
+                            .withPrefix(DB_SERVICE))
                     .withNetwork(NETWORK)
                     .withNetworkAliases(DB_SERVICE)
                     .dependsOn(KEYCLOAK_CONTAINER);
 
     private static final RabbitMQContainer RABBITMQ_CONTAINER =
-            new RabbitMQContainer(DockerImageName.parse(RABBITMQ_IMAGE_NAME).asCompatibleSubstituteFor("rabbitmq"))
+            new RabbitMQContainer(DockerImageName.parse(RABBITMQ_IMAGE_NAME)
+                    .asCompatibleSubstituteFor("rabbitmq"))
                     .withNetwork(NETWORK)
                     .withNetworkAliases(RABBITMQ_SERVICE)
-                    .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(RABBITMQ_SERVICE));
+                    .withLogConsumer(new Slf4jLogConsumer(logger)
+                            .withPrefix(RABBITMQ_SERVICE));
 
     private static GenericContainer<?> API_CONTAINER;
 
@@ -129,13 +132,15 @@ public class TestEnvironment implements AutoCloseable {
                 .withEnv(APP_RELAY_HOST_KEY, RABBITMQ_SERVICE)
                 .withEnv(APP_RELAY_PORT_KEY, String.valueOf(RABBITMQ_STOMP_PORT))
                 .withEnv(APP_USE_FIXED_SCENARIO_KEY, String.valueOf(useFixedScenario))
-                .withEnv(POKERAPP_LOG_LEVEL_KEY, System.getenv().getOrDefault(ENV_POKERAPP_LOG_LEVEL, DEFAULT_POKERAPP_LOG_LEVEL))
+                .withEnv(POKERAPP_LOG_LEVEL_KEY, System.getenv()
+                        .getOrDefault(ENV_POKERAPP_LOG_LEVEL, DEFAULT_POKERAPP_LOG_LEVEL))
                 .withExposedPorts(API_PORT)
-                .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(API_SERVICE))
+                .withLogConsumer(new Slf4jLogConsumer(logger)
+                        .withPrefix(API_SERVICE))
                 .withNetwork(NETWORK)
                 .withNetworkAliases(API_SERVICE)
                 .dependsOn(KEYCLOAK_CONTAINER, DB_CONTAINER, RABBITMQ_CONTAINER);
-        boolean isDebug = getRuntimeMXBean()
+        var isDebug = getRuntimeMXBean()
                 .getInputArguments().toString().contains("jdwp");
         if (isDebug) {
             API_CONTAINER.setPortBindings(
