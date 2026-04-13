@@ -24,6 +24,7 @@ public class TestScenario {
     public static final double DEFAULT_BUY_IN_AMOUNT = 5_000d;
     private static final int WAIT_DISCONNECT_TIMEOUT_SECS = 10;
     private static final int DISCONNECT_SETTLE_PERIOD_MS = 3 * 1000;
+    PRIVATE static final int SESSION_DISCONNECT_STAGGER_MS = 200;
     private final TestEnvironment env;
 
     @Getter
@@ -112,7 +113,7 @@ public class TestScenario {
             }
             try {
                 //noinspection BusyWait
-                Thread.sleep(200);
+                Thread.sleep(SESSION_DISCONNECT_STAGGER_MS);
             } catch (InterruptedException e) {
                 throw new RuntimeException("Failed to sleep waiting for sessions to disconnect", e);
             }
@@ -120,6 +121,7 @@ public class TestScenario {
     }
 
     private boolean isAllDisconnected(List<PlayerSession> sessions) {
-        return sessions.stream().allMatch(playerSession -> SessionState.CONNECTED != playerSession.getSessionState());
+        return sessions.stream()
+                .allMatch(playerSession -> SessionState.CONNECTED != playerSession.getSessionState());
     }
 }

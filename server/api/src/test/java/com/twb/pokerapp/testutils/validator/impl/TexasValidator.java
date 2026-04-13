@@ -119,7 +119,7 @@ public class TexasValidator extends Validator {
             var communityCardsSplit = communityCards.split(";");
             assertEquals(communityCardsSplit.length, messages.size());
 
-            for (int index = 0; index < communityCardsSplit.length; index++) {
+            for (var index = 0; index < communityCardsSplit.length; index++) {
                 var communityCardStr = communityCardsSplit[index];
                 var message = messages.get(index);
                 assertInstanceOf(DealCommunityCardDTO.class, message.getPayload());

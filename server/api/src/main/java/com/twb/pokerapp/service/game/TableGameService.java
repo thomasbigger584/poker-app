@@ -34,6 +34,7 @@ public class TableGameService {
     private final TableRepository tableRepository;
     private final PlayerSessionRepository playerSessionRepository;
     private final PlayerSessionService playerSessionService;
+    private final BettingRoundRepository bettingRoundRepository;
 
     private final GameThreadManager threadManager;
     private final ServerMessageFactory messageFactory;
@@ -42,7 +43,6 @@ public class TableGameService {
     private final XSync<UUID> mutex;
     private final ApplicationContext context;
     private final TransactionTemplate writeTx;
-    private final BettingRoundRepository bettingRoundRepository;
 
     public ServerMessageDTO onUserConnected(UUID tableId, ConnectionType connectionType, String username, Double buyInAmount) {
         return mutex.evaluate(tableId, () -> {

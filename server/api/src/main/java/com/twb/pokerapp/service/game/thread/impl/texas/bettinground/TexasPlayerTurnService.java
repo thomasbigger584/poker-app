@@ -202,7 +202,7 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
             }
 
             // Skip Non-Actionable Players (folded or all-in)
-            int startPlayerIndex = playerIndex;
+            var startPlayerIndex = playerIndex;
             while (!isActionable(activePlayers.get(playerIndex))) {
                 playerIndex++;
                 if (playerIndex >= activePlayers.size()) {
@@ -307,7 +307,7 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
     }
 
     private boolean isPlayerDisconnected(PlayerSession playerSession) {
-        return !userWebsocketService.isUserConnected(params.getTable(), playerSession);
+        return userWebsocketService.isUserDisconnected(params.getTable(), playerSession);
     }
 
     private void refreshActivePlayers() {

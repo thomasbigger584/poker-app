@@ -55,7 +55,7 @@ public class TexasGameThread extends GameThread {
         for (var cardType : CardType.PLAYER_CARDS) {
             for (var playerSession : activePlayers) {
                 checkRoundInterrupted();
-                if (!userWebsocketService.isUserConnected(table, playerSession)) {
+                if (userWebsocketService.isUserDisconnected(table, playerSession)) {
                     log.debug("Skipping dealing {} to disconnected player: {}", cardType, playerSession.getUser().getUsername());
                     continue;
                 }

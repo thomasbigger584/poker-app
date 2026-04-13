@@ -48,7 +48,7 @@ public class TableConnectViewModel extends ViewModel {
             return;
         }
 
-        String connectionType = "PLAYER";
+        var connectionType = "PLAYER";
         if (selectedRadioId == R.id.radio_viewer) {
             connectionType = "LISTENER";
             buyIn = 0d;

@@ -146,10 +146,9 @@ public class AuthStateManager {
 
     private SharedPreferences createEncryptedSharedPreferences(Context context) {
         try {
-            MasterKey masterKey = new MasterKey.Builder(context)
+            var masterKey = new MasterKey.Builder(context)
                     .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
                     .build();
-
             return EncryptedSharedPreferences.create(
                     context,
                     STORE_NAME,

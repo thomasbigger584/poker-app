@@ -222,14 +222,14 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
         var config = currentState.getAuthorizationServiceConfiguration();
 
         // Clear auth state but keep config if possible
-        AuthState clearedState = (config != null) ? new AuthState(config) : new AuthState();
+        var clearedState = (config != null) ? new AuthState(config) : new AuthState();
         if (currentState.getLastRegistrationResponse() != null) {
             clearedState.update(currentState.getLastRegistrationResponse());
         }
 
         authStateManager.replace(clearedState);
 
-        Intent loginIntent = new Intent(this, LoginActivity.class);
+        var loginIntent = new Intent(this, LoginActivity.class);
         loginIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(loginIntent);
         finish();
@@ -240,7 +240,7 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
     @CallSuper
     protected void onSaveInstanceState(@NonNull Bundle state) {
         super.onSaveInstanceState(state);
-        JSONObject currentInfo = userInfoJson.get();
+        var currentInfo = userInfoJson.get();
         if (currentInfo != null) {
             state.putString(KEY_USER_INFO, currentInfo.toString());
         }
