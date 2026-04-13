@@ -16,58 +16,68 @@ x-common-extra: &common-extra
 services:
 
   # --- Network ---
+  tailscale-cleanup:
+    extends:
+      file: ../../tailscale/compose.yml
+      service: tailscale-cleanup-base
   tailscale:
     extends:
-      file: tailscale/docker-compose.yml
+      file: ../../tailscale/compose.yml
       service: tailscale-base
+    depends_on:
+      tailscale-cleanup:
+        condition: service_completed_successfully
     <<: [ *common-extra ]
   nginx:
     extends:
-      file: nginx/docker-compose.yml
+      file: ../../nginx/compose.yml
       service: nginx-base
     depends_on:
       tailscale:
         condition: service_healthy
     <<: [ *network, *common-extra ]
 
-
   # --- Database ---
   postgres:
     extends:
-      file: postgres/docker-compose.yml
+      file: ../../postgres/compose.yml
       service: postgres-base
     depends_on:
       tailscale:
         condition: service_healthy
+      nginx:
+        condition: service_healthy
     <<: [ *network, *common-extra ]
-#  pgadmin:
-#    extends:
-#      file: postgres/docker-compose.yml
-#      service: pgadmin-base
-#    depends_on:
-#      postgres:
-#        condition: service_healthy
-#    <<: [ *network, *common-extra ]
-
+  #  pgadmin:
+  #    extends:
+  #      file: ../../postgres/compose.yml
+  #      service: pgadmin-base
+  #    depends_on:
+  #      postgres:
+  #        condition: service_healthy
+  #    <<: [ *network, *common-extra ]
 
   # --- MQ ---
   rabbitmq:
     extends:
-      file: rabbitmq/docker-compose.yml
+      file: ../../rabbitmq/compose.yml
       service: rabbitmq-base
     depends_on:
       tailscale:
         condition: service_healthy
+      nginx:
+        condition: service_healthy
     <<: [ *network, *common-extra ]
-
 
   # --- Auth ---
   keycloak:
     extends:
-      file: keycloak/docker-compose.yml
+      file: ../../keycloak/compose.yml
       service: keycloak-base
     depends_on:
       tailscale:
+        condition: service_healthy
+      nginx:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -75,13 +85,16 @@ services:
         condition: service_healthy
     <<: [ *network, *common-extra ]
 
-
   # --- App ---
   api:
     extends:
-      file: api/docker-compose.yml
+      file: ../../api/compose.yml
       service: api-base
     depends_on:
+      tailscale:
+        condition: service_healthy
+      nginx:
+        condition: service_healthy
       postgres:
         condition: service_healthy
       rabbitmq:

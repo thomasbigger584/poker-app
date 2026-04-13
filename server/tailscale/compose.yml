@@ -1,0 +1,43 @@
+name: 'tailscale'
+services:
+  tailscale-cleanup-base:
+    image: alpine:latest
+    container_name: tailscale-cleanup
+    env_file:
+      - ../env/.secrets.env
+    volumes:
+      - ./cleanup.sh:/cleanup.sh
+    command: sh -c "chmod +x /cleanup.sh && /cleanup.sh"
+
+  tailscale-base:
+    image: tailscale/tailscale:latest
+    container_name: tailscale
+    hostname: poker-app
+    volumes:
+      - ./serve.json:/etc/tailscale/serve.json:ro
+      - tailscale_data:/var/lib/tailscale
+      - /lib/modules:/lib/modules:ro # Required for Linux although doesnt fix any issue
+      - /dev/net/tun:/dev/net/tun
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    env_file:
+      - ../env/.secrets.env
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+      - SYS_MODULE
+    environment:
+      - TS_HOSTNAME=poker-app
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+      - TS_SERVE_CONFIG=/etc/tailscale/serve.json
+      - TS_ADVERTISE_ROUTES=
+      - TS_EPHEMERAL=false
+      - TS_EXTRA_ARGS=--accept-routes --shields-up=false
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "tailscale status --json | grep -q '\"BackendState\":.*\"Running\"' || exit 1" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s

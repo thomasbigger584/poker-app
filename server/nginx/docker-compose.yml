@@ -1,8 +1,0 @@
-name: 'nginx'
-services:
-  nginx-base:
-    image: nginx:alpine
-    container_name: nginx
-    volumes:
-      - ./conf.d:/etc/nginx/conf.d:ro
-      - ./html:/usr/share/nginx/html:ro

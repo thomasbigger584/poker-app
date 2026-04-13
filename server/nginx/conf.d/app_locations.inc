@@ -1,7 +1,3 @@
-server {
-    listen 80;
-    server_name ~^poker-app(-[0-9]+)?\.taila8b6c7\.ts\.net$;
-
     # Keycloak Main Service
     location /auth/ {
         proxy_pass http://localhost:8080/auth/;
@@ -38,7 +34,6 @@ server {
     }
 
     location / {
-        root /usr/share/nginx/html;
-        try_files $uri $uri/ /index.html;
+        root   /usr/share/nginx/html;
+        index  index.html;
     }
-}
