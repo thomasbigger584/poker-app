@@ -15,6 +15,12 @@ public class CreateTableDTO {
     @NotNull(message = "Game Type is required")
     private GameType gameType;
 
+    @Positive(message = "Speed Mutliplier should be a positive number")
+    private Double speedMultiplier;
+
+    @Positive(message = "Total Rounds should be a positive number")
+    private Integer totalRounds;
+
     @NotNull(message = "Min Players is required")
     @Positive(message = "Min Players should be a positive number")
     private Integer minPlayers;

@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <attr name="layout_scale" format="float" />
+
     <declare-styleable name="CardPairLayout">
-        <attr name="layout_scale" format="float" />
+        <attr name="layout_scale"  />
         <attr name="textsize_scale" format="float" />
+    </declare-styleable>
+
+    <declare-styleable name="CommunityCardLayout">
+        <attr name="layout_scale" />
     </declare-styleable>
 </resources>

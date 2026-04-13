@@ -1,6 +1,7 @@
 package com.twb.pokerapp.service.game.eval;
 
 import com.twb.pokerapp.domain.Card;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -8,27 +9,40 @@ import java.util.List;
 /**
  * Evaluates the rank of a poker hand using a native method.
  */
+@Slf4j
 @Component
 public class RankEvaluator {
-
     static {
-        // Load the native library containing the evaluator function
-        System.load(System.getenv("EVALUATOR_SO_PATH"));
+        try {
+            var path = System.getenv("EVALUATOR_SO_PATH");
+            if (path != null) {
+                System.load(path);
+                log.info("Successfully loaded native library.");
+            } else {
+                log.error("EVALUATOR_SO_PATH environment variable is not set.");
+            }
+        } catch (UnsatisfiedLinkError e) {
+            log.error("Failed to load native library", e);
+            throw e;
+        } catch (Throwable t) {
+            log.error("Unexpected error loading native library", t);
+            throw t;
+        }
     }
 
     /**
      * Native method to evaluate the rank of a hand of cards.
      *
-     * @param i the rank value of the first card
-     * @param j the rank value of the second card
-     * @param k the rank value of the third card
-     * @param m the rank value of the fourth card
-     * @param n the rank value of the fifth card
-     * @param p the rank value of the sixth card
-     * @param q the rank value of the seventh card
+     * @param c1 the rank value of the first card
+     * @param c2 the rank value of the second card
+     * @param c3 the rank value of the third card
+     * @param c4 the rank value of the fourth card
+     * @param c5 the rank value of the fifth card
+     * @param c6 the rank value of the sixth card
+     * @param c7 the rank value of the seventh card
      * @return the rank of the hand
      */
-    static native int getRank(int i, int j, int k, int m, int n, int p, int q);
+    static native int getRankNative(int c1, int c2, int c3, int c4, int c5, int c6, int c7);
 
     /**
      * Evaluates the rank of a hand of seven cards.
@@ -41,7 +55,7 @@ public class RankEvaluator {
         if (cards.size() != 7) {
             throw new IllegalArgumentException("Not enough cards in hand: " + cards.size());
         }
-        return getRank(cards.get(0).getRankValue(),
+        return getRankNative(cards.get(0).getRankValue(),
                 cards.get(1).getRankValue(),
                 cards.get(2).getRankValue(),
                 cards.get(3).getRankValue(),

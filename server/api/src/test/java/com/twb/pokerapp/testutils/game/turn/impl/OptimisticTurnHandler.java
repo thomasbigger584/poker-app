@@ -23,7 +23,7 @@ public class OptimisticTurnHandler implements TurnHandler {
                 .anyMatch(actionType -> actionType == ActionType.CALL)) {
             sendPlayerAction(user, ActionType.CALL, playerTurn.getAmountToCall());
         } else {
-            throw new IllegalStateException("Failed to find bet action in player turn response");
+            throw new IllegalStateException("Failed to find bet or call action in player turn response");
         }
     }
 }

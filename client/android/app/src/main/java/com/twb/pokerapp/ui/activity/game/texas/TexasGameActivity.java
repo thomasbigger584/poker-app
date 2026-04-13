@@ -4,10 +4,13 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.PopupMenu;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.lifecycle.ViewModelProvider;
@@ -15,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.twb.pokerapp.R;
+import com.twb.pokerapp.databinding.ActivityGameTexasBinding;
 import com.twb.pokerapp.data.auth.AuthService;
 import com.twb.pokerapp.data.model.dto.table.TableDTO;
 import com.twb.pokerapp.data.model.enumeration.ActionType;
@@ -31,7 +35,6 @@ import com.twb.pokerapp.ui.dialog.DialogHelper;
 import com.twb.pokerapp.ui.dialog.FinishActivityOnClickListener;
 
 import java.util.ArrayList;
-import java.util.Locale;
 
 import javax.inject.Inject;
 
@@ -46,6 +49,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     @Inject
     AuthService authService;
 
+    private ActivityGameTexasBinding binding;
     private TexasGameViewModel viewModel;
     private TableDTO table;
     private AlertDialog loadingSpinner;
@@ -67,8 +71,9 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     }
 
     @Override
-    protected int getContentView() {
-        return R.layout.activity_game_texas;
+    protected View getContentView() {
+        binding = ActivityGameTexasBinding.inflate(getLayoutInflater());
+        return binding.getRoot();
     }
 
     @Override
@@ -81,32 +86,57 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         loadingSpinner = DialogHelper.createLoadingSpinner(this);
         DialogHelper.show(loadingSpinner);
 
-        tableController = new TableController(this);
-        controlsController = new ControlsController(this);
+        tableController = new TableController(binding);
+        controlsController = new ControlsController(binding);
 
-        var chatBoxRecyclerView = (RecyclerView) findViewById(R.id.chatBoxRecyclerView);
+        initClickListeners();
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                onLeaveTable();
+            }
+        });
+
         var layoutManager = new LinearLayoutManager(this);
         layoutManager.setStackFromEnd(true);
-        chatBoxRecyclerView.setLayoutManager(layoutManager);
+        binding.chatBoxRecyclerView.setLayoutManager(layoutManager);
 
-        chatBoxAdapter = new ChatBoxRecyclerAdapter(layoutManager);
-        chatBoxRecyclerView.setAdapter(chatBoxAdapter);
+        chatBoxAdapter = new ChatBoxRecyclerAdapter();
+        binding.chatBoxRecyclerView.setAdapter(chatBoxAdapter);
+        chatBoxAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onItemRangeInserted(int positionStart, int itemCount) {
+                binding.chatBoxRecyclerView.smoothScrollToPosition(chatBoxAdapter.getItemCount() - 1);
+            }
+        });
 
         viewModel = new ViewModelProvider(this).get(TexasGameViewModel.class);
         viewModel.errors.observe(this, throwable -> {
             if (throwable == null) return;
+            handleUnauthorizedException(throwable);
             DialogHelper.dismiss(loadingSpinner);
             var alertModalDialog = AlertModalDialog
                     .newInstance(AlertModalDialog.AlertModalType.ERROR, throwable.getMessage(), null);
-            alertModalDialog.show(getSupportFragmentManager(), "error_modal");
+            var prev = getSupportFragmentManager().findFragmentByTag("error_modal");
+            if (prev == null) {
+                alertModalDialog.show(getSupportFragmentManager(), "error_modal");
+            } else {
+                Log.d("DEBUG", "Dialog error_modal already visible!");
+            }
             chatBoxAdapter.add(throwable.getMessage());
         });
         viewModel.closedConnection.observe(this, aVoid -> {
             dismissDialogs();
-            var message = "Lost connection with server";
+            var message = getString(R.string.lost_connection);
             var alertModalDialog = AlertModalDialog
                     .newInstance(AlertModalDialog.AlertModalType.ERROR, message, new FinishActivityOnClickListener(this));
-            alertModalDialog.show(getSupportFragmentManager(), "closed_connection_modal");
+            var prev = getSupportFragmentManager().findFragmentByTag("closed_connection_modal");
+            if (prev == null) {
+                alertModalDialog.show(getSupportFragmentManager(), "closed_connection_modal");
+            } else {
+                Log.d("DEBUG", "Dialog closed_connection_modal already visible!");
+            }
             chatBoxAdapter.add(message);
         });
         viewModel.playerSubscribed.observe(this, playerSubscribed -> {
@@ -119,14 +149,14 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
                     tableController.connectOtherPlayer(playerSession);
                 }
             }
-            chatBoxAdapter.add("Connected: " + currentUsername);
+            chatBoxAdapter.add(getString(R.string.connected_format, currentUsername));
             dismissDialogs();
         });
         viewModel.playerConnected.observe(this, playerConnected -> {
             var playerSession = playerConnected.getPlayerSession();
             if (!authService.isCurrentUser(playerSession.getUser())) {
                 tableController.connectOtherPlayer(playerSession);
-                chatBoxAdapter.add("Connected: " + playerSession.getUser().getUsername());
+                chatBoxAdapter.add(getString(R.string.connected_format, playerSession.getUser().getUsername()));
             }
         });
         viewModel.dealerDetermined.observe(this, dealerDetermined -> {
@@ -178,17 +208,26 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             dismissDialogs();
             tableController.hidePlayerTurns();
             controlsController.hide();
-            tableController.reset(roundFinished);
+            tableController.update(roundFinished);
         });
         viewModel.gameFinished.observe(this, gameFinished -> {
             var clickListener = new FinishActivityOnClickListener(this);
             var alertModalDialog = AlertModalDialog
-                    .newInstance(AlertModalDialog.AlertModalType.INFO, "Game Finished", clickListener);
-            alertModalDialog.show(getSupportFragmentManager(), "game_finished_modal");
-            chatBoxAdapter.add("Game Finished");
+                    .newInstance(AlertModalDialog.AlertModalType.INFO, getString(R.string.game_finished), clickListener);
+            var prev = getSupportFragmentManager().findFragmentByTag("game_finished_modal");
+            if (prev == null) {
+                alertModalDialog.show(getSupportFragmentManager(), "game_finished_modal");
+            } else {
+                Log.d("DEBUG", "Dialog game_finished_modal already visible!");
+            }
+            chatBoxAdapter.add(getString(R.string.game_finished));
         });
         viewModel.chatMessage.observe(this, chatMessage -> {
-            chatBoxAdapter.add(chatMessage.getUsername() + ": " + chatMessage.getMessage());
+            var user = chatMessage.getUsername();
+            if (chatMessage.getUsername().equals(authService.getCurrentUser())) {
+               user = "You";
+            }
+            chatBoxAdapter.add(getString(R.string.chat_message_format, user, chatMessage.getMessage()));
         });
         viewModel.logMessage.observe(this, logMessage -> {
             chatBoxAdapter.add(logMessage.getMessage());
@@ -198,11 +237,11 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         });
         viewModel.validationMessage.observe(this, validation -> {
             Log.w(TAG, "VALIDATION: Invalid PlayerAction Request: " + validation.toString());
-            Toast.makeText(this, "Invalid PlayerAction Request", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.invalid_player_action), Toast.LENGTH_SHORT).show();
         });
         viewModel.playerDisconnected.observe(this, playerDisconnected -> {
             var username = playerDisconnected.getUsername();
-            chatBoxAdapter.add("Disconnected: " + username);
+            chatBoxAdapter.add(getString(R.string.disconnected_format, username));
             var current = authService.getCurrentUser();
             if (username.equals(current)) {
                 finish();
@@ -210,6 +249,30 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
                 tableController.disconnectOtherPlayer(username);
             }
         });
+    }
+
+    private void initClickListeners() {
+        binding.foldButton.setOnClickListener(v -> {
+            dismissDialogs();
+            viewModel.onPlayerAction(ActionType.FOLD);
+        });
+        binding.checkButton.setOnClickListener(v -> {
+            dismissDialogs();
+            viewModel.onPlayerAction(ActionType.CHECK);
+        });
+        binding.betButton.setOnClickListener(v -> onBetClick());
+        binding.callButton.setOnClickListener(v -> {
+            dismissDialogs();
+            viewModel.onPlayerAction(ActionType.CALL);
+        });
+        binding.raiseButton.setOnClickListener(v -> onRaiseClick());
+        binding.allInButton.setOnClickListener(v -> {
+            dismissDialogs();
+            viewModel.onPlayerAction(ActionType.ALL_IN);
+        });
+        binding.chatBoxRecyclerView.setOnClickListener(v -> onChatClick());
+        binding.chatButton.setOnClickListener(v -> onChatClick());
+        binding.menuButton.setOnClickListener(this::onMenuClick);
     }
 
     @Override
@@ -233,30 +296,80 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
      * ****************************************************************************
      */
 
-    public void onFoldClick(View view) {
-        viewModel.onPlayerAction(ActionType.FOLD);
-    }
-
-    public void onCheckClick(View view) {
-        viewModel.onPlayerAction(ActionType.CHECK);
-    }
-
-    public void onBetClick(View view) {
+    private void onBetClick() {
         dismissDialogs();
-        var minimumBet = 10d;
-        betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.BET, buyInAmount, minimumBet, this);
-        betRaisePokerGameDialog.show(getSupportFragmentManager(), "bet_dialog");
+        var maximumBet = tableController.getPlayerCardPairLayout().getPlayerSession().getFunds();
+        var minimumBet = Math.min(10d, maximumBet);
+        betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.BET, maximumBet, minimumBet, this);
+        var prev = getSupportFragmentManager().findFragmentByTag("bet_dialog");
+        if (prev == null) {
+            betRaisePokerGameDialog.show(getSupportFragmentManager(), "bet_dialog");
+        } else {
+            Log.d("DEBUG", "Dialog bet_dialog already visible!");
+        }
     }
 
-    public void onCallClick(View view) {
-        viewModel.onPlayerAction(ActionType.CALL);
-    }
-
-    public void onRaiseClick(View view) {
+    private void onRaiseClick() {
         dismissDialogs();
-        var minimumBet = getRaiseMinimumBet();
-        betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.RAISE, buyInAmount, minimumBet, this);
-        betRaisePokerGameDialog.show(getSupportFragmentManager(), "raise_dialog");
+        var maximumBet = tableController.getPlayerCardPairLayout().getPlayerSession().getFunds();
+        var minimumBet = Math.min(getRaiseMinimumBet(), maximumBet);
+        betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.RAISE, maximumBet, minimumBet, this);
+        var prev = getSupportFragmentManager().findFragmentByTag("raise_dialog");
+        if (prev == null) {
+            betRaisePokerGameDialog.show(getSupportFragmentManager(), "raise_dialog");
+        } else {
+            Log.d("DEBUG", "Dialog raise_dialog already visible!");
+        }
+    }
+
+    private void onChatClick() {
+        var builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.send_chat_message);
+
+        var input = new android.widget.EditText(this);
+        input.setHint(R.string.enter_message);
+        builder.setView(input);
+
+        builder.setPositiveButton(R.string.confirm, (dialog, which) -> {
+            var message = input.getText().toString().trim();
+            if (!message.isEmpty()) {
+                viewModel.sendChatMessage(message);
+            }
+        });
+        builder.setNegativeButton(R.string.cancel, (dialog, which) -> dialog.cancel());
+        builder.show();
+    }
+
+    private void onMenuClick(View view) {
+        var popup = new PopupMenu(this, view);
+        popup.getMenuInflater().inflate(R.menu.game_menu, popup.getMenu());
+        popup.setOnMenuItemClickListener(this::onMenuItemClick);
+        popup.show();
+    }
+
+    private boolean onMenuItemClick(MenuItem item) {
+        var itemId = item.getItemId();
+        if (itemId == R.id.action_leave_table) {
+            onLeaveTable();
+            return true;
+        } else if (itemId == R.id.action_show_current_width) {
+            var width = getResources().getConfiguration().screenWidthDp;
+            Toast.makeText(this, "Width: " + width + "dp", Toast.LENGTH_SHORT).show();
+            return true;
+        }
+        return false;
+    }
+
+    private void onLeaveTable() {
+        var listener = new FinishActivityOnClickListener(this);
+        var dialog = AlertModalDialog.newInstance(AlertModalDialog.AlertModalType.CONFIRM,
+                        getString(R.string.leave_table_confirm), listener);
+        var prev = getSupportFragmentManager().findFragmentByTag("leave_table_modal");
+        if (prev == null) {
+            dialog.show(getSupportFragmentManager(), "leave_table_modal");
+        } else {
+            Log.d("DEBUG", "Dialog leave_table_modal already visible!");
+        }
     }
 
     /*
@@ -306,20 +419,15 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         var user = playerAction.getPlayerSession().getUser();
         var stringBuilderList = new ArrayList<String>();
         if (authService.isCurrentUser(user)) {
-            stringBuilderList.add("You");
+            stringBuilderList.add(getString(R.string.player_action_you));
         } else {
             stringBuilderList.add(user.getUsername());
         }
-        stringBuilderList.add(playerAction.getActionType().toLowerCase());
+        stringBuilderList.add(playerAction.getActionType().toLowerCase().replace("_", " "));
         var amount = playerAction.getAmount();
         if (amount != null && amount > 0d) {
-            stringBuilderList.add("with");
-            stringBuilderList.add(String.format(Locale.getDefault(), "%.2f", playerAction.getAmount()));
-        }
-        var bettingRound = playerAction.getBettingRound();
-        var bettingRoundPot = bettingRound.getPot();
-        if (bettingRoundPot != null && bettingRoundPot > 0) {
-            stringBuilderList.add(String.format(Locale.getDefault(), "(%.2f)", bettingRoundPot));
+            stringBuilderList.add(getString(R.string.player_action_with));
+            stringBuilderList.add(getString(R.string.currency_format, playerAction.getAmount()));
         }
         return String.join(" ", stringBuilderList);
     }
@@ -329,7 +437,12 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         var clickListener = new FinishActivityOnClickListener(this);
         var alertModalDialog = AlertModalDialog
                 .newInstance(AlertModalDialog.AlertModalType.ERROR, message, clickListener);
-        alertModalDialog.show(getSupportFragmentManager(), "error_modal");
+        var prev = getSupportFragmentManager().findFragmentByTag("error_modal");
+        if (prev == null) {
+            alertModalDialog.show(getSupportFragmentManager(), "error_modal");
+        } else {
+            Log.d("DEBUG", "Dialog error_modal already visible!");
+        }
         chatBoxAdapter.add(message);
     }
 

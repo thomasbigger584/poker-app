@@ -6,7 +6,10 @@ import androidx.annotation.MainThread;
 
 import com.google.gson.Gson;
 import com.twb.pokerapp.BuildConfig;
+import com.twb.pokerapp.data.auth.AuthConfiguration;
 import com.twb.pokerapp.data.auth.AuthService;
+import com.twb.pokerapp.data.exception.UnauthorizedException;
+import com.twb.pokerapp.di.network.qualifiers.Authenticated;
 import com.twb.pokerapp.data.websocket.message.client.SendChatMessageDTO;
 import com.twb.pokerapp.data.websocket.message.client.SendPlayerActionDTO;
 import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
@@ -16,24 +19,24 @@ import com.twb.stomplib.stomp.Stomp;
 import com.twb.stomplib.stomp.StompClient;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
 import javax.inject.Inject;
 
 import io.reactivex.CompletableTransformer;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
+import okhttp3.OkHttpClient;
 
 public class WebSocketClient {
     private static final String TAG = WebSocketClient.class.getSimpleName();
 
-    private static final String PROTOCOL = "ws://";
     private static final String WEBSOCKET_ENDPOINT = "/api/looping/websocket";
-    private static final int CLIENT_HEARTBEAT_MS = 1000;
-    private static final int SERVER_HEARTBEAT_MS = 1000;
+    private static final int CLIENT_HEARTBEAT_MS = 5000;
+    private static final int SERVER_HEARTBEAT_MS = 15000;
     private static final String TOPIC_PREFIX = "/topic/loops.";
     private static final String NOTIFICATIONS_TOPIC = "/user/%s/notifications";
     private static final String SEND_ENDPOINT_PREFIX = "/app/pokerTable/%s";
@@ -44,14 +47,21 @@ public class WebSocketClient {
     private static final String CONNECTION_TYPE_HEADER = "X-Connection-Type";
     private static final String BUY_IN_AMOUNT_HEADER = "X-BuyIn-Amount";
     private final AuthService authService;
+    private final AuthConfiguration authConfiguration;
+    private final OkHttpClient okHttpClient;
     private final Gson gson;
 
     private StompClient stompClient;
     private CompositeDisposable compositeDisposable;
 
     @Inject
-    public WebSocketClient(AuthService authService, Gson gson) {
+    public WebSocketClient(AuthService authService,
+                           AuthConfiguration authConfiguration,
+                           @Authenticated OkHttpClient okHttpClient,
+                           Gson gson) {
         this.authService = authService;
+        this.authConfiguration = authConfiguration;
+        this.okHttpClient = okHttpClient;
         this.gson = gson;
     }
 
@@ -63,22 +73,41 @@ public class WebSocketClient {
         if (stompClient != null && stompClient.isConnected()) {
             return;
         }
-        var accessToken = authService.getAccessToken();
-        if (accessToken == null) {
-            throw new RuntimeException("Cannot connect to websocket as access token is null");
-        }
-        var websocketUrl = PROTOCOL + BuildConfig.API_BASE_URL + WEBSOCKET_ENDPOINT;
-        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, websocketUrl);
 
-       var headers = new ArrayList<StompHeader>();
+        resetSubscriptions();
+
+        compositeDisposable.add(Single.fromCallable(authService::getAccessTokenWithRefresh)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(accessToken -> {
+                    if (accessToken == null) {
+                        // This might happen if refresh timed out but isn't "invalid"
+                        listener.onConnectError(new LifecycleEvent(LifecycleEvent.Type.ERROR));
+                        return;
+                    }
+                    connectInternal(accessToken, tableId, listener, connectionType, buyInAmount);
+                }, throwable -> {
+                    Log.e(TAG, "Error refreshing token", throwable);
+                    // This is critical: Notify the listener about the specific auth error
+                    if (throwable instanceof UnauthorizedException || throwable.getCause() instanceof UnauthorizedException) {
+                        // You can add a new method to your WebSocketListener: onAuthFailure(throwable)
+                        listener.onSubscribeError(throwable);
+                    }
+                }));
+    }
+
+    private void connectInternal(String accessToken, UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount) {
+        var protocol = authConfiguration.isHttpsRequired() ? "wss://" : "ws://";
+        var websocketUrl = protocol + BuildConfig.API_BASE_URL + WEBSOCKET_ENDPOINT;
+        stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, websocketUrl, null, okHttpClient);
+
+        var headers = new ArrayList<StompHeader>();
         headers.add(new StompHeader(AUTHORIZATION_HEADER, BEARER_PREFIX + accessToken));
         headers.add(new StompHeader(CONNECTION_TYPE_HEADER, connectionType));
         headers.add(new StompHeader(BUY_IN_AMOUNT_HEADER, String.format(Locale.getDefault(), "%.2f", buyInAmount)));
 
         stompClient.withClientHeartbeat(CLIENT_HEARTBEAT_MS)
                 .withServerHeartbeat(SERVER_HEARTBEAT_MS);
-
-        resetSubscriptions();
 
         compositeDisposable.add(stompClient.lifecycle()
                 .subscribeOn(Schedulers.io())
@@ -109,7 +138,7 @@ public class WebSocketClient {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(topicMessage -> {
-                    String payloadJson = topicMessage.getPayload();
+                    var payloadJson = topicMessage.getPayload();
                     Log.i(TAG, "SUBSCRIBE: MESSAGE: " + payloadJson);
                     listener.onMessage(gson.fromJson(payloadJson, ServerMessageDTO.class));
                 }, throwable -> {
@@ -123,7 +152,7 @@ public class WebSocketClient {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(topicMessage -> {
-                    String payloadJson = topicMessage.getPayload();
+                    var payloadJson = topicMessage.getPayload();
                     Log.i(TAG, "USER SUBSCRIBE: MESSAGE: " + payloadJson);
                     listener.onMessage(gson.fromJson(payloadJson, ServerMessageDTO.class));
                 }, throwable -> {
@@ -142,10 +171,12 @@ public class WebSocketClient {
     }
 
     public void disconnect() {
-        stompClient.disconnect();
-
+        if (stompClient != null) {
+            stompClient.disconnect();
+        }
         if (compositeDisposable != null) {
             compositeDisposable.dispose();
+            compositeDisposable = null;
         }
     }
 

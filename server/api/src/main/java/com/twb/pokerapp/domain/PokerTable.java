@@ -34,6 +34,14 @@ public class PokerTable extends Auditable {
     @Column(name = "game_type")
     private GameType gameType;
 
+    @Positive
+    @Column(name = "speed_multiplier")
+    private Double speedMultiplier;
+
+    @Positive
+    @Column(name = "total_rounds")
+    private Integer totalRounds;
+
     @NotNull
     @Positive
     @Column(name = "min_players")
@@ -69,6 +77,8 @@ public class PokerTable extends Auditable {
                 .append(id, table.id)
                 .append(name, table.name)
                 .append(gameType, table.gameType)
+                .append(speedMultiplier, table.speedMultiplier)
+                .append(totalRounds, table.totalRounds)
                 .append(minPlayers, table.minPlayers)
                 .append(maxPlayers, table.maxPlayers)
                 .append(minBuyin, table.minBuyin)
@@ -80,6 +90,7 @@ public class PokerTable extends Auditable {
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
                 .append(id).append(name).append(gameType)
+                .append(speedMultiplier).append(totalRounds)
                 .append(minPlayers).append(minPlayers)
                 .append(minBuyin).append(maxBuyin)
                 .toHashCode();
@@ -91,6 +102,8 @@ public class PokerTable extends Auditable {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", gameType=" + gameType +
+                ", speedMultiplier=" + speedMultiplier +
+                ", totalRounds=" + totalRounds +
                 ", minPlayers=" + minPlayers +
                 ", maxPlayers=" + maxPlayers +
                 ", minBuyin=" + minBuyin +

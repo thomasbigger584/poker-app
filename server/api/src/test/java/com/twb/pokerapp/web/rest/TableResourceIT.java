@@ -4,7 +4,10 @@ import com.twb.pokerapp.domain.enumeration.GameType;
 import com.twb.pokerapp.dto.table.AvailableTableDTO;
 import com.twb.pokerapp.dto.table.CreateTableDTO;
 import com.twb.pokerapp.dto.table.TableDTO;
-import com.twb.pokerapp.testutils.testcontainers.BaseTestContainersIT;
+import com.twb.pokerapp.testutils.TestEnvironment;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
@@ -13,8 +16,32 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class TableResourceIT extends BaseTestContainersIT {
+class TableResourceIT {
     private static final String ENDPOINT = "/poker-table";
+    private final static TestEnvironment env = new TestEnvironment();
+
+    // *****************************************************************************************
+    // Lifecycle Methods
+    // *****************************************************************************************
+
+    @BeforeAll
+    static void beforeAll() {
+        env.start();
+    }
+
+    @AfterEach
+    void afterEach() {
+        env.afterEach();
+    }
+
+    @AfterAll
+    static void afterAll() {
+        env.close();
+    }
+
+    // *****************************************************************************************
+    // Test Methods
+    // *****************************************************************************************
 
     @Test
     void testCreateAndFetchTable() throws Throwable {
@@ -28,6 +55,7 @@ class TableResourceIT extends BaseTestContainersIT {
         createDto.setMaxBuyin(10_000d);
 
         // when
+        var adminRestClient = env.getAdminRestClient();
         var createResponse = adminRestClient.post(TableDTO.class, createDto, ENDPOINT);
 
         // then

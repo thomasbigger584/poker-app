@@ -4,7 +4,7 @@ import com.twb.pokerapp.domain.Card;
 import com.twb.pokerapp.domain.enumeration.RankType;
 import com.twb.pokerapp.domain.enumeration.SuitType;
 import com.twb.pokerapp.exception.NotFoundException;
-import com.twb.pokerapp.service.game.DeckOfCardsFactory;
+import com.twb.pokerapp.service.game.deck.DeckFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -13,11 +13,11 @@ import java.util.stream.Collectors;
 
 public class HandFixture {
 
-    private static final Map<String, Card> DECK_MAP = DeckOfCardsFactory.getCards(false).stream()
+    private static final Map<String, Card> DECK_MAP = DeckFactory.CARDS.stream()
             .collect(Collectors.toUnmodifiableMap(card -> card.getRankType().toString() + card.getSuitType().toString(), Function.identity()));
 
     public static List<Card> createRoyalFlush() {
-        SuitType suit = SuitType.HEARTS;
+        var suit = SuitType.HEARTS;
         return List.of(
                 findCard(RankType.TEN, suit),
                 findCard(RankType.JACK, suit),
@@ -30,7 +30,7 @@ public class HandFixture {
     }
 
     public static List<Card> createUpperStraightFlush() {
-        SuitType suit = SuitType.CLUBS;
+        var suit = SuitType.CLUBS;
         return List.of(
                 findCard(RankType.NINE, suit),
                 findCard(RankType.TEN, suit),
@@ -43,7 +43,7 @@ public class HandFixture {
     }
 
     public static List<Card> createStraightFlush() {
-        SuitType suit = SuitType.CLUBS;
+        var suit = SuitType.CLUBS;
         return List.of(
                 findCard(RankType.FIVE, suit),
                 findCard(RankType.SIX, suit),
@@ -56,7 +56,7 @@ public class HandFixture {
     }
 
     public static List<Card> createLowerStraightFlush() {
-        SuitType suit = SuitType.CLUBS;
+        var suit = SuitType.CLUBS;
         return List.of(
                 findCard(RankType.ACE, suit),
                 findCard(RankType.DEUCE, suit),
@@ -69,7 +69,7 @@ public class HandFixture {
     }
 
     public static List<Card> createBothStraightAndFlush() {
-        SuitType suit = SuitType.CLUBS;
+        var suit = SuitType.CLUBS;
         return List.of(
                 findCard(RankType.ACE, suit),
                 findCard(RankType.DEUCE, suit),
@@ -277,7 +277,7 @@ public class HandFixture {
 
     public static Card findCard(RankType rankType, SuitType suitType) {
         var key = rankType.toString() + suitType.toString();
-        Card card = DECK_MAP.get(key);
+        var card = DECK_MAP.get(key);
         if (card == null) {
             throw new NotFoundException("Failed to find card: " + key + " - shouldn't get here, in a test");
         }

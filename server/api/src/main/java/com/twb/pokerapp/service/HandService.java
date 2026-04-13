@@ -28,7 +28,7 @@ public class HandService {
             throw new IllegalStateException("Round not found");
         }
         var round = roundOpt.get();
-        var handOpt = repository.findHandForRound(playerSession.getId(), round.getId());
+        var handOpt = repository.findForPlayerAndRound(playerSession.getId(), round.getId());
         Hand hand;
         if (handOpt.isPresent()) {
             hand = handOpt.get();

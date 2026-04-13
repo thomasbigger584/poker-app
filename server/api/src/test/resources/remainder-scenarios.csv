@@ -1,0 +1,15 @@
+Scenario,user1Hand,user1Start,user2Hand,user2Start,user3Hand,user3Start,Community,PreFlop,Flop,Turn,River,Winner,TotalPot,user1Win,user2Win,user3Win
+"Trips vs Straight on River",ts;tc,5000,8h;9h,5000,2d;3d,5000,th;jh;qc;7d;5s,user1:BET:500;user2:CALL:500;user3:FOLD,user1:BET:1000;user2:CALL:1000,user1:BET:2000;user2:CALL:2000,None,user2,7000,0,7000,0
+"One All-In; others keep betting",ah;kh,1000,2s;2c,5000,qs;jd,5000,ad;kd;7c;5h;3s,user1:ALL_IN:1000;user2:CALL:1000;user3:CALL:1000,user2:BET:500;user3:CALL:500,user2:BET:1000;user3:FOLD,None,user2;user1,5500,3000,2500,0
+"The Broadway Straight",as;kh,5000,2d;3d,5000,4h;5s,5000,ts;jc;qd;kd;ad,user1:BET:500;user2:FOLD;user3:FOLD,None,None,None,user1,500,500,0,0
+"Side Pot Winner/Main Pot Loser",2s;2h,5000,as;ks,1000,qd;qs,5000,ad;kc;th;5d;2c,user1:CALL:1000;user2:ALL_IN:1000;user3:CALL:1000,user1:BET:2000;user3:CALL:2000,user1:CHECK;user3:CHECK,user1:CHECK;user3:CHECK,user2;user1,7000,4000,3000,0
+"Fold to Side Pot Bet",as;ks,5000,kh;qh,1000,2d;3d,5000,js;ts;5h;2c;7d,user1:CALL:1000;user2:ALL_IN:1000;user3:CALL:1000,user1:BET:500;user3:FOLD,None,None,user2,3000,0,3000,0
+"The 1-Chip Survival",as;ad,5000,ks;kd,1,qs;qh,5000,js;th;2d;5s;7h,user1:BET:10;user2:ALL_IN:1;user3:CALL:10,user1:CHECK;user3:CHECK,user1:CHECK;user3:CHECK,user1:CHECK;user3:CHECK,user1,21,21,0,0
+"Deep Stack Pressure Fold",ah;kh,10000,2s;2c,1000,3s;3c,1000,7d;8d;9d;tc;jd,user1:BET:5000;user2:FOLD;user3:FOLD,None,None,None,user1,5000,5000,0,0
+"Split Main Pot / Single Side Pot",as;ks,5000,ac;kc,1000,2h;7d,5000,ah;kh;qd;js;tc,user1:ALL_IN:5000;user2:ALL_IN:1000;user3:CALL:5000,None,None,None,user1;user2;user1,11000,9500,1500,0
+"U2 All-In / U1 & U3 Chop Side",2s;7d,5000,as;ah,1000,2c;7h,5000,2h;7s;tc;jd;qh,user1:CALL:1000;user2:ALL_IN:1000;user3:CALL:1000,user1:BET:1000;user3:CALL:1000,user1:CHECK;user3:CHECK,user1:CHECK;user3:CHECK,user2;user1;user3,5000,1000,3000,1000
+"The 'Dry Side Pot' Fold",as;ah,5000,ks;kh,5000,qs;qh,1000,js;ts;5h;3d;2c,user1:BET:2000;user2:CALL:2000;user3:ALL_IN:1000,user1:BET:3000;user2:FOLD,None,None,user1;user1,7000,6000,0,1000
+"Three-Way Side Pot Cascade",as;ad,500,ks;kd,1500,qs;qh,5000,jh;tc;9d;8s;2c,user1:ALL_IN:500;user2:ALL_IN:1500;user3:CALL:1500,None,None,None,user1,3500,1500,2000,0
+"Split Pot / Odd Chip Distribution",ah;kd,5000,ad;kh,5000,2s;7c,5000,ac;kc;qh;jc;ts,user1:BET:100;user2:CALL:100;user3:FOLD,None,None,None,user1;user2,200,100,100,0
+"Inside Straight vs Outside Straight",3s;4h,5000,7d;8c,5000,as;ah,5000,5d;6h;2s;9c;ts,user1:BET:500;user2:CALL:500;user3:FOLD,None,None,None,user2,1000,0,1000,0
+"All-In with 'Dead' Small Stack",9s;9h,200,as;ks,5000,kd;qd,5000,2s;3d;4h;5c;jh,user1:ALL_IN:200;user2:BET:1000;user3:CALL:1000,user2:BET:2000;user3:FOLD,None,None,user2,3400,0,3400,0

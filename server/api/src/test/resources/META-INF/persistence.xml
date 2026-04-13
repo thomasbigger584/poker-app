@@ -13,6 +13,10 @@
         <class>com.twb.pokerapp.domain.PlayerSession</class>
         <class>com.twb.pokerapp.domain.PokerTable</class>
         <class>com.twb.pokerapp.domain.Round</class>
+        <class>com.twb.pokerapp.domain.RoundPot</class>
+        <class>com.twb.pokerapp.domain.RoundWinner</class>
+        <class>com.twb.pokerapp.domain.FixedScenario</class>
+        <class>com.twb.pokerapp.domain.BettingRoundRefund</class>
         <shared-cache-mode>NONE</shared-cache-mode>
 
         <properties>

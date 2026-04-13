@@ -1,6 +1,7 @@
 package com.twb.pokerapp.testutils.game.player;
 
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
+import com.twb.pokerapp.testutils.game.GameLatches;
 import com.twb.pokerapp.testutils.http.message.ServerMessageConverter;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
@@ -10,14 +11,13 @@ import com.twb.pokerapp.web.websocket.message.server.payload.validation.Validati
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.keycloak.admin.client.Keycloak;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpHeaders;
 import org.springframework.messaging.simp.stomp.*;
-import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
-import org.springframework.web.socket.sockjs.client.RestTemplateXhrTransport;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.Transport;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
@@ -29,7 +29,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -42,22 +41,26 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String HEADER_CONNECTION_TYPE = "X-Connection-Type";
     private static final String HEADER_BUYIN_AMOUNT = "X-BuyIn-Amount";
+    private static final int HEARTBEAT_IN_MS = 5 * 1000;
+    private static final int CONNECT_LATCH_TIMEOUT_SECS = 30;
     @Getter
     protected final TestUserParams params;
-    private final Keycloak keycloak;
     private final WebSocketStompClient client;
     private final CountDownLatch connectLatch = new CountDownLatch(1);
     @Getter
     private final AtomicReference<Throwable> exceptionThrown = new AtomicReference<>();
     @Getter
     private final List<ServerMessageDTO> receivedMessages = Collections.synchronizedList(new ArrayList<>());
-    private StompSession session;
+    protected StompSession session;
 
     public AbstractTestUser(TestUserParams params) {
-        this.keycloak = params.getKeycloak();
         this.params = params;
         this.client = createClient();
         this.session = null;
+    }
+
+    public String getUsername() {
+        return params.getUsername();
     }
 
     public void connect() throws InterruptedException {
@@ -65,7 +68,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     }
 
     public void connect(Double buyInAmount) throws InterruptedException {
-        log.info("Connecting {} to {}", params.getUsername(), params.getTable().getId());
+        log.debug("Connecting {} to {}", params.getUsername(), params.getTable().getId());
         var url = URI.create(CONNECTION_URL);
         var headers = new WebSocketHttpHeaders();
         var stompHeaders = new StompHeaders();
@@ -76,7 +79,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         }
 
         client.connectAsync(url, headers, stompHeaders, this);
-        if (!connectLatch.await(15, TimeUnit.SECONDS)) {
+        if (!connectLatch.await(CONNECT_LATCH_TIMEOUT_SECS, TimeUnit.SECONDS)) {
             log.error("Timed out user {} from connecting to table {} via websocket", params.getUsername(), params.getTable().getId());
             throw new RuntimeException("Timed out user " + params.getUsername() + " from connecting to table " + params.getTable().getId());
         }
@@ -84,10 +87,17 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
     public void disconnect() {
         if (session != null && session.isConnected()) {
-            log.info("Disconnecting {} from {}", params.getUsername(), params.getTable().getId());
+            log.debug("Disconnecting {} from {}", params.getUsername(), params.getTable().getId());
             session.disconnect();
         }
         session = null;
+    }
+
+    public void stop() {
+        if (client != null) {
+            log.debug("Stopping client for user {}", params.getUsername());
+            client.stop();
+        }
     }
 
     // ***************************************************************
@@ -95,7 +105,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     // ***************************************************************
 
     @Override
-    public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
+    public void afterConnected(StompSession session, @NonNull StompHeaders connectedHeaders) {
         this.session = session;
 
         var gameTopic = GAME_TOPIC_SUFFIX.formatted(params.getTable().getId());
@@ -107,7 +117,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
         var gameReceipt = session.subscribe(gameHeaders, this);
         gameReceipt.addReceiptTask(() -> {
-            log.info("Receipt received for subscription on user {} destination {}", params.getUsername(), gameTopic);
+            log.debug("Receipt received for subscription on user {} destination {}", params.getUsername(), gameTopic);
 
             var notificationHeaders = new StompHeaders();
             notificationHeaders.setDestination(notificationTopic);
@@ -115,7 +125,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
             var notificationReceipt = session.subscribe(notificationHeaders, this);
             notificationReceipt.addReceiptTask(() -> {
-                log.info("Receipt received for subscription on user {} destination {}", params.getUsername(), notificationTopic);
+                log.debug("Receipt received for subscription on user {} destination {}", params.getUsername(), notificationTopic);
                 countdownLatch(connectLatch);
             });
             notificationReceipt.addReceiptLostTask(() -> {
@@ -128,27 +138,31 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     }
 
     @Override
-    public void handleException(StompSession session, StompCommand command,
-                                StompHeaders headers, byte[] payload, Throwable exception) {
+    public void handleException(@NonNull StompSession session, StompCommand command,
+                                @NonNull StompHeaders headers, byte @NonNull [] payload, @NonNull Throwable exception) {
         log.error("Exception thrown during stomp session", exception);
-        exceptionThrown.set(exception);
+        if (this.session != null) {
+            exceptionThrown.compareAndSet(null, exception);
+        }
         countdownLatches();
     }
 
     @Override
-    public void handleTransportError(StompSession session, Throwable exception) {
+    public void handleTransportError(@NonNull StompSession session, @NonNull Throwable exception) {
         log.error("Exception thrown after connect failure", exception);
-        exceptionThrown.set(exception);
+        if (this.session != null) {
+            exceptionThrown.compareAndSet(null, exception);
+        }
         countdownLatches();
     }
 
     @Override
-    public Type getPayloadType(StompHeaders headers) {
+    public @NonNull Type getPayloadType(@NonNull StompHeaders headers) {
         return ServerMessageDTO.class;
     }
 
     @Override
-    public void handleFrame(StompHeaders headers, Object payload) {
+    public void handleFrame(@NonNull StompHeaders headers, Object payload) {
         if (payload == null) {
             log.error("Frame received but payload is null with headers {}", headers);
             return;
@@ -157,14 +171,16 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
             var message = (ServerMessageDTO) payload;
             receivedMessages.add(message);
 
+            var gameLatch = params.getLatches().gameLatch();
             if (message.getPayload() instanceof ErrorMessageDTO errorDto) {
-                log.error("{} received error message: {}", params.getUsername(), errorDto.getMessage());
+                GameLatches.countdown(gameLatch);
                 return;
             } else if (message.getPayload() instanceof LogMessageDTO logDto) {
-                log.info("{} received log message: {}", params.getUsername(), logDto.getMessage());
+                log.debug("{} received log message: {}", params.getUsername(), logDto.getMessage());
                 return;
             } else if (message.getPayload() instanceof ValidationDTO validationDto) {
-                log.info("{} received validation message: {}", params.getUsername(), validationDto.getFields());
+                log.debug("{} received validation message: {}", params.getUsername(), validationDto.getFields());
+                GameLatches.countdown(gameLatch);
                 return;
             }
             handleMessage(headers, message);
@@ -187,14 +203,14 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
             log.warn("Cannot send to destination {} for user {} as not connected", destination, params.getUsername());
             return;
         }
-        log.info(">>>> [{}] sending {}", params.getUsername(), dto);
+        log.debug(">>>> [{}] sending {}", params.getUsername(), dto);
 
         var headers = new StompHeaders();
         headers.setDestination(destination);
         headers.setReceipt("receipt-" + params.getUsername() + "-send-" + UUID.randomUUID());
 
         var receiptable = session.send(headers, dto);
-        receiptable.addReceiptTask(() -> log.info("Receipt received for user {} destination {} and payload {}", params.getUsername(), destination, dto));
+        receiptable.addReceiptTask(() -> log.debug("Receipt received for user {} destination {} and payload {}", params.getUsername(), destination, dto));
         receiptable.addReceiptLostTask(() -> {
             throw new RuntimeException(String.format("Failed to receive receipt for user %s destination %s and payload %s", params.getUsername(), destination, dto));
         });
@@ -214,21 +230,28 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
     @NotNull
     private WebSocketStompClient createClient() {
-        var transports = new ArrayList<Transport>(2);
+        var transports = new ArrayList<Transport>(1);
         transports.add(new WebSocketTransport(new StandardWebSocketClient()));
-        transports.add(new RestTemplateXhrTransport());
 
         var sockJsClient = new SockJsClient(transports);
+
+        var taskScheduler = new ThreadPoolTaskScheduler();
+        taskScheduler.setPoolSize(5);
+        taskScheduler.setThreadNamePrefix("stomp-test-heartbeat-");
+        taskScheduler.initialize();
+
         var stompClient = new WebSocketStompClient(sockJsClient);
-        stompClient.setTaskScheduler(new ConcurrentTaskScheduler(Executors.newSingleThreadScheduledExecutor()));
+        stompClient.setTaskScheduler(taskScheduler);
+
+        stompClient.setDefaultHeartbeat(new long[]{HEARTBEAT_IN_MS, (long) (HEARTBEAT_IN_MS * 3)});
         stompClient.setMessageConverter(new ServerMessageConverter());
+        stompClient.setInboundMessageSizeLimit(1024 * 1024);
         return stompClient;
     }
 
     private void countdownLatches() {
         countdownLatch(connectLatch);
         var latches = params.getLatches();
-        countdownLatch(latches.roundLatch());
         countdownLatch(latches.gameLatch());
     }
 
@@ -239,7 +262,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     }
 
     private String getAccessToken() {
-        var tokenManager = keycloak.tokenManager();
+        var tokenManager = params.getKeycloak().tokenManager();
         var accessTokenResponse = tokenManager.getAccessToken();
         return accessTokenResponse.getToken();
     }

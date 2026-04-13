@@ -14,7 +14,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -39,6 +42,11 @@ public class PlayerActionService {
 
         playerAction = repository.save(playerAction);
 
+        if (playerAction.getActionType() == ActionType.FOLD) {
+            playerSession.setActive(false);
+            playerSessionRepository.save(playerSession);
+        }
+
         return playerAction;
     }
 
@@ -52,21 +60,10 @@ public class PlayerActionService {
             nextActions = previousPlayerActionType.getNextActions();
             amountToCall = getAmountToCall(playerSession, prevPlayerActions);
         }
-        nextActions = filterNextActionsForAffordability(playerSession, amountToCall, nextActions);
-        return new NextActionsDTO(amountToCall, nextActions);
-    }
-
-    private ActionType[] filterNextActionsForAffordability(PlayerSession playerSession, double amountToCall, ActionType[] nextActions) {
         if (amountToCall > playerSession.getFunds()) {
-            // note: removing call here but in an all in scenario that is restricted,
-            // consider adding new ActionType for ALL_IN here and handle appropriately and also client side button
-            nextActions = Arrays.stream(nextActions)
-                    .filter(actionType -> actionType != ActionType.BET &&
-                            actionType != ActionType.CALL &&
-                            actionType != ActionType.RAISE)
-                    .toArray(ActionType[]::new);
+            nextActions = ActionType.getAllInActions();
         }
-        return nextActions;
+        return new NextActionsDTO(amountToCall, nextActions);
     }
 
     @Transactional(propagation = Propagation.MANDATORY, readOnly = true)
@@ -75,6 +72,40 @@ public class PlayerActionService {
         var maxBet = playerContributions.values().stream().max(Double::compare).orElse(0d);
         var currentContribution = playerContributions.getOrDefault(playerSession.getId(), 0d);
         return Math.max(0d, maxBet - currentContribution);
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY, readOnly = true)
+    public boolean isAggressive(PlayerAction playerAction) {
+        var bettingRound = playerAction.getBettingRound();
+        var actionType = playerAction.getActionType();
+        var isAggressive = actionType.isAggressive();
+
+        // If All-In, we must check if it was a Raise (Aggressive) or a Call (Passive)
+        // by comparing the amount against the max bet of other players.
+
+        // scenario where a player has already put money in the pot (e.g., a Call) and then later goes All-In for a raise.
+        // 1. Player A Bets 100.
+        // 2. Player B Calls 100.
+        // 3. Player C Raises to 300 (Delta: 300).
+        // 4. Player A Calls 200 (Total: 300).
+        // 5. Player B goes All-In for 400 Total (Delta: 300).
+
+        if (!isAggressive && actionType == ActionType.ALL_IN) {
+            var actions = repository.findPlayerActionsNotFolded(bettingRound.getId());
+            var playerContributions = getPlayerContributions(actions);
+
+            var currentPlayerId = playerAction.getPlayerSession().getId();
+            var currentPlayerTotal = playerContributions.getOrDefault(currentPlayerId, 0d);
+            var maxOtherTotal = playerContributions.entrySet().stream()
+                    .filter(entry -> !entry.getKey().equals(currentPlayerId))
+                    .mapToDouble(Map.Entry::getValue)
+                    .max()
+                    .orElse(0d);
+            if (currentPlayerTotal > maxOtherTotal) {
+                isAggressive = true;
+            }
+        }
+        return isAggressive;
     }
 
     private Map<UUID, Double> getPlayerContributions(List<PlayerAction> prevPlayerActions) {

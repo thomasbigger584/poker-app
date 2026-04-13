@@ -17,24 +17,24 @@
         android:id="@+id/community2CardLayout"
         android:layout_width="70dp"
         android:layout_height="100dp"
-        android:layout_marginLeft="8dp" />
+        android:layout_marginStart="8dp" />
 
     <com.twb.pokerapp.ui.layout.CardLayout
         android:id="@+id/community3CardLayout"
         android:layout_width="70dp"
         android:layout_height="100dp"
-        android:layout_marginLeft="8dp" />
+        android:layout_marginStart="8dp" />
 
     <com.twb.pokerapp.ui.layout.CardLayout
         android:id="@+id/community4CardLayout"
         android:layout_width="70dp"
         android:layout_height="100dp"
-        android:layout_marginLeft="8dp" />
+        android:layout_marginStart="8dp" />
 
     <com.twb.pokerapp.ui.layout.CardLayout
         android:id="@+id/community5CardLayout"
         android:layout_width="70dp"
         android:layout_height="100dp"
-        android:layout_marginLeft="8dp" />
+        android:layout_marginStart="8dp" />
 
 </merge>

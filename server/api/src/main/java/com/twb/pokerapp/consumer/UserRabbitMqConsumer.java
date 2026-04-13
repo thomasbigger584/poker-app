@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-@Profile(ProfileConfiguration.DIGITALOCEAN_PROFILE)
+@Profile(ProfileConfiguration.CLOUD_PROFILE)
 public class UserRabbitMqConsumer {
     private final ObjectMapper objectMapper;
     private final UserService userService;

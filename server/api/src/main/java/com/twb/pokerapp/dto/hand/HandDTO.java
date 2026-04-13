@@ -14,6 +14,5 @@ public class HandDTO {
     private UUID id;
     private HandType handType;
     private String handTypeStr;
-    private Boolean winner;
     private List<CardDTO> cards = new ArrayList<>();
 }

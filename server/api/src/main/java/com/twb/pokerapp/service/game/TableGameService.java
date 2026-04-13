@@ -1,10 +1,10 @@
 package com.twb.pokerapp.service.game;
 
 import com.antkorwin.xsync.XSync;
-import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.exception.game.GamePlayerErrorLogException;
 import com.twb.pokerapp.exception.game.GamePlayerLogException;
+import com.twb.pokerapp.repository.BettingRoundRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.TableRepository;
 import com.twb.pokerapp.repository.UserRepository;
@@ -34,6 +34,7 @@ public class TableGameService {
     private final TableRepository tableRepository;
     private final PlayerSessionRepository playerSessionRepository;
     private final PlayerSessionService playerSessionService;
+    private final BettingRoundRepository bettingRoundRepository;
 
     private final GameThreadManager threadManager;
     private final ServerMessageFactory messageFactory;
@@ -130,21 +131,19 @@ public class TableGameService {
 
             var threadOpt = threadManager.getIfExists(tableId);
             if (threadOpt.isEmpty()) {
-                log.error("No game thread for table ID: {}", tableId);
+                log.debug("No game thread for table ID: {}", tableId);
                 return;
             }
             var gameThread = threadOpt.get();
-
             if (playerSession.getConnectionType() == ConnectionType.PLAYER) {
-                var playerActionService = table.getGameType().getPlayerActionService(context);
-                var action = new CreatePlayerActionDTO();
-                action.setAction(ActionType.FOLD);
-                playerActionService.playerAction(playerSession, gameThread, action);
-            }
-
-            var playerSessions = playerSessionRepository.findConnectedPlayersByTableId(tableId);
-            if (playerSessions.size() < 2) {
-                gameThread.stopGame();
+                var playerTurnLatch = gameThread.getPlayerTurnLatch();
+                if (playerTurnLatch != null && username.equals(playerTurnLatch.playerSession().getUser().getUsername())) {
+                    var bettingRoundOpt = bettingRoundRepository.findCurrentByTableId(tableId);
+                    bettingRoundOpt.ifPresent(bettingRound -> {
+                        table.getGameType().getPlayerActionService(context)
+                                .onExecuteAutoAction(playerSession, bettingRound, gameThread);
+                    });
+                }
             }
         }));
     }

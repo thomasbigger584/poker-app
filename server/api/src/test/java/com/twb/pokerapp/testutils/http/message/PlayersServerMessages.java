@@ -15,14 +15,15 @@ public class PlayersServerMessages extends HashMap<String, List<ServerMessageDTO
     public PlayersServerMessages() {
     }
 
-    public PlayersServerMessages(AbstractTestUser listener,
-                                 List<AbstractTestUser> players) {
-        put(listener.getParams().getUsername(), listener.getReceivedMessages());
-        for (var player : players) {
+    public PlayersServerMessages(AbstractTestUser listenerUser,
+                                 List<AbstractTestUser> playerUsers) {
+        put(listenerUser.getParams().getUsername(), listenerUser.getReceivedMessages());
+        for (var player : playerUsers) {
             put(player.getParams().getUsername(), player.getReceivedMessages());
         }
     }
 
+    @Deprecated
     public PlayersServerMessages getByNumberOfRounds(int numberOfRounds) {
         var messages = new PlayersServerMessages();
         for (var entry : entrySet()) {

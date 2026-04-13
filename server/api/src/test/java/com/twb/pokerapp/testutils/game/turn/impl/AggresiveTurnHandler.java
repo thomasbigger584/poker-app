@@ -11,11 +11,16 @@ import java.util.Arrays;
 import static com.twb.pokerapp.testutils.game.turn.TurnHandler.sendPlayerAction;
 
 public class AggresiveTurnHandler implements TurnHandler {
+    private static final double DEFAULT_BET_AMOUNT = 10d;
+
     @Override
     public void handle(AbstractTestUser user, StompHeaders headers, PlayerTurnDTO playerTurn) {
         if (Arrays.stream(playerTurn.getNextActions())
                 .anyMatch(actionType -> actionType == ActionType.RAISE)) {
             sendPlayerAction(user, ActionType.RAISE, playerTurn.getAmountToCall() * 2);
+        } else if (Arrays.stream(playerTurn.getNextActions())
+                .anyMatch(actionType -> actionType == ActionType.BET)) {
+            sendPlayerAction(user, ActionType.BET, DEFAULT_BET_AMOUNT);
         } else if (Arrays.stream(playerTurn.getNextActions())
                 .anyMatch(actionType -> actionType == ActionType.CALL)) {
             sendPlayerAction(user, ActionType.CALL, playerTurn.getAmountToCall());
@@ -23,7 +28,7 @@ public class AggresiveTurnHandler implements TurnHandler {
                 .anyMatch(actionType -> actionType == ActionType.CHECK)) {
             sendPlayerAction(user, ActionType.CHECK, 0d);
         } else {
-            throw new IllegalStateException("Failed to find bet action in player turn response");
+            throw new IllegalStateException("Failed to find action in player turn response");
         }
     }
 }

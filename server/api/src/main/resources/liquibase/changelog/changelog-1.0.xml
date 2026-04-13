@@ -47,6 +47,8 @@
             <column name="game_type" type="text">
                 <constraints nullable="false"/>
             </column>
+            <column name="speed_multiplier" type="double"/>
+            <column name="total_rounds" type="int"/>
             <column name="min_players" type="int">
                 <constraints nullable="false"/>
             </column>
@@ -80,9 +82,6 @@
             <column name="round_state" type="text" defaultValue="WAITING_FOR_PLAYERS">
                 <constraints nullable="false"/>
             </column>
-            <column name="pot" type="double">
-                <constraints nullable="false"/>
-            </column>
             <column name="created_date_time" type="TIMESTAMP WITH TIME ZONE">
                 <constraints nullable="false"/>
             </column>
@@ -109,6 +108,7 @@
             <column name="position" type="int"/>
             <column name="dealer" type="boolean" defaultValue="0"/>
             <column name="current" type="boolean" defaultValue="0"/>
+            <column name="active" type="boolean" defaultValue="0"/>
             <column name="funds" type="double"/>
             <column name="session_state" type="text"/>
             <column name="connection_type" type="text"/>
@@ -140,7 +140,6 @@
                 <constraints nullable="false"/>
             </column>
             <column name="hand_type" type="text"/>
-            <column name="winner" type="boolean" defaultValue="0"/>
             <column name="created_date_time" type="TIMESTAMP WITH TIME ZONE">
                 <constraints nullable="false"/>
             </column>
@@ -206,9 +205,6 @@
             <column name="state" type="text">
                 <constraints nullable="false"/>
             </column>
-            <column name="pot" type="double" defaultValueNumeric="0">
-                <constraints nullable="false"/>
-            </column>
             <column name="created_date_time" type="TIMESTAMP WITH TIME ZONE">
                 <constraints nullable="false"/>
             </column>
@@ -253,4 +249,118 @@
                                  referencedTableName="betting_round" referencedColumnNames="id"/>
     </changeSet>
 
+    <changeSet author="tbigg" id="9">
+        <createTable tableName="round_pot">
+            <column name="id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="round_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pot_amount" type="double"/>
+            <column name="pot_index" type="int"/>
+            <column name="created_date_time" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_date_time" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="pk_round_pot" tableName="round_pot"/>
+        <addForeignKeyConstraint constraintName="fk_round_pot_round_id" onDelete="CASCADE"
+                                 baseTableName="round_pot" baseColumnNames="round_id"
+                                 referencedTableName="round" referencedColumnNames="id"/>
+
+        <createTable tableName="round_pot_eligible_players">
+            <column name="round_pot_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="player_session_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint constraintName="fk_round_pot_eligible_players_round_pot_id" onDelete="CASCADE"
+                                 baseTableName="round_pot_eligible_players" baseColumnNames="round_pot_id"
+                                 referencedTableName="round_pot" referencedColumnNames="id"/>
+        <addForeignKeyConstraint constraintName="fk_round_pot_eligible_players_player_session_id" onDelete="CASCADE"
+                                 baseTableName="round_pot_eligible_players" baseColumnNames="player_session_id"
+                                 referencedTableName="player_session" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet author="tbigg" id="10">
+        <createTable tableName="round_winner">
+            <column name="id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="player_session_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="round_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hand_id" type="uuid"/>
+            <column name="amount" type="double">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date_time" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_date_time" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="pk_round_winner" tableName="round_winner"/>
+        <addForeignKeyConstraint constraintName="fk_round_winner_player_session_id" onDelete="CASCADE"
+                                 baseTableName="round_winner" baseColumnNames="player_session_id"
+                                 referencedTableName="player_session" referencedColumnNames="id"/>
+        <addForeignKeyConstraint constraintName="fk_round_winner_round_id" onDelete="CASCADE"
+                                 baseTableName="round_winner" baseColumnNames="round_id"
+                                 referencedTableName="round" referencedColumnNames="id"/>
+        <addForeignKeyConstraint constraintName="fk_round_winner_hand_id" onDelete="CASCADE"
+                                 baseTableName="round_winner" baseColumnNames="hand_id"
+                                 referencedTableName="hand" referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet author="tbigg" id="11">
+        <createTable tableName="fixed_scenario">
+            <column name="id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="player_hands" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+            <column name="community_cards" type="text"/>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="pk_fixed_scenario" tableName="fixed_scenario"/>
+    </changeSet>
+
+    <changeSet author="tbigg" id="12">
+        <createTable tableName="betting_round_refund">
+            <column name="id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="player_session_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="betting_round_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="double">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date_time" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_date_time" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="pk_betting_round_refund" tableName="betting_round_refund"/>
+        <addForeignKeyConstraint constraintName="fk_betting_round_refund_player_session_id" onDelete="CASCADE"
+                                 baseTableName="betting_round_refund" baseColumnNames="player_session_id"
+                                 referencedTableName="player_session" referencedColumnNames="id"/>
+        <addForeignKeyConstraint constraintName="fk_betting_round_refund_round_id" onDelete="CASCADE"
+                                 baseTableName="betting_round_refund" baseColumnNames="betting_round_id"
+                                 referencedTableName="betting_round" referencedColumnNames="id"/>
+    </changeSet>
 </databaseChangeLog>

@@ -10,12 +10,16 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 @Slf4j
-@Component
+@Component("blackjackGameThread")
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public final class BlackjackGameThread extends GameThread {
     public BlackjackGameThread(GameThreadParams params) {
         super(params);
     }
+
+    // *****************************************************************************************
+    // Lifecycle Methods
+    // *****************************************************************************************
 
     @Override
     protected void onInitRound() {

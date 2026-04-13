@@ -45,6 +45,9 @@ public class PlayerSession extends Auditable {
     @Column(name = "current")
     private Boolean current;
 
+    @Column(name = "active")
+    private Boolean active;
+
     @Column(name = "funds")
     private Double funds;
 
@@ -68,6 +71,15 @@ public class PlayerSession extends Auditable {
     @JoinColumn(name = "round_id")
     private Round round;
 
+    @OneToMany(mappedBy = "playerSession")
+    private List<BettingRoundRefund> bettingRoundRefunds = new ArrayList<>();
+
+    @ManyToMany(mappedBy = "eligiblePlayers")
+    private List<RoundPot> roundPots = new ArrayList<>();
+
+    @OneToMany(mappedBy = "playerSession")
+    private List<RoundWinner> roundWinners = new ArrayList<>();
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -78,6 +90,7 @@ public class PlayerSession extends Auditable {
                 .append(position, playerSession.position)
                 .append(dealer, playerSession.dealer)
                 .append(current, playerSession.current)
+                .append(active, playerSession.active)
                 .append(funds, playerSession.funds)
                 .append(sessionState, playerSession.sessionState)
                 .append(connectionType, playerSession.connectionType)
@@ -88,7 +101,7 @@ public class PlayerSession extends Auditable {
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
                 .append(id).append(position).append(dealer).append(current)
-                .append(funds).append(sessionState).append(connectionType)
+                .append(active).append(funds).append(sessionState).append(connectionType)
                 .toHashCode();
     }
 
@@ -100,6 +113,7 @@ public class PlayerSession extends Auditable {
                 ", position=" + position +
                 ", dealer=" + dealer +
                 ", current=" + current +
+                ", active=" + active +
                 ", funds=" + funds +
                 ", sessionState=" + sessionState +
                 ", connectionType=" + connectionType +

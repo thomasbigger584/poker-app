@@ -4,9 +4,6 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 public abstract class BaseRepository {
-    protected final MutableLiveData<Throwable> errorLiveData = new MutableLiveData<>();
-
-    public LiveData<Throwable> getErrors() {
-        return errorLiveData;
-    }
+    protected final MutableLiveData<Throwable> _errorLiveData = new MutableLiveData<>();
+    public final LiveData<Throwable> errorLiveData = _errorLiveData;
 }

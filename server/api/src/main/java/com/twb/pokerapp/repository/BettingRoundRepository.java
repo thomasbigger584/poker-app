@@ -6,11 +6,19 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface BettingRoundRepository extends JpaRepository<BettingRound, UUID> {
+
+    @Query("""
+            SELECT b
+            FROM BettingRound b
+            WHERE b.state = com.twb.pokerapp.domain.enumeration.BettingRoundState.IN_PROGRESS
+            """)
+    List<BettingRound> findAllCurrent();
 
     @Query("""
             SELECT b
