@@ -30,7 +30,7 @@ public class BettingRoundRefund extends Auditable {
     @JoinColumn(name = "betting_round_id")
     private BettingRound bettingRound;
 
-    @Column(name = "amount")
+    @Column(name = "amount", precision = 19, scale = 2)
     private BigDecimal amount;
 
     @Override

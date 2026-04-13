@@ -49,7 +49,7 @@ public class PlayerSession extends Auditable {
     @Column(name = "active")
     private Boolean active;
 
-    @Column(name = "funds")
+    @Column(name = "funds", precision = 19, scale = 2)
     private BigDecimal funds;
 
     @NotNull

@@ -5,7 +5,6 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
 import static com.twb.pokerapp.testutils.TestScenario.DEFAULT_BUY_IN_AMOUNT;
 
@@ -23,10 +22,10 @@ public class ScenarioParams {
         if (scenarioPlayers == null) {
             return DEFAULT_BUY_IN_AMOUNT;
         }
-        var minBuyInOpt = scenarioPlayers.stream()
+        return scenarioPlayers.stream()
                 .map(ScenarioPlayer::getBuyIn)
                 .filter(java.util.Objects::nonNull)
-                .min(BigDecimal::compareTo);
-        return minBuyInOpt.orElse(DEFAULT_BUY_IN_AMOUNT);
+                .min(BigDecimal::compareTo)
+                .orElse(DEFAULT_BUY_IN_AMOUNT);
     }
 }

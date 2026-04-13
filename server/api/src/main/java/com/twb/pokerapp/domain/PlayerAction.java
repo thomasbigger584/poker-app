@@ -37,7 +37,7 @@ public class PlayerAction extends Auditable {
     @Column(name = "action_type")
     private ActionType actionType;
 
-    @Column(name = "amount")
+    @Column(name = "amount", precision = 19, scale = 2)
     private BigDecimal amount;
 
     @Override

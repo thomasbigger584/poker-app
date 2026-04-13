@@ -24,7 +24,7 @@ public class RoundPot extends Auditable {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "pot_amount")
+    @Column(name = "pot_amount", precision = 19, scale = 2)
     private BigDecimal potAmount;
 
     @Column(name = "pot_index")

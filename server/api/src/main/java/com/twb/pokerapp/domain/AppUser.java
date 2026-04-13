@@ -54,7 +54,7 @@ public class AppUser extends Auditable {
 
     // -----------------------------------------------------------------
 
-    @Column(name = "total_funds")
+    @Column(name = "total_funds", precision = 19, scale = 2)
     private BigDecimal totalFunds = BigDecimal.ZERO;
 
     @Override

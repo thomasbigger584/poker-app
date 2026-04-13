@@ -55,12 +55,12 @@ public class PokerTable extends Auditable {
 
     @NotNull
     @Positive
-    @Column(name = "min_buyin")
+    @Column(name = "min_buyin", precision = 19, scale = 2)
     private BigDecimal minBuyin;
 
     @NotNull
     @Positive
-    @Column(name = "max_buyin")
+    @Column(name = "max_buyin", precision = 19, scale = 2)
     private BigDecimal maxBuyin;
 
     @OneToMany(mappedBy = "pokerTable", cascade = CascadeType.ALL)

@@ -36,7 +36,7 @@ public class RoundWinner extends Auditable {
     @JoinColumn(name = "hand_id")
     private Hand hand;
 
-    @Column(name = "amount")
+    @Column(name = "amount", precision = 19, scale = 2)
     private BigDecimal amount;
 
     @Override
