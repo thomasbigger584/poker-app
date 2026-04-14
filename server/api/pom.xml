@@ -15,7 +15,6 @@
     <description>API</description>
     <properties>
         <java.version>21</java.version>
-        <docker.image.name>com.twb.pokerapp/api</docker.image.name>
         <org.projectlombok.version>1.18.42</org.projectlombok.version>
         <org.mapstruct.version>1.6.3</org.mapstruct.version>
         <error-prone.version>2.45.0</error-prone.version>
@@ -30,7 +29,6 @@
         <guava.version>33.5.0-jre</guava.version>
 
         <!--  Test Properties  -->
-        <docker-maven-plugin.version>0.48.0</docker-maven-plugin.version>
         <build-helper-maven-plugin.version>3.6.1</build-helper-maven-plugin.version>
         <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>3.5.4</maven-failsafe-plugin.version>
@@ -284,39 +282,6 @@
                                     </includes>
                                 </resource>
                             </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Docker Maven plugin to build Docker images -->
-            <plugin>
-                <groupId>io.fabric8</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-                <version>${docker-maven-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>start</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>build</goal>
-                        </goals>
-                        <configuration>
-                            <verbose>true</verbose>
-                            <images>
-                                <image>
-                                    <name>${docker.image.name}:latest</name>
-                                    <build>
-                                        <dockerFileDir>${project.basedir}</dockerFileDir>
-                                        <buildx>
-                                            <platforms>
-                                                <platform>linux/amd64</platform>
-                                                <platform>linux/arm64</platform>
-                                            </platforms>
-                                        </buildx>
-                                    </build>
-                                </image>
-                            </images>
                         </configuration>
                     </execution>
                 </executions>
