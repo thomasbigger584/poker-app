@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Build API" type="ShConfigurationType">
+  <configuration default="false" name="Docker Build API" type="ShConfigurationType">
     <option name="SCRIPT_TEXT" value="docker compose build rabbitmq api;" />
     <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
     <option name="SCRIPT_PATH" value="" />
