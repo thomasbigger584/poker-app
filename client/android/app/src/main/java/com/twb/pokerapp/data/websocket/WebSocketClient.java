@@ -121,6 +121,7 @@ public class WebSocketClient {
                         listener.onConnectError(lifecycleEvent);
                     } else if (lifecycleEvent.getType() == LifecycleEvent.Type.CLOSED) {
                         listener.onClosed(lifecycleEvent);
+                        resetSubscriptions();
                     } else if (lifecycleEvent.getType() == LifecycleEvent.Type.FAILED_SERVER_HEARTBEAT) {
                         listener.onFailedServerHeartbeat(lifecycleEvent);
                     }

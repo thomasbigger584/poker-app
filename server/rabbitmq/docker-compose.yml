@@ -4,10 +4,6 @@ services:
     build: .
     container_name: rabbitmq
     image: com.twb.pokerapp/rabbitmq
-    ports:
-      - "61613:61613"
-      - "5672:5672"
-      - "15672:15672"
     healthcheck:
       test: [ "CMD", "rabbitmq-diagnostics", "status" ]
       interval: 10s
