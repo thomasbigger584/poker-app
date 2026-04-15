@@ -36,8 +36,8 @@ public class WebSocketClient {
 
     private static final String WEBSOCKET_ENDPOINT = "/api/looping";
     private static final int HEARTBEAT_MS = 20000;
-
-    private static final String TOPIC_PREFIX = "/topic/loops.";
+    private static final String GAME_APP_SUBSCRIBE = "/app/loops.%s";
+    private static final String GAME_TOPIC_SUBSCRIBE = "/topic/loops.%s";
     private static final String NOTIFICATIONS_TOPIC = "/user/queue/notifications";
 
     private static final String SEND_ENDPOINT_PREFIX = "/app/pokerTable.%s";
@@ -93,14 +93,15 @@ public class WebSocketClient {
 
         stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, websocketUrl, null, okHttpClient);
 
-        List<StompHeader> connectHeaders = new ArrayList<>();
+        var connectHeaders = new ArrayList<StompHeader>();
+        connectHeaders.add(new StompHeader(StompHeader.ID, "host"));
+        connectHeaders.add(new StompHeader("host", "/"));
         connectHeaders.add(new StompHeader("Authorization", "Bearer " + accessToken));
         connectHeaders.add(new StompHeader("X-Connection-Type", connectionType));
         connectHeaders.add(new StompHeader("X-BuyIn-Amount", String.format(Locale.getDefault(), "%.2f", buyInAmount)));
 
         stompClient.withClientHeartbeat(HEARTBEAT_MS).withServerHeartbeat(HEARTBEAT_MS);
 
-        // Handle Lifecycle
         compositeDisposable.add(stompClient.lifecycle()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -119,49 +120,58 @@ public class WebSocketClient {
     }
 
     private void subscribeWithReceipts(UUID tableId, WebSocketListener listener) {
-        // 1. Subscribe to Notifications FIRST with a Receipt (Just like AbstractTestUser)
-        var notificationReceiptId = "receipt-notifications-" + UUID.randomUUID();
-        List<StompHeader> notificationHeaders = new ArrayList<>();
-        notificationHeaders.add(new StompHeader(StompHeader.DESTINATION, NOTIFICATIONS_TOPIC));
-        notificationHeaders.add(new StompHeader(StompHeader.RECEIPT, notificationReceiptId));
+        var tableIdStr = tableId.toString();
 
-        compositeDisposable.add(stompClient.topic(NOTIFICATIONS_TOPIC, notificationHeaders)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(topicMessage -> {
-                    listener.onMessage(gson.fromJson(topicMessage.getPayload(), ServerMessageDTO.class));
-                }, throwable -> {
-                    Log.e(TAG, "Notification Subscription Error", throwable);
-                    listener.onSubscribeError(throwable);
-                }));
+        // 1. App Subscription (Handshake / Initial State)
+        var appTopic = String.format(GAME_APP_SUBSCRIBE, tableIdStr);
+        var appReceiptId = "receipt-app-" + UUID.randomUUID();
+        var appHeaders = new ArrayList<StompHeader>();
+        appHeaders.add(new StompHeader(StompHeader.DESTINATION, appTopic));
+        appHeaders.add(new StompHeader(StompHeader.RECEIPT, appReceiptId));
 
-        // 2. Subscribe to Table Topic with a Receipt
-        var tableReceiptId = "receipt-table-" + UUID.randomUUID();
-        List<StompHeader> tableHeaders = new ArrayList<>();
-        tableHeaders.add(new StompHeader(StompHeader.DESTINATION, TOPIC_PREFIX + tableId));
-        tableHeaders.add(new StompHeader(StompHeader.RECEIPT, tableReceiptId));
+        // 2. Live Topic Subscription (Broadcasting Game Events)
+        var liveTopic = String.format(GAME_TOPIC_SUBSCRIBE, tableIdStr);
+        var liveReceiptId = "receipt-live-" + UUID.randomUUID();
+        var liveHeaders = new ArrayList<StompHeader>();
+        liveHeaders.add(new StompHeader(StompHeader.DESTINATION, liveTopic));
+        liveHeaders.add(new StompHeader(StompHeader.RECEIPT, liveReceiptId));
 
-        compositeDisposable.add(stompClient.topic(TOPIC_PREFIX + tableId, tableHeaders)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(topicMessage -> {
-                    listener.onMessage(gson.fromJson(topicMessage.getPayload(), ServerMessageDTO.class));
-                }, throwable -> {
-                    Log.e(TAG, "Table Subscription Error", throwable);
-                    listener.onSubscribeError(throwable);
-                }));
+        // 3. User Notifications
+        var notifReceiptId = "receipt-notif-" + UUID.randomUUID();
+        var notifHeaders = new ArrayList<StompHeader>();
+        notifHeaders.add(new StompHeader(StompHeader.DESTINATION, NOTIFICATIONS_TOPIC));
+        notifHeaders.add(new StompHeader(StompHeader.RECEIPT, notifReceiptId));
 
-        // 3. Listen for Receipts to confirm "Subscription Complete"
+        // Start Subscriptions
+        subscribeToTopic(appTopic, appHeaders, listener);
+        subscribeToTopic(liveTopic, liveHeaders, listener);
+        subscribeToTopic(NOTIFICATIONS_TOPIC, notifHeaders, listener);
+
+        // Chain logic for receipts
         compositeDisposable.add(stompClient.receipts()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(receiptId -> {
-                    Log.d(TAG, "Receipt received from server: " + receiptId);
-                    if (receiptId.equals(tableReceiptId)) {
-                        Log.i(TAG, "All subscriptions confirmed. Ready to play.");
+                    Log.d(TAG, "Receipt received: " + receiptId);
+                    // Once the Live Topic is confirmed, we consider the connection "Fully Open"
+                    if (receiptId.equals(liveReceiptId)) {
+                        Log.i(TAG, "Game connection established and confirmed.");
                         listener.onOpened(new LifecycleEvent(LifecycleEvent.Type.OPENED));
                     }
                 }, throwable -> Log.e(TAG, "Receipt Error", throwable)));
+    }
+
+    private void subscribeToTopic(String topic, List<StompHeader> headers, WebSocketListener listener) {
+        compositeDisposable.add(stompClient.topic(topic, headers)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(stompMessage -> {
+                    var message = gson.fromJson(stompMessage.getPayload(), ServerMessageDTO.class);
+                    listener.onMessage(message);
+                }, throwable -> {
+                    Log.e(TAG, "Subscription error on topic: " + topic, throwable);
+                    listener.onSubscribeError(throwable);
+                }));
     }
 
     private void resetSubscriptions() {
