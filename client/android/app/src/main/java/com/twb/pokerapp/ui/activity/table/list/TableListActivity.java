@@ -77,8 +77,13 @@ public class TableListActivity extends BaseAuthActivity implements TableListAdap
 
     @Override
     protected void onAuthorized() {
-        binding.swipeRefreshLayout.setRefreshing(true);
-        viewModel.refresh();
+        refreshData();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshData();
     }
 
     @Override
@@ -113,5 +118,10 @@ public class TableListActivity extends BaseAuthActivity implements TableListAdap
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void refreshData() {
+        binding.swipeRefreshLayout.setRefreshing(true);
+        viewModel.refresh();
     }
 }
