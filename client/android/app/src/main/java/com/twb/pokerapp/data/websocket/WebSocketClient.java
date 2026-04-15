@@ -9,7 +9,6 @@ import com.twb.pokerapp.BuildConfig;
 import com.twb.pokerapp.data.auth.AuthConfiguration;
 import com.twb.pokerapp.data.auth.AuthService;
 import com.twb.pokerapp.data.exception.UnauthorizedException;
-import com.twb.pokerapp.di.network.qualifiers.Authenticated;
 import com.twb.pokerapp.data.websocket.message.client.SendChatMessageDTO;
 import com.twb.pokerapp.data.websocket.message.client.SendPlayerActionDTO;
 import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
@@ -19,6 +18,7 @@ import com.twb.stomplib.stomp.Stomp;
 import com.twb.stomplib.stomp.StompClient;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -34,18 +34,16 @@ import okhttp3.OkHttpClient;
 public class WebSocketClient {
     private static final String TAG = WebSocketClient.class.getSimpleName();
 
-    private static final String WEBSOCKET_ENDPOINT = "/api/looping/websocket";
-    private static final int CLIENT_HEARTBEAT_MS = 5000;
-    private static final int SERVER_HEARTBEAT_MS = 15000;
+    private static final String WEBSOCKET_ENDPOINT = "/api/looping";
+    private static final int HEARTBEAT_MS = 20000;
+
     private static final String TOPIC_PREFIX = "/topic/loops.";
-    private static final String NOTIFICATIONS_TOPIC = "/user/%s/notifications";
-    private static final String SEND_ENDPOINT_PREFIX = "/app/pokerTable/%s";
-    private static final String SEND_CHAT_MESSAGE = "/sendChatMessage";
-    private static final String SEND_PLAYER_ACTION = "/sendPlayerAction";
-    private static final String AUTHORIZATION_HEADER = "Authorization";
-    private static final String BEARER_PREFIX = "Bearer ";
-    private static final String CONNECTION_TYPE_HEADER = "X-Connection-Type";
-    private static final String BUY_IN_AMOUNT_HEADER = "X-BuyIn-Amount";
+    private static final String NOTIFICATIONS_TOPIC = "/user/queue/notifications";
+
+    private static final String SEND_ENDPOINT_PREFIX = "/app/pokerTable.%s";
+    private static final String SEND_CHAT_MESSAGE = ".sendChatMessage";
+    private static final String SEND_PLAYER_ACTION = ".sendPlayerAction";
+
     private final AuthService authService;
     private final AuthConfiguration authConfiguration;
     private final OkHttpClient okHttpClient;
@@ -57,17 +55,13 @@ public class WebSocketClient {
     @Inject
     public WebSocketClient(AuthService authService,
                            AuthConfiguration authConfiguration,
-                           @Authenticated OkHttpClient okHttpClient,
+                           OkHttpClient okHttpClient,
                            Gson gson) {
         this.authService = authService;
         this.authConfiguration = authConfiguration;
         this.okHttpClient = okHttpClient;
         this.gson = gson;
     }
-
-    // ***************************************************************
-    // WebSocket Lifecycle
-    // ***************************************************************
 
     public void connect(UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount) {
         if (stompClient != null && stompClient.isConnected()) {
@@ -81,16 +75,13 @@ public class WebSocketClient {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(accessToken -> {
                     if (accessToken == null) {
-                        // This might happen if refresh timed out but isn't "invalid"
                         listener.onConnectError(new LifecycleEvent(LifecycleEvent.Type.ERROR));
                         return;
                     }
                     connectInternal(accessToken, tableId, listener, connectionType, buyInAmount);
                 }, throwable -> {
                     Log.e(TAG, "Error refreshing token", throwable);
-                    // This is critical: Notify the listener about the specific auth error
-                    if (throwable instanceof UnauthorizedException || throwable.getCause() instanceof UnauthorizedException) {
-                        // You can add a new method to your WebSocketListener: onAuthFailure(throwable)
+                    if (throwable instanceof UnauthorizedException) {
                         listener.onSubscribeError(throwable);
                     }
                 }));
@@ -98,69 +89,79 @@ public class WebSocketClient {
 
     private void connectInternal(String accessToken, UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount) {
         var protocol = authConfiguration.isHttpsRequired() ? "wss://" : "ws://";
-        var websocketUrl = protocol + BuildConfig.API_BASE_URL + WEBSOCKET_ENDPOINT;
+        var websocketUrl = protocol + BuildConfig.API_BASE_URL + WEBSOCKET_ENDPOINT + "/websocket";
+
         stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, websocketUrl, null, okHttpClient);
 
-        var headers = new ArrayList<StompHeader>();
-        headers.add(new StompHeader(AUTHORIZATION_HEADER, BEARER_PREFIX + accessToken));
-        headers.add(new StompHeader(CONNECTION_TYPE_HEADER, connectionType));
-        headers.add(new StompHeader(BUY_IN_AMOUNT_HEADER, String.format(Locale.getDefault(), "%.2f", buyInAmount)));
+        List<StompHeader> connectHeaders = new ArrayList<>();
+        connectHeaders.add(new StompHeader("Authorization", "Bearer " + accessToken));
+        connectHeaders.add(new StompHeader("X-Connection-Type", connectionType));
+        connectHeaders.add(new StompHeader("X-BuyIn-Amount", String.format(Locale.getDefault(), "%.2f", buyInAmount)));
 
-        stompClient.withClientHeartbeat(CLIENT_HEARTBEAT_MS)
-                .withServerHeartbeat(SERVER_HEARTBEAT_MS);
+        stompClient.withClientHeartbeat(HEARTBEAT_MS).withServerHeartbeat(HEARTBEAT_MS);
 
+        // Handle Lifecycle
         compositeDisposable.add(stompClient.lifecycle()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(lifecycleEvent -> {
-                    switch (lifecycleEvent.getType()) {
-                        case OPENED:
-                            Log.i(TAG, "CONNECT: Stomp Connection OPENED");
-                            listener.onOpened(lifecycleEvent);
-                            break;
-                        case ERROR:
-                            Log.e(TAG, "CONNECT: Stomp connection error", lifecycleEvent.getException());
-                            listener.onConnectError(lifecycleEvent);
-                            break;
-                        case CLOSED:
-                            Log.i(TAG, "CONNECT: Stomp Connection CLOSED");
-                            listener.onClosed(lifecycleEvent);
-                            resetSubscriptions();
-                            break;
-                        case FAILED_SERVER_HEARTBEAT:
-                            Log.e(TAG, "CONNECT: Stomp Failed server heartbeat");
-                            listener.onFailedServerHeartbeat(lifecycleEvent);
-                            break;
+                    if (lifecycleEvent.getType() == LifecycleEvent.Type.OPENED) {
+                        Log.i(TAG, "Stomp Connection OPENED - Initiating Subscriptions");
+                        subscribeWithReceipts(tableId, listener);
+                    } else if (lifecycleEvent.getType() == LifecycleEvent.Type.ERROR) {
+                        listener.onConnectError(lifecycleEvent);
+                    } else if (lifecycleEvent.getType() == LifecycleEvent.Type.CLOSED) {
+                        listener.onClosed(lifecycleEvent);
                     }
                 }));
 
-        compositeDisposable.add(stompClient.topic(TOPIC_PREFIX + tableId)
+        stompClient.connect(connectHeaders);
+    }
+
+    private void subscribeWithReceipts(UUID tableId, WebSocketListener listener) {
+        // 1. Subscribe to Notifications FIRST with a Receipt (Just like AbstractTestUser)
+        var notificationReceiptId = "receipt-notifications-" + UUID.randomUUID();
+        List<StompHeader> notificationHeaders = new ArrayList<>();
+        notificationHeaders.add(new StompHeader(StompHeader.DESTINATION, NOTIFICATIONS_TOPIC));
+        notificationHeaders.add(new StompHeader(StompHeader.RECEIPT, notificationReceiptId));
+
+        compositeDisposable.add(stompClient.topic(NOTIFICATIONS_TOPIC, notificationHeaders)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(topicMessage -> {
-                    var payloadJson = topicMessage.getPayload();
-                    Log.i(TAG, "SUBSCRIBE: MESSAGE: " + payloadJson);
-                    listener.onMessage(gson.fromJson(payloadJson, ServerMessageDTO.class));
+                    listener.onMessage(gson.fromJson(topicMessage.getPayload(), ServerMessageDTO.class));
                 }, throwable -> {
-                    Log.e(TAG, "SUBSCRIBE: Subscription Error", throwable);
+                    Log.e(TAG, "Notification Subscription Error", throwable);
                     listener.onSubscribeError(throwable);
                 }));
 
-        var currentUser = authService.getCurrentUser();
-        var notificationTopic = String.format(Locale.getDefault(), NOTIFICATIONS_TOPIC, currentUser);
-        compositeDisposable.add(stompClient.topic(notificationTopic)
+        // 2. Subscribe to Table Topic with a Receipt
+        var tableReceiptId = "receipt-table-" + UUID.randomUUID();
+        List<StompHeader> tableHeaders = new ArrayList<>();
+        tableHeaders.add(new StompHeader(StompHeader.DESTINATION, TOPIC_PREFIX + tableId));
+        tableHeaders.add(new StompHeader(StompHeader.RECEIPT, tableReceiptId));
+
+        compositeDisposable.add(stompClient.topic(TOPIC_PREFIX + tableId, tableHeaders)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(topicMessage -> {
-                    var payloadJson = topicMessage.getPayload();
-                    Log.i(TAG, "USER SUBSCRIBE: MESSAGE: " + payloadJson);
-                    listener.onMessage(gson.fromJson(payloadJson, ServerMessageDTO.class));
+                    listener.onMessage(gson.fromJson(topicMessage.getPayload(), ServerMessageDTO.class));
                 }, throwable -> {
-                    Log.e(TAG, "USER SUBSCRIBE: Subscription Error", throwable);
+                    Log.e(TAG, "Table Subscription Error", throwable);
                     listener.onSubscribeError(throwable);
                 }));
 
-        stompClient.connect(headers);
+        // 3. Listen for Receipts to confirm "Subscription Complete"
+        compositeDisposable.add(stompClient.receipts()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(receiptId -> {
+                    Log.d(TAG, "Receipt received from server: " + receiptId);
+                    if (receiptId.equals(tableReceiptId)) {
+                        Log.i(TAG, "All subscriptions confirmed. Ready to play.");
+                        listener.onOpened(new LifecycleEvent(LifecycleEvent.Type.OPENED));
+                    }
+                }, throwable -> Log.e(TAG, "Receipt Error", throwable)));
     }
 
     private void resetSubscriptions() {
@@ -180,24 +181,15 @@ public class WebSocketClient {
         }
     }
 
-    // ***************************************************************
-    // WebSocket Send Methods
-    // ***************************************************************
-
     public void sendChatMessage(UUID tableId, SendChatMessageDTO dto, SendListener listener) {
-        var destination = String.format(SEND_ENDPOINT_PREFIX + SEND_CHAT_MESSAGE, tableId);
-        var message = gson.toJson(dto);
-        sendMessage(destination, message, listener);
+        var destination = String.format(Locale.getDefault(), SEND_ENDPOINT_PREFIX + SEND_CHAT_MESSAGE, tableId);
+        sendMessage(destination, gson.toJson(dto), listener);
     }
 
     public void sendPlayerAction(UUID tableId, SendPlayerActionDTO dto, SendListener listener) {
-        var destination = String.format(SEND_ENDPOINT_PREFIX + SEND_PLAYER_ACTION, tableId);
-        var message = gson.toJson(dto);
-        sendMessage(destination, message, listener);
+        var destination = String.format(Locale.getDefault(), SEND_ENDPOINT_PREFIX + SEND_PLAYER_ACTION, tableId);
+        sendMessage(destination, gson.toJson(dto), listener);
     }
-
-    // WebSocket Send Helper Methods
-    // ----------------------------------------------------------------
 
     private void sendMessage(String destination, String message, SendListener listener) {
         compositeDisposable.add(stompClient.send(destination, message)
@@ -211,10 +203,6 @@ public class WebSocketClient {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
     }
-
-    // ***************************************************************
-    // Listeners
-    // ***************************************************************
 
     @MainThread
     public interface SendListener {

@@ -19,7 +19,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Completable;
-import io.reactivex.CompletableSource;
 import io.reactivex.Flowable;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.annotations.Nullable;
@@ -58,46 +57,22 @@ public class StompClient {
         });
     }
 
-    /**
-     * Sets the heartbeat interval to request from the server.
-     * <p>
-     * Not very useful yet, because we don't have any heartbeat logic on our side.
-     *
-     * @param ms heartbeat time in milliseconds
-     */
     public StompClient withServerHeartbeat(int ms) {
         heartBeatTask.setServerHeartbeat(ms);
         return this;
     }
 
-    /**
-     * Sets the heartbeat interval that client propose to send.
-     * <p>
-     * Not very useful yet, because we don't have any heartbeat logic on our side.
-     *
-     * @param ms heartbeat time in milliseconds
-     */
     public StompClient withClientHeartbeat(int ms) {
         heartBeatTask.setClientHeartbeat(ms);
         return this;
     }
 
-    /**
-     * Connect without reconnect if connected
-     */
     public void connect() {
         connect(null);
     }
 
-    /**
-     * Connect to websocket. If already connected, this will silently fail.
-     *
-     * @param _headers HTTP headers to send in the INITIAL REQUEST, i.e. during the protocol upgrade
-     */
     public void connect(@Nullable List<StompHeader> _headers) {
-
         Log.d(TAG, "Connect");
-
         this.headers = _headers;
 
         if (isConnected()) {
@@ -160,6 +135,17 @@ public class StompClient {
         return messageStream;
     }
 
+    /**
+     * Exposes a stream of Receipt IDs received from the server.
+     * Used by the client to confirm subscriptions or message delivery.
+     */
+    public Flowable<String> receipts() {
+        return getMessageStream()
+                .filter(msg -> msg.getStompCommand().equals(StompCommand.RECEIPT))
+                .map(msg -> msg.findHeader(StompHeader.RECEIPT_ID)) // Maps to the value of "receipt-id"
+                .toFlowable(BackpressureStrategy.BUFFER);
+    }
+
     public Completable send(String destination) {
         return send(destination, null);
     }
@@ -212,9 +198,7 @@ public class StompClient {
     }
 
     public Completable disconnectCompletable() {
-
         heartBeatTask.shutdown();
-
         if (lifecycleDisposable != null) {
             lifecycleDisposable.dispose();
         }
@@ -252,10 +236,8 @@ public class StompClient {
 
     private Completable subscribePath(String destinationPath, @Nullable List<StompHeader> headerList) {
         var topicId = UUID.randomUUID().toString();
-
         if (topics == null) topics = new ConcurrentHashMap<>();
 
-        // Only continue if we don't already have a subscription to the topic
         if (topics.containsKey(destinationPath)) {
             Log.d(TAG, "Attempted to subscribe to already-subscribed path!");
             return Completable.complete();
@@ -267,40 +249,24 @@ public class StompClient {
         headers.add(new StompHeader(StompHeader.DESTINATION, destinationPath));
         headers.add(new StompHeader(StompHeader.ACK, DEFAULT_ACK));
         if (headerList != null) headers.addAll(headerList);
+
         return send(new StompMessage(StompCommand.SUBSCRIBE,
                 headers, null))
                 .doOnError(throwable -> unsubscribePath(destinationPath).subscribe());
     }
 
-
     private Completable unsubscribePath(String dest) {
         streamMap.remove(dest);
-
+        if (topics == null) return Completable.complete();
         var topicId = topics.get(dest);
-
-        if (topicId == null) {
-            return Completable.complete();
-        }
-
+        if (topicId == null) return Completable.complete();
         topics.remove(dest);
 
         Log.d(TAG, "Unsubscribe path: " + dest + " id: " + topicId);
-
         return send(new StompMessage(StompCommand.UNSUBSCRIBE,
                 Collections.singletonList(new StompHeader(StompHeader.ID, topicId)), null)).onErrorComplete();
     }
 
-    /**
-     * Set the wildcard or other matcher for Topic subscription.
-     * <p>
-     * Right now, the only options are simple, rmq supported.
-     * But you can write you own matcher by implementing {@link PathMatcher}
-     * <p>
-     * When set to {@link ua.naiksoftware.stomp.pathmatcher.RabbitPathMatcher}, topic subscription allows for RMQ-style wildcards.
-     * <p>
-     *
-     * @param pathMatcher Set to {@link SimplePathMatcher} by default
-     */
     public void setPathMatcher(PathMatcher pathMatcher) {
         this.pathMatcher = pathMatcher;
     }
@@ -309,28 +275,11 @@ public class StompClient {
         return getConnectionStream().getValue();
     }
 
-    /**
-     * Reverts to the old frame formatting, which included two newlines between the message body
-     * and the end-of-frame marker.
-     * <p>
-     * Legacy: Body\n\n^@
-     * <p>
-     * Default: Body^@
-     *
-     * @param legacyWhitespace whether to append an extra two newlines
-     * @see <a href="http://stomp.github.io/stomp-specification-1.2.html#STOMP_Frames">The STOMP spec</a>
-     */
     public void setLegacyWhitespace(boolean legacyWhitespace) {
         this.legacyWhitespace = legacyWhitespace;
     }
 
-    /**
-     * returns the to topic (subscription id) corresponding to a given destination
-     *
-     * @param dest the destination
-     * @return the topic (subscription id) or null if no topic corresponds to the destination
-     */
     public String getTopicId(String dest) {
-        return topics.get(dest);
+        return topics != null ? topics.get(dest) : null;
     }
 }

@@ -12,6 +12,12 @@ public class StompHeader {
     public static final String ID = "id";
     public static final String ACK = "ack";
 
+    // Used by the Client to request a receipt
+    public static final String RECEIPT = "receipt";
+
+    // Used by the Server in the RECEIPT frame
+    public static final String RECEIPT_ID = "receipt-id";
+
     private final String mKey;
     private final String mValue;
 
