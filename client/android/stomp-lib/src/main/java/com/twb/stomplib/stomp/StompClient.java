@@ -257,11 +257,14 @@ public class StompClient {
 
     private Completable unsubscribePath(String dest) {
         streamMap.remove(dest);
-        if (topics == null) return Completable.complete();
+        if (topics == null) {
+            return Completable.complete();
+        }
         var topicId = topics.get(dest);
-        if (topicId == null) return Completable.complete();
+        if (topicId == null) {
+            return Completable.complete();
+        }
         topics.remove(dest);
-
         Log.d(TAG, "Unsubscribe path: " + dest + " id: " + topicId);
         return send(new StompMessage(StompCommand.UNSUBSCRIBE,
                 Collections.singletonList(new StompHeader(StompHeader.ID, topicId)), null)).onErrorComplete();

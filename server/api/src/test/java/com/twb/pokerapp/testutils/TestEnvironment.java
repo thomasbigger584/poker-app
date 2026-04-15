@@ -184,6 +184,10 @@ public class TestEnvironment implements AutoCloseable {
         if (DB_CONTAINER != null) DB_CONTAINER.stop();
     }
 
+    // *****************************************************************************************
+    // Helper Methods
+    // *****************************************************************************************
+
     private static String getPortBindingString(int port) {
         return "%d:%d".formatted(port, port);
     }

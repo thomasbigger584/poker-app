@@ -11,8 +11,6 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @Configuration
 @EnableWebSocketMessageBroker
 public class RabbitMqConfiguration implements WebSocketMessageBrokerConfigurer {
-
-    // Aligned with your definitions.json "admin" user
     @Value("${spring.rabbitmq.host:localhost}")
     private String relayHost;
 

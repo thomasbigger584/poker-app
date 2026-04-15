@@ -47,7 +47,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private static final String HEADER_CONNECTION_TYPE = "X-Connection-Type";
     private static final String HEADER_BUYIN_AMOUNT = "X-BuyIn-Amount";
 
-    // Increased to 20s to prevent RabbitMQ from closing connections during Docker lag
+    // Using 20s to prevent RabbitMQ from closing connections during Docker lag
     private static final int HEARTBEAT_IN_MS = 20 * 1000;
     private static final int CONNECT_LATCH_TIMEOUT_SECS = 30;
 
@@ -239,8 +239,17 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         receiptable.addReceiptTask(() -> log.debug("Receipt received for user {} destination {}", params.getUsername(), destination));
     }
 
+    // ***************************************************************
+    // Abstract Methods
+    // ***************************************************************
+
     protected abstract void handleMessage(StompHeaders headers, ServerMessageDTO message);
+
     protected abstract ConnectionType getConnectionType();
+
+    // ***************************************************************
+    // Helper Methods
+    // ***************************************************************
 
     @NotNull
     private WebSocketStompClient createClient() {
@@ -257,6 +266,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         stompClient.setTaskScheduler(taskScheduler);
 
         // 0 means client will NOT expect heartbeats FROM the server (more stable for testing).
+        // TODO: revise the 0 for running apps
         stompClient.setDefaultHeartbeat(new long[]{HEARTBEAT_IN_MS, 0});
 
         stompClient.setMessageConverter(new ServerMessageConverter());

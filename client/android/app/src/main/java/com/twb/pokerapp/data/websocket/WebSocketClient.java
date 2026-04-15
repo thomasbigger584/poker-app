@@ -12,6 +12,7 @@ import com.twb.pokerapp.data.exception.UnauthorizedException;
 import com.twb.pokerapp.data.websocket.message.client.SendChatMessageDTO;
 import com.twb.pokerapp.data.websocket.message.client.SendPlayerActionDTO;
 import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
+import com.twb.pokerapp.di.network.qualifiers.Authenticated;
 import com.twb.stomplib.dto.LifecycleEvent;
 import com.twb.stomplib.dto.StompHeader;
 import com.twb.stomplib.stomp.Stomp;
@@ -55,13 +56,18 @@ public class WebSocketClient {
     @Inject
     public WebSocketClient(AuthService authService,
                            AuthConfiguration authConfiguration,
-                           OkHttpClient okHttpClient,
+                           @Authenticated OkHttpClient okHttpClient,
                            Gson gson) {
         this.authService = authService;
         this.authConfiguration = authConfiguration;
         this.okHttpClient = okHttpClient;
         this.gson = gson;
     }
+
+
+    // ***************************************************************
+    // WebSocket Lifecycle
+    // ***************************************************************
 
     public void connect(UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount) {
         if (stompClient != null && stompClient.isConnected()) {
@@ -113,6 +119,8 @@ public class WebSocketClient {
                         listener.onConnectError(lifecycleEvent);
                     } else if (lifecycleEvent.getType() == LifecycleEvent.Type.CLOSED) {
                         listener.onClosed(lifecycleEvent);
+                    } else if (lifecycleEvent.getType() == LifecycleEvent.Type.FAILED_SERVER_HEARTBEAT) {
+                        listener.onFailedServerHeartbeat(lifecycleEvent);
                     }
                 }));
 
