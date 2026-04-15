@@ -87,7 +87,8 @@ public class WebSocketClient {
                     connectInternal(accessToken, tableId, listener, connectionType, buyInAmount);
                 }, throwable -> {
                     Log.e(TAG, "Error refreshing token", throwable);
-                    if (throwable instanceof UnauthorizedException) {
+                    if (throwable instanceof UnauthorizedException
+                            || throwable.getCause() instanceof UnauthorizedException) {
                         listener.onSubscribeError(throwable);
                     }
                 }));
@@ -106,7 +107,8 @@ public class WebSocketClient {
         connectHeaders.add(new StompHeader("X-Connection-Type", connectionType));
         connectHeaders.add(new StompHeader("X-BuyIn-Amount", String.format(Locale.getDefault(), "%.2f", buyInAmount)));
 
-        stompClient.withClientHeartbeat(HEARTBEAT_MS).withServerHeartbeat(HEARTBEAT_MS);
+        stompClient.withClientHeartbeat(HEARTBEAT_MS)
+                .withServerHeartbeat(HEARTBEAT_MS);
 
         compositeDisposable.add(stompClient.lifecycle()
                 .subscribeOn(Schedulers.io())
@@ -199,6 +201,9 @@ public class WebSocketClient {
         }
     }
 
+    // WebSocket Send Methods
+    // ----------------------------------------------------------------
+
     public void sendChatMessage(UUID tableId, SendChatMessageDTO dto, SendListener listener) {
         var destination = String.format(Locale.getDefault(), SEND_ENDPOINT_PREFIX + SEND_CHAT_MESSAGE, tableId);
         sendMessage(destination, gson.toJson(dto), listener);
@@ -208,6 +213,9 @@ public class WebSocketClient {
         var destination = String.format(Locale.getDefault(), SEND_ENDPOINT_PREFIX + SEND_PLAYER_ACTION, tableId);
         sendMessage(destination, gson.toJson(dto), listener);
     }
+
+    // WebSocket Send Helper Methods
+    // ----------------------------------------------------------------
 
     private void sendMessage(String destination, String message, SendListener listener) {
         compositeDisposable.add(stompClient.send(destination, message)
@@ -221,6 +229,10 @@ public class WebSocketClient {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
     }
+
+    // ***************************************************************
+    // Listeners
+    // ***************************************************************
 
     @MainThread
     public interface SendListener {

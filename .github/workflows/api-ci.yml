@@ -40,7 +40,7 @@ jobs:
         run: chmod +x ./mvnw
         working-directory: ./server/api
 
-      - name: 🏗️ Build and Test with Maven
+      - name: 🏗️ Test with Maven
         run: ./mvnw --no-transfer-progress clean verify -P run-tests
         working-directory: ./server/api
         env:
