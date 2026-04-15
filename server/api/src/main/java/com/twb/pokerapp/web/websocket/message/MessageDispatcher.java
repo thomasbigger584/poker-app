@@ -22,8 +22,11 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class MessageDispatcher {
+    // Matches the dot-notation required by RabbitMQ and AntPathMatcher
     private static final String GAME_TOPIC = "/topic/loops.%s";
-    private static final String USER_NOTIFICATION_TOPIC = "/notifications";
+
+    // Changed to match standard Spring/RabbitMQ private queue patterns
+    private static final String USER_NOTIFICATION_TOPIC = "/queue/notifications";
 
     private final SimpMessagingTemplate template;
     private final ObjectMapper objectMapper;
@@ -64,7 +67,7 @@ public class MessageDispatcher {
     }
 
     public void sendReceipt(StompHeaderAccessor headerAccessor) {
-        String receipt = headerAccessor.getReceipt();
+        var receipt = headerAccessor.getReceipt();
         if (receipt != null) {
             sendReceipt(receipt, headerAccessor.getSessionId());
         }

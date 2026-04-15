@@ -14,7 +14,7 @@
     <method v="2">
       <option name="Make" enabled="true" />
       <option name="Maven.BeforeRunTask" enabled="true" file="$PROJECT_DIR$/pom.xml" goal="process-test-resources" />
-      <option name="RunConfigurationTask" enabled="false" run_configuration_name="Build API" run_configuration_type="ShConfigurationType" />
+      <option name="RunConfigurationTask" enabled="false" run_configuration_name="Docker Build API" run_configuration_type="ShConfigurationType" />
     </method>
   </configuration>
 </component>

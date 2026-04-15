@@ -237,8 +237,9 @@ public class TexasGameViewModel extends ViewModel
         _errors.setValue(throwable);
     }
 
+    // ***************************************************************
     // Helper Methods
-    // ----------------------------------------------------------------
+    // ***************************************************************
 
     private void publishLifecycleEventError(LifecycleEvent event) {
         if (event.getException() == null) {
