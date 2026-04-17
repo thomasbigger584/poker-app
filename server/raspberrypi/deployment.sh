@@ -68,15 +68,15 @@ else
 fi
 
 # Tailscale API Regex Cleanup
-if [ -n "\$TS_API_KEY" ]; then
+if [ -n "\$TS_APIKEY" ]; then
     echo "🔍 Checking Tailscale devices..."
-    DEVICE_IDS=\$(curl -s -f -u "\$TS_API_KEY:" "https://api.tailscale.com/api/v2/tailnet/$TS_TAILNET/devices" | \\
+    DEVICE_IDS=\$(curl -s -f -u "\$TS_APIKEY:" "https://api.tailscale.com/api/v2/tailnet/$TS_TAILNET/devices" | \\
                 jq -r ".devices[] | select(.name | test(\"\$TS_REGEX\")) | .id")
 
     if [ -n "\$DEVICE_IDS" ] && [ "\$DEVICE_IDS" != "null" ]; then
         for ID in \$DEVICE_IDS; do
             echo "🗑️ Deleting Tailscale machine ID: \$ID"
-            curl -s -f -X DELETE -u "\$TS_API_KEY:" "https://api.tailscale.com/api/v2/device/\$ID"
+            curl -s -f -X DELETE -u "\$TS_APIKEY:" "https://api.tailscale.com/api/v2/device/\$ID"
         done
     fi
 fi
