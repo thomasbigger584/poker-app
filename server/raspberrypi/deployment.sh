@@ -81,7 +81,6 @@ fi
 
 # Docker Deploy
 cd "$SERVER_DIR" || exit 1
-docker compose pull
 set +e
 docker compose down --remove-orphans
 docker compose up --build -d
