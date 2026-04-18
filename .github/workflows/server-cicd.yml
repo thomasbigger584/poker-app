@@ -65,9 +65,8 @@ jobs:
   #  sudo tailscale up --ssh --advertise-tags=tag:raspberrypi --hostname=raspberrypi --force-reauth
   deploy:
     runs-on: ubuntu-latest
+    continue-on-error: true
     needs: [changes, build]
-    # We use always() so this job runs even if 'build' was skipped.
-    # We then check that the event is a push to master AND that build didn't fail.
     if: >-
       always() &&
       github.event_name == 'push' &&
@@ -81,8 +80,6 @@ jobs:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:ci
-          # This acts as the 'is it turned on' check.
-          # The job will fail/stop here if the Pi is unreachable.
           ping: raspberrypi
 
       - name: 🚀 Execute Remote Deployment Script
