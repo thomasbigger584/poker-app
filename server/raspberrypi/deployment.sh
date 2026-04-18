@@ -15,7 +15,7 @@ REAL_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
 REPO_DIR="$REAL_HOME/poker-app"
 SERVER_DIR="$REPO_DIR/server"
 ENV_FILE="$SERVER_DIR/env/.secrets.env"
-TS_REGEX="^poker-app(-[0-9]+)?$"
+TS_REGEX="^poker-app"
 TS_TAILNET="taila8b6c7.ts.net"
 WORKER_SCRIPT="$REAL_HOME/startup-task.sh"
 SERVICE_NAME="poker-app.service"
@@ -42,18 +42,33 @@ set -e
 tail -n 1000 "$LOG_FILE" > "$LOG_FILE.tmp" 2>/dev/null && mv "$LOG_FILE.tmp" "$LOG_FILE" 2>/dev/null
 exec > >(tee -a "$LOG_FILE") 2>&1
 
+# Notification setup
+NTFY_URL="ntfy.sh/raspberrypi-poker-app-584"
+on_exit() {
+    EXIT_STATUS=\$?
+    if [ \$EXIT_STATUS -eq 0 ]; then
+        curl -s -d "✅ Deployment successful! 🚀" "\$NTFY_URL" > /dev/null
+    else
+        curl -s -d "❌ Deployment FAILED with exit code \$EXIT_STATUS! 🛑" "\$NTFY_URL" > /dev/null
+    fi
+}
+trap on_exit EXIT
+
 echo "🚀 Execution started: \$(date)"
 
 # Update Repo with Network Wait
 cd "$REPO_DIR" || exit 1
-MAX_RETRIES=10
+MAX_RETRIES=15
 RETRY_COUNT=0
-until git fetch --all || [ \$RETRY_COUNT -eq \$MAX_RETRIES ]; do
+until git fetch origin master || [ \$RETRY_COUNT -eq \$MAX_RETRIES ]; do
     echo "Waiting for network... (\$((++RETRY_COUNT))/\$MAX_RETRIES)"
     sleep 5
 done
 
-git reset --hard origin/master
+# Ensure we are on master and match origin exactly
+git checkout -B master
+git reset --hard FETCH_HEAD
+git clean -fd
 
 # Source Secrets
 if [ -f "$ENV_FILE" ]; then
