@@ -1,14 +1,14 @@
-name: 🛠️ API CI/CD
+name: 🛠️ Server CI/CD
 
 on:
   push:
     branches: [ "master" ]
     paths:
-      - "server/api/**"
+      - "server/**"
   pull_request:
     branches: [ "master" ]
     paths:
-      - "server/api/**"
+      - "server/**"
 
 jobs:
   build:
