@@ -24,6 +24,7 @@ services:
       PGADMIN_DEFAULT_PASSWORD: password
       PGADMIN_LISTEN_PORT: 5050
       PGADMIN_CONFIG_SCRIPT_NAME: /pgadmin
+      PGADMIN_LISTEN_ADDRESS: 0.0.0.0
       TZ: Europe/London
       PGPASSFILE: /tmp/pgpass
     volumes:
