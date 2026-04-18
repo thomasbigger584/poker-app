@@ -7,6 +7,8 @@ services:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=db
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/1-schema.sql
@@ -23,7 +25,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: thomas@pokerapp.com
       PGADMIN_DEFAULT_PASSWORD: password
       PGADMIN_LISTEN_PORT: 5050
-      PGADMIN_OPTIONS: "--script-name /pgadmin"
+      PGADMIN_CONFIG_SCRIPT_NAME: /pgadmin
       TZ: Europe/London
       PGPASSFILE: /tmp/pgpass
     volumes:
