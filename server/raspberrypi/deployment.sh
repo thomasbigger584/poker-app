@@ -84,7 +84,7 @@ fi
 if [ -n "\$TS_APIKEY" ]; then
     echo "🔍 Cleaning up Tailscale machines matching: $TS_REGEX"
     DEVICE_IDS=\$(curl -s -f -u "\$TS_APIKEY:" "https://api.tailscale.com/api/v2/tailnet/$TS_TAILNET/devices" | \\
-                jq -r ".devices[] | select(.name | test(\"\$TS_REGEX\")) | .id")
+                jq -r ".devices[] | select(.name | test(\"$TS_REGEX\")) | .id")
 
     if [ -n "\$DEVICE_IDS" ] && [ "\$DEVICE_IDS" != "null" ]; then
         for ID in \$DEVICE_IDS; do
