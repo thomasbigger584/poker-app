@@ -20,6 +20,7 @@ TS_TAILNET="taila8b6c7.ts.net"
 WORKER_SCRIPT="$REAL_HOME/startup-task.sh"
 SERVICE_NAME="poker-app.service"
 LOG_FILE="$REAL_HOME/poker-deploy.log"
+VERSION_FILE="$REAL_HOME/.poker-deploy-version"
 
 echo "🛠️ Orchestrating setup for $REAL_USER..."
 
@@ -70,6 +71,14 @@ git checkout -B master
 git reset --hard FETCH_HEAD
 git clean -fd
 
+# Version Tracking
+CURRENT_HASH=\$(git rev-parse HEAD)
+if [ -f "$VERSION_FILE" ]; then
+    DEPLOYED_HASH=\$(cat "$VERSION_FILE")
+else
+    DEPLOYED_HASH="none"
+fi
+
 # Source Secrets
 if [ -f "$ENV_FILE" ]; then
     set -a
@@ -98,7 +107,15 @@ fi
 cd "$SERVER_DIR" || exit 1
 set +e
 docker compose down --remove-orphans
-docker compose up --build -d
+
+if [ "\$CURRENT_HASH" == "\$DEPLOYED_HASH" ]; then
+    echo "⏩ No code changes detected (\$CURRENT_HASH). Skipping build..."
+    docker compose up -d
+else
+    echo "🏗️ Code changes detected (\$DEPLOYED_HASH -> \$CURRENT_HASH). Rebuilding..."
+    docker compose up --build -d
+fi
+
 EXIT_CODE=\$?
 set -e
 
@@ -106,6 +123,9 @@ if [ \$EXIT_CODE -ne 0 ]; then
     echo "❌ Error: Docker failed."
     exit \$EXIT_CODE
 fi
+
+# Update deployed version hash
+echo "\$CURRENT_HASH" > "$VERSION_FILE"
 
 # SD Card Optimization
 docker system prune -f
