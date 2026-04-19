@@ -1,63 +1,64 @@
 package com.twb.pokerapp.ui.activity.game.chatbox;
 
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.twb.pokerapp.R;
+import com.twb.pokerapp.databinding.ChatBoxListItemBinding;
 
 import java.util.ArrayList;
-import java.util.List;
 
-public class ChatBoxRecyclerAdapter extends RecyclerView.Adapter<ChatBoxRecyclerAdapter.ChatBoxViewHolder> {
-    private final List<String> items = new ArrayList<>();
-    private final LinearLayoutManager layoutManager;
+public class ChatBoxRecyclerAdapter extends ListAdapter<String, ChatBoxRecyclerAdapter.ChatBoxViewHolder> {
 
-    public ChatBoxRecyclerAdapter(LinearLayoutManager layoutManager) {
-        this.layoutManager = layoutManager;
+    private static final DiffUtil.ItemCallback<String> DIFF_CALLBACK = new DiffUtil.ItemCallback<>() {
+        @Override
+        public boolean areItemsTheSame(@NonNull String oldItem, @NonNull String newItem) {
+            return oldItem.equals(newItem);
+        }
+
+        @Override
+        public boolean areContentsTheSame(@NonNull String oldItem, @NonNull String newItem) {
+            return oldItem.equals(newItem);
+        }
+    };
+
+    public ChatBoxRecyclerAdapter() {
+        super(DIFF_CALLBACK);
     }
 
     @NonNull
     @Override
     public ChatBoxViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        var chatBoxItemLayout = LayoutInflater.from(parent.getContext()).
-                inflate(R.layout.chat_box_list_item, parent, false);
-        return new ChatBoxViewHolder(chatBoxItemLayout);
+        var binding = ChatBoxListItemBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
+        return new ChatBoxViewHolder(binding);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ChatBoxViewHolder holder, int position) {
-        var item = items.get(position);
-        holder.chatBoxItemTextView.setText(item);
+        holder.bind(getItem(position));
     }
 
-    @Override
-    public int getItemCount() {
-        return items.size();
-    }
-
-    public void add(@Nullable String item) {
-        if (item == null) {
-            return;
-        }
-        var positionStart = items.size() + 1;
-        items.add(item);
-        notifyItemRangeInserted(positionStart, items.size());
-        layoutManager.scrollToPosition(items.size() - 1);
+    public void add(String item) {
+        if (item == null) return;
+        var currentList = new ArrayList<>(getCurrentList());
+        currentList.add(item);
+        submitList(currentList);
     }
 
     public static class ChatBoxViewHolder extends RecyclerView.ViewHolder {
-        final TextView chatBoxItemTextView;
+        private final ChatBoxListItemBinding binding;
 
-        ChatBoxViewHolder(View view) {
-            super(view);
-            chatBoxItemTextView = view.findViewById(R.id.chatBoxItemTextView);
+        ChatBoxViewHolder(ChatBoxListItemBinding binding) {
+            super(binding.getRoot());
+            this.binding = binding;
+        }
+
+        void bind(String item) {
+            binding.chatBoxItemTextView.setText(item);
         }
     }
 }

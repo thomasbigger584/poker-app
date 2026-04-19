@@ -19,16 +19,16 @@ public class GameLogService {
     // Log Methods
     // *****************************************************************************************
 
+    public void sendLogMessage(GameThreadParams params, String message) {
+        dispatcher.send(params.getTable(), messageFactory.logMessage(message));
+    }
+
     public void sendLogMessage(PokerTable table, String message) {
         dispatcher.send(table, messageFactory.logMessage(message));
     }
 
-    public void sendLogMessage(UUID tableId, String message) {
-        dispatcher.send(tableId, messageFactory.logMessage(message));
-    }
-
     public void sendLogMessage(PlayerSession playerSession, String message) {
-        String username = playerSession.getUser().getUsername();
+        var username = playerSession.getUser().getUsername();
         dispatcher.send(username, messageFactory.logMessage(message));
     }
 
@@ -45,7 +45,7 @@ public class GameLogService {
     }
 
     public void sendErrorMessage(PlayerSession playerSession, String message) {
-        String username = playerSession.getUser().getUsername();
+        var username = playerSession.getUser().getUsername();
         dispatcher.send(username, messageFactory.errorMessage(message));
     }
 

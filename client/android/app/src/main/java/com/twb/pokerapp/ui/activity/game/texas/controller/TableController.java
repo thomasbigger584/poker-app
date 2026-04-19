@@ -1,42 +1,41 @@
 package com.twb.pokerapp.ui.activity.game.texas.controller;
 
-import android.app.Activity;
-import android.widget.TextView;
+import android.annotation.SuppressLint;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.twb.pokerapp.R;
+import com.twb.pokerapp.databinding.ActivityGameTexasBinding;
 import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
+import com.twb.pokerapp.data.model.dto.roundpot.RoundPotDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.BettingRoundUpdatedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.DealCommunityCardDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.DealPlayerCardDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.RoundFinishedDTO;
 import com.twb.pokerapp.ui.layout.texas.CardPairLayout;
-import com.twb.pokerapp.ui.layout.texas.CommunityCardLayout;
 
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class TableController {
     private static final String TAG = TableController.class.getSimpleName();
     private static final int TABLE_SIZE = 6;
     private final CardPairLayout[] cardPairLayouts = new CardPairLayout[TABLE_SIZE];
     private final Map<Integer, CardPairLayout> positionCardPairs = new HashMap<>();
+    private final ActivityGameTexasBinding binding;
 
-    private final CommunityCardLayout communityCardLayout;
-    private final TextView potSizeText;
-
-    public TableController(Activity activity) {
-        cardPairLayouts[0] = activity.findViewById(R.id.playerCardPairLayout);
-        cardPairLayouts[1] = activity.findViewById(R.id.tablePlayer1CardPairLayout);
-        cardPairLayouts[2] = activity.findViewById(R.id.tablePlayer2CardPairLayout);
-        cardPairLayouts[3] = activity.findViewById(R.id.tablePlayer3CardPairLayout);
-        cardPairLayouts[4] = activity.findViewById(R.id.tablePlayer4CardPairLayout);
-        cardPairLayouts[5] = activity.findViewById(R.id.tablePlayer5CardPairLayout);
-        communityCardLayout = activity.findViewById(R.id.communityCardLayout);
-        potSizeText = activity.findViewById(R.id.potSizeText);
+    public TableController(ActivityGameTexasBinding binding) {
+        this.binding = binding;
+        cardPairLayouts[0] = binding.playerCardPairLayout;
+        cardPairLayouts[1] = binding.tablePlayer1CardPairLayout;
+        cardPairLayouts[2] = binding.tablePlayer2CardPairLayout;
+        cardPairLayouts[3] = binding.tablePlayer3CardPairLayout;
+        cardPairLayouts[4] = binding.tablePlayer4CardPairLayout;
+        cardPairLayouts[5] = binding.tablePlayer5CardPairLayout;
     }
 
     public void connectCurrentPlayer(PlayerSessionDTO playerSession) {
@@ -44,7 +43,7 @@ public class TableController {
 
         positionCardPairs.clear();
 
-        int index = 0;
+        var index = 0;
         for (var thisPosition = playerPosition; thisPosition <= TABLE_SIZE; thisPosition++, index++) {
             positionCardPairs.put(thisPosition, cardPairLayouts[index]);
         }
@@ -117,24 +116,41 @@ public class TableController {
     }
 
     public void dealCommunityCard(DealCommunityCardDTO dealCommunityCard) {
-        communityCardLayout.dealCard(dealCommunityCard.getCard());
+        binding.communityCardLayout.dealCard(dealCommunityCard.getCard());
     }
 
     public void updateBettingRound(BettingRoundUpdatedDTO bettingRoundUpdated) {
-        var round = bettingRoundUpdated.getRound();
-        var pot = 0d;
-        if (round != null && round.getPot() != null) {
-            pot = round.getPot();
-        }
-        potSizeText.setText(String.format(Locale.getDefault(), "$%.2f", pot));
+        var totalPotAmount = bettingRoundUpdated.getRoundPots()
+                .stream()
+                .mapToDouble(RoundPotDTO::getPotAmount)
+                .sum();
+        binding.potSizeText.setText(binding.getRoot().getContext()
+                .getString(R.string.currency_format, totalPotAmount));
     }
 
-    public void reset(RoundFinishedDTO roundFinished) {
+    @SuppressLint("SetTextI18n")
+    public void update(RoundFinishedDTO roundFinished) {
         hidePlayerTurns();
-        communityCardLayout.reset();
-        for (var cardPairLayout : cardPairLayouts) {
+        binding.communityCardLayout.reset();
+        for (var posCardPairEntry : positionCardPairs.entrySet()) {
+            var position = posCardPairEntry.getKey();
+            var cardPairLayout = posCardPairEntry.getValue();
             cardPairLayout.reset();
+            var winnerAtPositionList = roundFinished.getWinners()
+                    .stream()
+                    .filter(roundWinnerDTO -> Objects.equals(roundWinnerDTO.getPlayerSession().getPosition(), position))
+                    .collect(Collectors.toList());
+            if (winnerAtPositionList.size() == 1) {
+                var winnerAtPosition = winnerAtPositionList.get(0);
+                cardPairLayout.updateDetails(winnerAtPosition.getPlayerSession());
+            }
         }
+        binding.potSizeText.setText(binding.getRoot().getContext().getString(R.string.default_pot_size));
+    }
+
+    @NonNull
+    public CardPairLayout getPlayerCardPairLayout() {
+        return cardPairLayouts[0];
     }
 
     // ------------------------------------------------------------------------------

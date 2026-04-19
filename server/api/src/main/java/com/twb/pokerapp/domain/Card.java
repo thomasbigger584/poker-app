@@ -3,6 +3,7 @@ package com.twb.pokerapp.domain;
 import com.twb.pokerapp.domain.enumeration.CardType;
 import com.twb.pokerapp.domain.enumeration.RankType;
 import com.twb.pokerapp.domain.enumeration.SuitType;
+import com.twb.pokerapp.service.game.deck.CardLibraryMapper;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -54,6 +55,10 @@ public class Card extends Auditable {
     private Round round; // community card
 
     public Card() {
+    }
+
+    public Card(@NotNull RankType rankType, @NotNull SuitType suitType) {
+        this(rankType, suitType, CardLibraryMapper.toLibraryInt(rankType, suitType));
     }
 
     public Card(@NotNull RankType rankType,

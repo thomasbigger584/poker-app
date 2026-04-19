@@ -21,8 +21,19 @@
       "read": ".*"
     }
   ],
-  "exchanges": [
+  "policies": [
+    {
+      "vhost": "/",
+      "name": "delete_idle_notification_queues",
+      "pattern": "^notifications-user.*",
+      "apply-to": "queues",
+      "definition": {
+        "expires": 60000
+      },
+      "priority": 0
+    }
   ],
+  "exchanges": [],
   "queues": [
     {
       "name": "app.keycloak",

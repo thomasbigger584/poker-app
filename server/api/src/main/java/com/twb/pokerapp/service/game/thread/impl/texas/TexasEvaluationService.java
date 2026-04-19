@@ -1,24 +1,23 @@
 package com.twb.pokerapp.service.game.thread.impl.texas;
 
-import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.domain.Round;
-import com.twb.pokerapp.repository.CardRepository;
-import com.twb.pokerapp.repository.HandRepository;
-import com.twb.pokerapp.repository.PlayerSessionRepository;
-import com.twb.pokerapp.repository.RoundRepository;
+import com.twb.pokerapp.domain.*;
+import com.twb.pokerapp.domain.enumeration.HandType;
+import com.twb.pokerapp.repository.*;
 import com.twb.pokerapp.service.game.eval.HandEvaluator;
 import com.twb.pokerapp.service.game.eval.dto.EvalPlayerHandDTO;
 import com.twb.pokerapp.service.game.thread.GameLogService;
+import com.twb.pokerapp.service.game.thread.GameSpeedService;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
-import com.twb.pokerapp.service.game.thread.WinnerService;
+import com.twb.pokerapp.service.game.thread.impl.texas.dealer.TexasDealerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.twb.pokerapp.util.SleepUtil.sleepInMs;
 import static com.twb.pokerapp.util.TransactionUtil.afterCommit;
 
 @Component
@@ -26,23 +25,26 @@ import static com.twb.pokerapp.util.TransactionUtil.afterCommit;
 public class TexasEvaluationService {
     private final TransactionTemplate writeTx;
     private final RoundRepository roundRepository;
+    private final RoundPotRepository roundPotRepository;
     private final PlayerSessionRepository playerSessionRepository;
     private final HandRepository handRepository;
     private final CardRepository cardRepository;
+    private final RoundWinnerRepository roundWinnerRepository;
     private final HandEvaluator handEvaluator;
-    private final WinnerService winnerService;
     private final GameLogService gameLogService;
+    private final GameSpeedService gameSpeedService;
+    private final TexasDealerService dealerService;
 
     public void evaluate(GameThreadParams params) {
+        var tableId = params.getTable().getId();
         writeTx.executeWithoutResult(status -> {
-            var roundOpt = roundRepository.findCurrentByTableId(params.getTableId());
+            var roundOpt = roundRepository.findCurrentByTableId(tableId);
             if (roundOpt.isEmpty()) {
-                gameLogService.sendLogMessage(params.getTableId(), "Round not found for table: " + params.getTableId());
+                gameLogService.sendLogMessage(params, "Round not found for table: " + tableId);
                 return;
             }
             var round = roundOpt.get();
-            var activePlayers = playerSessionRepository
-                    .findActivePlayersByTableId(params.getTableId(), round.getId());
+            var activePlayers = playerSessionRepository.findActivePlayersByTableId(tableId, round.getId());
             if (activePlayers.size() == 1) {
                 var winner = activePlayers.getFirst();
                 evaluateLastPlayerStanding(params, winner, round);
@@ -50,43 +52,166 @@ public class TexasEvaluationService {
                 evaluateMultiPlayersStanding(params, round, activePlayers);
             }
         });
-        sleepInMs(params.getEvalWaitMs());
+        gameSpeedService.sleep(params.getTable(), params.getEvalWaitMs());
     }
 
     private void evaluateLastPlayerStanding(GameThreadParams params, PlayerSession winner, Round round) {
-        handRepository.markHandAsWinner(round.getId(), winner.getId());
-        handRepository.markHandsAsLosersWithWinner(round.getId(), winner.getId());
+        var pots = roundPotRepository.findByRound(round.getId());
+        var totalWinnings = pots.stream()
+                .map(RoundPot::getPotAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        winner.setFunds(winner.getFunds().add(totalWinnings));
+        playerSessionRepository.save(winner);
+
+        var hand = handRepository.findForPlayerAndRound(winner.getId(), round.getId())
+                .orElse(null);
+
+        saveRoundWinner(winner, round, hand, totalWinnings);
 
         var winnerUsername = winner.getUser().getUsername();
-
-        afterCommit(() -> gameLogService.sendLogMessage(params.getTableId(), "%s wins round with $%.2f".formatted(winnerUsername, round.getPot())));
+        afterCommit(() -> gameLogService.sendLogMessage(params, "%s wins round with $%.2f"
+                .formatted(winnerUsername, totalWinnings)));
     }
 
     private void evaluateMultiPlayersStanding(GameThreadParams params, Round round, List<PlayerSession> activePlayers) {
         var communityCards = cardRepository.findCommunityCardsForRound(round.getId());
 
-        var playerHandsList = new ArrayList<EvalPlayerHandDTO>();
-        for (PlayerSession potentialWinner : activePlayers) {
-
-            var playableCards = new ArrayList<>(communityCards);
-
-            var playerHandOpt = handRepository
-                    .findHandForRound(potentialWinner.getId(), round.getId());
-
+        var evalPlayerHandsList = new ArrayList<EvalPlayerHandDTO>();
+        for (var potentialWinner : activePlayers) {
+            var playerHandOpt = handRepository.findForPlayerAndRound(potentialWinner.getId(), round.getId());
             if (playerHandOpt.isPresent()) {
                 var hand = playerHandOpt.get();
+                var playableCards = new ArrayList<>(communityCards);
 
                 var playerCards = cardRepository.findCardsForHand(hand.getId());
                 playableCards.addAll(playerCards);
 
-                var playerHand = new EvalPlayerHandDTO();
-                playerHand.setPlayerSession(potentialWinner);
-                playerHand.setCards(playableCards);
-                playerHandsList.add(playerHand);
+                var evalPlayerHand = new EvalPlayerHandDTO();
+                evalPlayerHand.setPlayerSession(potentialWinner);
+                evalPlayerHand.setCards(playableCards);
+                evalPlayerHand.setHand(hand);
+                evalPlayerHandsList.add(evalPlayerHand);
             }
         }
-        var winners = handEvaluator.evaluate(round, playerHandsList);
 
-        winnerService.handleWinners(params, round, winners);
+        handEvaluator.evaluate(round, evalPlayerHandsList);
+
+        var pots = roundPotRepository.findByRound(round.getId());
+        for (var pot : pots) {
+            handlePotDistribution(params, round, pot, evalPlayerHandsList);
+        }
+    }
+
+    private void handlePotDistribution(GameThreadParams params, Round round,
+                                       RoundPot pot, List<EvalPlayerHandDTO> evalPlayerHandsList) {
+        var eligiblePlayerIds = pot.getEligiblePlayers().stream()
+                .map(PlayerSession::getId).toList();
+
+        var potHands = evalPlayerHandsList.stream()
+                .filter(hand -> eligiblePlayerIds.contains(hand.getPlayerSession().getId()))
+                .sorted()
+                .toList();
+
+        if (potHands.isEmpty()) return;
+
+        var bestHand = potHands.getFirst();
+        var winners = potHands.stream()
+                .filter(hand -> hand.compareTo(bestHand) == 0 || hand.getHandType() == HandType.ROYAL_FLUSH)
+                .toList();
+
+        distributePotToWinners(params, round, pot, winners);
+    }
+
+    private void distributePotToWinners(GameThreadParams params, Round round, RoundPot pot, List<EvalPlayerHandDTO> winners) {
+        var potAmount = pot.getPotAmount();
+        var winnerCount = winners.size();
+        if (winnerCount == 0) return;
+
+        // Sort winners by proximity to the dealer button (clockwise)
+        // In Hold'em, the odd chip goes to the first player to the left of the button.
+        var playerSessions = winners.stream().map(EvalPlayerHandDTO::getPlayerSession).toList();
+        var sortedWinnersSessions = dealerService.sortDealerLast(playerSessions);
+        
+        // Match original DTOs to the sorted session order
+        var sortedWinners = new ArrayList<EvalPlayerHandDTO>();
+        for (var session : sortedWinnersSessions) {
+            winners.stream()
+                .filter(w -> w.getPlayerSession().getId().equals(session.getId()))
+                .findFirst()
+                .ifPresent(sortedWinners::add);
+        }
+
+        // Calculate split in cents to handle odd chips correctly
+        var totalCents = potAmount.multiply(BigDecimal.valueOf(100)).setScale(0, RoundingMode.HALF_UP).longValue();
+        var splitCents = totalCents / winnerCount;
+        var remainderCents = totalCents % winnerCount;
+        var splitAmount = BigDecimal.valueOf(splitCents).divide(BigDecimal.valueOf(100), 2, RoundingMode.UNNECESSARY);
+
+        for (var index = 0; index < winnerCount; index++) {
+            var winnerHand = sortedWinners.get(index);
+            // Add 1 cent to the award amount for each winner (starting from the left of the button) until the remainder is exhausted
+            var extraCent = (index < remainderCents) ? BigDecimal.valueOf(0.01) : BigDecimal.ZERO;
+            var awardAmount = splitAmount.add(extraCent);
+
+            var playerSession = winnerHand.getPlayerSession();
+            playerSession.setFunds(playerSession.getFunds().add(awardAmount));
+            playerSessionRepository.save(playerSession);
+
+            saveRoundWinner(playerSession, round, winnerHand.getHand(), awardAmount);
+        }
+
+        afterCommit(() -> logPotWinners(params, pot, sortedWinners, splitAmount));
+    }
+
+    private void saveRoundWinner(PlayerSession playerSession, Round round,
+                                 Hand hand, BigDecimal amount) {
+        var roundWinnerOpt = roundWinnerRepository
+                .findByRoundAndPlayerSession(round.getId(), playerSession.getId());
+        RoundWinner roundWinner;
+        if (roundWinnerOpt.isPresent()) {
+            roundWinner = roundWinnerOpt.get();
+            roundWinner.setAmount(roundWinner.getAmount().add(amount));
+        } else {
+            roundWinner = new RoundWinner();
+            roundWinner.setPlayerSession(playerSession);
+            roundWinner.setRound(round);
+            roundWinner.setHand(hand);
+            roundWinner.setAmount(amount);
+        }
+        roundWinnerRepository.save(roundWinner);
+    }
+
+    private void logPotWinners(GameThreadParams params, RoundPot pot,
+                               List<EvalPlayerHandDTO> winners, BigDecimal amountPerWinner) {
+        var potName = (pot.getPotIndex() == 0) ? "Main Pot" : "Side Pot " + pot.getPotIndex();
+        var winnerNames = getReadableWinners(winners);
+
+        var handTypeStr = "Unknown";
+        if (!winners.isEmpty() && winners.getFirst().getHandType() != null) {
+            handTypeStr = winners.getFirst().getHandType().getValue();
+        }
+
+        String message;
+        if (winners.size() == 1) {
+            message = "%s wins %s ($%.2f) with a %s".formatted(winnerNames, potName, pot.getPotAmount(), handTypeStr);
+        } else {
+            message = "%s split %s ($%.2f) with a %s (Each gets ~$%.2f)".formatted(winnerNames, potName, pot.getPotAmount(), handTypeStr, amountPerWinner);
+        }
+        gameLogService.sendLogMessage(params, message);
+    }
+
+    private String getReadableWinners(List<EvalPlayerHandDTO> winners) {
+        var sb = new StringBuilder();
+        for (var index = 0; index < winners.size(); index++) {
+            var eval = winners.get(index);
+            var user = eval.getPlayerSession().getUser();
+            sb.append(user.getUsername());
+            if (index < winners.size() - 2) {
+                sb.append(", ");
+            } else if (index == winners.size() - 2) {
+                sb.append(" & ");
+            }
+        }
+        return sb.toString();
     }
 }

@@ -1,25 +1,40 @@
 FROM bellsoft/liberica-runtime-container:jdk-21-musl AS builder
 
-# Install C++ build tools
-RUN apk add --update g++ make && \
+RUN apk add --update g++ make git && \
     rm -rf /var/cache/apk/*
 
 WORKDIR /app
 
-COPY . .
-
-RUN sed -i 's/\r//g' ./mvnw && chmod +x ./mvnw
+RUN git clone -b develop https://github.com/HenryRLee/PokerHandEvaluator.git /app/src/main/cpp/PokerHandEvaluator
+COPY ./src/main/cpp/ /app/src/main/cpp/
 
 ENV EVALUATOR_SO_PATH=/app/src/main/cpp/evaluator.so
-RUN g++ -shared -fPIC -o $EVALUATOR_SO_PATH /app/src/main/cpp/* \
+RUN g++ -shared -fPIC -Wl,--no-undefined -O3 -o $EVALUATOR_SO_PATH \
+    /app/src/main/cpp/PokerEvaluator.cpp \
+    /app/src/main/cpp/PokerHandEvaluator/cpp/src/evaluator7.c \
+    /app/src/main/cpp/PokerHandEvaluator/cpp/src/hash.c \
+    /app/src/main/cpp/PokerHandEvaluator/cpp/src/hashtable.c \
+    /app/src/main/cpp/PokerHandEvaluator/cpp/src/hashtable7.c \
+    /app/src/main/cpp/PokerHandEvaluator/cpp/src/dptables.c \
+    /app/src/main/cpp/PokerHandEvaluator/cpp/src/tables_bitwise.c \
+    -I /app/src/main/cpp/PokerHandEvaluator/cpp/include \
     -I $JAVA_HOME/include \
     -I $JAVA_HOME/include/linux
 
+COPY mvnw .
+COPY .mvn .mvn
+COPY pom.xml .
+RUN sed -i 's/\r//g' ./mvnw && chmod +x ./mvnw
+
+COPY src ./src
 RUN --mount=type=cache,target=~/.m2 ./mvnw --no-transfer-progress package
 
 FROM bellsoft/liberica-runtime-container:jre-21-musl
 
 WORKDIR /app
+
+# Install curl for healthcheck
+RUN apk add --no-cache curl
 
 COPY --from=builder /app/target/api.jar /app/api.jar
 

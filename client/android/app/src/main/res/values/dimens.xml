@@ -1,9 +1,12 @@
 <resources>
-    <dimen name="fab_margin">16dp</dimen>
 
-    <!-- Default screen margins, per the Android Design guidelines. -->
-    <dimen name="activity_horizontal_margin">16dp</dimen>
-    <dimen name="activity_vertical_margin">16dp</dimen>
+    <!-- Layout Scale -->
+    <fraction name="current_player_podium_layout_scale">1.0</fraction>
+    <fraction name="other_player_podium_layout_scale">0.8</fraction>
+    <fraction name="community_cards_layout_scale">0.9</fraction>
 
-    <dimen name="section_margin">16dp</dimen>
+    <!-- Text Scale -->
+    <fraction name="current_player_podium_text_scale">1.0</fraction>
+    <fraction name="other_player_podium_text_scale">0.7</fraction>
+
 </resources>

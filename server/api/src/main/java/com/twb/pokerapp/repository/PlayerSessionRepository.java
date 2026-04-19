@@ -38,6 +38,7 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             WHERE s.pokerTable.id = :tableId
             AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
             AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
+            AND s.funds IS NOT NULL AND s.funds > 0
             ORDER BY s.position ASC
             """)
     List<PlayerSession> findConnectedPlayersByTableId(@Param("tableId") UUID tableId);
@@ -48,6 +49,7 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             WHERE s.pokerTable.id = :tableId
             AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
             AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
+            AND s.funds IS NOT NULL AND s.funds > 0
             """)
     int countConnectedPlayersByTableId(@Param("tableId") UUID tableId);
 
@@ -66,16 +68,20 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
             AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
             AND s.round.id = :roundId
-            AND s.funds > 0
-            AND NOT EXISTS (
-                SELECT 1
-                FROM PlayerAction a
-                WHERE a.playerSession = s
-                AND a.bettingRound.round.id = :roundId
-                AND a.actionType = com.twb.pokerapp.domain.enumeration.ActionType.FOLD
-            )
+            AND s.active = true
             ORDER BY s.position ASC
             """)
     List<PlayerSession> findActivePlayersByTableId(@Param("tableId") UUID tableId, @Param("roundId") UUID roundId);
+
+
+    @Query("""
+            SELECT s
+            FROM PlayerSession s
+            WHERE s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
+            AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
+            AND s.round.id = :roundId
+            ORDER BY s.position ASC
+            """)
+    List<PlayerSession> findPlayersOnRound(@Param("roundId") UUID roundId);
 
 }

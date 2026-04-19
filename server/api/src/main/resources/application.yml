@@ -1,7 +1,7 @@
 keycloak:
   server-url:
     internal: http://localhost:8080/auth
-    external: http://poker-app.taila8b6c7.ts.net/auth
+    external: https://poker-app.taila8b6c7.ts.net/auth
   realm: poker-app
   client-id: poker-game-api-client
   username: admin
@@ -45,8 +45,10 @@ jwt:
       resource-id: ${keycloak.client-id}
       principal-attribute: preferred_username
 server:
-  port:
-    8081
+  port: 8081
+  tomcat:
+    websocket:
+      idle-timeout: 300000
 app:
   deal-wait-ms: 1000
   db-poll-wait-ms: 1000
@@ -54,10 +56,15 @@ app:
   player-turn-wait-ms: 30000
   round-start-wait-ms: 3000
   round-end-wait-ms: 3000
-#logging:
-#  level:
-#    org.springframework.messaging.simp.broker: DEBUG
-#    org.springframework.messaging.simp.stomp: DEBUG
-#    org.springframework.messaging.support: DEBUG
-#    org.springframework.web.socket: DEBUG
-#    org.springframework.security: DEBUG
+logging:
+  level:
+    com.twb.pokerapp: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: cloud
+logging:
+  level:
+    com.twb.pokerapp: INFO

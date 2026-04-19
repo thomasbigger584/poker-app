@@ -14,7 +14,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -26,8 +30,8 @@ public class PlayerActionService {
     @Transactional(propagation = Propagation.MANDATORY)
     public PlayerAction create(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createDto) {
         var amount = createDto.getAmount();
-        if (amount != null && amount > 0d) {
-            playerSession.setFunds(playerSession.getFunds() - amount);
+        if (amount != null && amount.compareTo(BigDecimal.ZERO) > 0) {
+            playerSession.setFunds(playerSession.getFunds().subtract(amount));
             playerSession = playerSessionRepository.save(playerSession);
         }
 
@@ -39,49 +43,78 @@ public class PlayerActionService {
 
         playerAction = repository.save(playerAction);
 
+        if (playerAction.getActionType() == ActionType.FOLD) {
+            playerSession.setActive(false);
+            playerSessionRepository.save(playerSession);
+        }
+
         return playerAction;
     }
 
     @Transactional(propagation = Propagation.MANDATORY, readOnly = true)
     public NextActionsDTO getNextActions(PlayerSession playerSession, List<PlayerAction> prevPlayerActions) {
         var nextActions = ActionType.getDefaultActions();
-        var amountToCall = 0d;
+        var amountToCall = BigDecimal.ZERO;
         if (!prevPlayerActions.isEmpty()) {
             var previousPlayerAction = prevPlayerActions.getFirst();
             var previousPlayerActionType = previousPlayerAction.getActionType();
             nextActions = previousPlayerActionType.getNextActions();
             amountToCall = getAmountToCall(playerSession, prevPlayerActions);
         }
-        nextActions = filterNextActionsForAffordability(playerSession, amountToCall, nextActions);
+        if (amountToCall.compareTo(playerSession.getFunds()) > 0) {
+            nextActions = ActionType.getAllInActions();
+        }
         return new NextActionsDTO(amountToCall, nextActions);
     }
 
-    private ActionType[] filterNextActionsForAffordability(PlayerSession playerSession, double amountToCall, ActionType[] nextActions) {
-        if (amountToCall > playerSession.getFunds()) {
-            // note: removing call here but in an all in scenario that is restricted,
-            // consider adding new ActionType for ALL_IN here and handle appropriately and also client side button
-            nextActions = Arrays.stream(nextActions)
-                    .filter(actionType -> actionType != ActionType.BET &&
-                            actionType != ActionType.CALL &&
-                            actionType != ActionType.RAISE)
-                    .toArray(ActionType[]::new);
-        }
-        return nextActions;
+    @Transactional(propagation = Propagation.MANDATORY, readOnly = true)
+    public BigDecimal getAmountToCall(PlayerSession playerSession, List<PlayerAction> prevPlayerActions) {
+        var playerContributions = getPlayerContributions(prevPlayerActions);
+        var maxBet = playerContributions.values().stream().max(BigDecimal::compareTo).orElse(BigDecimal.ZERO);
+        var currentContribution = playerContributions.getOrDefault(playerSession.getId(), BigDecimal.ZERO);
+        var result = maxBet.subtract(currentContribution);
+        return result.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : result;
     }
 
     @Transactional(propagation = Propagation.MANDATORY, readOnly = true)
-    public double getAmountToCall(PlayerSession playerSession, List<PlayerAction> prevPlayerActions) {
-        var playerContributions = getPlayerContributions(prevPlayerActions);
-        var maxBet = playerContributions.values().stream().max(Double::compare).orElse(0d);
-        var currentContribution = playerContributions.getOrDefault(playerSession.getId(), 0d);
-        return Math.max(0d, maxBet - currentContribution);
+    public boolean isAggressive(PlayerAction playerAction) {
+        var bettingRound = playerAction.getBettingRound();
+        var actionType = playerAction.getActionType();
+        var isAggressive = actionType.isAggressive();
+
+        // If All-In, we must check if it was a Raise (Aggressive) or a Call (Passive)
+        // by comparing the amount against the max bet of other players.
+
+        // scenario where a player has already put money in the pot (e.g., a Call) and then later goes All-In for a raise.
+        // 1. Player A Bets 100.
+        // 2. Player B Calls 100.
+        // 3. Player C Raises to 300 (Delta: 300).
+        // 4. Player A Calls 200 (Total: 300).
+        // 5. Player B goes All-In for 400 Total (Delta: 300).
+
+        if (!isAggressive && actionType == ActionType.ALL_IN) {
+            var actions = repository.findPlayerActionsNotFolded(bettingRound.getId());
+            var playerContributions = getPlayerContributions(actions);
+
+            var currentPlayerId = playerAction.getPlayerSession().getId();
+            var currentPlayerTotal = playerContributions.getOrDefault(currentPlayerId, BigDecimal.ZERO);
+            var maxOtherTotal = playerContributions.entrySet().stream()
+                    .filter(entry -> !entry.getKey().equals(currentPlayerId))
+                    .map(Map.Entry::getValue)
+                    .max(BigDecimal::compareTo)
+                    .orElse(BigDecimal.ZERO);
+            if (currentPlayerTotal.compareTo(maxOtherTotal) > 0) {
+                isAggressive = true;
+            }
+        }
+        return isAggressive;
     }
 
-    private Map<UUID, Double> getPlayerContributions(List<PlayerAction> prevPlayerActions) {
-        var playerContributions = new HashMap<UUID, Double>();
+    private Map<UUID, BigDecimal> getPlayerContributions(List<PlayerAction> prevPlayerActions) {
+        var playerContributions = new HashMap<UUID, BigDecimal>();
         for (var action : prevPlayerActions) {
-            var thisAmount = action.getAmount() == null ? 0d : action.getAmount();
-            playerContributions.merge(action.getPlayerSession().getId(), thisAmount, Double::sum);
+            var thisAmount = action.getAmount() == null ? BigDecimal.ZERO : action.getAmount();
+            playerContributions.merge(action.getPlayerSession().getId(), thisAmount, BigDecimal::add);
         }
         return playerContributions;
     }

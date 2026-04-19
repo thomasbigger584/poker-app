@@ -10,8 +10,12 @@ import androidx.annotation.NonNull;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializer;
+import com.twb.pokerapp.BuildConfig;
+import com.twb.pokerapp.data.auth.AuthConfiguration;
 import com.twb.pokerapp.data.auth.AuthService;
+import com.twb.pokerapp.data.auth.TokenAuthenticator;
 import com.twb.pokerapp.data.retrofit.api.interceptor.AuthInterceptor;
+import com.twb.pokerapp.data.retrofit.api.interceptor.GlobalErrorInterceptor;
 import com.twb.pokerapp.data.retrofit.gson.ServerMessageDeserializer;
 import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.di.network.qualifiers.Authenticated;
@@ -19,6 +23,7 @@ import com.twb.pokerapp.di.network.qualifiers.Unauthenticated;
 
 import java.io.File;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
@@ -37,15 +42,16 @@ import retrofit2.converter.gson.GsonConverterFactory;
 @Module(includes = AuthModule.class)
 @InstallIn(SingletonComponent.class)
 public class NetworkModule {
-    private static final String PROTOCOL = "http://";
+    private static final String TAG = NetworkModule.class.getSimpleName();
     private static final String OKHTTP_CACHE_FILE = "okhttp_cache";
-    private static final int MAX_CACHE_SIZE = 10 * 1000 * 1000; //10MB Cache
+    private static final int MAX_CACHE_SIZE = 10 * 1024 * 1024; //10MB Cache
+    private static final int TIMEOUT_SECONDS = 30;
 
     @Provides
     @Singleton
     @Unauthenticated
-    public Retrofit retrofitUnAuthenticated(@Unauthenticated OkHttpClient okHttpClient, Gson gson) {
-        return getRetrofit(okHttpClient, gson);
+    public Retrofit retrofitUnAuthenticated(@Unauthenticated OkHttpClient okHttpClient, Gson gson, AuthConfiguration authConfiguration) {
+        return getRetrofit(okHttpClient, gson, authConfiguration);
     }
 
     @Provides
@@ -58,33 +64,41 @@ public class NetworkModule {
     @Provides
     @Singleton
     @Authenticated
-    public Retrofit retrofitAuthenticated(@Authenticated OkHttpClient okHttpClient, Gson gson) {
-        return getRetrofit(okHttpClient, gson);
+    public Retrofit retrofitAuthenticated(@Authenticated OkHttpClient okHttpClient, Gson gson, AuthConfiguration authConfiguration) {
+        return getRetrofit(okHttpClient, gson, authConfiguration);
     }
 
     @Provides
     @Singleton
     @Authenticated
     public OkHttpClient okHttpClientAuthenticated(HttpLoggingInterceptor loggingInterceptor,
-                                                  Cache cache, AuthInterceptor authInterceptor) {
-        OkHttpClient.Builder builder = getOkHttpClientBuilder(loggingInterceptor, cache);
+                                                  Cache cache, AuthInterceptor authInterceptor,
+                                                  GlobalErrorInterceptor globalErrorInterceptor,
+                                                  TokenAuthenticator tokenAuthenticator) {
+        var builder = getOkHttpClientBuilder(loggingInterceptor, cache);
         builder.addInterceptor(authInterceptor);
+        builder.addInterceptor(globalErrorInterceptor);
+        builder.authenticator(tokenAuthenticator);
         return builder.build();
     }
 
     @NonNull
-    private Retrofit getRetrofit(OkHttpClient okHttpClient, Gson gson) {
+    private Retrofit getRetrofit(OkHttpClient okHttpClient, Gson gson, AuthConfiguration authConfiguration) {
+        var protocol = authConfiguration.isHttpsRequired() ? "https://" : "http://";
         return new Retrofit.Builder()
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .client(okHttpClient)
-                .baseUrl(PROTOCOL + API_BASE_URL)
+                .baseUrl(protocol + API_BASE_URL)
                 .build();
     }
 
     @NonNull
     private OkHttpClient.Builder getOkHttpClientBuilder(HttpLoggingInterceptor loggingInterceptor, Cache cache) {
         return new OkHttpClient.Builder()
+                .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .writeTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .addInterceptor(loggingInterceptor)
                 .cache(cache);
     }
@@ -94,11 +108,18 @@ public class NetworkModule {
     public Gson gson() {
         var gsonBuilder = new GsonBuilder();
         gsonBuilder.registerTypeAdapter(Date.class, (JsonDeserializer<Date>) (json, typeOfT, context) -> {
-            //todo: verify this works with dates which get returned
-            return new Date((long) (json.getAsJsonPrimitive().getAsDouble() * 1000));
+            var dateAsDouble = json.getAsJsonPrimitive().getAsDouble();
+            try {
+                return new Date((long) (dateAsDouble * 1000));
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to parse date: " + dateAsDouble, e);
+                return null;
+            }
         });
         gsonBuilder.registerTypeAdapter(ServerMessageDTO.class, new ServerMessageDeserializer());
-        gsonBuilder.setPrettyPrinting();
+        if (BuildConfig.DEBUG) {
+            gsonBuilder.setPrettyPrinting();
+        }
         return gsonBuilder.create();
     }
 
@@ -106,7 +127,11 @@ public class NetworkModule {
     @Singleton
     public HttpLoggingInterceptor loggingInterceptor() {
         var loggingInterceptor = new HttpLoggingInterceptor(message -> Log.i(NetworkModule.class.getSimpleName(), message));
-        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        if (BuildConfig.DEBUG) {
+            loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        } else {
+            loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BASIC);
+        }
         return loggingInterceptor;
     }
 
@@ -114,6 +139,18 @@ public class NetworkModule {
     @Singleton
     public AuthInterceptor authInterceptor(AuthService authService) {
         return new AuthInterceptor(authService);
+    }
+
+    @Provides
+    @Singleton
+    public GlobalErrorInterceptor globalErrorInterceptor() {
+        return new GlobalErrorInterceptor();
+    }
+
+    @Provides
+    @Singleton
+    public TokenAuthenticator tokenAuthenticator(AuthService authService) {
+        return new TokenAuthenticator(authService);
     }
 
     @Provides

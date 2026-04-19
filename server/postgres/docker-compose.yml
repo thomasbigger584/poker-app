@@ -23,10 +23,18 @@ services:
       PGADMIN_DEFAULT_EMAIL: thomas@pokerapp.com
       PGADMIN_DEFAULT_PASSWORD: password
       PGADMIN_LISTEN_PORT: 5050
-      PGADMIN_OPTIONS: "--script-name /pgadmin"
+      PGADMIN_CONFIG_SCRIPT_NAME: "'/pgadmin'"
+      PGADMIN_LISTEN_ADDRESS: 0.0.0.0
+      PGADMIN_CONFIG_GUNICORN_TIMEOUT: 600
       TZ: Europe/London
       PGPASSFILE: /tmp/pgpass
     volumes:
       - pgadmin_data:/var/lib/pgadmin
       - ./servers.json:/pgadmin4/servers.json
       - ./pgpass:/tmp/pgpass:ro
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "https://poker-app.taila8b6c7.ts.net/pgadmin/misc/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s

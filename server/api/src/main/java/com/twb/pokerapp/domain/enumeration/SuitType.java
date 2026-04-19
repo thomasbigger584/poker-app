@@ -8,11 +8,20 @@ import lombok.ToString;
 @ToString
 @RequiredArgsConstructor
 public enum SuitType {
-    SPADES(0x1000, 's'),
-    HEARTS(0x2000, 'h'),
-    DIAMONDS(0x4000, 'd'),
-    CLUBS(0x8000, 'c');
+    CLUBS(0, 'c'),
+    DIAMONDS(1, 'd'),
+    HEARTS(2, 'h'),
+    SPADES(3, 's');
 
     private final int value;
     private final char suitChar;
+
+    public static SuitType fromSuitChar(char suitChar) {
+        for (var suitType : values()) {
+            if (suitType.getSuitChar() == suitChar) {
+                return suitType;
+            }
+        }
+        throw new IllegalArgumentException("Invalid suit character: " + suitChar);
+    }
 }

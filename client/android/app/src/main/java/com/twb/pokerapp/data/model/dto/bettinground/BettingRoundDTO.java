@@ -2,16 +2,15 @@ package com.twb.pokerapp.data.model.dto.bettinground;
 
 import androidx.annotation.NonNull;
 
-import com.twb.pokerapp.data.model.dto.card.CardDTO;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 public class BettingRoundDTO {
     private UUID id;
+    private String type;
     private String state;
-    private Double pot;
+    private List<BettingRoundRefundDTO> bettingRoundRefunds = new ArrayList<>();
 
     public UUID getId() {
         return id;
@@ -19,6 +18,14 @@ public class BettingRoundDTO {
 
     public void setId(UUID id) {
         this.id = id;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getState() {
@@ -29,12 +36,12 @@ public class BettingRoundDTO {
         this.state = state;
     }
 
-    public Double getPot() {
-        return pot;
+    public List<BettingRoundRefundDTO> getBettingRoundRefunds() {
+        return bettingRoundRefunds;
     }
 
-    public void setPot(Double pot) {
-        this.pot = pot;
+    public void setBettingRoundRefunds(List<BettingRoundRefundDTO> bettingRoundRefunds) {
+        this.bettingRoundRefunds = bettingRoundRefunds;
     }
 
     @NonNull
@@ -42,8 +49,9 @@ public class BettingRoundDTO {
     public String toString() {
         return "BettingRoundDTO{" +
                 "id=" + id +
+                ", type='" + type + '\'' +
                 ", state='" + state + '\'' +
-                ", pot=" + pot +
+                ", bettingRoundRefunds=" + bettingRoundRefunds +
                 '}';
     }
 }

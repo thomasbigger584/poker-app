@@ -4,6 +4,7 @@ import com.twb.stomplib.dto.StompHeader;
 import com.twb.stomplib.dto.StompMessage;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class RabbitPathMatcher implements PathMatcher {
 
@@ -19,6 +20,20 @@ public class RabbitPathMatcher implements PathMatcher {
         // for example string "lorem.ipsum.*.sit":
 
         // split it up into ["lorem", "ipsum", "*", "sit"]
+        var transformed = split(path);
+        // at this point, 'transformed' looks like ["lorem", "ipsum", "[^.]+", "sit"]
+        var sb = new StringBuilder();
+        for (var s : transformed) {
+            if (sb.length() > 0) sb.append("\\.");
+            sb.append(s);
+        }
+        var join = sb.toString();
+        // join = "lorem\.ipsum\.[^.]+\.sit"
+
+        return dest.matches(join);
+    }
+
+    private List<String> split(String path) {
         var split = path.split("\\.");
         var transformed = new ArrayList<String>();
         // check for wildcards and replace with corresponding regex
@@ -37,15 +52,6 @@ public class RabbitPathMatcher implements PathMatcher {
                     break;
             }
         }
-        // at this point, 'transformed' looks like ["lorem", "ipsum", "[^.]+", "sit"]
-        var sb = new StringBuilder();
-        for (var s : transformed) {
-            if (sb.length() > 0) sb.append("\\.");
-            sb.append(s);
-        }
-        var join = sb.toString();
-        // join = "lorem\.ipsum\.[^.]+\.sit"
-
-        return dest.matches(join);
+        return transformed;
     }
 }

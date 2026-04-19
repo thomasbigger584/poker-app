@@ -1,18 +1,26 @@
 package com.twb.pokerapp.testutils.http;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.twb.pokerapp.domain.enumeration.GameType;
+import com.twb.pokerapp.dto.table.CreateTableDTO;
+import com.twb.pokerapp.dto.table.TableDTO;
+import com.twb.pokerapp.testutils.game.params.scenario.ScenarioParams;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.Keycloak;
 import org.springframework.http.HttpStatus;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @RequiredArgsConstructor
 public class RestClient {
@@ -31,6 +39,22 @@ public class RestClient {
         var instance = new RestClient(keycloak);
         INSTANCES.put(keycloak, instance);
         return instance;
+    }
+
+    public TableDTO createTable(ScenarioParams params) throws Exception {
+        var createDto = new CreateTableDTO();
+        createDto.setName(UUID.randomUUID().toString());
+        createDto.setGameType(GameType.TEXAS_HOLDEM);
+        createDto.setSpeedMultiplier(params.getSpeedMultiplier());
+        createDto.setTotalRounds(params.getTotalRounds());
+        createDto.setMinPlayers(params.getScenarioPlayers().size());
+        createDto.setMaxPlayers(6);
+        createDto.setMinBuyin(params.getMinBuyIn());
+        createDto.setMaxBuyin(BigDecimal.valueOf(10_000));
+
+        var createResponse = post(TableDTO.class, createDto, "/poker-table");
+        assertEquals(HttpStatus.CREATED.value(), createResponse.httpResponse().statusCode());
+        return createResponse.resultBody();
     }
 
     public <ResultBody, RequestBody> ApiHttpResponse<ResultBody> post(Class<ResultBody> resultClass,

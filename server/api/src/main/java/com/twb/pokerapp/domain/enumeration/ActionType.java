@@ -5,7 +5,8 @@ public enum ActionType {
     BET,
     CALL,
     RAISE,
-    FOLD;
+    FOLD,
+    ALL_IN;
 
     public static ActionType[] getDefaultActions() {
         return CHECK.getNextActions();
@@ -19,9 +20,21 @@ public enum ActionType {
             case BET:
             case CALL:
             case RAISE:
-            case FOLD: {
-                yield new ActionType[]{CALL, RAISE, FOLD};
+            case FOLD:
+            case ALL_IN: {
+                yield new ActionType[]{CALL, RAISE, ALL_IN, FOLD};
             }
+        };
+    }
+
+    public static ActionType[] getAllInActions() {
+        return new ActionType[]{FOLD, ALL_IN};
+    }
+
+    public boolean isAggressive() {
+        return switch (this) {
+            case BET, RAISE -> true;
+            default -> false;
         };
     }
 }

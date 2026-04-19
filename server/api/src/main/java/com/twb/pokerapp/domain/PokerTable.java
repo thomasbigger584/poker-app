@@ -9,6 +9,7 @@ import lombok.Setter;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -34,6 +35,14 @@ public class PokerTable extends Auditable {
     @Column(name = "game_type")
     private GameType gameType;
 
+    @Positive
+    @Column(name = "speed_multiplier")
+    private Double speedMultiplier;
+
+    @Positive
+    @Column(name = "total_rounds")
+    private Integer totalRounds;
+
     @NotNull
     @Positive
     @Column(name = "min_players")
@@ -46,13 +55,13 @@ public class PokerTable extends Auditable {
 
     @NotNull
     @Positive
-    @Column(name = "min_buyin")
-    private Double minBuyin;
+    @Column(name = "min_buyin", precision = 19, scale = 2)
+    private BigDecimal minBuyin;
 
     @NotNull
     @Positive
-    @Column(name = "max_buyin")
-    private Double maxBuyin;
+    @Column(name = "max_buyin", precision = 19, scale = 2)
+    private BigDecimal maxBuyin;
 
     @OneToMany(mappedBy = "pokerTable", cascade = CascadeType.ALL)
     private List<Round> rounds = new ArrayList<>();
@@ -69,6 +78,8 @@ public class PokerTable extends Auditable {
                 .append(id, table.id)
                 .append(name, table.name)
                 .append(gameType, table.gameType)
+                .append(speedMultiplier, table.speedMultiplier)
+                .append(totalRounds, table.totalRounds)
                 .append(minPlayers, table.minPlayers)
                 .append(maxPlayers, table.maxPlayers)
                 .append(minBuyin, table.minBuyin)
@@ -80,6 +91,7 @@ public class PokerTable extends Auditable {
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
                 .append(id).append(name).append(gameType)
+                .append(speedMultiplier).append(totalRounds)
                 .append(minPlayers).append(minPlayers)
                 .append(minBuyin).append(maxBuyin)
                 .toHashCode();
@@ -91,6 +103,8 @@ public class PokerTable extends Auditable {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", gameType=" + gameType +
+                ", speedMultiplier=" + speedMultiplier +
+                ", totalRounds=" + totalRounds +
                 ", minPlayers=" + minPlayers +
                 ", maxPlayers=" + maxPlayers +
                 ", minBuyin=" + minBuyin +
