@@ -1,10 +1,8 @@
 package com.twb.pokerapp.data.retrofit.api.interceptor;
 
 import com.twb.pokerapp.data.auth.AuthService;
-import com.twb.pokerapp.data.exception.UnauthorizedException;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
 
 import okhttp3.Interceptor;
 import okhttp3.Request;
@@ -29,10 +27,6 @@ public class AuthInterceptor implements Interceptor {
                     .header(AUTHORIZATION_HEADER, BEARER_PREFIX + accessToken)
                     .build();
         }
-        var response = chain.proceed(request);
-        if (response.code() == HttpURLConnection.HTTP_UNAUTHORIZED) {
-            throw new UnauthorizedException("Unauthorized: 401");
-        }
-        return response;
+        return chain.proceed(request);
     }
 }

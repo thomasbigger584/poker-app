@@ -81,6 +81,7 @@ public class AuthService {
                         if (errorRef.get() != null) {
                             // Check for the specific "invalid_grant" error
                             if ("invalid_grant".equals(errorRef.get().error)) {
+                                AuthEventBus.triggerLogout();
                                 throw new UnauthorizedException("Session expired", errorRef.get());
                             }
                             return null;

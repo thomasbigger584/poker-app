@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.auth.AuthConfiguration;
+import com.twb.pokerapp.data.auth.AuthEventBus;
 import com.twb.pokerapp.data.auth.AuthStateManager;
 import com.twb.pokerapp.data.exception.UnauthorizedException;
 
@@ -64,8 +65,7 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
         executor = Executors.newSingleThreadExecutor();
 
         if (authConfiguration.hasConfigurationChanged()) {
-            signOut();
-            return;
+            Log.w(TAG, "Configuration change detected");
         }
 
         authService = new AuthorizationService(this, new AppAuthConfiguration.Builder()
@@ -77,6 +77,12 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
         if (view != null) {
             setContentView(view);
         }
+
+        AuthEventBus.getLogoutEvent().observe(this, shouldLogout -> {
+            if (shouldLogout != null && shouldLogout) {
+                signOut();
+            }
+        });
 
         if (savedInstanceState != null && savedInstanceState.containsKey(KEY_USER_INFO)) {
             try {
@@ -116,10 +122,14 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
         if (response != null && response.authorizationCode != null) {
             exchangeAuthorizationCode(response);
         } else if (ex != null) {
-            onNotAuthorized("Authorization flow failed", ex);
+            if ("invalid_grant".equals(ex.error)) {
+                signOut();
+            } else {
+                onNotAuthorized("Authorization flow failed", ex);
+            }
         } else {
             // No state and no response in intent means we are just not logged in
-            onNotAuthorized("No authorization state retained", null);
+            Log.d(TAG, "No authorization state retained");
         }
     }
 
@@ -172,7 +182,6 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
                 authService,
                 (accessToken, idToken, ex) -> {
                     if (ex != null) {
-                        handleUnauthorizedException(ex);
                         return;
                     }
                     action.execute(accessToken, idToken, null);
@@ -193,27 +202,6 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
         } else {
             signOut();
         }
-    }
-
-    protected void handleUnauthorizedException(Throwable throwable) {
-        if (throwable == null) return;
-        if (isAuthFailure(throwable) || (throwable.getCause() != null && isAuthFailure(throwable.getCause()))) {
-            Log.e(TAG, "Auth failure detected, signing out...", throwable);
-            signOut();
-            Toast.makeText(this, R.string.you_have_been_signed_out, Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private boolean isAuthFailure(@NonNull Throwable t) {
-        if (t instanceof UnauthorizedException) {
-            return true;
-        }
-        // Check for AppAuth's specific error code
-        if (t instanceof AuthorizationException) {
-            var authEx = (AuthorizationException) t;
-            return "invalid_grant".equals(authEx.error);
-        }
-        return false;
     }
 
     @MainThread

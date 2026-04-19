@@ -52,7 +52,6 @@ public class TableListActivity extends BaseAuthActivity implements TableListAdap
 
         viewModel.errorLiveData.observe(this, throwable -> {
             if (throwable == null) return;
-            handleUnauthorizedException(throwable);
             binding.swipeRefreshLayout.setRefreshing(false);
             var alertModalDialog = AlertModalDialog
                     .newInstance(AlertModalDialog.AlertModalType.ERROR, throwable.getMessage(), new AlertModalDialog.OnAlertClickListener() {
@@ -83,7 +82,6 @@ public class TableListActivity extends BaseAuthActivity implements TableListAdap
     @Override
     protected void onResume() {
         super.onResume();
-        refreshData();
     }
 
     @Override
