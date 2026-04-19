@@ -82,6 +82,7 @@ public final class LoginActivity extends AppCompatActivity {
         if (authStateManager.getCurrent().isAuthorized()) {
             Log.i(TAG, "User is already authenticated, proceeding to next activity");
             startActivity(new Intent(this, AUTH_COMPLETED_ACTIVITY));
+            binding.loginButton.setEnabled(true);
             finish();
             return;
         }
@@ -111,7 +112,7 @@ public final class LoginActivity extends AppCompatActivity {
 
     public void onWebsiteClick(View view) {
         var intent = new CustomTabsIntent.Builder().build();
-        intent.launchUrl(this, Uri.parse("http://poker-app.taila8b6c7.ts.net"));
+        intent.launchUrl(this, Uri.parse("https://poker-app.taila8b6c7.ts.net"));
     }
 
     @WorkerThread

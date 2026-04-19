@@ -33,6 +33,9 @@ FROM bellsoft/liberica-runtime-container:jre-21-musl
 
 WORKDIR /app
 
+# Install curl for healthcheck
+RUN apk add --no-cache curl
+
 COPY --from=builder /app/target/api.jar /app/api.jar
 
 ENV EVALUATOR_SO_PATH=/app/evaluator.so

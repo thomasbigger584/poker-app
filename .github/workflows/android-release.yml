@@ -1,4 +1,4 @@
-name: 🚀 Create Android Release
+name: 🚀 Android Release
 
 on:
   push:

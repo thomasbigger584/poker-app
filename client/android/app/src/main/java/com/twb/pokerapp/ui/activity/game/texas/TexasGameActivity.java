@@ -114,7 +114,6 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         viewModel = new ViewModelProvider(this).get(TexasGameViewModel.class);
         viewModel.errors.observe(this, throwable -> {
             if (throwable == null) return;
-            handleUnauthorizedException(throwable);
             DialogHelper.dismiss(loadingSpinner);
             var alertModalDialog = AlertModalDialog
                     .newInstance(AlertModalDialog.AlertModalType.ERROR, throwable.getMessage(), null);

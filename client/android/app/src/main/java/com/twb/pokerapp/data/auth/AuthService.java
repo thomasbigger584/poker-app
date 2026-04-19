@@ -6,7 +6,6 @@ import android.util.Log;
 import androidx.annotation.WorkerThread;
 
 import com.auth0.android.jwt.JWT;
-import com.twb.pokerapp.data.exception.UnauthorizedException;
 import com.twb.pokerapp.data.model.dto.appuser.AppUserDTO;
 
 import net.openid.appauth.AppAuthConfiguration;
@@ -55,7 +54,7 @@ public class AuthService {
     }
 
     @WorkerThread // blocks until a new token is retrieved
-    public String getAccessTokenWithRefresh() throws UnauthorizedException {
+    public String getAccessTokenWithRefresh() {
         refreshLock.lock();
         try {
             var jwt = getJwt();
@@ -81,7 +80,7 @@ public class AuthService {
                         if (errorRef.get() != null) {
                             // Check for the specific "invalid_grant" error
                             if ("invalid_grant".equals(errorRef.get().error)) {
-                                throw new UnauthorizedException("Session expired", errorRef.get());
+                                AuthEventBus.triggerLogout();
                             }
                             return null;
                         }

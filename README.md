@@ -1,7 +1,7 @@
 # Poker App
 
-[![API CI](https://github.com/thomasbigger584/poker-app/actions/workflows/api-ci.yml/badge.svg)](https://github.com/thomasbigger584/poker-app/actions/workflows/api-ci.yml)
-[![Android Release](https://github.com/thomasbigger584/poker-app/actions/workflows/android-release.yml/badge.svg)](https://github.com/thomasbigger584/poker-app/actions/workflows/android-release.yml)
+[![Server](https://github.com/thomasbigger584/poker-app/actions/workflows/server-cicd.yml/badge.svg)](https://github.com/thomasbigger584/poker-app/actions/workflows/server-cicd.yml)
+[![Android](https://github.com/thomasbigger584/poker-app/actions/workflows/android-release.yml/badge.svg)](https://github.com/thomasbigger584/poker-app/actions/workflows/android-release.yml)
 
 ![Logo](images/logo.png)
 
