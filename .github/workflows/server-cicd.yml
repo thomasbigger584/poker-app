@@ -75,7 +75,9 @@ jobs:
       !cancelled()
     steps:
       - name: 🌐 Connect to Tailscale
+        id: tailscale
         uses: tailscale/github-action@v4
+        continue-on-error: true
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
@@ -83,5 +85,6 @@ jobs:
           ping: raspberrypi
 
       - name: 🚀 Execute Remote Deployment Script
+        if: steps.tailscale.outcome == 'success'
         run: |
           ssh -o StrictHostKeyChecking=no tbigg@raspberrypi "sudo bash /home/tbigg/poker-app/server/raspberrypi/deployment.sh"
