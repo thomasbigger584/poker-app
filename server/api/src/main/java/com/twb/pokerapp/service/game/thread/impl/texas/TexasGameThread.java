@@ -6,16 +6,15 @@ import com.twb.pokerapp.domain.enumeration.RoundState;
 import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
 import com.twb.pokerapp.service.game.thread.impl.texas.bettinground.TexasBettingRoundService;
+import com.twb.pokerapp.service.game.thread.impl.texas.dealer.TexasDealerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import static com.twb.pokerapp.util.SleepUtil.sleepInMs;
-
 @Slf4j
-@Component
+@Component("texasGameThread")
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class TexasGameThread extends GameThread {
 
@@ -42,7 +41,7 @@ public class TexasGameThread extends GameThread {
         switch (roundState) {
             case INIT_DEAL -> initDeal();
             case INIT_DEAL_BET, FLOP_DEAL_BET, TURN_DEAL_BET, RIVER_DEAL_BET ->
-                    texasBettingRoundService.runBettingRound(params, this);
+                    texasBettingRoundService.runBettingRound(this);
             case FLOP_DEAL -> dealFlop();
             case TURN_DEAL -> dealCommunityCard(CardType.TURN_CARD);
             case RIVER_DEAL -> dealCommunityCard(CardType.RIVER_CARD);
@@ -52,10 +51,14 @@ public class TexasGameThread extends GameThread {
 
     private void initDeal() {
         var activePlayers = playerSessionRepository
-                .findActivePlayersByTableId(params.getTableId(), roundId);
+                .findActivePlayersByTableId(table.getId(), roundId);
         for (var cardType : CardType.PLAYER_CARDS) {
             for (var playerSession : activePlayers) {
                 checkRoundInterrupted();
+                if (userWebsocketService.isUserDisconnected(table, playerSession)) {
+                    log.debug("Skipping dealing {} to disconnected player: {}", cardType, playerSession.getUser().getUsername());
+                    continue;
+                }
                 dealPlayerCard(cardType, playerSession);
             }
         }
@@ -69,7 +72,7 @@ public class TexasGameThread extends GameThread {
             return card;
         });
         dispatcher.send(table, messageFactory.initDeal(playerSession, playerCard));
-        sleepInMs(params.getDealWaitMs());
+        gameSpeedService.sleep(table, params.getDealWaitMs());
     }
 
     private void dealFlop() {
@@ -87,7 +90,7 @@ public class TexasGameThread extends GameThread {
             return card;
         });
         dispatcher.send(table, messageFactory.communityCardDeal(communityCard));
-        sleepInMs(params.getDealWaitMs());
+        gameSpeedService.sleep(table, params.getDealWaitMs());
     }
 
     @Override

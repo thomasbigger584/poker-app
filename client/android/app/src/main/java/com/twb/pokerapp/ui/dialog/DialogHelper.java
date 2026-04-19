@@ -3,13 +3,10 @@ package com.twb.pokerapp.ui.dialog;
 import android.app.Activity;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.view.View;
-import android.view.Window;
-import android.widget.ProgressBar;
 
 import androidx.appcompat.app.AlertDialog;
 
-import com.twb.pokerapp.R;
+import com.twb.pokerapp.databinding.LoadingDialogSpinnerBinding;
 
 public class DialogHelper {
 
@@ -19,11 +16,10 @@ public class DialogHelper {
 
     public static AlertDialog createLoadingSpinner(Activity activity) {
         var dialogBuilder = new AlertDialog.Builder(activity);
-        var alertView = activity.getLayoutInflater().inflate(R.layout.loading_dialog_spinner, null);
+        var binding = LoadingDialogSpinnerBinding.inflate(activity.getLayoutInflater());
 
-        var progressBar = (ProgressBar) alertView.findViewById(R.id.loadingSpinner);
-        progressBar.setIndeterminate(true);
-        dialogBuilder.setView(alertView);
+        binding.loadingSpinner.setIndeterminate(true);
+        dialogBuilder.setView(binding.getRoot());
         dialogBuilder.setCancelable(false);
 
         var alertDialog = dialogBuilder.create();

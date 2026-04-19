@@ -29,8 +29,8 @@ public class Round extends Auditable {
     @Column(name = "round_state")
     private RoundState roundState;
 
-    @Column(name = "pot")
-    private Double pot;
+    @OneToMany(mappedBy = "round")
+    private List<RoundPot> roundPots = new ArrayList<>();
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "poker_table_id")
@@ -45,6 +45,9 @@ public class Round extends Auditable {
     @OneToMany(mappedBy = "round")
     private List<PlayerSession> playerSessions = new ArrayList<>();
 
+    @OneToMany(mappedBy = "round")
+    private List<RoundWinner> roundWinners = new ArrayList<>();
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -52,14 +55,13 @@ public class Round extends Auditable {
         var round = (Round) o;
         return new EqualsBuilder().append(id, round.id)
                 .append(roundState, round.roundState)
-                .append(pot, round.pot)
                 .isEquals();
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder(17, 37)
-                .append(id).append(roundState).append(pot).toHashCode();
+                .append(id).append(roundState).toHashCode();
     }
 
     @Override
@@ -67,7 +69,6 @@ public class Round extends Auditable {
         return "Round{" +
                 "id=" + id +
                 ", roundState=" + roundState +
-                ", pot=" + pot +
                 '}';
     }
 }

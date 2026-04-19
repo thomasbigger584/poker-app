@@ -11,16 +11,16 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Profile(ProfileConfiguration.DIGITALOCEAN_PROFILE)
+@Profile(ProfileConfiguration.CLOUD_PROFILE)
 public class KeycloakRabbitMqConsumer {
 
     @RabbitListener(queues = {"app.keycloak"})
     public void onAnyEvent(Message message) {
         try {
-            log.info("***************************************");
-            log.info("Props: {}", message.getMessageProperties());
-            log.info("Body: {}", new String(message.getBody()));
-            log.info("***************************************");
+            log.debug("***************************************");
+            log.debug("Props: {}", message.getMessageProperties());
+            log.debug("Body: {}", new String(message.getBody()));
+            log.debug("***************************************");
         } catch (Exception e) {
             log.error("Failed to print message", e);
         }

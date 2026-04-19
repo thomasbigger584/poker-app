@@ -16,6 +16,6 @@ public class FinishActivityOnClickListener implements AlertModalDialog.OnAlertCl
 
     @Override
     public void onCancelClick() {
-        activity.finish();
+        // do nothing
     }
 }

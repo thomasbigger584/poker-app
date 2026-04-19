@@ -1,10 +1,10 @@
 package com.twb.pokerapp.service.game;
 
 import com.antkorwin.xsync.XSync;
-import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.exception.game.GamePlayerErrorLogException;
 import com.twb.pokerapp.exception.game.GamePlayerLogException;
+import com.twb.pokerapp.repository.BettingRoundRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.TableRepository;
 import com.twb.pokerapp.repository.UserRepository;
@@ -21,6 +21,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import static com.twb.pokerapp.repository.RepositoryUtil.getThrowPlayerErrorLog;
@@ -34,6 +35,7 @@ public class TableGameService {
     private final TableRepository tableRepository;
     private final PlayerSessionRepository playerSessionRepository;
     private final PlayerSessionService playerSessionService;
+    private final BettingRoundRepository bettingRoundRepository;
 
     private final GameThreadManager threadManager;
     private final ServerMessageFactory messageFactory;
@@ -43,19 +45,19 @@ public class TableGameService {
     private final ApplicationContext context;
     private final TransactionTemplate writeTx;
 
-    public ServerMessageDTO onUserConnected(UUID tableId, ConnectionType connectionType, String username, Double buyInAmount) {
+    public ServerMessageDTO onUserConnected(UUID tableId, ConnectionType connectionType, String username, BigDecimal buyInAmount) {
         return mutex.evaluate(tableId, () -> {
             var allPlayerSessions = writeTx.execute(status -> {
                 var table = getThrowPlayerErrorLog(tableRepository.findById(tableId), "No table found for Table ID: " + tableId);
                 if (connectionType == ConnectionType.PLAYER) {
-                    if (buyInAmount < table.getMinBuyin() || buyInAmount > table.getMaxBuyin()) {
+                    if (buyInAmount.compareTo(table.getMinBuyin()) < 0 || buyInAmount.compareTo(table.getMaxBuyin()) > 0) {
                         var message = "Buy-In amount must be between $%.2f and $%.2f for table %s".formatted(table.getMinBuyin(), table.getMaxBuyin(), tableId);
                         throw new GamePlayerErrorLogException(message);
                     }
                 }
                 var user = getThrowPlayerErrorLog(userRepository.findByUsername(username), "Failed to connect user %s to table %s as user not found".formatted(username, tableId));
                 if (connectionType == ConnectionType.PLAYER) {
-                    if (buyInAmount > user.getTotalFunds()) {
+                    if (buyInAmount.compareTo(user.getTotalFunds()) > 0) {
                         var message = "User %s does not have enough total funds for Buy-In $%.2f, has $%.2f".formatted(username, buyInAmount, user.getTotalFunds());
                         throw new GamePlayerErrorLogException(message);
                     }
@@ -130,21 +132,19 @@ public class TableGameService {
 
             var threadOpt = threadManager.getIfExists(tableId);
             if (threadOpt.isEmpty()) {
-                log.error("No game thread for table ID: {}", tableId);
+                log.debug("No game thread for table ID: {}", tableId);
                 return;
             }
             var gameThread = threadOpt.get();
-
             if (playerSession.getConnectionType() == ConnectionType.PLAYER) {
-                var playerActionService = table.getGameType().getPlayerActionService(context);
-                var action = new CreatePlayerActionDTO();
-                action.setAction(ActionType.FOLD);
-                playerActionService.playerAction(playerSession, gameThread, action);
-            }
-
-            var playerSessions = playerSessionRepository.findConnectedPlayersByTableId(tableId);
-            if (playerSessions.size() < 2) {
-                gameThread.stopGame();
+                var playerTurnLatch = gameThread.getPlayerTurnLatch();
+                if (playerTurnLatch != null && username.equals(playerTurnLatch.playerSession().getUser().getUsername())) {
+                    var bettingRoundOpt = bettingRoundRepository.findCurrentByTableId(tableId);
+                    bettingRoundOpt.ifPresent(bettingRound -> {
+                        table.getGameType().getPlayerActionService(context)
+                                .onExecuteAutoAction(playerSession, bettingRound, gameThread);
+                    });
+                }
             }
         }));
     }

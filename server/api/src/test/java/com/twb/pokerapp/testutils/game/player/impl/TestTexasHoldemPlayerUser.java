@@ -25,7 +25,7 @@ public class TestTexasHoldemPlayerUser extends AbstractTestUser {
                 var turnHandler = params.getTurnHandler();
                 if (turnHandler != null) {
                     try {
-                        Thread.sleep(2000L);
+                        Thread.sleep(1000L);
                         turnHandler.handle(this, headers, playerTurn);
                     } catch (InterruptedException e) {
                         log.error("Failed to handle player turn", e);

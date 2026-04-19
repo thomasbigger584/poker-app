@@ -30,10 +30,6 @@ public class Hand extends Auditable {
     @Column(name = "hand_type")
     private HandType handType;
 
-    @Nullable
-    @Column(name = "winner")
-    private Boolean winner;
-
     @ManyToOne(optional = false)
     @JoinColumn(name = "player_session_id")
     private PlayerSession playerSession;
@@ -45,6 +41,9 @@ public class Hand extends Auditable {
     //this will be a small amount (i.e. 2 for TexasHoldem)
     @OneToMany(mappedBy = "hand", fetch = FetchType.EAGER)
     private List<Card> cards = new ArrayList<>();
+
+    @OneToMany(mappedBy = "hand")
+    private List<RoundWinner> roundWinners = new ArrayList<>();
 
     @Override
     public boolean equals(Object o) {

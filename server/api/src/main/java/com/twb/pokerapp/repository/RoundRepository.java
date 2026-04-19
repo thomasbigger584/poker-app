@@ -17,14 +17,16 @@ public interface RoundRepository extends JpaRepository<Round, UUID> {
             SELECT r
             FROM Round r
             WHERE r.roundState <> com.twb.pokerapp.domain.enumeration.RoundState.FINISHED
+            AND r.roundState <> com.twb.pokerapp.domain.enumeration.RoundState.FAILED
             """)
-    List<Round> findAllNotFinished();
+    List<Round> findAllCurrent();
 
     @Query("""
             SELECT r
             FROM Round r
             WHERE r.pokerTable.id = :tableId
             AND r.roundState <> com.twb.pokerapp.domain.enumeration.RoundState.FINISHED
+            AND r.roundState <> com.twb.pokerapp.domain.enumeration.RoundState.FAILED
             """)
     Optional<Round> findCurrentByTableId(@Param("tableId") UUID tableId);
 }

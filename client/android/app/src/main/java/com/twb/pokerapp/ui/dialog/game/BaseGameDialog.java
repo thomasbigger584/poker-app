@@ -1,24 +1,22 @@
 package com.twb.pokerapp.ui.dialog.game;
 
-import android.util.Log;
-import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 
 public abstract class BaseGameDialog extends DialogFragment {
-    private static final String TAG = BaseGameDialog.class.getSimpleName();
     private static final float DIM_AMOUNT = 0.5f;
-
-    View inflatedView;
 
     @Override
     public void onStart() {
         super.onStart();
-        var window = getDialog().getWindow();
+        var window = getWindow();
         if (window != null) {
             var windowParams = window.getAttributes();
             windowParams.dimAmount = DIM_AMOUNT;
@@ -33,27 +31,24 @@ public abstract class BaseGameDialog extends DialogFragment {
         setFullScreen();
     }
 
-    private void setFullScreen() {
-        inflatedView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
-                | View.SYSTEM_UI_FLAG_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
-    }
-
-    public void show(FragmentManager manager) {
-        super.show(manager, getClass().getSimpleName());
+    protected void setFullScreen() {
+        if (getView() == null) return;
+        var window = getWindow();
+        if (window != null) {
+            var controller = new WindowInsetsControllerCompat(window, getView());
+            controller.hide(WindowInsetsCompat.Type.systemBars());
+            controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+        }
     }
 
     @Override
-    public void show(FragmentManager manager, String tag) {
-        try {
-            var ft = manager.beginTransaction();
-            ft.add(this, tag);
-            ft.commit();
-        } catch (IllegalStateException e) {
-            Log.d(TAG, "Exception", e);
-        }
+    public void show(@NonNull FragmentManager manager, @Nullable String tag) {
+        if (manager.isStateSaved()) return;
+        super.show(manager, tag);
+    }
+
+    @Nullable
+    private Window getWindow() {
+        return getDialog() != null ? getDialog().getWindow() : null;
     }
 }

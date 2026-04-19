@@ -22,8 +22,11 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class MessageDispatcher {
+    // Matches the dot-notation required by RabbitMQ and AntPathMatcher
     private static final String GAME_TOPIC = "/topic/loops.%s";
-    private static final String USER_NOTIFICATION_TOPIC = "/notifications";
+
+    // Changed to match standard Spring/RabbitMQ private queue patterns
+    private static final String USER_NOTIFICATION_TOPIC = "/queue/notifications";
 
     private final SimpMessagingTemplate template;
     private final ObjectMapper objectMapper;
@@ -39,7 +42,7 @@ public class MessageDispatcher {
     }
 
     public void send(GameThreadParams params, ServerMessageDTO message) {
-        send(params.getTableId(), message);
+        send(params.getTable(), message);
     }
 
     public void send(UUID tableId, ServerMessageDTO message) {
@@ -47,7 +50,7 @@ public class MessageDispatcher {
             var destination = GAME_TOPIC.formatted(tableId);
             var payload = objectMapper.writeValueAsString(message);
             template.convertAndSend(destination, payload);
-            log.info("<<<< {}", payload);
+            log.debug("<<<< {}", payload);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to send message", e);
         }
@@ -57,14 +60,14 @@ public class MessageDispatcher {
         try {
             var payload = objectMapper.writeValueAsString(message);
             template.convertAndSendToUser(username, USER_NOTIFICATION_TOPIC, payload);
-            log.info("<<<< [{}] {}", username, payload);
+            log.debug("<<<< [{}] {}", username, payload);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to send message", e);
         }
     }
 
     public void sendReceipt(StompHeaderAccessor headerAccessor) {
-        String receipt = headerAccessor.getReceipt();
+        var receipt = headerAccessor.getReceipt();
         if (receipt != null) {
             sendReceipt(receipt, headerAccessor.getSessionId());
         }

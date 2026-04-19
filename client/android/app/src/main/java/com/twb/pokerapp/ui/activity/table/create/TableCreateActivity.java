@@ -1,45 +1,41 @@
 package com.twb.pokerapp.ui.activity.table.create;
 
 import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.twb.pokerapp.R;
-import com.twb.pokerapp.data.model.dto.table.CreateTableDTO;
+import com.twb.pokerapp.databinding.ActivityTableCreateBinding;
 import com.twb.pokerapp.ui.activity.login.BaseAuthActivity;
 import com.twb.pokerapp.ui.dialog.AlertModalDialog;
 import com.twb.pokerapp.ui.dialog.DialogHelper;
-
-import java.util.List;
 
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class TableCreateActivity extends BaseAuthActivity {
+    private ActivityTableCreateBinding binding;
     private TableCreateViewModel viewModel;
     private AlertDialog loadingSpinner;
-    private EditText tableNameEditText;
-    private Spinner gameTypeSpinner;
-    private EditText minPlayersEditText;
-    private EditText maxPlayersEditText;
-    private EditText minBuyInEditText;
-    private EditText maxBuyInEditText;
+
+    @Override
+    protected View getContentView() {
+        binding = ActivityTableCreateBinding.inflate(getLayoutInflater());
+        return binding.getRoot();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setupToolbar();
 
         loadingSpinner = DialogHelper.createLoadingSpinner(this);
@@ -54,30 +50,24 @@ public class TableCreateActivity extends BaseAuthActivity {
         });
         viewModel.createdTableLiveData.observe(this, tableDTO -> {
             if (tableDTO == null) {
-                Toast.makeText(this, "Table not created", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.table_not_created, Toast.LENGTH_SHORT).show();
                 return;
             }
             DialogHelper.dismiss(loadingSpinner);
-            Toast.makeText(this, "Created Table", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.created_table, Toast.LENGTH_SHORT).show();
             finish();
         });
 
-        tableNameEditText = findViewById(R.id.edit_table_name);
-        gameTypeSpinner = findViewById(R.id.spinner_game_type);
-        minPlayersEditText = findViewById(R.id.edit_min_players);
-        maxPlayersEditText = findViewById(R.id.edit_max_players);
-        minBuyInEditText = findViewById(R.id.edit_min_buyin);
-        maxBuyInEditText = findViewById(R.id.edit_max_buyin);
-    }
+        viewModel.validationErrorResId.observe(this, resId -> {
+            Toast.makeText(this, resId, Toast.LENGTH_SHORT).show();
+        });
 
-    @Override
-    protected int getContentView() {
-        return R.layout.activity_table_create;
+        binding.buttonSubmitTable.setOnClickListener(v -> onCreateTableClick());
     }
 
     @Override
     protected void onAuthorized() {
-        Toast.makeText(this, "onAuthorized", Toast.LENGTH_SHORT).show();
+        // No-op for now
     }
 
     @Override
@@ -85,67 +75,22 @@ public class TableCreateActivity extends BaseAuthActivity {
         finish();
     }
 
-    public void onCreateTableClick(View view) {
-        var createTableDTO = new CreateTableDTO();
-        var tableName = tableNameEditText.getText().toString().trim();
-        if (tableName.isBlank()) {
-            Toast.makeText(this, "Please enter a table name", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        createTableDTO.setName(tableName);
-
-        var gameTypeSelectedPosition = gameTypeSpinner.getSelectedItemPosition();
+    private void onCreateTableClick() {
+        var name = binding.editTableName.getText().toString();
+        var gameTypeSelectedPosition = binding.spinnerGameType.getSelectedItemPosition();
         var gameTypesArray = getResources().getStringArray(R.array.game_types_array);
         var gameType = gameTypesArray[gameTypeSelectedPosition];
-        createTableDTO.setGameType(gameType);
 
-        var minPlayersString = minPlayersEditText.getText().toString().trim();
-        if (minPlayersString.isBlank()) {
-            Toast.makeText(this, "Please enter a minimum number of players", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        try {
-            createTableDTO.setMinPlayers(Integer.parseInt(minPlayersString));
-        } catch (NumberFormatException e) {
-            Toast.makeText(this, "Please enter a valid minimum number of players", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        var maxPlayersString = maxPlayersEditText.getText().toString().trim();
-        if (maxPlayersString.isBlank()) {
-            Toast.makeText(this, "Please enter a maximum number of players", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        try {
-            createTableDTO.setMaxPlayers(Integer.parseInt(maxPlayersString));
-        } catch (NumberFormatException e) {
-            Toast.makeText(this, "Please enter a valid maximum number of players", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        var minBuyInString = minBuyInEditText.getText().toString().trim();
-        if (minBuyInString.isBlank()) {
-            Toast.makeText(this, "Please enter a minimum buy-in amount", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        try {
-            createTableDTO.setMinBuyin(Double.parseDouble(minBuyInString));
-        } catch (NumberFormatException e) {
-            Toast.makeText(this, "Please enter a valid minimum buy-in amount", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        var maxBuyInString = maxBuyInEditText.getText().toString().trim();
-        if (maxBuyInString.isBlank()) {
-            Toast.makeText(this, "Please enter a maximum buy-in amount", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        try {
-            createTableDTO.setMaxBuyin(Double.parseDouble(maxBuyInString));
-        } catch (NumberFormatException e) {
-            Toast.makeText(this, "Please enter a valid maximum buy-in amount", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        var speedMultiplier = binding.editSpeedMultiplier.getText().toString();
+        var totalRounds = binding.editTotalRounds.getText().toString();
+        var minPlayers = binding.editMinPlayers.getText().toString();
+        var maxPlayers = binding.editMaxPlayers.getText().toString();
+        var minBuyIn = binding.editMinBuyin.getText().toString();
+        var maxBuyIn = binding.editMaxBuyin.getText().toString();
 
         DialogHelper.show(loadingSpinner);
-        viewModel.createTable(createTableDTO);
+        viewModel.validateAndCreate(name, gameType, speedMultiplier, totalRounds,
+                minPlayers, maxPlayers, minBuyIn, maxBuyIn);
     }
 
     @Override
@@ -158,8 +103,7 @@ public class TableCreateActivity extends BaseAuthActivity {
     }
 
     private void setupToolbar() {
-        var toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        setSupportActionBar(binding.toolbar);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);

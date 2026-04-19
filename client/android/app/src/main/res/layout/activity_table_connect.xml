@@ -17,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
-            app:title="Connect To Table"
+            app:title="@string/connect_to_table_title"
             app:titleTextColor="@android:color/white" />
 
     </com.google.android.material.appbar.AppBarLayout>
@@ -40,10 +40,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingBottom="16dp"
-                android:text="Connect to Home Game 1"
                 android:textColor="@android:color/black"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                tools:text="Connect to Home Game 1" />
 
             <RadioGroup
                 android:id="@+id/connect_Type_radio_group"
@@ -58,13 +58,13 @@
                     android:layout_height="wrap_content"
                     android:checked="true"
                     android:paddingBottom="8dp"
-                    android:text="Connect as Player" />
+                    android:text="@string/connect_as_player" />
 
                 <RadioButton
                     android:id="@+id/radio_viewer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Connect as Viewer" />
+                    android:text="@string/connect_as_viewer" />
             </RadioGroup>
 
             <LinearLayout
@@ -77,7 +77,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:paddingBottom="8dp"
-                    android:text="Choose Buy-in Amount"
+                    android:text="@string/choose_buy_in_amount"
                     android:textColor="@android:color/black"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -94,7 +94,7 @@
                         android:id="@+id/buy_in_edit_text"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Enter buy-in amount"
+                        android:hint="@string/enter_buy_in_amount"
                         android:importantForAutofill="no"
                         android:inputType="numberDecimal" />
                 </FrameLayout>
@@ -115,8 +115,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
                         android:layout_weight="0.5"
-                        android:onClick="onMinBuyInClick"
-                        android:text="Min Buy-in" />
+                        android:text="@string/min_buy_in" />
 
                     <Button
                         android:id="@+id/button_max_buy_in"
@@ -124,8 +123,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="0.5"
-                        android:onClick="onMaxBuyInClick"
-                        android:text="Max Buy-in" />
+                        android:text="@string/max_buy_in" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -135,8 +133,7 @@
                 style="@style/PrimaryButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:onClick="onConnectTableClick"
-                android:text="Connect Table" />
+                android:text="@string/connect_table" />
 
         </LinearLayout>
     </ScrollView>

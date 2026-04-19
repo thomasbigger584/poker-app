@@ -6,34 +6,28 @@ import static com.twb.pokerapp.ui.util.ViewUtil.setInvisible;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.TextView;
+import android.view.LayoutInflater;
 
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.twb.pokerapp.R;
+import com.twb.pokerapp.databinding.CardPairBinding;
 import com.twb.pokerapp.data.model.dto.card.CardDTO;
 import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.ui.util.CardDrawableUtil;
 
-import java.util.Locale;
-
 public class CardPairLayout extends ConstraintLayout {
-    private static final String PLAYER_NOT_CONNECTED_TEXT = "--";
-    private final ImageView[] cardImageViews = new ImageView[2];
-    private TextView displayNameTextView;
-    private TextView fundsTextView;
-    private View dealerChipLayout;
-    private View inflatedView;
+    private CardPairBinding binding;
+    private PlayerSessionDTO playerSession;
 
-    public CardPairLayout(Context context, AttributeSet attrs) {
+    public CardPairLayout(Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public CardPairLayout(Context context, AttributeSet attrs, int defStyleAttr) {
+    public CardPairLayout(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init(context, attrs);
     }
@@ -43,23 +37,24 @@ public class CardPairLayout extends ConstraintLayout {
         init(context, null);
     }
 
-    private void init(Context context, AttributeSet attrs) {
-        inflatedView = inflate(getContext(), R.layout.card_pair, this);
-        cardImageViews[0] = inflatedView.findViewById(R.id.leftCardImageView);
-        cardImageViews[1] = inflatedView.findViewById(R.id.rightCardImageView);
-        displayNameTextView = inflatedView.findViewById(R.id.displayNameTextView);
-        fundsTextView = inflatedView.findViewById(R.id.fundsTextView);
-        dealerChipLayout = inflatedView.findViewById(R.id.dealerChipLayout);
+    private void init(Context context, @Nullable AttributeSet attrs) {
+        binding = CardPairBinding.inflate(LayoutInflater.from(context), this);
         setAttributes(context, attrs);
         reset();
+        if (isInEditMode()) {
+            binding.displayNameTextView.setText("Player 1");
+            binding.fundsTextView.setText("$10000.00");
+            updateCardImageView(R.drawable.sa);
+            updateCardImageView(R.drawable.sk);
+        }
     }
 
-    private void setAttributes(Context context, AttributeSet attrs) {
+    private void setAttributes(Context context, @Nullable AttributeSet attrs) {
         if (attrs == null) return;
         try (TypedArray cardPairLayoutAttributes = context.obtainStyledAttributes(attrs, R.styleable.CardPairLayout)) {
             var layoutScale = cardPairLayoutAttributes.getFloat(R.styleable.CardPairLayout_layout_scale, 1f);
             var textSizeScale = cardPairLayoutAttributes.getFloat(R.styleable.CardPairLayout_textsize_scale, 1f);
-            applyScaleRecursive(inflatedView, layoutScale, textSizeScale);
+            applyScaleRecursive(this, layoutScale, textSizeScale);
         }
     }
 
@@ -79,53 +74,64 @@ public class CardPairLayout extends ConstraintLayout {
     }
 
     private void updateCardImageView(@DrawableRes int cardDrawResId) {
-        if (cardImageViews[0].getVisibility() != INVISIBLE
-                && cardImageViews[1].getVisibility() != INVISIBLE) {
+        if (binding.leftCardImageView.getVisibility() != INVISIBLE
+                && binding.rightCardImageView.getVisibility() != INVISIBLE) {
             reset();
         }
-        if (cardImageViews[0].getVisibility() == INVISIBLE) {
-            cardImageViews[0].setImageResource(cardDrawResId);
-            cardImageViews[0].setVisibility(VISIBLE);
-        } else if (cardImageViews[1].getVisibility() == INVISIBLE) {
-            cardImageViews[1].setImageResource(cardDrawResId);
-            cardImageViews[1].setVisibility(VISIBLE);
+        if (binding.leftCardImageView.getVisibility() == INVISIBLE) {
+            binding.leftCardImageView.setImageResource(cardDrawResId);
+            binding.leftCardImageView.setVisibility(VISIBLE);
+        } else if (binding.rightCardImageView.getVisibility() == INVISIBLE) {
+            binding.rightCardImageView.setImageResource(cardDrawResId);
+            binding.rightCardImageView.setVisibility(VISIBLE);
         }
     }
 
     public void updateDetails(PlayerSessionDTO playerSession) {
+        this.playerSession = playerSession;
+
         var user = playerSession.getUser();
-        displayNameTextView.setText(user.getUsername());
-        if (playerSession.getFunds() != null) {
-            fundsTextView.setText(String.format(Locale.getDefault(), "$%.2f", playerSession.getFunds()));
+        binding.displayNameTextView.setText(user.getUsername());
+
+        var funds = playerSession.getFunds();
+        if (funds != null) {
+            binding.fundsTextView.setText(getContext().getString(R.string.currency_format, funds));
         }
     }
 
     public void deleteDetails() {
         reset();
-        displayNameTextView.setText(PLAYER_NOT_CONNECTED_TEXT);
-        fundsTextView.setText(PLAYER_NOT_CONNECTED_TEXT);
+        var notConnectedText = getContext().getString(R.string.not_connected_text);
+        binding.displayNameTextView.setText(notConnectedText);
+        binding.fundsTextView.setText(notConnectedText);
     }
 
     public void updateDealerChip(boolean dealer) {
         var visibility = (dealer) ? VISIBLE : GONE;
-        dealerChipLayout.setVisibility(visibility);
+        binding.dealerChipLayout.setVisibility(visibility);
     }
 
     public void updateTurnPlayer(boolean playerTurn) {
         if (playerTurn) {
-            inflatedView.setBackgroundResource(R.drawable.player_turn_border);
+            setBackgroundResource(R.drawable.player_turn_border);
         } else {
-            inflatedView.setBackground(null);
+            setBackground(null);
         }
     }
 
     public void fold() {
-        for (var cardImageView : cardImageViews) {
-            setInvisible(cardImageView);
-        }
+        setInvisible(binding.leftCardImageView);
+        setInvisible(binding.rightCardImageView);
     }
 
     public String getUsername() {
-        return displayNameTextView.getText().toString();
+        if (playerSession != null) {
+            return playerSession.getUser().getUsername();
+        }
+        return binding.displayNameTextView.getText().toString();
+    }
+
+    public PlayerSessionDTO getPlayerSession() {
+        return playerSession;
     }
 }

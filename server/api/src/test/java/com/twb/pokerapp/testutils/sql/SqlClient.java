@@ -1,8 +1,11 @@
 package com.twb.pokerapp.testutils.sql;
 
 import com.twb.pokerapp.domain.*;
+import com.twb.pokerapp.testutils.game.params.scenario.ScenarioParams;
+import com.twb.pokerapp.testutils.game.params.scenario.ScenarioPlayer;
 import jakarta.persistence.*;
 import jakarta.persistence.metamodel.EntityType;
+import org.hibernate.jpa.HibernateHints;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 
 import java.util.HashMap;
@@ -14,6 +17,10 @@ public class SqlClient implements AutoCloseable {
     private static final String PERSISTENCE_UNIT_NAME = "poker-app-test";
     private final EntityManagerFactory emf;
     private final EntityManager em;
+
+    // *****************************************************************************************
+    // Constructors
+    // *****************************************************************************************
 
     public SqlClient(JdbcDatabaseContainer<?> container) {
         this(container.getJdbcUrl(), container.getUsername(), container.getPassword());
@@ -29,31 +36,46 @@ public class SqlClient implements AutoCloseable {
         em = emf.createEntityManager();
     }
 
+    // *****************************************************************************************
+    // Public Methods
+    // *****************************************************************************************
+
     public void truncate() {
-        var transaction = em.getTransaction();
-        transaction.begin();
-        var entities = em.getMetamodel().getEntities();
-        for (var entity : entities) {
-            // don't wipe the users as they get populated on app startup
-            if (!entity.getName().equals(AppUser.class.getSimpleName())) {
-                var nativeTableName = getNativeTableName(entity);
-                em.createNativeQuery("TRUNCATE TABLE " + nativeTableName + " CASCADE").executeUpdate();
+        runInTransaction(() -> {
+            var entities = em.getMetamodel().getEntities();
+            for (var entity : entities) {
+                // don't wipe the users as they get populated on app startup
+                if (!entity.getName().equals(AppUser.class.getSimpleName())) {
+                    var nativeTableName = getNativeTableName(entity);
+                    em.createNativeQuery("TRUNCATE TABLE " + nativeTableName + " CASCADE").executeUpdate();
+                }
             }
-        }
-        transaction.commit();
+        });
     }
 
-    public void updateUsersTotalFunds(double totalFunds) {
-        var transaction = em.getTransaction();
-        transaction.begin();
-        em.createQuery("""
-                        UPDATE AppUser u
-                        SET u.totalFunds = :totalFunds
-                        """)
-                .setParameter("totalFunds", totalFunds)
-                .executeUpdate();
+    public void insertFixedScenario(ScenarioParams params) {
+        runInTransaction(() -> {
+            var fixedScenario = new FixedScenario();
+            fixedScenario.setPlayerHands(params.getScenarioPlayers()
+                    .stream().map(ScenarioPlayer::getHandCards).toList());
+            fixedScenario.setCommunityCards(params.getCommunityCards());
+            em.persist(fixedScenario);
+        });
+    }
 
-        transaction.commit();
+    public void updateUsersTotalFunds(ScenarioParams params) {
+        runInTransaction(() -> {
+            for (var scenarioPlayer : params.getScenarioPlayers()) {
+                em.createQuery("""
+                            UPDATE AppUser u
+                            SET u.totalFunds = :totalFunds
+                            WHERE u.username = :username
+                            """)
+                        .setParameter("totalFunds", scenarioPlayer.getBuyIn())
+                        .setParameter("username", scenarioPlayer.getUsername())
+                        .executeUpdate();
+            }
+        });
     }
 
     // *****************************************************************************************
@@ -105,11 +127,13 @@ public class SqlClient implements AutoCloseable {
     // *****************************************************************************************
 
     private <T> Optional<T> getById(UUID id, Class<T> clazz) {
+        em.clear();
         try {
             var className = clazz.getSimpleName();
             var query = "SELECT o FROM " + className + " o WHERE o.id = :id";
             return Optional.of(em.createQuery(query, clazz)
                     .setParameter("id", id)
+                    .setHint(HibernateHints.HINT_READ_ONLY, true)
                     .getSingleResult());
         } catch (NoResultException e) {
             return Optional.empty();
@@ -117,9 +141,12 @@ public class SqlClient implements AutoCloseable {
     }
 
     private <T> List<T> getAll(Class<T> clazz) {
+        em.clear();
         var className = clazz.getSimpleName();
         var query = "SELECT o FROM " + className + " o";
-        return em.createQuery(query, clazz).getResultList();
+        return em.createQuery(query, clazz)
+                .setHint(HibernateHints.HINT_READ_ONLY, true)
+                .getResultList();
     }
 
     private String getNativeTableName(EntityType<?> entity) {
@@ -129,7 +156,7 @@ public class SqlClient implements AutoCloseable {
     }
 
     // *****************************************************************************************
-    // Entity Helper
+    // Helper Methods
     // *****************************************************************************************
 
     private Class<?> getClassForName(String className) {
@@ -147,6 +174,16 @@ public class SqlClient implements AutoCloseable {
             throw new RuntimeException("Failed to get table name from entity class: " + entityClass);
         }
         return tableAnnotation.name();
+    }
+
+    private void runInTransaction(Runnable runnable) {
+        var transaction = em.getTransaction();
+        transaction.begin();
+
+        runnable.run();
+
+        transaction.commit();
+        em.clear();
     }
 
     // *****************************************************************************************

@@ -6,6 +6,10 @@ public class CreateTableDTO {
 
     private String gameType;
 
+    private Double speedMultiplier;
+
+    private Integer totalRounds;
+
     private Integer minPlayers;
 
     private Integer maxPlayers;
@@ -28,6 +32,22 @@ public class CreateTableDTO {
 
     public void setGameType(String gameType) {
         this.gameType = gameType;
+    }
+
+    public Double getSpeedMultiplier() {
+        return speedMultiplier;
+    }
+
+    public void setSpeedMultiplier(Double speedMultiplier) {
+        this.speedMultiplier = speedMultiplier;
+    }
+
+    public Integer getTotalRounds() {
+        return totalRounds;
+    }
+
+    public void setTotalRounds(Integer totalRounds) {
+        this.totalRounds = totalRounds;
     }
 
     public Integer getMinPlayers() {

@@ -6,17 +6,19 @@ import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.domain.enumeration.SessionState;
 import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
+import com.twb.pokerapp.exception.game.GamePlayerErrorLogException;
 import com.twb.pokerapp.mapper.PlayerSessionMapper;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.UUID;
+import java.math.BigDecimal;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class PlayerSessionService {
@@ -25,87 +27,73 @@ public class PlayerSessionService {
     private final PlayerSessionMapper mapper;
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public PlayerSessionDTO connectUserToRound(PokerTable table, AppUser user, ConnectionType connectionType, Double buyInAmount) {
-        var sessionOpt = repository
-                .findByTableIdAndUsername(table.getId(), user.getUsername());
-        PlayerSession session;
-        if (sessionOpt.isPresent()) {
-            session = sessionOpt.get();
-        } else {
-            session = new PlayerSession();
-            session.setPokerTable(table);
+    public void reset() {
+        repository.findAll().forEach(this::disconnectUser);
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public PlayerSessionDTO connectUserToRound(PokerTable table, AppUser user, ConnectionType connectionType, BigDecimal buyInAmount) {
+        var sessionOpt = repository.findByTableIdAndUsername(table.getId(), user.getUsername());
+        
+        if (sessionOpt.isPresent() && sessionOpt.get().getSessionState() == SessionState.CONNECTED) {
+            var message = String.format("User %s is already connected to table %s", user.getUsername(), table.getId());
+            log.warn(message);
+            throw new GamePlayerErrorLogException(sessionOpt.get(), message);
         }
 
+        var session = sessionOpt.orElseGet(PlayerSession::new);
+        session.setPokerTable(table);
+        session.setUser(user);
         session.setConnectionType(connectionType);
+        session.setActive(false);
         session.setSessionState(SessionState.CONNECTED);
 
         if (connectionType == ConnectionType.PLAYER) {
-            var position = getSessionTablePosition(table);
+            var position = getNextAvailablePosition(table);
             session.setPosition(position);
             session.setFunds(buyInAmount);
 
-            user.setTotalFunds(user.getTotalFunds() - buyInAmount);
+            user.setTotalFunds(user.getTotalFunds().subtract(buyInAmount));
+            userRepository.save(user);
         }
-
-        user = userRepository.save(user);
-        session.setUser(user);
 
         session = repository.save(session);
         return mapper.modelToDto(session);
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public void disconnectUser(PlayerSession playerSession) {
-        var fundsLeftOver = playerSession.getFunds();
-        if (fundsLeftOver == null) {
-            fundsLeftOver = 0d;
+    public void disconnectUser(PlayerSession session) {
+        if (session.getSessionState() == SessionState.DISCONNECTED) {
+            return;
         }
-        var user = playerSession.getUser();
-        user.setTotalFunds(user.getTotalFunds() + fundsLeftOver);
-        user = userRepository.save(user);
 
-        playerSession.setUser(user);
-        playerSession.setDealer(null);
-        playerSession.setFunds(null);
-        playerSession.setPokerTable(null);
-        playerSession.setRound(null);
-        playerSession.setConnectionType(null);
-        playerSession.setSessionState(SessionState.DISCONNECTED);
+        if (session.getConnectionType() == ConnectionType.PLAYER && session.getFunds() != null) {
+            var user = session.getUser();
+            user.setTotalFunds(user.getTotalFunds().add(session.getFunds()));
+            userRepository.save(user);
+        }
 
-        repository.save(playerSession);
+        session.setSessionState(SessionState.DISCONNECTED);
+        session.setPokerTable(null);
+        session.setRound(null);
+        session.setActive(null);
+        session.setFunds(null);
+        session.setDealer(null);
+        session.setCurrent(null);
+        session.setConnectionType(null);
+        
+        repository.save(session);
     }
 
-    private int getSessionTablePosition(PokerTable table) {
+    private int getNextAvailablePosition(PokerTable table) {
         var sessions = repository.findConnectedPlayersByTableId(table.getId());
-        var otherPlayersMaxCount = table.getMaxPlayers() - 1;
-        for (var position = 1; position <= otherPlayersMaxCount; position++) {
-            if (!isPositionAlreadyTaken(sessions, position)) {
+        for (var position = 1; position <= table.getMaxPlayers(); position++) {
+            final var finalPosition = position;
+            if (sessions.stream().noneMatch(s ->
+                    s.getPosition() != null && s.getPosition() == finalPosition)) {
                 return position;
             }
         }
-        if (otherPlayersMaxCount == 0) {
-            return 1;
-        }
-        //return a suitable position if no positions yet taken
-        if (otherPlayersMaxCount % 2 == 0) {
-            return (otherPlayersMaxCount / 2);
-        }
-        return (otherPlayersMaxCount / 2) + 1;
-    }
-
-    private boolean isPositionAlreadyTaken(List<PlayerSession> sessions, int position) {
-        for (var session : sessions) {
-            var thisPosition = session.getPosition();
-            if (thisPosition != null && thisPosition == position) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Transactional(readOnly = true)
-    public List<PlayerSessionDTO> getByTableId(UUID tableId) {
-        return repository.findConnectedByTableId(tableId)
-                .stream().map(mapper::modelToDto).toList();
+        return 1;
     }
 }

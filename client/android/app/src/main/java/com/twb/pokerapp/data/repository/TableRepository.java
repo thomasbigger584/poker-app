@@ -11,7 +11,6 @@ import com.twb.pokerapp.data.retrofit.api.TableApi;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -20,31 +19,32 @@ import retrofit2.Response;
 public class TableRepository extends BaseRepository {
     private static final String TAG = TableRepository.class.getSimpleName();
     private final TableApi api;
-    private final MutableLiveData<List<AvailableTableDTO>> getTablesLiveData = new MutableLiveData<>();
-    private final MutableLiveData<TableDTO> createdTableLiveData = new MutableLiveData<>();
+    private final MutableLiveData<List<AvailableTableDTO>> _tablesLiveData = new MutableLiveData<>();
+    public final LiveData<List<AvailableTableDTO>> tablesLiveData = _tablesLiveData;
+
+    private final MutableLiveData<TableDTO> _createdTableLiveData = new MutableLiveData<>();
+    public final LiveData<TableDTO> createTableLiveData = _createdTableLiveData;
 
     public TableRepository(TableApi api) {
         this.api = api;
     }
 
-    public LiveData<List<AvailableTableDTO>> getAvailableTables() {
-        var queryParams = new HashMap<String, Integer>();
-        api.getAvailableTables(queryParams).enqueue(new Callback<>() {
+    public void refreshAvailableTables() {
+        api.getAvailableTables(new HashMap<>()).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<List<AvailableTableDTO>> call, @NonNull Response<List<AvailableTableDTO>> response) {
                 if (response.isSuccessful()) {
-                    getTablesLiveData.setValue(response.body());
+                    _tablesLiveData.setValue(response.body());
                 } else {
-                    errorLiveData.setValue(new RuntimeException("Failed to get tables"));
+                    _errorLiveData.setValue(new RuntimeException("Failed to get tables: " + response.code()));
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<List<AvailableTableDTO>> call, @NonNull Throwable throwable) {
-                errorLiveData.setValue(throwable);
+                _errorLiveData.setValue(throwable);
             }
         });
-        return getTablesLiveData;
     }
 
     public void createTable(CreateTableDTO dto) {
@@ -52,21 +52,17 @@ public class TableRepository extends BaseRepository {
             @Override
             public void onResponse(@NonNull Call<TableDTO> call, @NonNull Response<TableDTO> response) {
                 if (response.isSuccessful()) {
-                    createdTableLiveData.setValue(response.body());
+                    _createdTableLiveData.setValue(response.body());
                 } else {
-                    errorLiveData.setValue(new RuntimeException("Failed to create table"));
+                    _errorLiveData.setValue(new RuntimeException("Failed to create table: " + response.code()));
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<TableDTO> call, @NonNull Throwable throwable) {
-                errorLiveData.setValue(throwable);
+                _errorLiveData.setValue(throwable);
             }
         });
-    }
-
-    public MutableLiveData<TableDTO> getCreatedTableLiveData() {
-        return createdTableLiveData;
     }
 }
 

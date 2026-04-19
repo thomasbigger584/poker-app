@@ -19,6 +19,7 @@ import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
+import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.UUID;
 
@@ -26,13 +27,22 @@ import java.util.UUID;
 @Controller
 @RequiredArgsConstructor
 public class TableWebSocketController {
-    private static final String GAME_TOPIC = "/loops.{tableId}";
-    private static final String SERVER_MESSAGE_TOPIC = "/topic" + GAME_TOPIC;
-    private static final String INBOUND_MESSAGE_PREFIX = "/pokerTable/{tableId}";
 
-    private static final String SEND_CHAT_MESSAGE = "/sendChatMessage";
-    private static final String SEND_PLAYER_ACTION = "/sendPlayerAction";
-    private static final String SEND_DISCONNECT_PLAYER = "/sendDisconnectPlayer";
+    // 1. Logic for Initial Subscription (Spring Intercepted)
+    // Client subscribes to: /app/loops.{tableId}
+    private static final String SUBSCRIBE_GAME_TOPIC = "loops.{tableId}";
+
+    // 2. Logic for Broadcasting (RabbitMQ Relay)
+    // Server sends to: /topic/loops.{tableId}
+    private static final String SERVER_MESSAGE_TOPIC = "/topic/loops.{tableId}";
+
+    // 3. Logic for Inbound Actions (Spring Intercepted)
+    // Client sends to: /app/pokerTable.{tableId}.sendChatMessage
+    private static final String INBOUND_MESSAGE_PREFIX = "pokerTable.{tableId}";
+
+    private static final String SEND_CHAT_MESSAGE = ".sendChatMessage";
+    private static final String SEND_PLAYER_ACTION = ".sendPlayerAction";
+    private static final String SEND_DISCONNECT_PLAYER = ".sendDisconnectPlayer";
 
     private static final String TABLE_ID = "tableId";
 
@@ -41,12 +51,22 @@ public class TableWebSocketController {
     private final MessageDispatcher dispatcher;
     private final TableGameService tableGameService;
 
-    @SubscribeMapping(GAME_TOPIC)
-    public ServerMessageDTO userSubscribed(Principal principal, StompHeaderAccessor headerAccessor, @DestinationVariable(TABLE_ID) UUID tableId) {
+    /**
+     * Triggered when a user subscribes to /app/loops.{tableId}.
+     * Returns the initial state of the game directly to the user.
+     */
+    @SubscribeMapping(SUBSCRIBE_GAME_TOPIC)
+    public ServerMessageDTO userSubscribed(Principal principal,
+                                           StompHeaderAccessor headerAccessor,
+                                           @DestinationVariable(TABLE_ID) UUID tableId) {
+
         sessionService.putPokerTableId(headerAccessor, tableId);
         var connectionType = getConnectionType(headerAccessor);
         var buyInAmount = getBuyInAmount(headerAccessor);
-        log.info(">>>> userSubscribed - Table: {}, User: {}, Connection: {}, BuyIn: {}", tableId, principal.getName(), connectionType, buyInAmount);
+
+        log.debug(">>>> userSubscribed - Table: {}, User: {}, Connection: {}, BuyIn: {}",
+                tableId, principal.getName(), connectionType, buyInAmount);
+
         try {
             return tableGameService.onUserConnected(tableId, connectionType, principal.getName(), buyInAmount);
         } catch (Exception e) {
@@ -55,25 +75,43 @@ public class TableWebSocketController {
         }
     }
 
+    /**
+     * Client sends to /app/pokerTable.{tableId}.sendChatMessage
+     */
     @MessageMapping(INBOUND_MESSAGE_PREFIX + SEND_CHAT_MESSAGE)
-    @SendTo(SERVER_MESSAGE_TOPIC)
-    public void sendChatMessage(Principal principal, StompHeaderAccessor headerAccessor, @DestinationVariable(TABLE_ID) UUID tableId, @Payload @Valid CreateChatMessageDTO message) {
+    public void sendChatMessage(Principal principal,
+                                StompHeaderAccessor headerAccessor,
+                                @DestinationVariable(TABLE_ID) UUID tableId,
+                                @Payload @Valid CreateChatMessageDTO message) {
+
         var chatMessage = messageFactory.chatMessage(principal.getName(), message.getMessage());
+        // dispatcher.send should use /topic/loops.{tableId} internally
         dispatcher.send(tableId, chatMessage);
         dispatcher.sendReceipt(headerAccessor);
     }
 
+    /**
+     * Client sends to /app/pokerTable.{tableId}.sendPlayerAction
+     */
     @MessageMapping(INBOUND_MESSAGE_PREFIX + SEND_PLAYER_ACTION)
-    @SendTo(SERVER_MESSAGE_TOPIC)
-    public void sendPlayerAction(Principal principal, StompHeaderAccessor headerAccessor, @DestinationVariable(TABLE_ID) UUID tableId, @Payload @Valid CreatePlayerActionDTO action) {
+    public void sendPlayerAction(Principal principal,
+                                 StompHeaderAccessor headerAccessor,
+                                 @DestinationVariable(TABLE_ID) UUID tableId,
+                                 @Payload @Valid CreatePlayerActionDTO action) {
+
         tableGameService.onPlayerAction(tableId, principal.getName(), action);
         dispatcher.sendReceipt(headerAccessor);
     }
 
-    // not returning here as called from multiple places
+    /**
+     * Client sends to /app/pokerTable.{tableId}.sendDisconnectPlayer
+     */
     @MessageMapping(INBOUND_MESSAGE_PREFIX + SEND_DISCONNECT_PLAYER)
-    public void sendDisconnectPlayer(Principal principal, StompHeaderAccessor headerAccessor, @DestinationVariable(TABLE_ID) UUID tableId) {
-        log.info(">>>> sendDisconnectPlayer - Poker Table: {} - User: {}", tableId, principal.getName());
+    public void sendDisconnectPlayer(Principal principal,
+                                     StompHeaderAccessor headerAccessor,
+                                     @DestinationVariable(TABLE_ID) UUID tableId) {
+
+        log.debug(">>>> sendDisconnectPlayer - Poker Table: {} - User: {}", tableId, principal.getName());
         tableGameService.onUserDisconnected(tableId, principal.getName());
     }
 
@@ -85,7 +123,7 @@ public class TableWebSocketController {
         return sessionService.getConnectionType(headerAccessor).orElse(ConnectionType.LISTENER);
     }
 
-    private Double getBuyInAmount(StompHeaderAccessor headerAccessor) {
+    private BigDecimal getBuyInAmount(StompHeaderAccessor headerAccessor) {
         return sessionService.getBuyInAmount(headerAccessor).orElse(null);
     }
 }

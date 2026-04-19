@@ -1,0 +1,14 @@
+
+<!-- Foldables -->
+<resources>
+
+    <!-- Layout Scale -->
+    <fraction name="current_player_podium_layout_scale">1.3</fraction>
+    <fraction name="other_player_podium_layout_scale">0.9</fraction>
+    <fraction name="community_cards_layout_scale">1.1</fraction>
+
+    <!-- Text Scale -->
+    <fraction name="current_player_podium_text_scale">1.1</fraction>
+    <fraction name="other_player_podium_text_scale">0.9</fraction>
+
+</resources>

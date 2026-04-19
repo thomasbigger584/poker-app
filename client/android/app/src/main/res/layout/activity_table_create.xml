@@ -17,15 +17,14 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
-            app:title="Create New Table"
+            app:title="@string/create_new_table"
             app:titleTextColor="@android:color/white" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:context=".CreateTableActivity">
+        android:layout_height="match_parent">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -43,7 +42,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Table Name"
+                    android:text="@string/table_name"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:textStyle="bold" />
 
@@ -51,7 +50,7 @@
                     android:id="@+id/edit_table_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Enter table name"
+                    android:hint="@string/enter_table_name"
                     android:importantForAutofill="no"
                     android:inputType="textCapWords" />
 
@@ -68,7 +67,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
-                    android:text="Game Type"
+                    android:text="@string/game_type"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:textStyle="bold" />
 
@@ -98,16 +97,17 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Min Players"
+                        android:text="@string/speed_multiplier"
                         android:textAppearance="?android:attr/textAppearanceMedium"
                         android:textStyle="bold" />
 
                     <EditText
-                        android:id="@+id/edit_min_players"
+                        android:id="@+id/edit_speed_multiplier"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Min"
-                        android:inputType="number" />
+                        android:hint="@string/speed_hint"
+                        android:text="1"
+                        android:inputType="numberDecimal" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -120,15 +120,15 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Max Players"
+                        android:text="@string/total_rounds"
                         android:textAppearance="?android:attr/textAppearanceMedium"
                         android:textStyle="bold" />
 
                     <EditText
-                        android:id="@+id/edit_max_players"
+                        android:id="@+id/edit_total_rounds"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Max"
+                        android:hint="@string/total_rounds_hint"
                         android:inputType="number" />
                 </LinearLayout>
             </LinearLayout>
@@ -150,15 +150,15 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Min Buy-In"
+                        android:text="@string/min_players"
                         android:textAppearance="?android:attr/textAppearanceMedium"
                         android:textStyle="bold" />
 
                     <EditText
-                        android:id="@+id/edit_min_buyin"
+                        android:id="@+id/edit_min_players"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Min"
+                        android:hint="@string/min_hint"
                         android:inputType="number" />
                 </LinearLayout>
 
@@ -172,7 +172,59 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Max Buy-In"
+                        android:text="@string/max_players"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/edit_max_players"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/max_hint"
+                        android:inputType="number" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/spinner_border"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/min_buyin_label"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/edit_min_buyin"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/min_hint"
+                        android:inputType="number" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/max_buyin_label"
                         android:textAppearance="?android:attr/textAppearanceMedium"
                         android:textStyle="bold" />
 
@@ -180,7 +232,7 @@
                         android:id="@+id/edit_max_buyin"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Max"
+                        android:hint="@string/max_hint"
                         android:inputType="number" />
                 </LinearLayout>
             </LinearLayout>
@@ -190,8 +242,7 @@
                 style="@style/PrimaryButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:onClick="onCreateTableClick"
-                android:text="Create Table" />
+                android:text="@string/create_table" />
 
         </LinearLayout>
     </ScrollView>

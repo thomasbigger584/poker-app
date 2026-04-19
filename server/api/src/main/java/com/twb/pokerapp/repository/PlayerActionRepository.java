@@ -35,4 +35,12 @@ public interface PlayerActionRepository extends JpaRepository<PlayerAction, UUID
             )
             """)
     Optional<PlayerAction> findByBettingRoundAndPlayer(@Param("bettingRoundId") UUID bettingRoundId, @Param("playerSessionId") UUID playerSessionId);
+
+    @Query("""
+            SELECT a
+            FROM PlayerAction a
+            WHERE a.bettingRound.round.id = :roundId
+            ORDER BY a.createdDateTime DESC
+            """)
+    List<PlayerAction> findByRoundId(@Param("roundId") UUID roundId);
 }
