@@ -43,7 +43,6 @@ public class TableCreateActivity extends BaseAuthActivity {
         viewModel = new ViewModelProvider(this).get(TableCreateViewModel.class);
         viewModel.errors.observe(this, throwable -> {
             if (throwable == null) return;
-            handleUnauthorizedException(throwable);
             DialogHelper.dismiss(loadingSpinner);
             var alertModalDialog = AlertModalDialog
                     .newInstance(AlertModalDialog.AlertModalType.ERROR, throwable.getMessage(), null);

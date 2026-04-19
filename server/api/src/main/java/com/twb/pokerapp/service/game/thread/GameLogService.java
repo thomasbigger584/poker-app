@@ -28,7 +28,7 @@ public class GameLogService {
     }
 
     public void sendLogMessage(PlayerSession playerSession, String message) {
-        String username = playerSession.getUser().getUsername();
+        var username = playerSession.getUser().getUsername();
         dispatcher.send(username, messageFactory.logMessage(message));
     }
 
@@ -45,7 +45,7 @@ public class GameLogService {
     }
 
     public void sendErrorMessage(PlayerSession playerSession, String message) {
-        String username = playerSession.getUser().getUsername();
+        var username = playerSession.getUser().getUsername();
         dispatcher.send(username, messageFactory.errorMessage(message));
     }
 

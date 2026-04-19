@@ -1,0 +1,90 @@
+name: 🛠️ Server CI/CD
+
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - "server/**"
+  pull_request:
+    branches: [ "master" ]
+    paths:
+      - "server/**"
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+    steps:
+      - name: 📋 Checkout
+        uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            api:
+              - 'server/api/**'
+
+  build:
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: 📋 Checkout
+        uses: actions/checkout@v4
+
+      - name: 💻 Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: 🔨 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: ☕ Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: 🐳 Build Docker Images (API & RabbitMQ)
+        run: |
+          docker compose build rabbitmq api
+        working-directory: ./server
+
+      - name: ⚙️ Make mvnw executable
+        run: chmod +x ./mvnw
+        working-directory: ./server/api
+
+      - name: 🏗️ Test with Maven
+        run: ./mvnw --no-transfer-progress clean verify -P run-tests
+        working-directory: ./server/api
+        env:
+          POKERAPP_LOG_LEVEL: INFO
+
+  # Ensure this is running on raspberry pi:
+  #  sudo tailscale up --ssh --advertise-tags=tag:raspberrypi --hostname=raspberrypi --force-reauth
+  deploy:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    needs: [changes, build]
+    if: >-
+      always() &&
+      github.event_name == 'push' &&
+      github.ref_name == 'master' &&
+      (needs.build.result == 'success' || needs.build.result == 'skipped') &&
+      !cancelled()
+    steps:
+      - name: 🌐 Connect to Tailscale
+        id: tailscale
+        uses: tailscale/github-action@v4
+        continue-on-error: true
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+          ping: raspberrypi
+
+      - name: 🚀 Execute Remote Deployment Script
+        if: steps.tailscale.outcome == 'success'
+        run: |
+          ssh -o StrictHostKeyChecking=no tbigg@raspberrypi "sudo bash /home/tbigg/poker-app/server/raspberrypi/deployment.sh"

@@ -6,6 +6,8 @@ services:
     hostname: poker-app
     volumes:
       - tailscale_data:/var/lib/tailscale
+      - tailscale_certs:/certs
+      - tailscale_run:/tmp
       - /dev/net/tun:/dev/net/tun
     env_file:
       - ../env/.secrets.env
@@ -19,10 +21,38 @@ services:
       - TS_ADVERTISE_ROUTES=
       - TS_EPHEMERAL=false
       - TS_EXTRA_ARGS=--accept-routes --shields-up=false
-    restart: unless-stopped
-    healthcheck: # This check waits until tailscale can resolve its own hostname to an IP.
+      - TS_SOCKET=/tmp/tailscaled.sock
+    healthcheck:
       test: ["CMD-SHELL", "tailscale ip -4 poker-app | grep -E '^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$$' > /dev/null || exit 1"]
       interval: 5s
       timeout: 3s
       retries: 10
       start_period: 10s
+
+  tailscale-cert-renewer-base:
+    image: tailscale/tailscale:latest
+    container_name: tailscale-cert-renewer
+    volumes:
+      - tailscale_certs:/certs
+      - tailscale_run:/tmp
+    command:
+      - /bin/sh
+      - -c
+      - |
+        while true; do
+          echo "Checking/Renewing certificate for poker-app.taila8b6c7.ts.net..."
+          sleep 2
+          if tailscale --socket=/tmp/tailscaled.sock cert --cert-file /certs/poker.crt --key-file /certs/poker.key poker-app.taila8b6c7.ts.net; then
+            echo "Certificate success! Sleeping 24h..."
+            sleep 86400
+          else
+            echo "Cert generation failed. Check if HTTPS is enabled in Tailscale console. Retrying in 60s..."
+            sleep 60
+          fi
+        done
+    healthcheck:
+      test: ["CMD", "test", "-f", "/certs/poker.crt"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s

@@ -6,3 +6,11 @@ services:
     volumes:
       - ./conf.d:/etc/nginx/conf.d:ro
       - ./html:/usr/share/nginx/html:ro
+      - tailscale_certs:/etc/nginx/certs:ro
+    command: >
+      /bin/sh -c "while true; do sleep 12h; nginx -s reload; done & nginx -g 'daemon off;'"
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 10s
+      timeout: 5s
+      retries: 3

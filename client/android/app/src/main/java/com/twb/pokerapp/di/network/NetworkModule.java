@@ -13,7 +13,9 @@ import com.google.gson.JsonDeserializer;
 import com.twb.pokerapp.BuildConfig;
 import com.twb.pokerapp.data.auth.AuthConfiguration;
 import com.twb.pokerapp.data.auth.AuthService;
+import com.twb.pokerapp.data.auth.TokenAuthenticator;
 import com.twb.pokerapp.data.retrofit.api.interceptor.AuthInterceptor;
+import com.twb.pokerapp.data.retrofit.api.interceptor.GlobalErrorInterceptor;
 import com.twb.pokerapp.data.retrofit.gson.ServerMessageDeserializer;
 import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.di.network.qualifiers.Authenticated;
@@ -70,9 +72,13 @@ public class NetworkModule {
     @Singleton
     @Authenticated
     public OkHttpClient okHttpClientAuthenticated(HttpLoggingInterceptor loggingInterceptor,
-                                                  Cache cache, AuthInterceptor authInterceptor) {
+                                                  Cache cache, AuthInterceptor authInterceptor,
+                                                  GlobalErrorInterceptor globalErrorInterceptor,
+                                                  TokenAuthenticator tokenAuthenticator) {
         var builder = getOkHttpClientBuilder(loggingInterceptor, cache);
         builder.addInterceptor(authInterceptor);
+        builder.addInterceptor(globalErrorInterceptor);
+        builder.authenticator(tokenAuthenticator);
         return builder.build();
     }
 
@@ -133,6 +139,18 @@ public class NetworkModule {
     @Singleton
     public AuthInterceptor authInterceptor(AuthService authService) {
         return new AuthInterceptor(authService);
+    }
+
+    @Provides
+    @Singleton
+    public GlobalErrorInterceptor globalErrorInterceptor() {
+        return new GlobalErrorInterceptor();
+    }
+
+    @Provides
+    @Singleton
+    public TokenAuthenticator tokenAuthenticator(AuthService authService) {
+        return new TokenAuthenticator(authService);
     }
 
     @Provides
