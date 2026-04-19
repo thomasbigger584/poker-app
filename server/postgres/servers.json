@@ -3,7 +3,7 @@
     "1": {
       "Name": "App",
       "Group": "poker-app",
-      "Host": "poker-app.taila8b6c7.ts.net",
+      "Host": "localhost",
       "Port": 5432,
       "MaintenanceDB": "db",
       "Username": "root",
@@ -13,7 +13,7 @@
     "2": {
       "Name": "Keycloak",
       "Group": "poker-app",
-      "Host": "poker-app.taila8b6c7.ts.net",
+      "Host": "localhost",
       "Port": 5432,
       "MaintenanceDB": "keycloak",
       "Username": "keycloak",
