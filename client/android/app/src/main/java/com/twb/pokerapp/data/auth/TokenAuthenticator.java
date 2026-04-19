@@ -24,7 +24,7 @@ public class TokenAuthenticator implements Authenticator {
             return null;
         }
 
-        String newToken = authService.getAccessTokenWithRefresh();
+        var newToken = authService.getAccessTokenWithRefresh();
 
         if (newToken != null) {
             return response.request().newBuilder()
@@ -35,7 +35,7 @@ public class TokenAuthenticator implements Authenticator {
     }
 
     private int responseCount(Response response) {
-        int result = 1;
+        var result = 1;
         while ((response = response.priorResponse()) != null) {
             result++;
         }

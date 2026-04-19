@@ -17,10 +17,12 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
 
-      # Keycloak Hostname Configuration
-      KC_HOSTNAME: http://poker-app.taila8b6c7.ts.net/auth
-      KC_PROXY_HEADERS: xforwarded
+      # Keycloak Hostname & Proxy Configuration
+      KC_PROXY: edge
+      KC_HOSTNAME: poker-app.taila8b6c7.ts.net
+      KC_HOSTNAME_STRICT: true
       KC_HTTP_RELATIVE_PATH: /auth
+      KC_PROXY_HEADERS: xforwarded # Deprecated in KC 25+, but kept for compatibility if needed; KC_PROXY is preferred
       KC_HOSTNAME_DEBUG: true
       KC_HTTP_ENABLED: true
       KC_HEALTH_ENABLED: true

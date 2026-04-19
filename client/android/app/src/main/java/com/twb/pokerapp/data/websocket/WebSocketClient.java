@@ -8,7 +8,6 @@ import com.google.gson.Gson;
 import com.twb.pokerapp.BuildConfig;
 import com.twb.pokerapp.data.auth.AuthConfiguration;
 import com.twb.pokerapp.data.auth.AuthService;
-import com.twb.pokerapp.data.exception.UnauthorizedException;
 import com.twb.pokerapp.data.websocket.message.client.SendChatMessageDTO;
 import com.twb.pokerapp.data.websocket.message.client.SendPlayerActionDTO;
 import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
@@ -86,11 +85,7 @@ public class WebSocketClient {
                     }
                     connectInternal(accessToken, tableId, listener, connectionType, buyInAmount);
                 }, throwable -> {
-                    Log.e(TAG, "Error refreshing token", throwable);
-                    if (throwable instanceof UnauthorizedException
-                            || throwable.getCause() instanceof UnauthorizedException) {
-                        listener.onSubscribeError(throwable);
-                    }
+                    listener.onSubscribeError(throwable);
                 }));
     }
 

@@ -14,11 +14,9 @@ import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.auth.AuthConfiguration;
 import com.twb.pokerapp.data.auth.AuthEventBus;
 import com.twb.pokerapp.data.auth.AuthStateManager;
-import com.twb.pokerapp.data.exception.UnauthorizedException;
 
 import net.openid.appauth.AppAuthConfiguration;
 import net.openid.appauth.AuthState;

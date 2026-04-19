@@ -12,7 +12,7 @@ public class GlobalErrorInterceptor implements Interceptor {
 
     @Override
     public Response intercept(Chain chain) throws IOException {
-        Response response = chain.proceed(chain.request());
+        var response = chain.proceed(chain.request());
 
         // If we get here and it's still a 401, the Authenticator failed to refresh.
         if (response.code() == HttpURLConnection.HTTP_UNAUTHORIZED) {
