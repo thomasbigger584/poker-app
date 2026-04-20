@@ -6,4 +6,16 @@
     <string-array name="game_types_array">
         <item>TEXAS_HOLDEM</item>
     </string-array>
+
+    <string-array name="transaction_history_types_array">
+        <item>ALL</item>
+        <item>DEBIT</item>
+        <item>CREDIT</item>
+    </string-array>
+
+    <string-array name="transaction_history_types_str_array">
+        <item>All</item>
+        <item>Debit</item>
+        <item>Credit</item>
+    </string-array>
 </resources>
