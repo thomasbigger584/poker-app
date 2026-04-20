@@ -8,6 +8,7 @@ import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.jpa.HibernateHints;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -75,6 +76,19 @@ public class SqlClient implements AutoCloseable {
                         .setParameter("username", scenarioPlayer.getUsername())
                         .executeUpdate();
             }
+        });
+    }
+
+    public void updateUsersTotalFunds(String username, BigDecimal totalFunds) {
+        runInTransaction(() -> {
+            em.createQuery("""
+                            UPDATE AppUser u
+                            SET u.totalFunds = :totalFunds
+                            WHERE u.username = :username
+                            """)
+                    .setParameter("totalFunds", totalFunds)
+                    .setParameter("username", username)
+                    .executeUpdate();
         });
     }
 

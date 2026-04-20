@@ -172,6 +172,10 @@ public class TestEnvironment implements AutoCloseable {
         return this;
     }
 
+    public RestClient getUserRestClient(String username) {
+        return RestClient.getInstance(keycloakClients.get(username));
+    }
+
     public void afterEach() {
         sqlClient.truncate();
     }

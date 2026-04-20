@@ -1,5 +1,6 @@
 package com.twb.pokerapp.service.keycloak;
 
+import com.twb.pokerapp.configuration.Constants;
 import com.twb.pokerapp.mapper.UserMapper;
 import com.twb.pokerapp.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -10,14 +11,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.UUID;
 
 @Slf4j
 @Component
 public class KeycloakUserService {
-    private static final BigDecimal INITIAL_USER_FUNDS = BigDecimal.valueOf(50_000);
 
     @Autowired
     @Qualifier("userGroupResource")
@@ -52,7 +51,7 @@ public class KeycloakUserService {
                 updatedUsers++;
             } else {
                 var appUser = userMapper.representationToModel(representation);
-                appUser.setTotalFunds(INITIAL_USER_FUNDS);
+                appUser.setTotalFunds(Constants.INITIAL_USER_FUNDS);
                 userRepository.save(appUser);
                 createdUsers++;
             }

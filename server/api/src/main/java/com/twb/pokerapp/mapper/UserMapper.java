@@ -2,6 +2,7 @@ package com.twb.pokerapp.mapper;
 
 import com.twb.pokerapp.configuration.Constants;
 import com.twb.pokerapp.domain.AppUser;
+import com.twb.pokerapp.dto.appuser.AppUserDTO;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -17,6 +18,8 @@ public interface UserMapper {
     @Mapping(source = "id", target = "id")
     @Mapping(source = "groups", target = "groups", qualifiedByName = "mapGroups")
     AppUser representationToModel(UserRepresentation representation);
+
+    AppUserDTO modelToDto(AppUser appUser);
 
     default UUID mapUuid(String id) {
         return UUID.fromString(id);
