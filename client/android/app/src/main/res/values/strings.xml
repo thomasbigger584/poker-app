@@ -146,4 +146,9 @@
     <string name="logout">Logout</string>
     <string name="funds_format">Funds: $%.2f</string>
 
+    <string name="player_stats">Player Stats</string>
+    <string name="transaction_history">Transaction History</string>
+    <string name="achievements">Achievements</string>
+    <string name="leaderboards">Leaderboards</string>
+
 </resources>

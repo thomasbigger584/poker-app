@@ -2,6 +2,22 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <group android:checkableBehavior="single">
         <item
+            android:id="@+id/nav_player_stats"
+            android:icon="@drawable/ic_user"
+            android:title="@string/player_stats" />
+        <item
+            android:id="@+id/nav_transaction_history"
+            android:icon="@android:drawable/ic_menu_recent_history"
+            android:title="@string/transaction_history" />
+        <item
+            android:id="@+id/nav_achievements"
+            android:icon="@android:drawable/btn_star_big_on"
+            android:title="@string/achievements" />
+        <item
+            android:id="@+id/nav_leaderboards"
+            android:icon="@android:drawable/ic_menu_sort_by_size"
+            android:title="@string/leaderboards" />
+        <item
             android:id="@+id/nav_reset_funds"
             android:icon="@android:drawable/ic_menu_revert"
             android:title="@string/reset_funds" />
