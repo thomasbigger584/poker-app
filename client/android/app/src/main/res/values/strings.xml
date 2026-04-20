@@ -142,5 +142,8 @@
     <string name="developer">Developer</string>
     <string name="show_current_width">Show Current Width</string>
     <string name="you_have_been_signed_out">You have been signed out</string>
+    <string name="reset_funds">Reset Funds</string>
+    <string name="logout">Logout</string>
+    <string name="funds_format">Funds: $%.2f</string>
 
 </resources>

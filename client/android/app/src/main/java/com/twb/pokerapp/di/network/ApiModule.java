@@ -1,5 +1,6 @@
 package com.twb.pokerapp.di.network;
 
+import com.twb.pokerapp.data.retrofit.api.AppUserApi;
 import com.twb.pokerapp.data.retrofit.api.TableApi;
 import com.twb.pokerapp.di.network.qualifiers.Authenticated;
 
@@ -19,5 +20,11 @@ public class ApiModule {
     @Singleton
     public TableApi tableApi(@Authenticated Retrofit retrofit) {
         return retrofit.create(TableApi.class);
+    }
+
+    @Provides
+    @Singleton
+    public AppUserApi appUserApi(@Authenticated Retrofit retrofit) {
+        return retrofit.create(AppUserApi.class);
     }
 }

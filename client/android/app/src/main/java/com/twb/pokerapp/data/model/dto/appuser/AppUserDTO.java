@@ -12,6 +12,7 @@ public class AppUserDTO {
     private String email;
     private boolean emailVerified;
     private boolean enabled;
+    private Double totalFunds;
 
     public UUID getId() {
         return id;
@@ -69,6 +70,14 @@ public class AppUserDTO {
         this.enabled = enabled;
     }
 
+    public Double getTotalFunds() {
+        return totalFunds;
+    }
+
+    public void setTotalFunds(Double totalFunds) {
+        this.totalFunds = totalFunds;
+    }
+
     @NonNull
     @Override
     public String toString() {
@@ -80,6 +89,7 @@ public class AppUserDTO {
                 ", email='" + email + '\'' +
                 ", emailVerified=" + emailVerified +
                 ", enabled=" + enabled +
+                ", totalFunds=" + totalFunds +
                 '}';
     }
 }

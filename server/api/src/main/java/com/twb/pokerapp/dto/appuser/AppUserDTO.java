@@ -2,6 +2,7 @@ package com.twb.pokerapp.dto.appuser;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Data
@@ -13,4 +14,5 @@ public class AppUserDTO {
     private String email;
     private boolean emailVerified;
     private boolean enabled;
+    private BigDecimal totalFunds;
 }

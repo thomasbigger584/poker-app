@@ -7,6 +7,7 @@ import androidx.annotation.MainThread;
 import com.google.gson.Gson;
 import com.twb.pokerapp.BuildConfig;
 import com.twb.pokerapp.data.auth.AuthConfiguration;
+import com.twb.pokerapp.data.auth.AuthEventBus;
 import com.twb.pokerapp.data.auth.AuthService;
 import com.twb.pokerapp.data.websocket.message.client.SendChatMessageDTO;
 import com.twb.pokerapp.data.websocket.message.client.SendPlayerActionDTO;
@@ -33,6 +34,7 @@ import okhttp3.OkHttpClient;
 
 public class WebSocketClient {
     private static final String TAG = WebSocketClient.class.getSimpleName();
+    private static final String UNAUTHORIZED_ERROR_CODE = "401";
 
     private static final String WEBSOCKET_ENDPOINT = "/api/looping";
     private static final int HEARTBEAT_MS = 20000;
@@ -113,6 +115,14 @@ public class WebSocketClient {
                         Log.i(TAG, "Stomp Connection OPENED - Initiating Subscriptions");
                         subscribeWithReceipts(tableId, listener);
                     } else if (lifecycleEvent.getType() == LifecycleEvent.Type.ERROR) {
+                        var exception = lifecycleEvent.getException();
+                        Log.e(TAG, "Stomp Connection Error: " + exception);
+                        if (exception != null) {
+                            var message = exception.getMessage();
+                            if (message != null && message.contains(UNAUTHORIZED_ERROR_CODE)) {
+                                AuthEventBus.triggerLogout();
+                            }
+                        }
                         listener.onConnectError(lifecycleEvent);
                     } else if (lifecycleEvent.getType() == LifecycleEvent.Type.CLOSED) {
                         listener.onClosed(lifecycleEvent);
