@@ -22,9 +22,13 @@ import com.twb.pokerapp.data.repository.RepositoryCallback;
 import com.twb.pokerapp.databinding.ActivityTableListBinding;
 import com.twb.pokerapp.databinding.NavHeaderTableListBinding;
 import com.twb.pokerapp.data.model.dto.table.TableDTO;
+import com.twb.pokerapp.ui.activity.achievement.AchievementActivity;
+import com.twb.pokerapp.ui.activity.leaderboard.LeaderboardActivity;
 import com.twb.pokerapp.ui.activity.login.BaseAuthActivity;
+import com.twb.pokerapp.ui.activity.stats.StatsActivity;
 import com.twb.pokerapp.ui.activity.table.connect.TableConnectActivity;
 import com.twb.pokerapp.ui.activity.table.create.TableCreateActivity;
+import com.twb.pokerapp.ui.activity.transaction.TransactionHistoryActivity;
 import com.twb.pokerapp.ui.dialog.AlertModalDialog;
 
 import javax.inject.Inject;
@@ -174,9 +178,14 @@ public class TableListActivity extends BaseAuthActivity implements
             } else {
                 Log.d("DEBUG", "Dialog reset_funds_modal already visible!");
             }
-        } else if (id == R.id.nav_player_stats || id == R.id.nav_transaction_history
-                || id == R.id.nav_achievements || id == R.id.nav_leaderboards) {
-            Toast.makeText(this, R.string.not_implemented, Toast.LENGTH_SHORT).show();
+        } else if (id == R.id.nav_player_stats) {
+            startActivity(new Intent(this, StatsActivity.class));
+        } else if (id == R.id.nav_transaction_history) {
+            startActivity(new Intent(this, TransactionHistoryActivity.class));
+        } else if (id == R.id.nav_achievements) {
+            startActivity(new Intent(this, AchievementActivity.class));
+        } else if (id == R.id.nav_leaderboards) {
+            startActivity(new Intent(this, LeaderboardActivity.class));
         }
         binding.drawerLayout.closeDrawer(GravityCompat.START);
         return true;

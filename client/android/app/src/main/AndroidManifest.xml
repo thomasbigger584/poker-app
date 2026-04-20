@@ -37,6 +37,18 @@
                 android:name=".ui.activity.table.connect.TableConnectActivity"
                 android:exported="false"/>
         <activity
+                android:name=".ui.activity.stats.StatsActivity"
+                android:exported="false"/>
+        <activity
+                android:name=".ui.activity.transaction.TransactionHistoryActivity"
+                android:exported="false"/>
+        <activity
+                android:name=".ui.activity.achievement.AchievementActivity"
+                android:exported="false"/>
+        <activity
+                android:name=".ui.activity.leaderboard.LeaderboardActivity"
+                android:exported="false"/>
+        <activity
                 android:name=".ui.activity.game.texas.TexasGameActivity"
                 android:configChanges="orientation|keyboardHidden|screenSize"
                 android:exported="false"
