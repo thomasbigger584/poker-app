@@ -167,6 +167,7 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
         if (!authStateManager.getCurrent().isAuthorized()) {
             runOnUiThread(() -> onNotAuthorized("Authorization failed", authException));
         } else {
+            AuthEventBus.resetLogoutEvent();
             runOnUiThread(this::onAuthorized);
         }
     }
@@ -204,6 +205,7 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
 
     @MainThread
     protected void signOut() {
+        AuthEventBus.resetLogoutEvent();
         var currentState = authStateManager.getCurrent();
         var config = currentState.getAuthorizationServiceConfiguration();
 

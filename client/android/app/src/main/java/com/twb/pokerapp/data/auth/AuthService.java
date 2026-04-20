@@ -65,7 +65,14 @@ public class AuthService {
                 final var errorRef = new AtomicReference<AuthorizationException>();
 
                 var currentAuthState = authStateManager.getCurrent();
-                var tokenRefreshRequest = currentAuthState.createTokenRefreshRequest();
+                TokenRequest tokenRefreshRequest;
+                try {
+                    tokenRefreshRequest = currentAuthState.createTokenRefreshRequest();
+                } catch (IllegalStateException ex) {
+                    Log.e(TAG, "Failed to create refresh request", ex);
+                    AuthEventBus.triggerLogout();
+                    return null;
+                }
 
                 performTokenRequest(tokenRefreshRequest, (response, ex) -> {
                     authStateManager.updateAfterTokenResponse(response, ex);

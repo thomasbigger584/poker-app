@@ -16,4 +16,8 @@ public class AuthEventBus {
     public static void triggerLogout() {
         new Handler(Looper.getMainLooper()).post(() -> logoutEvent.setValue(true));
     }
+
+    public static void resetLogoutEvent() {
+        new Handler(Looper.getMainLooper()).post(() -> logoutEvent.setValue(false));
+    }
 }
