@@ -127,19 +127,56 @@ public class TableListActivity extends BaseAuthActivity implements
     public boolean onNavigationItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.nav_logout) {
-            signOut();
-        } else if (id == R.id.nav_reset_funds) {
-            viewModel.resetFunds(new RepositoryCallback<>() {
+            var listener = new AlertModalDialog.OnAlertClickListener() {
                 @Override
-                public void onSuccess(AppUserDTO result) {
-                    Toast.makeText(TableListActivity.this, "Funds Reset", Toast.LENGTH_SHORT).show();
+                public void onSuccessClick() {
+                    signOut();
                 }
 
                 @Override
-                public void onFailure(Throwable t) {
-                    Toast.makeText(TableListActivity.this, "Failed to reset funds", Toast.LENGTH_SHORT).show();
+                public void onCancelClick() {
                 }
-            });
+            };
+            var alertModalDialog = AlertModalDialog.newInstance(AlertModalDialog.AlertModalType.CONFIRM,
+                    getString(R.string.logout_confirm), listener);
+            var prev = getSupportFragmentManager().findFragmentByTag("logout_modal");
+            if (prev == null) {
+                alertModalDialog.show(getSupportFragmentManager(), "logout_modal");
+            } else {
+                Log.d("DEBUG", "Dialog logout_modal already visible!");
+            }
+        } else if (id == R.id.nav_reset_funds) {
+            var listener = new AlertModalDialog.OnAlertClickListener() {
+                @Override
+                public void onSuccessClick() {
+                    viewModel.resetFunds(new RepositoryCallback<>() {
+                        @Override
+                        public void onSuccess(AppUserDTO result) {
+                            Toast.makeText(TableListActivity.this, "Funds Reset", Toast.LENGTH_SHORT).show();
+                        }
+
+                        @Override
+                        public void onFailure(Throwable t) {
+                            Toast.makeText(TableListActivity.this, "Failed to reset funds", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+
+                @Override
+                public void onCancelClick() {
+                }
+            };
+            var alertModalDialog = AlertModalDialog
+                    .newInstance(AlertModalDialog.AlertModalType.CONFIRM, getString(R.string.reset_funds_confirm), listener);
+            var prev = getSupportFragmentManager().findFragmentByTag("reset_funds_modal");
+            if (prev == null) {
+                alertModalDialog.show(getSupportFragmentManager(), "reset_funds_modal");
+            } else {
+                Log.d("DEBUG", "Dialog reset_funds_modal already visible!");
+            }
+        } else if (id == R.id.nav_player_stats || id == R.id.nav_transaction_history
+                || id == R.id.nav_achievements || id == R.id.nav_leaderboards) {
+            Toast.makeText(this, R.string.not_implemented, Toast.LENGTH_SHORT).show();
         }
         binding.drawerLayout.closeDrawer(GravityCompat.START);
         return true;
