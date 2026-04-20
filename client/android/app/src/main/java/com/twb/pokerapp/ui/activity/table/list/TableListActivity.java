@@ -131,7 +131,7 @@ public class TableListActivity extends BaseAuthActivity implements
         } else if (id == R.id.nav_reset_funds) {
             viewModel.resetFunds(new RepositoryCallback<>() {
                 @Override
-                public void onSuccess(Void result) {
+                public void onSuccess(AppUserDTO result) {
                     Toast.makeText(TableListActivity.this, "Funds Reset", Toast.LENGTH_SHORT).show();
                 }
 
