@@ -10,14 +10,14 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.twb.pokerapp.R;
-import com.twb.pokerapp.data.model.dto.transaction.TransactionHistoryDTO;
+import com.twb.pokerapp.data.model.dto.transactionhistory.TransactionHistoryDTO;
 import com.twb.pokerapp.databinding.ItemTransactionHistoryBinding;
 
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 
 public class TransactionHistoryAdapter extends ListAdapter<TransactionHistoryDTO, TransactionHistoryAdapter.ViewHolder> {
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault());
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MMM dd, HH:mm");
 
     private static final DiffUtil.ItemCallback<TransactionHistoryDTO> DIFF_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
@@ -27,9 +27,9 @@ public class TransactionHistoryAdapter extends ListAdapter<TransactionHistoryDTO
 
         @Override
         public boolean areContentsTheSame(@NonNull TransactionHistoryDTO oldItem, @NonNull TransactionHistoryDTO newItem) {
-            return oldItem.getDescription().equals(newItem.getDescription()) &&
+            return oldItem.getType().equals(newItem.getType()) &&
                     oldItem.getAmount().equals(newItem.getAmount()) &&
-                    oldItem.getDateCreated().equals(newItem.getDateCreated());
+                    oldItem.getCreatedDateTime().equals(newItem.getCreatedDateTime());
         }
     };
 
@@ -59,14 +59,17 @@ public class TransactionHistoryAdapter extends ListAdapter<TransactionHistoryDTO
 
         public void bind(TransactionHistoryDTO transaction) {
             var context = binding.getRoot().getContext();
-            binding.transactionTitle.setText(transaction.getDescription());
-            binding.transactionTimestamp.setText(DATE_FORMAT.format(transaction.getDateCreated()));
+            binding.transactionTitle.setText(transaction.getType());
+            binding.transactionTimestamp.setText(DATE_FORMAT.format(transaction.getCreatedDateTime()));
 
             var amount = transaction.getAmount();
-            var amountText = String.format(Locale.getDefault(), "%s$%.2f", amount >= 0 ? "+" : "-", Math.abs(amount));
+            var type = transaction.getType();
+            var isCredit = type.equals("CREDIT");
+            var sign = isCredit ? "+" : "-";
+            var amountText = String.format(Locale.getDefault(), "%s$%.2f", sign, Math.abs(amount));
             binding.transactionAmount.setText(amountText);
 
-            if (amount >= 0) {
+            if (isCredit) {
                 binding.transactionAmount.setTextColor(ContextCompat.getColor(context, R.color.transaction_positive_gain));
                 binding.chipIcon.setImageResource(R.drawable.ic_positive_green);
             } else {

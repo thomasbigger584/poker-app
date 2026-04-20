@@ -1,9 +1,6 @@
 package com.twb.pokerapp.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -52,10 +49,11 @@ public class AppUser extends Auditable {
     @Column(name = "groups", columnDefinition = "jsonb")
     private List<String> groups = new ArrayList<>();
 
-    // -----------------------------------------------------------------
-
     @Column(name = "total_funds", precision = 19, scale = 2)
     private BigDecimal totalFunds = BigDecimal.ZERO;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TransactionHistory> transactionHistories = new ArrayList<>();
 
     @Override
     public boolean equals(Object o) {

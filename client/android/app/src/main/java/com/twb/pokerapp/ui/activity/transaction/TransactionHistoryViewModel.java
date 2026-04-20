@@ -3,7 +3,7 @@ package com.twb.pokerapp.ui.activity.transaction;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.twb.pokerapp.data.model.dto.transaction.TransactionHistoryDTO;
+import com.twb.pokerapp.data.model.dto.transactionhistory.TransactionHistoryDTO;
 import com.twb.pokerapp.data.repository.TransactionHistoryRepository;
 
 import java.util.List;

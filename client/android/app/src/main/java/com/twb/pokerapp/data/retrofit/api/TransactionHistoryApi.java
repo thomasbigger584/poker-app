@@ -1,6 +1,6 @@
 package com.twb.pokerapp.data.retrofit.api;
 
-import com.twb.pokerapp.data.model.dto.transaction.TransactionHistoryDTO;
+import com.twb.pokerapp.data.model.dto.transactionhistory.TransactionHistoryDTO;
 
 import java.util.List;
 

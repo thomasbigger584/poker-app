@@ -5,6 +5,7 @@ import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.domain.enumeration.SessionState;
+import com.twb.pokerapp.domain.enumeration.TransactionHistoryType;
 import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.exception.game.GamePlayerErrorLogException;
 import com.twb.pokerapp.mapper.PlayerSessionMapper;
@@ -25,6 +26,7 @@ public class PlayerSessionService {
     private final UserRepository userRepository;
     private final PlayerSessionRepository repository;
     private final PlayerSessionMapper mapper;
+    private final TransactionHistoryService transactionHistoryService;
 
     @Transactional(propagation = Propagation.MANDATORY)
     public void reset() {
@@ -55,6 +57,7 @@ public class PlayerSessionService {
 
             user.setTotalFunds(user.getTotalFunds().subtract(buyInAmount));
             userRepository.save(user);
+            transactionHistoryService.create(user, buyInAmount, TransactionHistoryType.DEBIT);
         }
 
         session = repository.save(session);
@@ -67,10 +70,12 @@ public class PlayerSessionService {
             return;
         }
 
-        if (session.getConnectionType() == ConnectionType.PLAYER && session.getFunds() != null) {
+        var sessionFundsRemaining = session.getFunds();
+        if (session.getConnectionType() == ConnectionType.PLAYER && sessionFundsRemaining != null) {
             var user = session.getUser();
-            user.setTotalFunds(user.getTotalFunds().add(session.getFunds()));
+            user.setTotalFunds(user.getTotalFunds().add(sessionFundsRemaining));
             userRepository.save(user);
+            transactionHistoryService.create(user, sessionFundsRemaining, TransactionHistoryType.CREDIT);
         }
 
         session.setSessionState(SessionState.DISCONNECTED);

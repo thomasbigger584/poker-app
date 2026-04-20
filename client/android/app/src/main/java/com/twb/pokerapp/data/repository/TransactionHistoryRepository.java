@@ -4,7 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import com.twb.pokerapp.data.model.dto.transaction.TransactionHistoryDTO;
+import com.twb.pokerapp.data.model.dto.transactionhistory.TransactionHistoryDTO;
 import com.twb.pokerapp.data.retrofit.api.TransactionHistoryApi;
 
 import java.util.List;
