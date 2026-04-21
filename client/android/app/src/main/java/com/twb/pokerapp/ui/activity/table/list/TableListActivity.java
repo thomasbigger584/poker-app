@@ -79,6 +79,7 @@ public class TableListActivity extends BaseAuthActivity implements
         binding.recyclerView.setAdapter(adapter);
 
         viewModel = new ViewModelProvider(this).get(TableListViewModel.class);
+        viewModel.clearError();
         binding.swipeRefreshLayout.setOnRefreshListener(() -> viewModel.refresh());
         viewModel.tablesLiveData.observe(this, tables -> {
             adapter.submitList(tables);
@@ -105,6 +106,7 @@ public class TableListActivity extends BaseAuthActivity implements
             } else {
                 Log.d("DEBUG", "Dialog error_dialog already visible!");
             }
+            viewModel.clearError();
         });
 
         setupDrawerHeader();

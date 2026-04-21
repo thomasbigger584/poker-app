@@ -30,6 +30,10 @@ public class TableCreateViewModel extends ViewModel {
         this.createdTableLiveData = repository.createTableLiveData;
     }
 
+    public void clearError() {
+        repository.clearError();
+    }
+
     public void validateAndCreate(String name,
                                   String gameType,
                                   String speedMultiplierStr,
