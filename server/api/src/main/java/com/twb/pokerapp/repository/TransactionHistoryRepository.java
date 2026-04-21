@@ -1,7 +1,6 @@
 package com.twb.pokerapp.repository;
 
 import com.twb.pokerapp.domain.TransactionHistory;
-import com.twb.pokerapp.domain.enumeration.TransactionHistoryType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,10 +18,7 @@ public interface TransactionHistoryRepository extends JpaRepository<TransactionH
             FROM TransactionHistory t
             JOIN t.user u
             WHERE u.username = :username
-            AND (:type IS NULL OR t.type = :type)
             ORDER BY t.createdDateTime DESC
             """)
-    Page<TransactionHistory> findByUsernameAndType(@Param("username") String username,
-                                                   @Param("type") TransactionHistoryType type,
-                                                   Pageable pageable);
+    Page<TransactionHistory> findByUsername(@Param("username") String username, Pageable pageable);
 }

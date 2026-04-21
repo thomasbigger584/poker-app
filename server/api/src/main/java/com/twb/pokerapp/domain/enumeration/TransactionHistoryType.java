@@ -1,6 +1,9 @@
 package com.twb.pokerapp.domain.enumeration;
 
 public enum TransactionHistoryType {
-    CREDIT,
-    DEBIT
+    DEPOSIT,
+    WITHDRAW,
+    BUYIN,
+    CASHOUT,
+    RESET
 }

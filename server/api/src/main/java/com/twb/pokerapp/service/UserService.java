@@ -44,7 +44,8 @@ public class UserService {
             var resetFunds = Constants.INITIAL_USER_FUNDS;
             user.setTotalFunds(resetFunds);
             user = repository.save(user);
-            transactionHistoryService.create(user, resetFunds, TransactionHistoryType.CREDIT);
+            var difference = resetFunds.subtract(user.getTotalFunds());
+            transactionHistoryService.create(user, difference, TransactionHistoryType.RESET);
             return mapper.modelToDto(user);
         });
     }

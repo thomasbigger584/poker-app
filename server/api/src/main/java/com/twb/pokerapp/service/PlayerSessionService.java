@@ -57,7 +57,7 @@ public class PlayerSessionService {
 
             user.setTotalFunds(user.getTotalFunds().subtract(buyInAmount));
             userRepository.save(user);
-            transactionHistoryService.create(user, buyInAmount, TransactionHistoryType.DEBIT);
+            transactionHistoryService.create(user, buyInAmount, TransactionHistoryType.BUYIN);
         }
 
         session = repository.save(session);
@@ -75,7 +75,7 @@ public class PlayerSessionService {
             var user = session.getUser();
             user.setTotalFunds(user.getTotalFunds().add(sessionFundsRemaining));
             userRepository.save(user);
-            transactionHistoryService.create(user, sessionFundsRemaining, TransactionHistoryType.CREDIT);
+            transactionHistoryService.create(user, sessionFundsRemaining, TransactionHistoryType.CASHOUT);
         }
 
         session.setSessionState(SessionState.DISCONNECTED);
