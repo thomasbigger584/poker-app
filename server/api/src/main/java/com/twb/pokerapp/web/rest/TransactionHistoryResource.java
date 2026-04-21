@@ -1,10 +1,12 @@
 package com.twb.pokerapp.web.rest;
 
 import com.twb.pokerapp.dto.transactionhistory.TransactionHistoryDTO;
+import com.twb.pokerapp.service.PaginationService;
 import com.twb.pokerapp.service.TransactionHistoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,11 +21,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TransactionHistoryResource {
     private final TransactionHistoryService service;
+    private final PaginationService paginationService;
 
     @GetMapping("/current")
     public ResponseEntity<List<TransactionHistoryDTO>> getCurrent(Principal principal, Pageable pageable,
                                                                   @RequestParam(value = "type", required = false) String type) {
         Page<TransactionHistoryDTO> page = service.findCurrent(principal, type, pageable);
-        return ResponseEntity.ok(page.getContent());
+        var headers = paginationService.createHeaders(page);
+        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
 }

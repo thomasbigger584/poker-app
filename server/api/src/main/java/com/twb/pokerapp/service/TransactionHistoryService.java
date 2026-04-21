@@ -7,7 +7,6 @@ import com.twb.pokerapp.dto.transactionhistory.TransactionHistoryDTO;
 import com.twb.pokerapp.mapper.TransactionHistoryMapper;
 import com.twb.pokerapp.repository.TransactionHistoryRepository;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -21,6 +20,8 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class TransactionHistoryService {
+    private static final String ALL_SIMPLIFIED = "ALL_SIMPLIFIED";
+
     private final TransactionHistoryRepository repository;
     private final TransactionHistoryMapper mapper;
 
@@ -41,8 +42,9 @@ public class TransactionHistoryService {
 
     @Transactional(readOnly = true)
     public Page<TransactionHistoryDTO> findCurrent(Principal principal, String typeStr, Pageable pageable) {
-        if (typeStr.equals("ALL_SIMPLIFIED")) {
-            throw new NotImplementedException("Not Implemented yet");
+        if (typeStr.equals(ALL_SIMPLIFIED)) {
+            return repository.findSimplifiedByUsername(principal.getName(), pageable)
+                    .map(mapper::modelToDto);
         }
         return repository.findByUsername(principal.getName(), pageable)
                 .map(mapper::modelToDto);

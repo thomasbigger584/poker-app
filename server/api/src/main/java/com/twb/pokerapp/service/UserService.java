@@ -4,6 +4,8 @@ import com.twb.pokerapp.configuration.Constants;
 import com.twb.pokerapp.domain.AppUser;
 import com.twb.pokerapp.domain.enumeration.TransactionHistoryType;
 import com.twb.pokerapp.dto.appuser.AppUserDTO;
+import com.twb.pokerapp.dto.appuser.UserAmountDTO;
+import com.twb.pokerapp.exception.ValidationException;
 import com.twb.pokerapp.mapper.UserMapper;
 import com.twb.pokerapp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +48,33 @@ public class UserService {
             user = repository.save(user);
             var difference = resetFunds.subtract(user.getTotalFunds());
             transactionHistoryService.create(user, difference, TransactionHistoryType.RESET);
+            return mapper.modelToDto(user);
+        });
+    }
+
+    public Optional<AppUserDTO> deposit(Principal principal, UserAmountDTO amountDto) {
+        if (principal == null) {
+            return Optional.empty();
+        }
+        return repository.findByUsername(principal.getName()).map(user -> {
+            user.setTotalFunds(user.getTotalFunds().add(amountDto.getAmount()));
+            user = repository.save(user);
+            transactionHistoryService.create(user, amountDto.getAmount(), TransactionHistoryType.DEPOSIT);
+            return mapper.modelToDto(user);
+        });
+    }
+
+    public Optional<AppUserDTO> withdraw(Principal principal, UserAmountDTO amountDto) {
+        if (principal == null) {
+            return Optional.empty();
+        }
+        return repository.findByUsername(principal.getName()).map(user -> {
+            if (user.getTotalFunds().compareTo(amountDto.getAmount()) < 0) {
+                throw new ValidationException("User does not have enough funds to withdraw " + amountDto.getAmount());
+            }
+            user.setTotalFunds(user.getTotalFunds().subtract(amountDto.getAmount()));
+            user = repository.save(user);
+            transactionHistoryService.create(user, amountDto.getAmount(), TransactionHistoryType.WITHDRAW);
             return mapper.modelToDto(user);
         });
     }
