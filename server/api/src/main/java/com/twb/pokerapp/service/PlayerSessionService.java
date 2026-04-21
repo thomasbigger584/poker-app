@@ -57,7 +57,7 @@ public class PlayerSessionService {
 
             user.setTotalFunds(user.getTotalFunds().subtract(buyInAmount));
             userRepository.save(user);
-            transactionHistoryService.create(user, buyInAmount, TransactionHistoryType.BUYIN);
+            transactionHistoryService.create(user, buyInAmount.negate(), TransactionHistoryType.BUYIN);
         }
 
         session = repository.save(session);

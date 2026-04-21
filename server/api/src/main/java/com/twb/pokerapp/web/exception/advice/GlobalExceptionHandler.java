@@ -21,8 +21,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<ValidationDTO> handleValidationException(ValidationException ex) {
-        ValidationDTO validationDTO = new ValidationDTO();
-        ValidationFieldDTO fieldDTO = new ValidationFieldDTO();
+        var validationDTO = new ValidationDTO();
+        var fieldDTO = new ValidationFieldDTO();
+        fieldDTO.setField(ex.getField());
         fieldDTO.setMessage(ex.getMessage());
         validationDTO.setFields(Collections.singletonList(fieldDTO));
         return new ResponseEntity<>(validationDTO, HttpStatus.BAD_REQUEST);
@@ -30,7 +31,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ValidationDTO> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
-        List<ValidationFieldDTO> fields = new ArrayList<>();
+        var fields = new ArrayList<ValidationFieldDTO>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();

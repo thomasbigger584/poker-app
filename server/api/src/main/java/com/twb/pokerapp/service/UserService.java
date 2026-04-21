@@ -70,11 +70,11 @@ public class UserService {
         }
         return repository.findByUsername(principal.getName()).map(user -> {
             if (user.getTotalFunds().compareTo(amountDto.getAmount()) < 0) {
-                throw new ValidationException("User does not have enough funds to withdraw " + amountDto.getAmount());
+                throw new ValidationException("amount", "User does not have enough funds to withdraw " + amountDto.getAmount());
             }
             user.setTotalFunds(user.getTotalFunds().subtract(amountDto.getAmount()));
             user = repository.save(user);
-            transactionHistoryService.create(user, amountDto.getAmount(), TransactionHistoryType.WITHDRAW);
+            transactionHistoryService.create(user, amountDto.getAmount().negate(), TransactionHistoryType.WITHDRAW);
             return mapper.modelToDto(user);
         });
     }
