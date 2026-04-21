@@ -5,7 +5,7 @@ import com.twb.pokerapp.domain.AppUser;
 import com.twb.pokerapp.domain.enumeration.TransactionHistoryType;
 import com.twb.pokerapp.dto.appuser.AppUserDTO;
 import com.twb.pokerapp.dto.appuser.UserAmountDTO;
-import com.twb.pokerapp.exception.ValidationException;
+import com.twb.pokerapp.web.exception.ValidationException;
 import com.twb.pokerapp.mapper.UserMapper;
 import com.twb.pokerapp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

@@ -7,7 +7,7 @@ import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.ErrorMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.LogMessageDTO;
-import com.twb.pokerapp.web.websocket.message.server.payload.validation.ValidationDTO;
+import com.twb.pokerapp.web.exception.validation.ValidationDTO;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

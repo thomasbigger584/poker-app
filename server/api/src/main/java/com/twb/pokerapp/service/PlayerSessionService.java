@@ -7,7 +7,7 @@ import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.domain.enumeration.SessionState;
 import com.twb.pokerapp.domain.enumeration.TransactionHistoryType;
 import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
-import com.twb.pokerapp.exception.game.GamePlayerErrorLogException;
+import com.twb.pokerapp.service.game.exception.GamePlayerErrorLogException;
 import com.twb.pokerapp.mapper.PlayerSessionMapper;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.UserRepository;

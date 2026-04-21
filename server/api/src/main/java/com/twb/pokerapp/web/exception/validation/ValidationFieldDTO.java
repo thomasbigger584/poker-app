@@ -1,4 +1,4 @@
-package com.twb.pokerapp.web.websocket.message.server.payload.validation;
+package com.twb.pokerapp.web.exception.validation;
 
 import lombok.Data;
 

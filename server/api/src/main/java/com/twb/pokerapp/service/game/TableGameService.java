@@ -2,8 +2,8 @@ package com.twb.pokerapp.service.game;
 
 import com.antkorwin.xsync.XSync;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
-import com.twb.pokerapp.exception.game.GamePlayerErrorLogException;
-import com.twb.pokerapp.exception.game.GamePlayerLogException;
+import com.twb.pokerapp.service.game.exception.GamePlayerErrorLogException;
+import com.twb.pokerapp.service.game.exception.GamePlayerLogException;
 import com.twb.pokerapp.repository.BettingRoundRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.TableRepository;

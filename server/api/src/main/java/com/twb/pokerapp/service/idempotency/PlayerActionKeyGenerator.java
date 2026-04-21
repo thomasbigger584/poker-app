@@ -1,4 +1,4 @@
-package com.twb.pokerapp.service.idepetency;
+package com.twb.pokerapp.service.idempotency;
 
 import com.twb.pokerapp.domain.enumeration.ActionType;
 import jakarta.annotation.Nonnull;
@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import java.lang.reflect.Method;
 import java.util.UUID;
 
-import static com.twb.pokerapp.service.idepetency.IdempotencyService.PLAYER_ACTION_KEY_GEN;
+import static com.twb.pokerapp.service.idempotency.IdempotencyService.PLAYER_ACTION_KEY_GEN;
 
 @Component(PLAYER_ACTION_KEY_GEN)
 public class PlayerActionKeyGenerator implements KeyGenerator {

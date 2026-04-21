@@ -1,7 +1,7 @@
 package com.twb.pokerapp.service.table.validation;
 
 import com.twb.pokerapp.dto.table.CreateTableDTO;
-import com.twb.pokerapp.exception.ValidationException;
+import com.twb.pokerapp.web.exception.ValidationException;
 
 public abstract class TableValidationService {
 

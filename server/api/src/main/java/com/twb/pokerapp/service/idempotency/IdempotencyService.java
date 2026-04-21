@@ -1,4 +1,4 @@
-package com.twb.pokerapp.service.idepetency;
+package com.twb.pokerapp.service.idempotency;
 
 import com.twb.pokerapp.domain.enumeration.ActionType;
 import org.springframework.cache.annotation.CachePut;

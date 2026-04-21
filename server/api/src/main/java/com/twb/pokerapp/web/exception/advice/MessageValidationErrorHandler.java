@@ -1,9 +1,9 @@
-package com.twb.pokerapp.web.websocket.advice;
+package com.twb.pokerapp.web.exception.advice;
 
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
-import com.twb.pokerapp.web.websocket.message.server.payload.validation.ValidationDTO;
-import com.twb.pokerapp.web.websocket.message.server.payload.validation.ValidationFieldDTO;
+import com.twb.pokerapp.web.exception.validation.ValidationDTO;
+import com.twb.pokerapp.web.exception.validation.ValidationFieldDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;

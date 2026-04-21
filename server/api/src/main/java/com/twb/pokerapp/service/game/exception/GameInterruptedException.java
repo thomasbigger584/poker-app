@@ -1,4 +1,4 @@
-package com.twb.pokerapp.exception.game;
+package com.twb.pokerapp.service.game.exception;
 
 public class GameInterruptedException extends RuntimeException {
 

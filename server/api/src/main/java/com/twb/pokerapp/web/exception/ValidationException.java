@@ -1,4 +1,4 @@
-package com.twb.pokerapp.exception;
+package com.twb.pokerapp.web.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

@@ -4,7 +4,7 @@ import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.enumeration.ActionType;
-import com.twb.pokerapp.exception.game.GamePlayerLogException;
+import com.twb.pokerapp.service.game.exception.GamePlayerLogException;
 import com.twb.pokerapp.repository.PlayerActionRepository;
 import com.twb.pokerapp.service.PlayerActionService;
 import com.twb.pokerapp.service.game.thread.GamePlayerActionService;
