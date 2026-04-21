@@ -52,9 +52,6 @@ public class AppUser extends Auditable {
     @Column(name = "total_funds", precision = 19, scale = 2)
     private BigDecimal totalFunds = BigDecimal.ZERO;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TransactionHistory> transactionHistories = new ArrayList<>();
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
