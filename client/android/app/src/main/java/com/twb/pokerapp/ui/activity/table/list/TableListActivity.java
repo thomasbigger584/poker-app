@@ -11,6 +11,7 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -63,12 +64,22 @@ public class TableListActivity extends BaseAuthActivity implements
         toggle.syncState();
 
         binding.navView.setNavigationItemSelectedListener(this);
+        binding.drawerLayout.addDrawerListener(new DrawerLayout.SimpleDrawerListener() {
+            @Override
+            public void onDrawerClosed(View drawerView) {
+                super.onDrawerClosed(drawerView);
+                for (int i = 0; i < binding.navView.getMenu().size(); i++) {
+                    binding.navView.getMenu().getItem(i).setChecked(false);
+                }
+            }
+        });
 
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new TableListAdapter(this);
         binding.recyclerView.setAdapter(adapter);
 
         viewModel = new ViewModelProvider(this).get(TableListViewModel.class);
+        viewModel.clearError();
         binding.swipeRefreshLayout.setOnRefreshListener(() -> viewModel.refresh());
         viewModel.tablesLiveData.observe(this, tables -> {
             adapter.submitList(tables);
@@ -95,6 +106,7 @@ public class TableListActivity extends BaseAuthActivity implements
             } else {
                 Log.d("DEBUG", "Dialog error_dialog already visible!");
             }
+            viewModel.clearError();
         });
 
         setupDrawerHeader();

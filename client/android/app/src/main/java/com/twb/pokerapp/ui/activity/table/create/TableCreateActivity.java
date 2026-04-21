@@ -45,8 +45,17 @@ public class TableCreateActivity extends BaseAuthActivity {
             if (throwable == null) return;
             DialogHelper.dismiss(loadingSpinner);
             var alertModalDialog = AlertModalDialog
-                    .newInstance(AlertModalDialog.AlertModalType.ERROR, throwable.getMessage(), null);
+                    .newInstance(AlertModalDialog.AlertModalType.ERROR, throwable.getMessage(), new AlertModalDialog.OnAlertClickListener() {
+                        @Override
+                        public void onSuccessClick() {
+                        }
+
+                        @Override
+                        public void onCancelClick() {
+                        }
+                    });
             alertModalDialog.show(getSupportFragmentManager(), "error_modal");
+            viewModel.clearError();
         });
         viewModel.createdTableLiveData.observe(this, tableDTO -> {
             if (tableDTO == null) {
