@@ -34,7 +34,7 @@
         <maven-failsafe-plugin.version>3.5.5</maven-failsafe-plugin.version>
         <testcontainers.version>2.0.4</testcontainers.version>
         <testcontainers-keycloak.version>4.2.0</testcontainers-keycloak.version>
-        <testcontainers-rabbitmq.version>2.0.4</testcontainers-rabbitmq.version>
+        <testcontainers-rabbitmq.version>2.0.5</testcontainers-rabbitmq.version>
     </properties>
 
     <dependencyManagement>
