@@ -37,10 +37,10 @@ public class AppUserRepository extends BaseRepository {
         });
     }
 
-    public void resetFunds(RepositoryCallback<Void> callback) {
+    public void resetFunds(RepositoryCallback<AppUserDTO> callback) {
         api.resetFunds().enqueue(new Callback<>() {
             @Override
-            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+            public void onResponse(@NonNull Call<AppUserDTO> call, @NonNull Response<AppUserDTO> response) {
                 if (response.isSuccessful()) {
                     callback.onSuccess(response.body());
                 } else {
@@ -51,7 +51,7 @@ public class AppUserRepository extends BaseRepository {
             }
 
             @Override
-            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable throwable) {
+            public void onFailure(@NonNull Call<AppUserDTO> call, @NonNull Throwable throwable) {
                 _errorLiveData.setValue(throwable);
                 callback.onFailure(throwable);
             }

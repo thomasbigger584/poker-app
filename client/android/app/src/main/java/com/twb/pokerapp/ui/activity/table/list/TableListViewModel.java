@@ -48,11 +48,11 @@ public class TableListViewModel extends ViewModel {
         });
     }
 
-    public void resetFunds(RepositoryCallback<Void> callback) {
+    public void resetFunds(RepositoryCallback<AppUserDTO> callback) {
         appUserRepository.resetFunds(new RepositoryCallback<>() {
             @Override
-            public void onSuccess(Void result) {
-                refresh();
+            public void onSuccess(AppUserDTO result) {
+                userLiveData.setValue(result);
                 callback.onSuccess(result);
             }
 

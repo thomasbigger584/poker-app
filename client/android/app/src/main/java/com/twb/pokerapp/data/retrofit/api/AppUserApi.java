@@ -12,5 +12,5 @@ public interface AppUserApi {
     Call<AppUserDTO> getCurrentUser();
 
     @POST("/api/app-user/reset-funds")
-    Call<Void> resetFunds();
+    Call<AppUserDTO> resetFunds();
 }
