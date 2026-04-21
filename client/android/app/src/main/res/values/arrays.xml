@@ -9,13 +9,11 @@
 
     <string-array name="transaction_history_types_array">
         <item>ALL</item>
-        <item>DEBIT</item>
-        <item>CREDIT</item>
+        <item>ALL_SIMPLIFIED</item>
     </string-array>
 
     <string-array name="transaction_history_types_str_array">
         <item>All</item>
-        <item>Debit</item>
-        <item>Credit</item>
+        <item>All (Simplified)</item>
     </string-array>
 </resources>
