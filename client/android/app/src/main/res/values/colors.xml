@@ -39,4 +39,6 @@
     <color name="red">#f53d3d</color>
 
     <color name="pokerGreen">#308014</color>
+    <color name="transaction_positive_gain">#4CAF50</color>
+    <color name="transaction_negative_cost">#F44336</color>
 </resources>

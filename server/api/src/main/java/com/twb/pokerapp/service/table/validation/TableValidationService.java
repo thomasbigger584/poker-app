@@ -1,6 +1,7 @@
 package com.twb.pokerapp.service.table.validation;
 
 import com.twb.pokerapp.dto.table.CreateTableDTO;
+import com.twb.pokerapp.web.exception.ValidationException;
 
 public abstract class TableValidationService {
 
@@ -14,20 +15,20 @@ public abstract class TableValidationService {
     private void validatePlayerCounts(CreateTableDTO dto) {
         var minPlayers = dto.getGameType().getMinPlayerCount();
         if (dto.getMinPlayers() < minPlayers) {
-            throw new RuntimeException("Min Players should be at least " + minPlayers);
+            throw new ValidationException("minPlayers", "Min Players should be at least " + minPlayers);
         }
         var maxPlayers = dto.getGameType().getMaxPlayerCount();
         if (dto.getMaxPlayers() > maxPlayers) {
-            throw new RuntimeException("Max Players should be at least " + maxPlayers);
+            throw new ValidationException("maxPlayers", "Max Players should be at least " + maxPlayers);
         }
         if (dto.getMinPlayers() > dto.getMaxPlayers()) {
-            throw new RuntimeException("Min Players should be smaller or equaled to Max Players");
+            throw new ValidationException("minPlayers", "Min Players should be smaller or equaled to Max Players");
         }
     }
 
     private void validateBuyIn(CreateTableDTO dto) {
         if (dto.getMinBuyin().compareTo(dto.getMaxBuyin()) > 0) {
-            throw new RuntimeException("Min Buy-In should be smaller or equaled to Max Players");
+            throw new ValidationException("minBuyin", "Min Buy-In should be smaller or equaled to Max Buy-In");
         }
     }
 

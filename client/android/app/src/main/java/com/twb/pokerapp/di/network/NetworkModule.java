@@ -22,6 +22,7 @@ import com.twb.pokerapp.di.network.qualifiers.Authenticated;
 import com.twb.pokerapp.di.network.qualifiers.Unauthenticated;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -116,6 +117,8 @@ public class NetworkModule {
                 return null;
             }
         });
+        gsonBuilder.registerTypeAdapter(LocalDateTime.class, (JsonDeserializer<LocalDateTime>) (json, typeOfT, context) ->
+                LocalDateTime.parse(json.getAsString()));
         gsonBuilder.registerTypeAdapter(ServerMessageDTO.class, new ServerMessageDeserializer());
         if (BuildConfig.DEBUG) {
             gsonBuilder.setPrettyPrinting();

@@ -1,5 +1,7 @@
 package com.twb.pokerapp.ui.activity.table.connect;
 
+import static com.twb.pokerapp.ui.util.ActivityUtil.setupToolbar;
+
 import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.view.MenuItem;
@@ -38,8 +40,7 @@ public class TableConnectActivity extends BaseAuthActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (!initIncomingData()) return;
-
-        setupToolbar();
+        setupToolbar(this, binding.toolbar);
 
         binding.textConnectToTable.setText(getString(R.string.connect_to_table_format, table.getName()));
 
@@ -108,20 +109,5 @@ public class TableConnectActivity extends BaseAuthActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    private void setupToolbar() {
-        setSupportActionBar(binding.toolbar);
-
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setDisplayShowHomeEnabled(true);
-
-            var upArrow = ContextCompat.getDrawable(this, androidx.appcompat.R.drawable.abc_ic_ab_back_material);
-            if (upArrow != null) {
-                upArrow.setColorFilter(ContextCompat.getColor(this, android.R.color.white), PorterDuff.Mode.SRC_ATOP);
-                getSupportActionBar().setHomeAsUpIndicator(upArrow);
-            }
-        }
     }
 }

@@ -1,7 +1,7 @@
 package com.twb.pokerapp.service.game.thread.impl.texas.dealer.impl;
 
 import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.exception.game.GameInterruptedException;
+import com.twb.pokerapp.service.game.exception.GameInterruptedException;
 import com.twb.pokerapp.service.game.thread.impl.texas.dealer.TexasDealerService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;

@@ -1,7 +1,7 @@
 package com.twb.pokerapp.web.websocket.message.server;
 
+import com.twb.pokerapp.web.exception.validation.ValidationDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.*;
-import com.twb.pokerapp.web.websocket.message.server.payload.validation.ValidationDTO;
 
 public enum ServerMessageType {
     /*

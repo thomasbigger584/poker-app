@@ -154,4 +154,11 @@
     <string name="leaderboards">Leaderboards</string>
     <string name="not_implemented">Not implemented yet</string>
 
+    <string name="no_transactions_found">No transactions found for this type.</string>
+    <string name="type">Type</string>
+    <string name="funds_reset_admin">Funds Reset - Admin</string>
+    <string name="filter_all">All</string>
+    <string name="filter_table">Table</string>
+    <string name="filter_funds">Funds</string>
+
 </resources>

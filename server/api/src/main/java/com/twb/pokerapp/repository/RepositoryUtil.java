@@ -1,9 +1,9 @@
 package com.twb.pokerapp.repository;
 
 import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.exception.game.GameInterruptedException;
-import com.twb.pokerapp.exception.game.GamePlayerErrorLogException;
-import com.twb.pokerapp.exception.game.GamePlayerLogException;
+import com.twb.pokerapp.service.game.exception.GameInterruptedException;
+import com.twb.pokerapp.service.game.exception.GamePlayerErrorLogException;
+import com.twb.pokerapp.service.game.exception.GamePlayerLogException;
 
 import java.util.Optional;
 
