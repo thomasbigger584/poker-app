@@ -13,11 +13,11 @@ import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.model.dto.transactionhistory.TransactionHistoryDTO;
 import com.twb.pokerapp.databinding.ItemTransactionHistoryBinding;
 
-import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 public class TransactionHistoryAdapter extends ListAdapter<TransactionHistoryDTO, TransactionHistoryAdapter.ViewHolder> {
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MMM dd, HH:mm");
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MMM dd, HH:mm", Locale.getDefault());
 
     private static final DiffUtil.ItemCallback<TransactionHistoryDTO> DIFF_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
@@ -60,22 +60,50 @@ public class TransactionHistoryAdapter extends ListAdapter<TransactionHistoryDTO
         public void bind(TransactionHistoryDTO transaction) {
             var context = binding.getRoot().getContext();
             binding.transactionTitle.setText(transaction.getType());
-            binding.transactionTimestamp.setText(DATE_FORMAT.format(transaction.getCreatedDateTime()));
+            binding.transactionTimestamp.setText(transaction.getCreatedDateTime().format(DATE_FORMAT));
 
             var amount = transaction.getAmount();
             var type = transaction.getType();
-            var isCredit = type.equals("CREDIT");
-            var sign = isCredit ? "+" : "-";
+
+            var sign = amount >= 0 ? "+" : "-";
             var amountText = String.format(Locale.getDefault(), "%s$%.2f", sign, Math.abs(amount));
             binding.transactionAmount.setText(amountText);
 
-            if (isCredit) {
-                binding.transactionAmount.setTextColor(ContextCompat.getColor(context, R.color.transaction_positive_gain));
-                binding.chipIcon.setImageResource(R.drawable.ic_positive_green);
-            } else {
-                binding.transactionAmount.setTextColor(ContextCompat.getColor(context, R.color.transaction_negative_cost));
-                binding.chipIcon.setImageResource(R.drawable.ic_negative_red);
+            int iconRes;
+            int colorRes;
+
+            switch (type) {
+                case "DEPOSIT":
+                    iconRes = R.drawable.ic_credit_card;
+                    colorRes = R.color.transaction_negative_cost;
+                    break;
+                case "WITHDRAW":
+                    iconRes = R.drawable.ic_credit_card;
+                    colorRes = R.color.transaction_positive_gain;
+                    break;
+                case "BUYIN":
+                    iconRes = R.drawable.ic_poker_chip;
+                    colorRes = R.color.transaction_negative_cost;
+                    break;
+                case "CASHOUT":
+                    iconRes = R.drawable.ic_poker_chip;
+                    colorRes = R.color.transaction_positive_gain;
+                    break;
+                case "RESET":
+                    iconRes = R.drawable.ic_refresh;
+                    colorRes = (amount >= 0) ? R.color.transaction_positive_gain : R.color.transaction_negative_cost;
+                    break;
+                default:
+                    iconRes = R.drawable.ic_info;
+                    colorRes = R.color.lightGrey;
+                    break;
             }
+
+            var color = ContextCompat.getColor(context, colorRes);
+            binding.transactionAmount.setTextColor(color);
+            binding.chipIcon.setImageResource(iconRes);
+            binding.chipIcon.setColorFilter(color);
+
         }
     }
 }

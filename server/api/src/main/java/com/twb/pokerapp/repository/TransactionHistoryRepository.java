@@ -43,7 +43,7 @@ public interface TransactionHistoryRepository extends JpaRepository<TransactionH
                 (type = 'BUYIN' AND prev_type = 'CASHOUT') OR (type = 'CASHOUT' AND prev_type = 'BUYIN') OR
                 (type = 'DEPOSIT' AND prev_type = 'WITHDRAW') OR (type = 'WITHDRAW' AND prev_type = 'DEPOSIT')
             ))
-            ORDER BY id DESC
+            ORDER BY created_date_time DESC
             """,
             countQuery = """
             SELECT count(*) FROM (

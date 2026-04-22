@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -33,27 +32,27 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ValidationDTO> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         var fields = new ArrayList<ValidationFieldDTO>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            ValidationFieldDTO fieldDTO = new ValidationFieldDTO();
+            var fieldName = ((FieldError) error).getField();
+            var errorMessage = error.getDefaultMessage();
+            var fieldDTO = new ValidationFieldDTO();
             fieldDTO.setField(fieldName);
             fieldDTO.setMessage(errorMessage);
             fields.add(fieldDTO);
         });
-        ValidationDTO validationDTO = new ValidationDTO();
+        var validationDTO = new ValidationDTO();
         validationDTO.setFields(fields);
         return new ResponseEntity<>(validationDTO, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ApiErrorDTO> handleNotFoundException(NotFoundException ex) {
-        ApiErrorDTO apiError = new ApiErrorDTO(HttpStatus.NOT_FOUND.value(), ex.getMessage());
+        var apiError = new ApiErrorDTO(HttpStatus.NOT_FOUND.value(), ex.getMessage());
         return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorDTO> handleGenericException(Exception ex) {
-        ApiErrorDTO apiError = new ApiErrorDTO(HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getMessage());
+        var apiError = new ApiErrorDTO(HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getMessage());
         return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

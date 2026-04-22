@@ -32,6 +32,7 @@ android {
         }
     }
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
@@ -62,6 +63,7 @@ kapt {
 }
 
 dependencies {
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
     implementation 'androidx.core:core-ktx:1.16.0'
     implementation platform('org.jetbrains.kotlin:kotlin-bom:1.9.22')
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.9.2'
