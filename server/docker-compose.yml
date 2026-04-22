@@ -111,6 +111,6 @@ volumes:
   tailscale_data:
     driver: local
   tailscale_certs:
-    driver: local
+    external: true
   tailscale_run:
     driver: local

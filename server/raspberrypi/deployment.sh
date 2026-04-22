@@ -103,6 +103,15 @@ if [ -n "\$TS_APIKEY" ]; then
     fi
 fi
 
+# Ensure persistent Tailscale volume exists
+VOLUME_NAME="tailscale_certs"
+if ! docker volume inspect "$VOLUME_NAME" >/dev/null 2>&1; then
+    echo "📦 Volume '$VOLUME_NAME' not found. Creating..."
+    docker volume create "$VOLUME_NAME"
+else
+    echo "✅ Volume '$VOLUME_NAME' already exists. Skipping creation."
+fi
+
 # Docker Deploy
 cd "$SERVER_DIR" || exit 1
 set +e
