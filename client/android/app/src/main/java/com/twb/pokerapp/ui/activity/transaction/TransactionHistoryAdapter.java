@@ -75,11 +75,11 @@ public class TransactionHistoryAdapter extends ListAdapter<TransactionHistoryDTO
             switch (type) {
                 case "DEPOSIT":
                     iconRes = R.drawable.ic_credit_card;
-                    colorRes = R.color.transaction_negative_cost;
+                    colorRes = R.color.transaction_positive_gain;
                     break;
                 case "WITHDRAW":
                     iconRes = R.drawable.ic_credit_card;
-                    colorRes = R.color.transaction_positive_gain;
+                    colorRes = R.color.transaction_negative_cost;
                     break;
                 case "BUYIN":
                     iconRes = R.drawable.ic_poker_chip;
