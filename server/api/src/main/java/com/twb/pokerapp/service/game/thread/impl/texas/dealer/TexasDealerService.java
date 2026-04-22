@@ -1,8 +1,8 @@
 package com.twb.pokerapp.service.game.thread.impl.texas.dealer;
 
 import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.service.game.exception.GameInterruptedException;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
+import com.twb.pokerapp.service.game.exception.GameInterruptedException;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;

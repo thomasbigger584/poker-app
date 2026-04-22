@@ -1,6 +1,7 @@
 package com.twb.pokerapp.domain.enumeration;
 
 import com.twb.pokerapp.service.game.thread.GamePlayerActionService;
+import com.twb.pokerapp.service.game.thread.GamePlayerTurnService;
 import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
 import com.twb.pokerapp.service.game.thread.impl.blackjack.BlackjackGameThread;
@@ -8,7 +9,6 @@ import com.twb.pokerapp.service.game.thread.impl.blackjack.BlackjackPlayerAction
 import com.twb.pokerapp.service.game.thread.impl.blackjack.bettinground.BlackjackPlayerTurnService;
 import com.twb.pokerapp.service.game.thread.impl.texas.TexasGameThread;
 import com.twb.pokerapp.service.game.thread.impl.texas.TexasPlayerActionService;
-import com.twb.pokerapp.service.game.thread.GamePlayerTurnService;
 import com.twb.pokerapp.service.game.thread.impl.texas.bettinground.TexasPlayerTurnService;
 import com.twb.pokerapp.service.table.validation.TableValidationService;
 import com.twb.pokerapp.service.table.validation.impl.BlackjackTableValidationService;

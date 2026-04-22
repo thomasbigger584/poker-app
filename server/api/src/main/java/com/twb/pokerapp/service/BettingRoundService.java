@@ -18,7 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import static com.twb.pokerapp.domain.enumeration.BettingRoundState.*;
+import static com.twb.pokerapp.domain.enumeration.BettingRoundState.FAILED;
+import static com.twb.pokerapp.domain.enumeration.BettingRoundState.IN_PROGRESS;
 import static com.twb.pokerapp.repository.RepositoryUtil.getThrowGameInterrupted;
 
 @Slf4j
