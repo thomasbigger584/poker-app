@@ -12,6 +12,8 @@ import org.keycloak.admin.client.resource.GroupResource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.UUID;
@@ -36,6 +38,7 @@ public class KeycloakUserService {
     /*
      * Synchronizing users api database with those stored in keycloak on application startup
      */
+    @Transactional(propagation = Propagation.MANDATORY)
     public void init() {
         log.debug("Synchronizing Keycloak users...");
         var userMembers = userGroupResource.members();
@@ -58,7 +61,7 @@ public class KeycloakUserService {
                 var appUser = userMapper.representationToModel(representation);
                 var totalFunds = Constants.INITIAL_USER_FUNDS;
                 appUser.setTotalFunds(totalFunds);
-                userRepository.save(appUser);
+                appUser = userRepository.save(appUser);
                 transactionHistoryService.create(appUser, totalFunds, TransactionHistoryType.DEPOSIT);
                 createdUsers++;
             }
