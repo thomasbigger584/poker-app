@@ -35,14 +35,17 @@ public interface TransactionHistoryRepository extends JpaRepository<TransactionH
             )
             SELECT id, user_id, amount, type, created_date_time, modified_date_time
             FROM RankedTransactions
-            WHERE NOT (amount = next_amt AND (
-                (type = 'BUYIN' AND next_type = 'CASHOUT') OR (type = 'CASHOUT' AND next_type = 'BUYIN') OR
-                (type = 'DEPOSIT' AND next_type = 'WITHDRAW') OR (type = 'WITHDRAW' AND next_type = 'DEPOSIT')
-            ))
-            AND NOT (amount = prev_amt AND (
-                (type = 'BUYIN' AND prev_type = 'CASHOUT') OR (type = 'CASHOUT' AND prev_type = 'BUYIN') OR
-                (type = 'DEPOSIT' AND prev_type = 'WITHDRAW') OR (type = 'WITHDRAW' AND prev_type = 'DEPOSIT')
-            ))
+            WHERE type = 'RESET'
+            OR (
+                NOT (ABS(amount) = ABS(next_amt) AND (
+                    (type = 'BUYIN' AND next_type = 'CASHOUT') OR (type = 'CASHOUT' AND next_type = 'BUYIN') OR
+                    (type = 'DEPOSIT' AND next_type = 'WITHDRAW') OR (type = 'WITHDRAW' AND next_type = 'DEPOSIT')
+                ))
+                AND NOT (ABS(amount) = ABS(prev_amt) AND (
+                    (type = 'BUYIN' AND prev_type = 'CASHOUT') OR (type = 'CASHOUT' AND prev_type = 'BUYIN') OR
+                    (type = 'DEPOSIT' AND prev_type = 'WITHDRAW') OR (type = 'WITHDRAW' AND prev_type = 'DEPOSIT')
+                ))
+            )
             ORDER BY created_date_time DESC
             """,
             countQuery = """
@@ -58,14 +61,17 @@ public interface TransactionHistoryRepository extends JpaRepository<TransactionH
                     WHERE u.username = :username
                 )
                 SELECT id FROM RankedTransactions
-                WHERE NOT (amount = next_amt AND (
-                    (type = 'BUYIN' AND next_type = 'CASHOUT') OR (type = 'CASHOUT' AND next_type = 'BUYIN') OR
-                    (type = 'DEPOSIT' AND next_type = 'WITHDRAW') OR (type = 'WITHDRAW' AND next_type = 'DEPOSIT')
-                ))
-                AND NOT (amount = prev_amt AND (
-                    (type = 'BUYIN' AND prev_type = 'CASHOUT') OR (type = 'CASHOUT' AND prev_type = 'BUYIN') OR
-                    (type = 'DEPOSIT' AND prev_type = 'WITHDRAW') OR (type = 'WITHDRAW' AND prev_type = 'DEPOSIT')
-                ))
+                WHERE type = 'RESET'
+                OR (
+                    NOT (ABS(amount) = ABS(next_amt) AND (
+                        (type = 'BUYIN' AND next_type = 'CASHOUT') OR (type = 'CASHOUT' AND next_type = 'BUYIN') OR
+                        (type = 'DEPOSIT' AND next_type = 'WITHDRAW') OR (type = 'WITHDRAW' AND next_type = 'DEPOSIT')
+                    ))
+                    AND NOT (ABS(amount) = ABS(prev_amt) AND (
+                        (type = 'BUYIN' AND prev_type = 'CASHOUT') OR (type = 'CASHOUT' AND prev_type = 'BUYIN') OR
+                        (type = 'DEPOSIT' AND prev_type = 'WITHDRAW') OR (type = 'WITHDRAW' AND prev_type = 'DEPOSIT')
+                    ))
+                )
             ) AS filtered_transactions
             """,
             nativeQuery = true)

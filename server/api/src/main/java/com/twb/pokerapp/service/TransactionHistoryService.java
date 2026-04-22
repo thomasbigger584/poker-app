@@ -7,6 +7,7 @@ import com.twb.pokerapp.dto.transactionhistory.TransactionHistoryDTO;
 import com.twb.pokerapp.mapper.TransactionHistoryMapper;
 import com.twb.pokerapp.repository.TransactionHistoryRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TransactionHistoryService {
@@ -28,6 +30,7 @@ public class TransactionHistoryService {
     @Transactional(propagation = Propagation.MANDATORY)
     public Optional<TransactionHistory> create(AppUser user, BigDecimal amount, TransactionHistoryType type) {
         if (amount.compareTo(BigDecimal.ZERO) == 0) {
+            log.info("Attempting to create a transaction history but amount is 0 for user: {}", user.getUsername());
             return Optional.empty();
         }
         var transaction = new TransactionHistory();

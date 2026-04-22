@@ -1,8 +1,10 @@
 package com.twb.pokerapp.service.keycloak;
 
 import com.twb.pokerapp.configuration.Constants;
+import com.twb.pokerapp.domain.enumeration.TransactionHistoryType;
 import com.twb.pokerapp.mapper.UserMapper;
 import com.twb.pokerapp.repository.UserRepository;
+import com.twb.pokerapp.service.TransactionHistoryService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -28,6 +30,9 @@ public class KeycloakUserService {
     @Autowired
     private UserMapper userMapper;
 
+    @Autowired
+    private TransactionHistoryService transactionHistoryService;
+
     /*
      * Synchronizing users api database with those stored in keycloak on application startup
      */
@@ -51,8 +56,10 @@ public class KeycloakUserService {
                 updatedUsers++;
             } else {
                 var appUser = userMapper.representationToModel(representation);
-                appUser.setTotalFunds(Constants.INITIAL_USER_FUNDS);
+                var totalFunds = Constants.INITIAL_USER_FUNDS;
+                appUser.setTotalFunds(totalFunds);
                 userRepository.save(appUser);
+                transactionHistoryService.create(appUser, totalFunds, TransactionHistoryType.DEPOSIT);
                 createdUsers++;
             }
         }
