@@ -17,7 +17,6 @@ services:
     environment:
       - TS_HOSTNAME=poker-app
       - TS_STATE_DIR=/var/lib/tailscale
-      - TS_USERSPACE=true
       - TS_ADVERTISE_ROUTES=
       - TS_EPHEMERAL=false
       - TS_EXTRA_ARGS=--accept-routes --shields-up=false
@@ -39,14 +38,21 @@ services:
       - /bin/sh
       - -c
       - |
+        # Wait for the main tailscale container to be fully ready
+        while ! tailscale --socket=/tmp/tailscaled.sock status >/dev/null 2>&1; do
+          echo "Waiting for tailscaled socket and status..."
+          sleep 5
+        done
+        echo "Tailscale daemon is ready."
+
         while true; do
           echo "Checking/Renewing certificate for poker-app.taila8b6c7.ts.net..."
-          sleep 2
-          if tailscale --socket=/tmp/tailscaled.sock cert --cert-file /certs/poker.crt --key-file /certs/poker.key poker-app.taila8b6c7.ts.net; then
+          # Use --timeout to prevent hanging indefinitely
+          if timeout 120s tailscale --socket=/tmp/tailscaled.sock cert --cert-file /certs/poker.crt --key-file /certs/poker.key poker-app.taila8b6c7.ts.net; then
             echo "Certificate success! Sleeping 24h..."
             sleep 86400
           else
-            echo "Cert generation failed. Check if HTTPS is enabled in Tailscale console. Retrying in 60s..."
+            echo "Cert generation failed or timed out. Check if HTTPS is enabled in Tailscale console. Retrying in 60s..."
             sleep 60
           fi
         done
@@ -54,5 +60,5 @@ services:
       test: ["CMD", "test", "-f", "/certs/poker.crt"]
       interval: 10s
       timeout: 5s
-      retries: 10
-      start_period: 30s
+      retries: 20
+      start_period: 180s
