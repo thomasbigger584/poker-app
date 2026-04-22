@@ -1,8 +1,8 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="(Bash) Stop Server" type="ShConfigurationType">
-    <option name="SCRIPT_TEXT" value="docker compose down --remove-orphans;" />
+  <configuration default="false" name="Stop/Build/Run Server (Bash)" type="ShConfigurationType">
+    <option name="SCRIPT_TEXT" value="docker compose down --remove-orphans; docker compose up --build;" />
     <option name="INDEPENDENT_SCRIPT_PATH" value="false" />
-    <option name="SCRIPT_PATH" value="$PROJECT_DIR$/../../scripts/stop_server.sh" />
+    <option name="SCRIPT_PATH" value="$PROJECT_DIR$/../../scripts/stop_build_run_server.sh" />
     <option name="SCRIPT_OPTIONS" value="" />
     <option name="INDEPENDENT_SCRIPT_WORKING_DIRECTORY" value="true" />
     <option name="SCRIPT_WORKING_DIRECTORY" value="$PROJECT_DIR$/../../scripts" />

@@ -1,13 +1,13 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="(Windows) Stop/Clean/Build/Run Server" type="ShConfigurationType">
-    <option name="SCRIPT_TEXT" value="docker compose down --remove-orphans --volumes; docker system prune --all --force; docker compose up --build;" />
+  <configuration default="false" name="Stop/Build/Run Server (Windows)" type="ShConfigurationType">
+    <option name="SCRIPT_TEXT" value="docker compose down --remove-orphans; docker compose up --build;" />
     <option name="INDEPENDENT_SCRIPT_PATH" value="false" />
-    <option name="SCRIPT_PATH" value="$PROJECT_DIR$/../../scripts/stop_clean_build_run_server.ps1" />
+    <option name="SCRIPT_PATH" value="$PROJECT_DIR$/../../scripts/stop_build_run_server.ps1" />
     <option name="SCRIPT_OPTIONS" value="" />
     <option name="INDEPENDENT_SCRIPT_WORKING_DIRECTORY" value="true" />
     <option name="SCRIPT_WORKING_DIRECTORY" value="$PROJECT_DIR$/../../scripts" />
     <option name="INDEPENDENT_INTERPRETER_PATH" value="false" />
-    <option name="INTERPRETER_PATH" value="$PROJECT_DIR$/../../../../../../Windows/System32/WindowsPowerShell/v1.0/powershell.exe" />
+    <option name="INTERPRETER_PATH" value="C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe" />
     <option name="INTERPRETER_OPTIONS" value="-ExecutionPolicy Bypass -File" />
     <option name="EXECUTE_IN_TERMINAL" value="true" />
     <option name="EXECUTE_SCRIPT_FILE" value="true" />
