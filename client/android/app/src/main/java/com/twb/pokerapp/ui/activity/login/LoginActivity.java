@@ -81,8 +81,8 @@ public final class LoginActivity extends AppCompatActivity {
         // 2. Already Authorized Check
         if (authStateManager.getCurrent().isAuthorized()) {
             Log.i(TAG, "User is already authenticated, proceeding to next activity");
-            startActivity(new Intent(this, AUTH_COMPLETED_ACTIVITY));
             binding.loginButton.setEnabled(true);
+            startActivity(new Intent(this, AUTH_COMPLETED_ACTIVITY));
             finish();
             return;
         }
@@ -99,8 +99,6 @@ public final class LoginActivity extends AppCompatActivity {
             displaySnackbarMessage("Authorization Canceled or Failed");
         }
 
-        // Disable login until browser is ready (optional but recommended)
-        binding.loginButton.setEnabled(false);
         executor.submit(this::initializeAppAuth);
     }
 
