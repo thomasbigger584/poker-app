@@ -22,7 +22,7 @@ android {
             useSupportLibrary true
         }
         manifestPlaceholders = ['appAuthRedirectScheme': 'com.twb.pokerapp']
-        buildConfigField "String", "API_BASE_URL", '"poker-app.taila8b6c7.ts.net"'
+        buildConfigField "String", "API_BASE_URL", '"poker-app.dinosaur-emperor.ts.net"'
     }
 
     buildTypes {

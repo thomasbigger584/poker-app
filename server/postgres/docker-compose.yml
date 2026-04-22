@@ -33,7 +33,7 @@ services:
       - ./servers.json:/pgadmin4/servers.json
       - ./pgpass:/tmp/pgpass:ro
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "https://poker-app.taila8b6c7.ts.net/pgadmin/misc/ping"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "https://poker-app.dinosaur-emperor.ts.net/pgadmin/misc/ping"]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -112,7 +112,7 @@ public final class LoginActivity extends AppCompatActivity {
 
     public void onWebsiteClick(View view) {
         var intent = new CustomTabsIntent.Builder().build();
-        intent.launchUrl(this, Uri.parse("https://poker-app.taila8b6c7.ts.net"));
+        intent.launchUrl(this, Uri.parse("https://poker-app.dinosaur-emperor.ts.net"));
     }
 
     @WorkerThread

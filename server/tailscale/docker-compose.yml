@@ -48,12 +48,12 @@ services:
         echo "Tailscale daemon is ready."
 
         while true; do
-          echo "Checking certificate for poker-app.taila8b6c7.ts.net (Min validity: 30 days)..."
+          echo "Checking certificate for poker-app.dinosaur-emperor.ts.net (Min validity: 30 days)..."
           if timeout 120s tailscale --socket=/tmp/tailscaled.sock cert \
             --min-validity 720h \
             --cert-file /certs/poker.crt \
             --key-file /certs/poker.key \
-            poker-app.taila8b6c7.ts.net; then
+            poker-app.dinosaur-emperor.ts.net; then
             echo "Certificate is valid. Sleeping 24h..."
             sleep 86400
           else

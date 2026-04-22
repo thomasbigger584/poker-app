@@ -1,7 +1,7 @@
 keycloak:
   server-url:
     internal: http://localhost:8080/auth
-    external: https://poker-app.taila8b6c7.ts.net/auth
+    external: https://poker-app.dinosaur-emperor.ts.net/auth
   realm: poker-app
   client-id: poker-game-api-client
   username: admin
