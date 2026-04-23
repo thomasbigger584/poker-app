@@ -45,6 +45,7 @@ public class TransactionHistoryActivity extends BaseAuthActivity {
         loadingSpinner = createLoadingSpinner(this);
 
         viewModel = new ViewModelProvider(this).get(TransactionHistoryViewModel.class);
+        viewModel.clearError();
         binding.swipeRefreshLayout.setOnRefreshListener(this::refresh);
 
         setupTypeSpinner();
@@ -95,6 +96,7 @@ public class TransactionHistoryActivity extends BaseAuthActivity {
             var alertModalDialog = AlertModalDialog.newInstance(AlertModalDialog.AlertModalType.ERROR,
                     throwable.getMessage(), null);
             alertModalDialog.show(getSupportFragmentManager(), "error_dialog");
+            viewModel.clearError();
         });
     }
 

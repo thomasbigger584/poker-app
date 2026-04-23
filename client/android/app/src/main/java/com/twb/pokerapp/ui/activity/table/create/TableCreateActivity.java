@@ -43,6 +43,7 @@ public class TableCreateActivity extends BaseAuthActivity {
         loadingSpinner = createLoadingSpinner(this);
 
         viewModel = new ViewModelProvider(this).get(TableCreateViewModel.class);
+        viewModel.clearError();
         viewModel.errors.observe(this, throwable -> {
             if (throwable == null) return;
             DialogHelper.dismiss(loadingSpinner);

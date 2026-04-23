@@ -25,6 +25,10 @@ public class TransactionHistoryViewModel extends ViewModel {
         this.errorLiveData = repository.errorLiveData;
     }
 
+    public void clearError() {
+        repository.clearError();
+    }
+
     public void refresh(String type) {
         repository.refreshCurrent(type);
     }
