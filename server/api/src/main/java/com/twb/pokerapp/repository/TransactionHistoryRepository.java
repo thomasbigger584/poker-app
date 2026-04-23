@@ -38,12 +38,12 @@ public interface TransactionHistoryRepository extends JpaRepository<TransactionH
             WHERE type = 'RESET'
             OR (
                 NOT (COALESCE(ABS(amount) = ABS(next_amt) AND (
-                    (type = 'BUYIN' AND next_type = 'CASHOUT') OR (type = 'CASHOUT' AND next_type = 'BUYIN') OR
-                    (type = 'DEPOSIT' AND next_type = 'WITHDRAW') OR (type = 'WITHDRAW' AND next_type = 'DEPOSIT')
+                    (type = 'BUYIN' AND next_type = 'CASHOUT') OR
+                    (type = 'DEPOSIT' AND next_type = 'WITHDRAW')
                 ), FALSE))
                 AND NOT (COALESCE(ABS(amount) = ABS(prev_amt) AND (
-                    (type = 'BUYIN' AND prev_type = 'CASHOUT') OR (type = 'CASHOUT' AND prev_type = 'BUYIN') OR
-                    (type = 'DEPOSIT' AND prev_type = 'WITHDRAW') OR (type = 'WITHDRAW' AND prev_type = 'DEPOSIT')
+                    (type = 'CASHOUT' AND prev_type = 'BUYIN') OR
+                    (type = 'WITHDRAW' AND prev_type = 'DEPOSIT')
                 ), FALSE))
             )
             ORDER BY created_date_time DESC, id DESC
@@ -64,12 +64,12 @@ public interface TransactionHistoryRepository extends JpaRepository<TransactionH
                 WHERE type = 'RESET'
                 OR (
                     NOT (COALESCE(ABS(amount) = ABS(next_amt) AND (
-                        (type = 'BUYIN' AND next_type = 'CASHOUT') OR (type = 'CASHOUT' AND next_type = 'BUYIN') OR
-                        (type = 'DEPOSIT' AND next_type = 'WITHDRAW') OR (type = 'WITHDRAW' AND next_type = 'DEPOSIT')
+                        (type = 'BUYIN' AND next_type = 'CASHOUT') OR
+                        (type = 'DEPOSIT' AND next_type = 'WITHDRAW')
                     ), FALSE))
                     AND NOT (COALESCE(ABS(amount) = ABS(prev_amt) AND (
-                        (type = 'BUYIN' AND prev_type = 'CASHOUT') OR (type = 'CASHOUT' AND prev_type = 'BUYIN') OR
-                        (type = 'DEPOSIT' AND prev_type = 'WITHDRAW') OR (type = 'WITHDRAW' AND prev_type = 'DEPOSIT')
+                        (type = 'CASHOUT' AND prev_type = 'BUYIN') OR
+                        (type = 'WITHDRAW' AND prev_type = 'DEPOSIT')
                     ), FALSE))
                 )
             ) AS filtered_transactions
