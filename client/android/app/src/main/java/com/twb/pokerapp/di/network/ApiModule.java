@@ -1,9 +1,11 @@
 package com.twb.pokerapp.di.network;
 
 import com.twb.pokerapp.data.retrofit.api.AppUserApi;
+import com.twb.pokerapp.data.retrofit.api.HealthApi;
 import com.twb.pokerapp.data.retrofit.api.TableApi;
 import com.twb.pokerapp.data.retrofit.api.TransactionHistoryApi;
 import com.twb.pokerapp.di.network.qualifiers.Authenticated;
+import com.twb.pokerapp.di.network.qualifiers.Unauthenticated;
 
 import javax.inject.Singleton;
 
@@ -16,6 +18,12 @@ import retrofit2.Retrofit;
 @Module(includes = {NetworkModule.class})
 @InstallIn(SingletonComponent.class)
 public class ApiModule {
+
+    @Provides
+    @Singleton
+    public HealthApi healthApi(@Unauthenticated Retrofit retrofit) {
+        return retrofit.create(HealthApi.class);
+    }
 
     @Provides
     @Singleton
@@ -34,4 +42,5 @@ public class ApiModule {
     public TransactionHistoryApi transactionHistoryApi(@Authenticated Retrofit retrofit) {
         return retrofit.create(TransactionHistoryApi.class);
     }
+
 }

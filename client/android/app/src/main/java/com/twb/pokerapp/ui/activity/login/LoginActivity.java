@@ -10,6 +10,7 @@ import android.view.View;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.WorkerThread;
+import com.twb.pokerapp.ui.dialog.AlertModalDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.browser.customtabs.CustomTabColorSchemeParams;
 import androidx.browser.customtabs.CustomTabsIntent;
@@ -19,6 +20,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.auth.AuthConfiguration;
 import com.twb.pokerapp.data.auth.AuthStateManager;
+import com.twb.pokerapp.data.auth.TailscaleController;
 import com.twb.pokerapp.databinding.ActivityLoginBinding;
 import com.twb.pokerapp.ui.activity.table.list.TableListActivity;
 
@@ -59,10 +61,13 @@ public final class LoginActivity extends AppCompatActivity {
     public AuthStateManager authStateManager;
     @Inject
     public AuthConfiguration authConfiguration;
+    @Inject
+    public TailscaleController tailscaleController;
 
     private ActivityLoginBinding binding;
     private AuthorizationService authService;
     private ExecutorService executor;
+    private boolean isAppAuthInitialized = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,8 +103,65 @@ public final class LoginActivity extends AppCompatActivity {
         if (getIntent().getBooleanExtra(EXTRA_FAILED, false)) {
             displaySnackbarMessage("Authorization Canceled or Failed");
         }
+    }
 
-        executor.submit(this::initializeAppAuth);
+    @Override
+    protected void onResume() {
+        super.onResume();
+        checkTailscaleAndInitialize();
+    }
+
+    private void checkTailscaleAndInitialize() {
+        executor.submit(() -> {
+            var isConnected = tailscaleController.isTailscaleConnected();
+            runOnUiThread(() -> {
+                if (isConnected) {
+                    var fragment = getSupportFragmentManager().findFragmentByTag("tailscale_warning_dialog");
+                    if (fragment instanceof AlertModalDialog) {
+                        ((AlertModalDialog) fragment).dismiss();
+                    }
+                    binding.loginButton.setEnabled(true);
+                    if (!isAppAuthInitialized) {
+                        isAppAuthInitialized = true;
+                        executor.submit(this::initializeAppAuth);
+                    }
+                } else {
+                    binding.loginButton.setEnabled(false);
+                    showTailscaleWarning();
+                }
+            });
+        });
+    }
+
+    private void showTailscaleWarning() {
+        var fragment = getSupportFragmentManager().findFragmentByTag("tailscale_warning_dialog");
+        if (fragment != null) {
+            return;
+        }
+        var discoveryUri = authConfiguration.getDiscoveryUri().getHost();
+        var subtitle = "You are not connected to the Tailscale VPN or the appropriate Tailscale network. Click Confirm to open or install Tailscale. Please check your device has access to " + discoveryUri;
+        var dialog = AlertModalDialog.newInstance(AlertModalDialog.AlertModalType.WARNING, subtitle, new AlertModalDialog.OnAlertClickListener() {
+            @Override
+            public void onSuccessClick() {
+                String tailscalePackageName = "com.tailscale.ipn";
+                Intent intent = getPackageManager().getLaunchIntentForPackage(tailscalePackageName);
+                if (intent != null) {
+                    startActivity(intent);
+                } else {
+                    try {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + tailscalePackageName)));
+                    } catch (android.content.ActivityNotFoundException anfe) {
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + tailscalePackageName)));
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelClick() {
+
+            }
+        });
+        dialog.show(getSupportFragmentManager(), "tailscale_warning_dialog");
     }
 
     public void onLoginClick(View view) {
