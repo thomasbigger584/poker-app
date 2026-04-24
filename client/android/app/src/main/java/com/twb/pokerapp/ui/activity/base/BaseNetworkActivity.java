@@ -24,7 +24,7 @@ import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
-public abstract class BaseNetworkActivity extends AppCompatActivity {
+public abstract class BaseNetworkActivity extends BasePermissionActivity {
     private static final String TAG = BaseNetworkActivity.class.getSimpleName();
     private static final String TAILSCALE_DIALOG_TAG = "tailscale_warning_dialog";
     private static final String NETWORK_DIALOG_TAG = "network_warning_dialog";
