@@ -47,7 +47,7 @@ import javax.inject.Inject;
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
-public final class LoginActivity extends AppCompatActivity {
+public final class LoginActivity extends BaseNetworkActivity {
     private static final String TAG = LoginActivity.class.getSimpleName();
     private static final String EXTRA_FAILED = "com.twb.pokerapp.auth.failed";
     private static final Class<? extends AppCompatActivity> AUTH_COMPLETED_ACTIVITY = TableListActivity.class;
@@ -59,20 +59,14 @@ public final class LoginActivity extends AppCompatActivity {
 
     @Inject
     public AuthStateManager authStateManager;
-    @Inject
-    public AuthConfiguration authConfiguration;
-    @Inject
-    public TailscaleController tailscaleController;
 
     private ActivityLoginBinding binding;
     private AuthorizationService authService;
-    private ExecutorService executor;
     private boolean isAppAuthInitialized = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        executor = Executors.newSingleThreadExecutor();
         binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
@@ -106,68 +100,18 @@ public final class LoginActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        checkTailscaleAndInitialize();
-    }
-
-    private void checkTailscaleAndInitialize() {
-        executor.submit(() -> {
-            var isConnected = tailscaleController.isTailscaleConnected();
-            runOnUiThread(() -> {
-                if (isConnected) {
-                    var fragment = getSupportFragmentManager().findFragmentByTag("tailscale_warning_dialog");
-                    if (fragment instanceof AlertModalDialog) {
-                        ((AlertModalDialog) fragment).dismiss();
-                    }
-                    binding.loginButton.setEnabled(true);
-                    if (!isAppAuthInitialized) {
-                        isAppAuthInitialized = true;
-                        executor.submit(this::initializeAppAuth);
-                    }
-                } else {
-                    binding.loginButton.setEnabled(false);
-                    showTailscaleWarning();
-                }
-            });
-        });
-    }
-
-    private void showTailscaleWarning() {
-        var fragment = getSupportFragmentManager().findFragmentByTag("tailscale_warning_dialog");
-        if (fragment != null) {
-            return;
+    protected void onTailscaleSuccess() {
+        binding.loginButton.setEnabled(true);
+        if (!isAppAuthInitialized) {
+            isAppAuthInitialized = true;
+            networkExecutor.submit(this::initializeAppAuth);
         }
-        var discoveryUri = authConfiguration.getDiscoveryUri().getHost();
-        var subtitle = "You are not connected to the Tailscale VPN or the appropriate Tailscale network. Click Confirm to open or install Tailscale. Please check your device has access to " + discoveryUri;
-        var dialog = AlertModalDialog.newInstance(AlertModalDialog.AlertModalType.WARNING, subtitle, new AlertModalDialog.OnAlertClickListener() {
-            @Override
-            public void onSuccessClick() {
-                String tailscalePackageName = "com.tailscale.ipn";
-                Intent intent = getPackageManager().getLaunchIntentForPackage(tailscalePackageName);
-                if (intent != null) {
-                    startActivity(intent);
-                } else {
-                    try {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + tailscalePackageName)));
-                    } catch (android.content.ActivityNotFoundException anfe) {
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + tailscalePackageName)));
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelClick() {
-
-            }
-        });
-        dialog.show(getSupportFragmentManager(), "tailscale_warning_dialog");
     }
 
     public void onLoginClick(View view) {
         // Prevent double clicks or clicking before initialization is done
         binding.loginButton.setEnabled(false);
-        executor.submit(this::doAuth);
+        networkExecutor.submit(this::doAuth);
     }
 
     public void onWebsiteClick(View view) {
@@ -207,7 +151,7 @@ public final class LoginActivity extends AppCompatActivity {
             return;
         }
         authStateManager.replace(new AuthState(config));
-        executor.submit(this::initializeClient);
+        networkExecutor.submit(this::initializeClient);
     }
 
     @WorkerThread
@@ -266,7 +210,7 @@ public final class LoginActivity extends AppCompatActivity {
     }
 
     private void warmUpBrowser() {
-        executor.execute(() -> {
+        networkExecutor.execute(() -> {
             Log.i(TAG, "Warming up browser");
             var intentBuilder = authService.createCustomTabsIntentBuilder(authRequest.get().toUri());
             intentBuilder.setDefaultColorSchemeParams(new CustomTabColorSchemeParams.Builder()
@@ -318,7 +262,6 @@ public final class LoginActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         if (authService != null) authService.dispose();
-        executor.shutdownNow();
         super.onDestroy();
     }
 

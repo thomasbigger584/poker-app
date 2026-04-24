@@ -40,7 +40,7 @@ import javax.inject.Inject;
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
-public abstract class BaseAuthActivity extends AppCompatActivity {
+public abstract class BaseAuthActivity extends BaseNetworkActivity {
     private static final String TAG = BaseAuthActivity.class.getSimpleName();
     private static final String KEY_USER_INFO = "userInfo";
     private static final int END_SESSION_REQUEST_CODE = 911;
@@ -50,21 +50,12 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
     @Inject
     public AuthStateManager authStateManager;
 
-    @Inject
-    public AuthConfiguration authConfiguration;
-
     private AuthorizationService authService;
-    private ExecutorService executor;
 
     @Override
     @CallSuper
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        executor = Executors.newSingleThreadExecutor();
-
-        if (authConfiguration.hasConfigurationChanged()) {
-            Log.w(TAG, "Configuration change detected");
-        }
 
         authService = new AuthorizationService(this, new AppAuthConfiguration.Builder()
                 .setConnectionBuilder(authConfiguration.getConnectionBuilder())
@@ -95,14 +86,7 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
     }
 
     @Override
-    @CallSuper
-    protected void onStart() {
-        super.onStart();
-
-        if (executor.isShutdown()) {
-            executor = Executors.newSingleThreadExecutor();
-        }
-
+    protected void onTailscaleSuccess() {
         // 1. Check if we already have a valid authorized state
         if (authStateManager.getCurrent().isAuthorized()) {
             onAuthorized();
@@ -128,7 +112,14 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
         } else {
             // No state and no response in intent means we are just not logged in
             Log.d(TAG, "No authorization state retained");
+            onNotAuthorized("No authorization state retained", null);
         }
+    }
+
+    @Override
+    @CallSuper
+    protected void onStart() {
+        super.onStart();
     }
 
     @MainThread
@@ -239,7 +230,6 @@ public abstract class BaseAuthActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         if (authService != null) authService.dispose();
-        if (executor != null) executor.shutdownNow();
     }
 
     @Override
