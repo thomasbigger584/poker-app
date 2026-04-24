@@ -10,7 +10,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 import com.twb.pokerapp.databinding.ActivityLeaderboardBinding;
-import com.twb.pokerapp.ui.activity.login.BaseAuthActivity;
+import com.twb.pokerapp.ui.activity.base.BaseAuthActivity;
 import com.twb.pokerapp.ui.dialog.DialogHelper;
 import dagger.hilt.android.AndroidEntryPoint;
 

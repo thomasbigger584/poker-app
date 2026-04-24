@@ -25,7 +25,7 @@ import com.twb.pokerapp.databinding.NavHeaderTableListBinding;
 import com.twb.pokerapp.data.model.dto.table.TableDTO;
 import com.twb.pokerapp.ui.activity.achievement.AchievementActivity;
 import com.twb.pokerapp.ui.activity.leaderboard.LeaderboardActivity;
-import com.twb.pokerapp.ui.activity.login.BaseAuthActivity;
+import com.twb.pokerapp.ui.activity.base.BaseAuthActivity;
 import com.twb.pokerapp.ui.activity.stats.StatsActivity;
 import com.twb.pokerapp.ui.activity.table.connect.TableConnectActivity;
 import com.twb.pokerapp.ui.activity.table.create.TableCreateActivity;

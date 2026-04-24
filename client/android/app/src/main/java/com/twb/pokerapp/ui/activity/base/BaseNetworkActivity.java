@@ -1,4 +1,4 @@
-package com.twb.pokerapp.ui.activity.login;
+package com.twb.pokerapp.ui.activity.base;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;

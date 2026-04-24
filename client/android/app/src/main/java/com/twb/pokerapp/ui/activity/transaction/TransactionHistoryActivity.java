@@ -3,7 +3,6 @@ package com.twb.pokerapp.ui.activity.transaction;
 import static com.twb.pokerapp.ui.dialog.DialogHelper.createLoadingSpinner;
 import static com.twb.pokerapp.ui.util.ActivityUtil.setupToolbar;
 
-import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -12,16 +11,13 @@ import android.widget.AdapterView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.databinding.ActivityTransactionHistoryBinding;
-import com.twb.pokerapp.ui.activity.login.BaseAuthActivity;
+import com.twb.pokerapp.ui.activity.base.BaseAuthActivity;
 import com.twb.pokerapp.ui.dialog.AlertModalDialog;
-import com.twb.pokerapp.ui.dialog.DialogHelper;
 
 import dagger.hilt.android.AndroidEntryPoint;
 

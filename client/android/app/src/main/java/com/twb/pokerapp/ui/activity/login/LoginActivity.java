@@ -10,7 +10,9 @@ import android.view.View;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.WorkerThread;
-import com.twb.pokerapp.ui.dialog.AlertModalDialog;
+
+import com.twb.pokerapp.ui.activity.base.BaseNetworkActivity;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.browser.customtabs.CustomTabColorSchemeParams;
 import androidx.browser.customtabs.CustomTabsIntent;
@@ -18,9 +20,7 @@ import androidx.core.content.ContextCompat;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.twb.pokerapp.R;
-import com.twb.pokerapp.data.auth.AuthConfiguration;
 import com.twb.pokerapp.data.auth.AuthStateManager;
-import com.twb.pokerapp.data.auth.TailscaleController;
 import com.twb.pokerapp.databinding.ActivityLoginBinding;
 import com.twb.pokerapp.ui.activity.table.list.TableListActivity;
 
@@ -38,8 +38,6 @@ import net.openid.appauth.browser.AnyBrowserMatcher;
 
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.inject.Inject;
