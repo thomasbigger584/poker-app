@@ -7,8 +7,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
-
 @Service
 @RequiredArgsConstructor
 public class TemperamentService {
@@ -27,7 +25,6 @@ public class TemperamentService {
 
     private void create(float from, float to, String modifier) {
         var temperament = new Temperament();
-        temperament.setId(UUID.randomUUID());
         temperament.setFromRoll(from);
         temperament.setToRoll(to);
         temperament.setModifier(modifier);
