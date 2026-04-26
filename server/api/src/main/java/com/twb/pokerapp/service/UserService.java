@@ -26,7 +26,7 @@ public class UserService {
     private final TransactionHistoryService transactionHistoryService;
 
     public AppUser create(UserRepresentation representation) {
-        PhysicalUser physicalUser = mapper.representationToModel(representation);
+        var physicalUser = mapper.representationToModel(representation);
         return repository.save(physicalUser);
     }
 
@@ -48,7 +48,7 @@ public class UserService {
             var difference = resetFunds.subtract(user.getTotalFunds());
             transactionHistoryService.create(user, difference, TransactionHistoryType.RESET);
             user.setTotalFunds(resetFunds);
-            AppUser savedUser = repository.save(user);
+            var savedUser = repository.save(user);
             return mapper.modelToDto(savedUser);
         });
     }
@@ -59,7 +59,7 @@ public class UserService {
         }
         return repository.findByUsername(principal.getName()).map(user -> {
             user.setTotalFunds(user.getTotalFunds().add(amountDto.getAmount()));
-            AppUser savedUser = repository.save(user);
+            var savedUser = repository.save(user);
             transactionHistoryService.create(savedUser, amountDto.getAmount(), TransactionHistoryType.DEPOSIT);
             return mapper.modelToDto(savedUser);
         });
@@ -74,7 +74,7 @@ public class UserService {
                 throw new ValidationException("amount", "User does not have enough funds to withdraw " + amountDto.getAmount());
             }
             user.setTotalFunds(user.getTotalFunds().subtract(amountDto.getAmount()));
-            AppUser savedUser = repository.save(user);
+            var savedUser = repository.save(user);
             transactionHistoryService.create(savedUser, amountDto.getAmount().negate(), TransactionHistoryType.WITHDRAW);
             return mapper.modelToDto(savedUser);
         });
