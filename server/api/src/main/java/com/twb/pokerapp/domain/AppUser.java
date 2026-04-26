@@ -1,27 +1,21 @@
 package com.twb.pokerapp.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Entity
 @Getter
 @Setter
 @Table(name = "app_user")
-public class AppUser extends Auditable {
+@Inheritance(strategy = InheritanceType.JOINED)
+public abstract class AppUser extends Auditable {
 
     @Id
     @NotNull
@@ -38,19 +32,8 @@ public class AppUser extends Auditable {
     @Column(name = "last_name")
     private String lastName;
 
-    @Column(name = "email")
-    private String email;
-
-    @Column(name = "email_verified")
-    private boolean emailVerified;
-
     @Column(name = "enabled")
     private boolean enabled;
-
-    @NotNull
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "groups", columnDefinition = "jsonb")
-    private List<String> groups = new ArrayList<>();
 
     @Column(name = "total_funds", precision = 19, scale = 2)
     private BigDecimal totalFunds = BigDecimal.ZERO;
@@ -76,10 +59,7 @@ public class AppUser extends Auditable {
                 ", username='" + username + '\'' +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
-                ", email='" + email + '\'' +
-                ", emailVerified=" + emailVerified +
                 ", enabled=" + enabled +
-                ", groups=" + groups +
                 ", totalFunds=" + totalFunds +
                 '}';
     }

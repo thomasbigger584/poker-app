@@ -46,7 +46,7 @@ public class SqlClient implements AutoCloseable {
             var entities = em.getMetamodel().getEntities();
             for (var entity : entities) {
                 // don't wipe the users as they get populated on app startup
-                if (!entity.getName().equals(AppUser.class.getSimpleName())) {
+                if (!AppUser.class.isAssignableFrom(entity.getJavaType())) {
                     var nativeTableName = getNativeTableName(entity);
                     em.createNativeQuery("TRUNCATE TABLE " + nativeTableName + " CASCADE").executeUpdate();
                 }
