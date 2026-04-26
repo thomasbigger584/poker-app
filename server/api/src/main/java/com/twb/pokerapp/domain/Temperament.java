@@ -1,6 +1,9 @@
 package com.twb.pokerapp.domain;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,27 +15,31 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
-@Table(name = "persona")
-public class Persona extends Auditable {
+@Table(name = "temperament")
+public class Temperament extends Auditable {
 
     @Id
+    @NotNull
     @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @NotNull
-    @Column(name = "name")
-    private String name;
+    @Column(name = "from_roll")
+    private Float fromRoll;
 
-    @Column(name = "instructions")
-    private String instructions;
+    @NotNull
+    @Column(name = "to_roll")
+    private Float toRoll;
+
+    @Column(name = "modifier")
+    private String modifier;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Persona persona = (Persona) o;
-        return new EqualsBuilder().append(id, persona.id).isEquals();
+        Temperament temperament = (Temperament) o;
+        return new EqualsBuilder().append(id, temperament.id).isEquals();
     }
 
     @Override
@@ -42,9 +49,10 @@ public class Persona extends Auditable {
 
     @Override
     public String toString() {
-        return "Persona{" +
+        return "Temperament{" +
                 "id=" + id +
-                ", name='" + name + '\'' +
+                ", fromRoll=" + fromRoll +
+                ", toRoll=" + toRoll +
                 '}';
     }
 }

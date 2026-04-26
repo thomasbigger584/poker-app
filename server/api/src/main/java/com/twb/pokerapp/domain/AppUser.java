@@ -18,7 +18,6 @@ import java.util.UUID;
 public abstract class AppUser extends Auditable {
 
     @Id
-    @NotNull
     @Column(name = "id")
     private UUID id;
 
