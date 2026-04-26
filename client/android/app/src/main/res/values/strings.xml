@@ -161,6 +161,4 @@
     <string name="filter_table">Table</string>
     <string name="filter_funds">Funds</string>
 
-    <string name="your_turn">Your Turn!</string>
-    <string name="your_turn_message">It is your turn to act in the poker game.</string>
 </resources>

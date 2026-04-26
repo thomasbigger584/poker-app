@@ -17,7 +17,6 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.twb.pokerapp.PokerApplication;
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.databinding.ActivityGameTexasBinding;
 import com.twb.pokerapp.data.auth.AuthService;
@@ -29,7 +28,6 @@ import com.twb.pokerapp.ui.activity.base.BaseAuthActivity;
 import com.twb.pokerapp.ui.activity.game.chatbox.ChatBoxRecyclerAdapter;
 import com.twb.pokerapp.ui.activity.game.texas.controller.ControlsController;
 import com.twb.pokerapp.ui.activity.game.texas.controller.TableController;
-import com.twb.pokerapp.ui.util.NotificationHelper;
 import com.twb.pokerapp.ui.dialog.AlertModalDialog;
 import com.twb.pokerapp.ui.dialog.game.BaseGameDialog;
 import com.twb.pokerapp.ui.dialog.game.BetRaiseGameDialog;
@@ -181,12 +179,6 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             if (authService.isCurrentUser(playerSession.getUser())) {
                 controlsController.show(playerTurn);
                 currentPlayerTurn = playerTurn;
-
-                if (!PokerApplication.isForeground()) {
-                    NotificationHelper.showNotification(this,
-                            getString(R.string.your_turn),
-                            getString(R.string.your_turn_message));
-                }
             } else {
                 controlsController.hide();
                 currentPlayerTurn = null;
