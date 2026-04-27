@@ -2,6 +2,7 @@ package com.twb.pokerapp.service;
 
 import com.twb.pokerapp.configuration.Constants;
 import com.twb.pokerapp.domain.AppUser;
+import com.twb.pokerapp.domain.PhysicalUser;
 import com.twb.pokerapp.domain.enumeration.TransactionHistoryType;
 import com.twb.pokerapp.dto.appuser.AppUserDTO;
 import com.twb.pokerapp.dto.appuser.UserAmountDTO;
@@ -25,8 +26,8 @@ public class UserService {
     private final TransactionHistoryService transactionHistoryService;
 
     public AppUser create(UserRepresentation representation) {
-        var appUser = mapper.representationToModel(representation);
-        return repository.save(appUser);
+        var physicalUser = mapper.representationToModel(representation);
+        return repository.save(physicalUser);
     }
 
     @Transactional(readOnly = true)
@@ -47,8 +48,8 @@ public class UserService {
             var difference = resetFunds.subtract(user.getTotalFunds());
             transactionHistoryService.create(user, difference, TransactionHistoryType.RESET);
             user.setTotalFunds(resetFunds);
-            user = repository.save(user);
-            return mapper.modelToDto(user);
+            var savedUser = repository.save(user);
+            return mapper.modelToDto(savedUser);
         });
     }
 
@@ -58,9 +59,9 @@ public class UserService {
         }
         return repository.findByUsername(principal.getName()).map(user -> {
             user.setTotalFunds(user.getTotalFunds().add(amountDto.getAmount()));
-            user = repository.save(user);
-            transactionHistoryService.create(user, amountDto.getAmount(), TransactionHistoryType.DEPOSIT);
-            return mapper.modelToDto(user);
+            var savedUser = repository.save(user);
+            transactionHistoryService.create(savedUser, amountDto.getAmount(), TransactionHistoryType.DEPOSIT);
+            return mapper.modelToDto(savedUser);
         });
     }
 
@@ -73,9 +74,9 @@ public class UserService {
                 throw new ValidationException("amount", "User does not have enough funds to withdraw " + amountDto.getAmount());
             }
             user.setTotalFunds(user.getTotalFunds().subtract(amountDto.getAmount()));
-            user = repository.save(user);
-            transactionHistoryService.create(user, amountDto.getAmount().negate(), TransactionHistoryType.WITHDRAW);
-            return mapper.modelToDto(user);
+            var savedUser = repository.save(user);
+            transactionHistoryService.create(savedUser, amountDto.getAmount().negate(), TransactionHistoryType.WITHDRAW);
+            return mapper.modelToDto(savedUser);
         });
     }
 }

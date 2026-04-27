@@ -209,10 +209,12 @@ public abstract class Validator {
         assertEquals(appUserDto.getUsername(), appUser.getUsername());
         assertEquals(appUserDto.getFirstName(), appUser.getFirstName());
         assertEquals(appUserDto.getLastName(), appUser.getLastName());
-        assertEquals(appUserDto.getEmail(), appUser.getEmail());
-        assertEquals(appUserDto.isEmailVerified(), appUser.isEmailVerified());
         assertEquals(appUserDto.isEnabled(), appUser.isEnabled());
         assertTrue(appUser.isEnabled());
+        if (appUser instanceof PhysicalUser physicalUser) {
+            assertEquals(appUserDto.getEmail(), physicalUser.getEmail());
+            assertEquals(appUserDto.isEmailVerified(), physicalUser.isEmailVerified());
+        }
         return appUser;
     }
 

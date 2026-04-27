@@ -6,6 +6,9 @@
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
 
         <class>com.twb.pokerapp.domain.AppUser</class>
+        <class>com.twb.pokerapp.domain.PhysicalUser</class>
+        <class>com.twb.pokerapp.domain.BotUser</class>
+        <class>com.twb.pokerapp.domain.Persona</class>
         <class>com.twb.pokerapp.domain.BettingRound</class>
         <class>com.twb.pokerapp.domain.Card</class>
         <class>com.twb.pokerapp.domain.Hand</class>

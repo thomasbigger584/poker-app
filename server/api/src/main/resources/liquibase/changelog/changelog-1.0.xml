@@ -4,6 +4,23 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
 
     <changeSet author="tbigg" id="1">
+        <createTable tableName="persona">
+            <column name="id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="instructions" type="text"/>
+            <column name="created_date_time" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_date_time" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="pk_persona" tableName="persona"/>
+
         <createTable tableName="app_user">
             <column name="id" type="uuid">
                 <constraints nullable="false"/>
@@ -13,17 +30,10 @@
             </column>
             <column name="first_name" type="text"/>
             <column name="last_name" type="text"/>
-            <column name="email" type="text"/>
-            <column name="email_verified" type="boolean" defaultValue="0">
-                <constraints nullable="false"/>
-            </column>
             <column name="total_funds" type="decimal(19,2)" defaultValueNumeric="0">
                 <constraints nullable="false"/>
             </column>
             <column name="enabled" type="boolean" defaultValue="0">
-                <constraints nullable="false"/>
-            </column>
-            <column name="groups" type="jsonb">
                 <constraints nullable="false"/>
             </column>
             <column name="created_date_time" type="TIMESTAMP WITH TIME ZONE">
@@ -34,6 +44,39 @@
             </column>
         </createTable>
         <addPrimaryKey columnNames="id" constraintName="pk_app_user" tableName="app_user"/>
+
+        <createTable tableName="physical_user">
+            <column name="id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email" type="text"/>
+            <column name="email_verified" type="boolean" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="groups" type="jsonb"/>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="pk_physical_user" tableName="physical_user"/>
+        <addForeignKeyConstraint constraintName="fk_physical_user_id"
+                                 baseTableName="physical_user" baseColumnNames="id"
+                                 referencedTableName="app_user" referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <createTable tableName="bot_user">
+            <column name="id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="persona_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="pk_bot_user" tableName="bot_user"/>
+        <addForeignKeyConstraint constraintName="fk_bot_user_id"
+                                 baseTableName="bot_user" baseColumnNames="id"
+                                 referencedTableName="app_user" referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+        <addForeignKeyConstraint constraintName="fk_bot_user_persona_id"
+                                 baseTableName="bot_user" baseColumnNames="persona_id"
+                                 referencedTableName="persona" referencedColumnNames="id"/>
     </changeSet>
 
     <changeSet author="tbigg" id="2">
@@ -390,6 +433,5 @@
                                  baseTableName="transaction_history" baseColumnNames="user_id"
                                  referencedTableName="app_user" referencedColumnNames="id"/>
     </changeSet>
-
 
 </databaseChangeLog>
