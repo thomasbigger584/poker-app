@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 public class SeederService {
     private final KeycloakUserService keycloakUserService;
     private final PersonaService personaService;
-    private final TemperamentService temperamentService;
     private final PlayerSessionService playerSessionService;
     private final RoundService roundService;
     private final BettingRoundService bettingRoundService;
@@ -23,7 +22,6 @@ public class SeederService {
     @EventListener(ApplicationReadyEvent.class)
     public void onStartup() {
         keycloakUserService.init();
-        temperamentService.init();
         personaService.init();
         playerSessionService.reset();
         roundService.reset();

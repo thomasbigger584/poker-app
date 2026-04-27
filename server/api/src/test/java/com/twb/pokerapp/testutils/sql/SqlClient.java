@@ -19,8 +19,7 @@ public class SqlClient implements AutoCloseable {
 
     private static final List<Class<?>> SKIP_TRUNCATE_ENTITIES = List.of(
             AppUser.class,
-            Persona.class,
-            Temperament.class
+            Persona.class
     );
 
     private final EntityManagerFactory emf;

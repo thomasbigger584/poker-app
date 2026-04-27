@@ -21,26 +21,6 @@
         </createTable>
         <addPrimaryKey columnNames="id" constraintName="pk_persona" tableName="persona"/>
 
-        <createTable tableName="temperament">
-            <column name="id" type="uuid">
-                <constraints nullable="false"/>
-            </column>
-            <column name="from_roll" type="float">
-                <constraints nullable="false"/>
-            </column>
-            <column name="to_roll" type="float">
-                <constraints nullable="false"/>
-            </column>
-            <column name="modifier" type="text"/>
-            <column name="created_date_time" type="TIMESTAMP WITH TIME ZONE">
-                <constraints nullable="false"/>
-            </column>
-            <column name="modified_date_time" type="TIMESTAMP WITH TIME ZONE">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
-        <addPrimaryKey columnNames="id" constraintName="pk_temperament" tableName="temperament"/>
-
         <createTable tableName="app_user">
             <column name="id" type="uuid">
                 <constraints nullable="false"/>
