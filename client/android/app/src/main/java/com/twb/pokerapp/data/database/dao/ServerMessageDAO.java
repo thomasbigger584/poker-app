@@ -20,7 +20,7 @@ public interface ServerMessageDAO {
 
     @Query("""
             SELECT *
-            FROM ServerMessageEntity
+            FROM server_message
             WHERE tableId = :tableId
             ORDER BY timestamp ASC
             """)
