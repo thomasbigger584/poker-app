@@ -91,9 +91,7 @@ public class WebSocketClient {
                         return;
                     }
                     connectInternal(accessToken, tableId, listener, connectionType, buyInAmount);
-                }, throwable -> {
-                    listener.onSubscribeError(throwable);
-                }));
+                }, listener::onSubscribeError));
     }
 
     private void connectInternal(String accessToken, UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount) {
@@ -187,18 +185,18 @@ public class WebSocketClient {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(stompMessage -> {
-                    JsonObject jsonObject = gson.fromJson(stompMessage.getPayload(), JsonObject.class);
+                    var jsonObject = gson.fromJson(stompMessage.getPayload(), JsonObject.class);
                     var type = ServerMessageType.valueOf(jsonObject.get("type").getAsString());
                     long timestamp = jsonObject.get("timestamp").getAsLong();
-                    JsonElement payloadElement = jsonObject.get("payload");
+                    var payloadElement = jsonObject.get("payload");
                     
                     JsonObject rawPayload = null;
                     if (payloadElement != null && payloadElement.isJsonObject()) {
                         rawPayload = payloadElement.getAsJsonObject();
                     }
 
-                    ServerMessageDTO<Object> message = new ServerMessageDTO<>(type, rawPayload, timestamp);
-                    Class<?> payloadClass = type.getPayloadClass();
+                    var message = new ServerMessageDTO<>(type, rawPayload, timestamp);
+                    var payloadClass = type.getPayloadClass();
                     if (payloadClass != null && rawPayload != null) {
                         message.setPayload(gson.fromJson(rawPayload, payloadClass));
                     }

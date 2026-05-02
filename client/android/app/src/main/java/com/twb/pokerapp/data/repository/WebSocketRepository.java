@@ -13,6 +13,7 @@ import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.inject.Inject;
@@ -35,7 +36,7 @@ public class WebSocketRepository {
     private final MutableLiveData<Boolean> _connected = new MutableLiveData<>(false);
     public final LiveData<Boolean> connected = _connected;
 
-    private String currentTableId;
+    private UUID currentTableId;
 
     @Inject
     public WebSocketRepository(ServerMessageDAO serverMessageDAO, Gson gson) {
@@ -43,7 +44,7 @@ public class WebSocketRepository {
         this.gson = gson;
     }
 
-    public void setTableId(String tableId) {
+    public void setTableId(UUID tableId) {
         if (tableId == null) {
             this.currentTableId = null;
             this.internalList.clear();

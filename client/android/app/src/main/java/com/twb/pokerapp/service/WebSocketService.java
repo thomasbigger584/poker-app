@@ -127,12 +127,8 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
 
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel serviceChannel = new NotificationChannel(
-                    CHANNEL_ID,
-                    "WebSocket Service Channel",
-                    NotificationManager.IMPORTANCE_LOW
-            );
-            NotificationManager manager = getSystemService(NotificationManager.class);
+            var serviceChannel = new NotificationChannel(CHANNEL_ID, "WebSocket Service Channel", NotificationManager.IMPORTANCE_LOW);
+            var manager = getSystemService(NotificationManager.class);
             if (manager != null) {
                 manager.createNotificationChannel(serviceChannel);
             }
@@ -140,9 +136,8 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
     }
 
     private Notification createNotification() {
-        Intent notificationIntent = new Intent(this, TexasGameActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this,
-                0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
+        var notificationIntent = new Intent(this, TexasGameActivity.class);
+        var pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
 
         return new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Poker Game Connected")
@@ -152,14 +147,13 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
                 .build();
     }
 
-
     private void onStartAction(Intent intent) {
         var tableId = (UUID) intent.getSerializableExtra(EXTRA_TABLE_ID);
-        String connectionType = intent.getStringExtra(EXTRA_CONNECTION_TYPE);
+        var connectionType = intent.getStringExtra(EXTRA_CONNECTION_TYPE);
         var buyInAmount = intent.getDoubleExtra(EXTRA_BUY_IN_AMOUNT, 0);
 
         startForeground(NOTIFICATION_ID, createNotification());
-        repository.setTableId(tableId.toString());
+        repository.setTableId(tableId);
 
         webSocketClient.connect(tableId, this, connectionType, buyInAmount);
     }
