@@ -3,6 +3,7 @@ package com.twb.pokerapp.web.websocket;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.service.game.TableGameService;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
+import com.twb.pokerapp.web.websocket.message.client.CreateBotConnectionDTO;
 import com.twb.pokerapp.web.websocket.message.client.CreateChatMessageDTO;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
@@ -42,6 +43,7 @@ public class TableWebSocketController {
     private static final String SEND_CHAT_MESSAGE = ".sendChatMessage";
     private static final String SEND_PLAYER_ACTION = ".sendPlayerAction";
     private static final String SEND_DISCONNECT_PLAYER = ".sendDisconnectPlayer";
+    private static final String SEND_BOT_CONNECTED = ".sendBotConnected";
 
     private static final String TABLE_ID = "tableId";
 
@@ -72,6 +74,20 @@ public class TableWebSocketController {
             log.error("Failed to subscribe user {} to table {}", principal.getName(), tableId, e);
             return messageFactory.errorMessage(e.getMessage());
         }
+    }
+
+    /**
+     * Client sends to /app/pokerTable.{tableId}.sendBotConnected
+     */
+    @MessageMapping(INBOUND_MESSAGE_PREFIX + SEND_BOT_CONNECTED)
+    public void onBotConnected(StompHeaderAccessor headerAccessor,
+                               @DestinationVariable(TABLE_ID) UUID tableId,
+                               @Payload @Valid CreateBotConnectionDTO botConnection) {
+        log.debug(">>>> onBotConnected - Table: {}, BotUser: {}, BuyIn: {}",
+                tableId, botConnection.getBotUserId(), botConnection.getBuyInAmount());
+
+        tableGameService.onBotConnected(tableId, botConnection.getBotUserId(), botConnection.getBuyInAmount());
+        dispatcher.sendReceipt(headerAccessor);
     }
 
     /**
