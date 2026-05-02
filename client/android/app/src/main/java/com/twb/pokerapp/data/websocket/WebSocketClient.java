@@ -5,6 +5,8 @@ import android.util.Log;
 import androidx.annotation.MainThread;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.twb.pokerapp.BuildConfig;
 import com.twb.pokerapp.data.auth.AuthConfiguration;
 import com.twb.pokerapp.data.auth.AuthEventBus;
@@ -12,6 +14,7 @@ import com.twb.pokerapp.data.auth.AuthService;
 import com.twb.pokerapp.data.websocket.message.client.SendChatMessageDTO;
 import com.twb.pokerapp.data.websocket.message.client.SendPlayerActionDTO;
 import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
+import com.twb.pokerapp.data.websocket.message.server.enumeration.ServerMessageType;
 import com.twb.pokerapp.di.network.qualifiers.Authenticated;
 import com.twb.stomplib.dto.LifecycleEvent;
 import com.twb.stomplib.dto.StompHeader;
@@ -24,6 +27,7 @@ import java.util.Locale;
 import java.util.UUID;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import io.reactivex.CompletableTransformer;
 import io.reactivex.Single;
@@ -32,6 +36,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
 
+@Singleton
 public class WebSocketClient {
     private static final String TAG = WebSocketClient.class.getSimpleName();
     private static final String UNAUTHORIZED_ERROR_CODE = "401";
@@ -182,7 +187,21 @@ public class WebSocketClient {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(stompMessage -> {
-                    var message = gson.fromJson(stompMessage.getPayload(), ServerMessageDTO.class);
+                    JsonObject jsonObject = gson.fromJson(stompMessage.getPayload(), JsonObject.class);
+                    var type = ServerMessageType.valueOf(jsonObject.get("type").getAsString());
+                    long timestamp = jsonObject.get("timestamp").getAsLong();
+                    JsonElement payloadElement = jsonObject.get("payload");
+                    
+                    JsonObject rawPayload = null;
+                    if (payloadElement != null && payloadElement.isJsonObject()) {
+                        rawPayload = payloadElement.getAsJsonObject();
+                    }
+
+                    ServerMessageDTO<Object> message = new ServerMessageDTO<>(type, rawPayload, timestamp);
+                    Class<?> payloadClass = type.getPayloadClass();
+                    if (payloadClass != null && rawPayload != null) {
+                        message.setPayload(gson.fromJson(rawPayload, payloadClass));
+                    }
                     listener.onMessage(message);
                 }, throwable -> {
                     Log.e(TAG, "Subscription error on topic: " + topic, throwable);
