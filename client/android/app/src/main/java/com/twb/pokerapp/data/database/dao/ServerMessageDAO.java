@@ -17,9 +17,11 @@ public interface ServerMessageDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(ServerMessageEntity message);
 
-    @Query("SELECT * FROM ServerMessageEntity WHERE tableId = :tableId ORDER BY timestamp ASC")
+    @Query("""
+            SELECT *
+            FROM ServerMessageEntity
+            WHERE tableId = :tableId
+            ORDER BY timestamp ASC
+            """)
     Single<List<ServerMessageEntity>> getMessagesByTableId(String tableId);
-
-    @Query("DELETE FROM ServerMessageEntity WHERE tableId = :tableId")
-    void deleteByTableId(String tableId);
 }

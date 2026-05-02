@@ -146,7 +146,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
 
     private void onMessagesReceived(List<ServerMessageDTO<?>> messages) {
         if (messages == null) return;
-        for (ServerMessageDTO<?> message : messages) {
+        for (var message : messages) {
             if (message.getTimestamp() > lastRenderedTimestamp) {
                 dispatchMessage(message);
                 lastRenderedTimestamp = message.getTimestamp();
@@ -343,7 +343,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     @Override
     protected void onAuthorized() {
         viewModel.setTableId(table.getId());
-        Intent serviceIntent = new Intent(this, WebSocketService.class);
+        var serviceIntent = new Intent(this, WebSocketService.class);
         serviceIntent.setAction(WebSocketService.ACTION_START);
         serviceIntent.putExtra(WebSocketService.EXTRA_TABLE_ID, table.getId());
         serviceIntent.putExtra(WebSocketService.EXTRA_CONNECTION_TYPE, connectionType);
@@ -363,7 +363,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
 
     @Override
     protected void onDestroy() {
-        Intent serviceIntent = new Intent(this, WebSocketService.class);
+        var serviceIntent = new Intent(this, WebSocketService.class);
         serviceIntent.setAction(WebSocketService.ACTION_STOP);
         startService(serviceIntent);
         super.onDestroy();

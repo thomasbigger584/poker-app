@@ -19,7 +19,7 @@ public abstract class BasePermissionsActivity extends AppCompatActivity {
 
     private final ActivityResultLauncher<String[]> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
-                boolean allGranted = true;
+                var allGranted = true;
                 for (Boolean granted : result.values()) {
                     if (!granted) {
                         allGranted = false;
@@ -37,7 +37,7 @@ public abstract class BasePermissionsActivity extends AppCompatActivity {
     }
 
     protected void checkAndRequestPermissions() {
-        List<String> permissionsToRequest = new ArrayList<>();
+        var permissionsToRequest = new ArrayList<String>();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -52,7 +52,7 @@ public abstract class BasePermissionsActivity extends AppCompatActivity {
         }
     }
 
-    protected void onPermissionsResult(boolean allGranted) {
+    protected void onPermissionsResult(boolean ignored) {
         // Override in child if specific behavior is needed when permissions are granted/denied
     }
 }

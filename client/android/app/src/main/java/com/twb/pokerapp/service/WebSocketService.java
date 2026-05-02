@@ -5,7 +5,6 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
@@ -45,6 +44,10 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
     @Inject
     WebSocketRepository repository;
 
+    // ***************************************************************
+    // Service Lifecycle
+    // ***************************************************************
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -54,19 +57,11 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null) {
-            String action = intent.getAction();
+            var action = intent.getAction();
             if (ACTION_START.equals(action)) {
-                UUID tableId = (UUID) intent.getSerializableExtra(EXTRA_TABLE_ID);
-                String connectionType = intent.getStringExtra(EXTRA_CONNECTION_TYPE);
-                double buyInAmount = intent.getDoubleExtra(EXTRA_BUY_IN_AMOUNT, 0);
-
-                startForeground(NOTIFICATION_ID, createNotification());
-                repository.setTableId(tableId.toString());
-                
-                webSocketClient.connect(tableId, this, connectionType, buyInAmount);
+                onStartAction(intent);
             } else if (ACTION_STOP.equals(action)) {
-                stopForeground(true);
-                stopSelf();
+                onStopAction();
             }
         }
         return START_STICKY;
@@ -82,33 +77,6 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
     @Override
     public IBinder onBind(Intent intent) {
         return null;
-    }
-
-    private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel serviceChannel = new NotificationChannel(
-                    CHANNEL_ID,
-                    "WebSocket Service Channel",
-                    NotificationManager.IMPORTANCE_LOW
-            );
-            NotificationManager manager = getSystemService(NotificationManager.class);
-            if (manager != null) {
-                manager.createNotificationChannel(serviceChannel);
-            }
-        }
-    }
-
-    private Notification createNotification() {
-        Intent notificationIntent = new Intent(this, TexasGameActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this,
-                0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
-
-        return new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Poker Game Connected")
-                .setContentText("Maintaining background connection...")
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentIntent(pendingIntent)
-                .build();
     }
 
     // ***************************************************************
@@ -151,5 +119,53 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
     public void onSubscribeError(Throwable throwable) {
         Log.e(TAG, "Subscribe Error", throwable);
         repository.handleError(throwable);
+    }
+
+    // ***************************************************************
+    // Helper Methods
+    // ***************************************************************
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel serviceChannel = new NotificationChannel(
+                    CHANNEL_ID,
+                    "WebSocket Service Channel",
+                    NotificationManager.IMPORTANCE_LOW
+            );
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            if (manager != null) {
+                manager.createNotificationChannel(serviceChannel);
+            }
+        }
+    }
+
+    private Notification createNotification() {
+        Intent notificationIntent = new Intent(this, TexasGameActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this,
+                0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
+
+        return new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("Poker Game Connected")
+                .setContentText("Maintaining background connection...")
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentIntent(pendingIntent)
+                .build();
+    }
+
+
+    private void onStartAction(Intent intent) {
+        var tableId = (UUID) intent.getSerializableExtra(EXTRA_TABLE_ID);
+        String connectionType = intent.getStringExtra(EXTRA_CONNECTION_TYPE);
+        var buyInAmount = intent.getDoubleExtra(EXTRA_BUY_IN_AMOUNT, 0);
+
+        startForeground(NOTIFICATION_ID, createNotification());
+        repository.setTableId(tableId.toString());
+
+        webSocketClient.connect(tableId, this, connectionType, buyInAmount);
+    }
+
+    private void onStopAction() {
+        stopForeground(true);
+        stopSelf();
     }
 }

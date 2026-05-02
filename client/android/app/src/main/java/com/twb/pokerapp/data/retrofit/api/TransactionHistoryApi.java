@@ -11,5 +11,5 @@ import retrofit2.http.Query;
 public interface TransactionHistoryApi {
 
     @GET("/api/transaction-history/current")
-    Call<List<TransactionHistoryDTO>> getCurrent(@Query("type") String type);
+    Call<List<TransactimonHistoryDTO>> getCurrent(@Query("type") String type);
 }

@@ -8,25 +8,9 @@ import com.twb.pokerapp.data.database.dao.ServerMessageDAO;
 import com.twb.pokerapp.data.database.entities.ServerMessageEntity;
 import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.data.websocket.message.server.enumeration.ServerMessageType;
-import com.twb.pokerapp.data.websocket.message.server.payload.BettingRoundUpdatedDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.ChatMessageDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.DealCommunityCardDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.DealPlayerCardDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.DealerDeterminedDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.ErrorMessageDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.GameFinishedDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.LogMessageDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.PlayerActionedDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.PlayerConnectedDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.PlayerDisconnectedDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.PlayerSubscribedDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.PlayerTurnDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.RoundFinishedDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.ValidationDTO;
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -40,7 +24,7 @@ import io.reactivex.schedulers.Schedulers;
 public class WebSocketRepository {
     private final ServerMessageDAO serverMessageDAO;
     private final Gson gson;
-    
+
     private final List<ServerMessageDTO<?>> internalList = new CopyOnWriteArrayList<>();
     private final MutableLiveData<List<ServerMessageDTO<?>>> _messages = new MutableLiveData<>(new ArrayList<>());
     public final LiveData<List<ServerMessageDTO<?>>> messages = _messages;
@@ -73,19 +57,19 @@ public class WebSocketRepository {
         this.currentTableId = tableId;
         this.internalList.clear();
         this._messages.postValue(new ArrayList<>(internalList));
-        
+
         // Load existing messages from DB for "catch-up"
-        serverMessageDAO.getMessagesByTableId(tableId)
+        var ignored = serverMessageDAO.getMessagesByTableId(tableId)
                 .subscribeOn(Schedulers.io())
                 .subscribe(entities -> {
-                    List<ServerMessageDTO<?>> loadedMessages = new ArrayList<>();
+                    var loadedMessages = new ArrayList<ServerMessageDTO<?>>();
                     for (ServerMessageEntity entity : entities) {
                         loadedMessages.add(convertToDto(entity));
                     }
                     synchronized (internalList) {
-                        for (ServerMessageDTO<?> loaded : loadedMessages) {
-                            boolean exists = false;
-                            for (ServerMessageDTO<?> current : internalList) {
+                        for (var loaded : loadedMessages) {
+                            var exists = false;
+                            for (var current : internalList) {
                                 if (current.getTimestamp() == loaded.getTimestamp()) {
                                     exists = true;
                                     break;
@@ -95,7 +79,7 @@ public class WebSocketRepository {
                                 internalList.add(loaded);
                             }
                         }
-                        List<ServerMessageDTO<?>> sorted = new ArrayList<>(internalList);
+                        var sorted = new ArrayList<>(internalList);
                         sorted.sort(Comparator.comparingLong(ServerMessageDTO::getTimestamp));
                         _messages.postValue(sorted);
                     }
@@ -106,19 +90,19 @@ public class WebSocketRepository {
         if (currentTableId == null) return;
 
         // Save to Room
-        ServerMessageEntity entity = new ServerMessageEntity(
+        var entity = new ServerMessageEntity(
                 currentTableId,
                 message.getTimestamp(),
                 message.getType().name(),
                 gson.toJson(message.getRawPayload())
         );
-        
+
         Schedulers.io().scheduleDirect(() -> serverMessageDAO.insert(entity));
 
         // Update In-Memory List
         synchronized (internalList) {
-            boolean exists = false;
-            for (ServerMessageDTO<?> msg : internalList) {
+            var exists = false;
+            for (var msg : internalList) {
                 if (msg.getTimestamp() == message.getTimestamp()) {
                     exists = true;
                     break;
@@ -126,7 +110,7 @@ public class WebSocketRepository {
             }
             if (!exists) {
                 internalList.add(message);
-                List<ServerMessageDTO<?>> sorted = new ArrayList<>(internalList);
+                var sorted = new ArrayList<>(internalList);
                 sorted.sort(Comparator.comparingLong(ServerMessageDTO::getTimestamp));
                 _messages.postValue(sorted);
             }
@@ -142,11 +126,11 @@ public class WebSocketRepository {
     }
 
     private ServerMessageDTO<?> convertToDto(ServerMessageEntity entity) {
-        ServerMessageType type = ServerMessageType.valueOf(entity.getMessageType());
-        JsonObject rawPayload = gson.fromJson(entity.getPayload(), JsonObject.class);
-        ServerMessageDTO<Object> dto = new ServerMessageDTO<>(type, rawPayload, entity.getTimestamp());
-        
-        Class<?> payloadClass = type.getPayloadClass();
+        var type = ServerMessageType.valueOf(entity.getMessageType());
+        var rawPayload = gson.fromJson(entity.getPayload(), JsonObject.class);
+        var dto = new ServerMessageDTO<>(type, rawPayload, entity.getTimestamp());
+
+        var payloadClass = type.getPayloadClass();
         if (payloadClass != null && rawPayload != null) {
             dto.setPayload(gson.fromJson(rawPayload, payloadClass));
         }
