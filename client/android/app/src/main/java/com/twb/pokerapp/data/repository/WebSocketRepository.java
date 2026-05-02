@@ -64,7 +64,7 @@ public class WebSocketRepository {
                 .subscribeOn(Schedulers.io())
                 .subscribe(entities -> {
                     var loadedMessages = new ArrayList<ServerMessageDTO<?>>();
-                    for (ServerMessageEntity entity : entities) {
+                    for (var entity : entities) {
                         loadedMessages.add(convertToDto(entity));
                     }
                     synchronized (internalList) {

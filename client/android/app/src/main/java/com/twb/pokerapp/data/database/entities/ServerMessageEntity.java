@@ -3,11 +3,13 @@ package com.twb.pokerapp.data.database.entities;
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
 
+import java.util.UUID;
+
 @Entity(primaryKeys = {"tableId", "timestamp"})
 public class ServerMessageEntity {
 
     @NonNull
-    private final String tableId;
+    private final UUID tableId;
 
     private final long timestamp;
 
@@ -15,7 +17,8 @@ public class ServerMessageEntity {
 
     private final String payload;
 
-    public ServerMessageEntity(@NonNull String tableId, long timestamp, String messageType, String payload) {
+    public ServerMessageEntity(
+            @NonNull UUID tableId, long timestamp, String messageType, String payload) {
         this.tableId = tableId;
         this.timestamp = timestamp;
         this.messageType = messageType;
@@ -23,7 +26,7 @@ public class ServerMessageEntity {
     }
 
     @NonNull
-    public String getTableId() {
+    public UUID getTableId() {
         return tableId;
     }
 

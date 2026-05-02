@@ -20,7 +20,7 @@ public abstract class BasePermissionsActivity extends AppCompatActivity {
     private final ActivityResultLauncher<String[]> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
                 var allGranted = true;
-                for (Boolean granted : result.values()) {
+                for (var granted : result.values()) {
                     if (!granted) {
                         allGranted = false;
                         break;

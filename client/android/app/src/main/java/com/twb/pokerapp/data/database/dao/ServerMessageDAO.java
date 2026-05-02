@@ -8,6 +8,7 @@ import androidx.room.Query;
 import com.twb.pokerapp.data.database.entities.ServerMessageEntity;
 
 import java.util.List;
+import java.util.UUID;
 
 import io.reactivex.Single;
 
@@ -23,5 +24,5 @@ public interface ServerMessageDAO {
             WHERE tableId = :tableId
             ORDER BY timestamp ASC
             """)
-    Single<List<ServerMessageEntity>> getMessagesByTableId(String tableId);
+    Single<List<ServerMessageEntity>> getMessagesByTableId(UUID tableId);
 }
