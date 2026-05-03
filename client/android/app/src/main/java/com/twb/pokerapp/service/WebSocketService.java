@@ -13,10 +13,14 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
+import com.twb.pokerapp.PokerApplication;
 import com.twb.pokerapp.R;
+import com.twb.pokerapp.data.auth.AuthService;
 import com.twb.pokerapp.data.repository.WebSocketRepository;
 import com.twb.pokerapp.data.websocket.WebSocketClient;
 import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
+import com.twb.pokerapp.data.websocket.message.server.enumeration.ServerMessageType;
+import com.twb.pokerapp.data.websocket.message.server.payload.PlayerTurnDTO;
 import com.twb.pokerapp.ui.activity.game.texas.TexasGameActivity;
 import com.twb.stomplib.dto.LifecycleEvent;
 
@@ -43,6 +47,9 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
 
     @Inject
     WebSocketRepository repository;
+
+    @Inject
+    AuthService authService;
 
     // ***************************************************************
     // Service Lifecycle
@@ -113,6 +120,14 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
     @Override
     public void onMessage(ServerMessageDTO<?> message) {
         repository.handleNewMessage(message);
+
+        if (message.getType() == ServerMessageType.PLAYER_TURN) {
+            var turn = (PlayerTurnDTO) message.getPayload();
+            var username = turn.getPlayerSession().getUser().getUsername();
+            if (authService.isCurrentUser(username) && !PokerApplication.isAppInForeground()) {
+                showTurnNotification();
+            }
+        }
     }
 
     @Override
@@ -161,5 +176,26 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
     private void onStopAction() {
         stopForeground(true);
         stopSelf();
+    }
+
+    private void showTurnNotification() {
+        var notificationIntent = new Intent(this, TexasGameActivity.class);
+        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        var pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
+
+        var notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("Your Turn!")
+                .setContentText("It's your turn to act in the poker game.")
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setAutoCancel(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setDefaults(Notification.DEFAULT_ALL)
+                .setContentIntent(pendingIntent)
+                .build();
+
+        var manager = getSystemService(NotificationManager.class);
+        if (manager != null) {
+            manager.notify(2, notification);
+        }
     }
 }

@@ -78,7 +78,6 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     private Double buyInAmount;
 
     private long lastRenderedTimestamp = 0L;
-    private PlayerTurnDTO currentPlayerTurn;
 
     public static void startActivity(Activity activity, TableDTO table, String connectionType, Double buyInAmount) {
         var intent = new Intent(activity, TexasGameActivity.class);
@@ -144,6 +143,16 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        var turn = viewModel.getCurrentPlayerTurn();
+        var timestamp = viewModel.getCurrentPlayerTurnTimestamp();
+        if (turn != null) {
+            handlePlayerTurn(turn, timestamp);
+        }
+    }
+
     private void onMessagesReceived(List<ServerMessageDTO<?>> messages) {
         if (messages == null) return;
         for (var message : messages) {
@@ -173,7 +182,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
                 handleDealCommunityCard((DealCommunityCardDTO) message.getPayload());
                 break;
             case PLAYER_TURN:
-                handlePlayerTurn((PlayerTurnDTO) message.getPayload());
+                handlePlayerTurn((PlayerTurnDTO) message.getPayload(), message.getTimestamp());
                 break;
             case PLAYER_ACTIONED:
                 handlePlayerActioned((PlayerActionedDTO) message.getPayload());
@@ -206,6 +215,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     }
 
     private void handlePlayerSubscribed(PlayerSubscribedDTO playerSubscribed) {
+        clearCurrentPlayerTurn();
         var currentUsername = authService.getCurrentUser();
         var currentPlayerSession = playerSubscribed.getCurrentPlayerSession(currentUsername);
         tableController.connectCurrentPlayer(currentPlayerSession);
@@ -228,11 +238,13 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
 
     private void handleDealerDetermined(DealerDeterminedDTO dealerDetermined) {
         dismissDialogs();
+        clearCurrentPlayerTurn();
         tableController.dealerDetermined(dealerDetermined.getPlayerSession());
     }
 
     private void handleDealPlayerCard(DealPlayerCardDTO dealPlayerCard) {
         dismissDialogs();
+        clearCurrentPlayerTurn();
         tableController.hidePlayerTurns();
         controlsController.hide();
         var playerSession = dealPlayerCard.getPlayerSession();
@@ -243,20 +255,19 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         }
     }
 
-    private void handlePlayerTurn(PlayerTurnDTO playerTurn) {
+    private void handlePlayerTurn(PlayerTurnDTO playerTurn, long messageTimestamp) {
         var playerSession = playerTurn.getPlayerSession();
         tableController.updatePlayerTurn(playerSession);
         if (authService.isCurrentUser(playerSession.getUser())) {
-            controlsController.show(playerTurn);
-            currentPlayerTurn = playerTurn;
+            controlsController.show(playerTurn, messageTimestamp);
         } else {
             controlsController.hide();
-            currentPlayerTurn = null;
         }
     }
 
     private void handlePlayerActioned(PlayerActionedDTO playerActioned) {
         dismissDialogs();
+        clearCurrentPlayerTurn();
         var playerSession = playerActioned.getAction().getPlayerSession();
         tableController.updateDetails(playerSession);
         tableController.hidePlayerTurns();
@@ -270,18 +281,21 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
 
     private void handleDealCommunityCard(DealCommunityCardDTO dealCommunityCard) {
         dismissDialogs();
+        clearCurrentPlayerTurn();
         controlsController.hide();
         tableController.dealCommunityCard(dealCommunityCard);
     }
 
     private void handleRoundFinished(RoundFinishedDTO roundFinished) {
         dismissDialogs();
+        clearCurrentPlayerTurn();
         tableController.hidePlayerTurns();
         controlsController.hide();
         tableController.update(roundFinished);
     }
 
     private void handleGameFinished(GameFinishedDTO gameFinished) {
+        clearCurrentPlayerTurn();
         var clickListener = new FinishActivityOnClickListener(this);
         var alertModalDialog = AlertModalDialog.newInstance(AlertModalDialog.AlertModalType.INFO, getString(R.string.game_finished), clickListener);
         alertModalDialog.show(getSupportFragmentManager(), "game_finished_modal");
@@ -483,13 +497,18 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     }
 
     private double getRaiseMinimumBet() {
-        if (currentPlayerTurn != null) {
-            var amountToCall = currentPlayerTurn.getAmountToCall();
+        var turn = viewModel.getCurrentPlayerTurn();
+        if (turn != null) {
+            var amountToCall = turn.getAmountToCall();
             if (amountToCall != null) {
                 return amountToCall + 0.01;
             }
         }
         return 10d;
+    }
+
+    private void clearCurrentPlayerTurn() {
+        // Handled by Repository
     }
 
     private String getPlayerActionedMessage(PlayerActionedDTO playerActioned) {

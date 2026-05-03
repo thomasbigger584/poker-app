@@ -13,6 +13,8 @@ import com.twb.pokerapp.data.websocket.message.client.SendChatMessageDTO;
 import com.twb.pokerapp.data.websocket.message.client.SendPlayerActionDTO;
 import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
 
+import com.twb.pokerapp.data.websocket.message.server.payload.PlayerTurnDTO;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -63,6 +65,14 @@ public class TexasGameViewModel extends ViewModel implements WebSocketClient.Sen
         dto.setAction(actionType.name());
         dto.setAmount(amount);
         webSocketClient.sendPlayerAction(tableId, dto, this);
+    }
+
+    public PlayerTurnDTO getCurrentPlayerTurn() {
+        return repository.getCurrentPlayerTurn();
+    }
+
+    public long getCurrentPlayerTurnTimestamp() {
+        return repository.getCurrentPlayerTurnTimestamp();
     }
 
     @Override

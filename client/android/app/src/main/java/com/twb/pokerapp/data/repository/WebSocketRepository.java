@@ -8,6 +8,7 @@ import com.twb.pokerapp.data.database.dao.ServerMessageDAO;
 import com.twb.pokerapp.data.database.entities.ServerMessageEntity;
 import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.data.websocket.message.server.enumeration.ServerMessageType;
+import com.twb.pokerapp.data.websocket.message.server.payload.PlayerTurnDTO;
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
@@ -37,6 +38,9 @@ public class WebSocketRepository {
     public final LiveData<Boolean> connected = _connected;
 
     private UUID currentTableId;
+
+    private PlayerTurnDTO currentPlayerTurn;
+    private long currentPlayerTurnTimestamp;
 
     @Inject
     public WebSocketRepository(ServerMessageDAO serverMessageDAO, Gson gson) {
@@ -90,6 +94,14 @@ public class WebSocketRepository {
     public void handleNewMessage(ServerMessageDTO<?> message) {
         if (currentTableId == null) return;
 
+        if (message.getType() == ServerMessageType.PLAYER_TURN) {
+            currentPlayerTurn = (PlayerTurnDTO) message.getPayload();
+            currentPlayerTurnTimestamp = message.getTimestamp();
+        } else if (message.getType().isTurnEndingMessage()) {
+            currentPlayerTurn = null;
+            currentPlayerTurnTimestamp = 0L;
+        }
+
         // Save to Room
         var entity = new ServerMessageEntity(
                 currentTableId,
@@ -124,6 +136,14 @@ public class WebSocketRepository {
 
     public void setConnected(boolean connected) {
         _connected.postValue(connected);
+    }
+
+    public PlayerTurnDTO getCurrentPlayerTurn() {
+        return currentPlayerTurn;
+    }
+
+    public long getCurrentPlayerTurnTimestamp() {
+        return currentPlayerTurnTimestamp;
     }
 
     private ServerMessageDTO<?> convertToDto(ServerMessageEntity entity) {
