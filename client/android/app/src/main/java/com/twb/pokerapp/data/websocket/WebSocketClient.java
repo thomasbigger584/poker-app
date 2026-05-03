@@ -187,7 +187,7 @@ public class WebSocketClient {
                 .subscribe(stompMessage -> {
                     var jsonObject = gson.fromJson(stompMessage.getPayload(), JsonObject.class);
                     var type = ServerMessageType.valueOf(jsonObject.get("type").getAsString());
-                    long timestamp = jsonObject.get("timestamp").getAsLong();
+                    var timestamp = jsonObject.get("timestamp").getAsLong();
                     var payloadElement = jsonObject.get("payload");
                     
                     JsonObject rawPayload = null;

@@ -127,9 +127,9 @@ public class ControlsController {
             animator.cancel();
         }
 
-        long totalWaitMs = playerTurn.getPlayerTurnWaitMs();
-        long elapsedTimeMs = Math.max(0, System.currentTimeMillis() - messageTimestamp);
-        long remainingWaitMs = totalWaitMs - elapsedTimeMs;
+        var totalWaitMs = playerTurn.getPlayerTurnWaitMs();
+        var elapsedTimeMs = Math.max(0, System.currentTimeMillis() - messageTimestamp);
+        var remainingWaitMs = totalWaitMs - elapsedTimeMs;
 
         if (remainingWaitMs <= 0) {
             setInvisible(binding.secondsLeftProgressBar);
@@ -139,7 +139,7 @@ public class ControlsController {
         var max = 100;
         binding.secondsLeftProgressBar.setMax(max);
 
-        int startProgress = Math.min(max, (int) ((remainingWaitMs / (double) totalWaitMs) * max));
+        var startProgress = Math.min(max, (int) ((remainingWaitMs / (double) totalWaitMs) * max));
 
         animator = ValueAnimator.ofInt(startProgress, 0);
         animator.setDuration((long) (remainingWaitMs * 0.95));
