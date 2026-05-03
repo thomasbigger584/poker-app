@@ -38,9 +38,13 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
 
     public static final String ACTION_START = "ACTION_START";
     public static final String ACTION_STOP = "ACTION_STOP";
+    public static final String ACTION_PLAYER_ACTION = "ACTION_PLAYER_ACTION";
+
     public static final String EXTRA_TABLE_ID = "EXTRA_TABLE_ID";
     public static final String EXTRA_CONNECTION_TYPE = "EXTRA_CONNECTION_TYPE";
     public static final String EXTRA_BUY_IN_AMOUNT = "EXTRA_BUY_IN_AMOUNT";
+    public static final String EXTRA_ACTION = "EXTRA_ACTION";
+    public static final String EXTRA_AMOUNT = "EXTRA_AMOUNT";
 
     @Inject
     WebSocketClient webSocketClient;
@@ -50,6 +54,8 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
 
     @Inject
     AuthService authService;
+
+    private UUID tableId;
 
     // ***************************************************************
     // Service Lifecycle
@@ -69,6 +75,8 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
                 onStartAction(intent);
             } else if (ACTION_STOP.equals(action)) {
                 onStopAction();
+            } else if (ACTION_PLAYER_ACTION.equals(action)) {
+                onPlayerAction(intent);
             }
         }
         return START_STICKY;
@@ -125,7 +133,7 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
             var turn = (PlayerTurnDTO) message.getPayload();
             var username = turn.getPlayerSession().getUser().getUsername();
             if (authService.isCurrentUser(username) && !PokerApplication.isAppInForeground()) {
-                showTurnNotification();
+                showTurnNotification(turn);
             }
         }
     }
@@ -163,7 +171,7 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
     }
 
     private void onStartAction(Intent intent) {
-        var tableId = (UUID) intent.getSerializableExtra(EXTRA_TABLE_ID);
+        this.tableId = (UUID) intent.getSerializableExtra(EXTRA_TABLE_ID);
         var connectionType = intent.getStringExtra(EXTRA_CONNECTION_TYPE);
         var buyInAmount = intent.getDoubleExtra(EXTRA_BUY_IN_AMOUNT, 0);
 
@@ -173,29 +181,88 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
         webSocketClient.connect(tableId, this, connectionType, buyInAmount);
     }
 
+    private void onPlayerAction(Intent intent) {
+        var action = intent.getStringExtra(EXTRA_ACTION);
+        var amount = intent.getDoubleExtra(EXTRA_AMOUNT, 0);
+
+        if (action != null && tableId != null) {
+            var actionDto = new com.twb.pokerapp.data.websocket.message.client.SendPlayerActionDTO();
+            actionDto.setAction(action);
+            actionDto.setAmount(amount);
+
+            webSocketClient.sendPlayerAction(tableId, actionDto, new WebSocketClient.SendListener() {
+                @Override
+                public void onSendSuccess() {
+                    Log.i(TAG, "Player action sent: " + action);
+                    var manager = getSystemService(NotificationManager.class);
+                    if (manager != null) {
+                        manager.cancel(2);
+                    }
+                }
+
+                @Override
+                public void onSendFailure(Throwable throwable) {
+                    Log.e(TAG, "Failed to send player action", throwable);
+                }
+            });
+        }
+    }
+
     private void onStopAction() {
         stopForeground(true);
         stopSelf();
     }
 
-    private void showTurnNotification() {
+    private boolean isDirectAction(String action) {
+        return "CALL".equalsIgnoreCase(action) ||
+                "CHECK".equalsIgnoreCase(action) ||
+                "FOLD".equalsIgnoreCase(action);
+    }
+
+    private void showTurnNotification(PlayerTurnDTO turn) {
         var notificationIntent = new Intent(this, TexasGameActivity.class);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        var pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
+        var pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent,
+                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
 
-        var notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+        var contentText = "Betting Round: " + turn.getBettingRound().getType();
+        if (turn.getAmountToCall() > 0) {
+            contentText += " - Call: $" + turn.getAmountToCall();
+        }
+
+        var builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Your Turn!")
-                .setContentText("It's your turn to act in the poker game.")
+                .setContentText(contentText)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setAutoCancel(true)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setDefaults(Notification.DEFAULT_ALL)
-                .setContentIntent(pendingIntent)
-                .build();
+                .setContentIntent(pendingIntent);
+
+        for (var action : turn.getNextActions()) {
+            PendingIntent actionPendingIntent;
+            if (isDirectAction(action)) {
+                var actionIntent = new Intent(this, WebSocketService.class);
+                actionIntent.setAction(ACTION_PLAYER_ACTION);
+                actionIntent.putExtra(EXTRA_ACTION, action);
+                if ("CALL".equalsIgnoreCase(action)) {
+                    actionIntent.putExtra(EXTRA_AMOUNT, turn.getAmountToCall());
+                }
+                actionPendingIntent = PendingIntent.getService(this, action.hashCode(), actionIntent,
+                        PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+            } else {
+                var actionIntent = new Intent(this, TexasGameActivity.class);
+                actionIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                actionPendingIntent = PendingIntent.getActivity(this, action.hashCode(), actionIntent,
+                        PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+            }
+
+            builder.addAction(new NotificationCompat.Action(0, action, actionPendingIntent));
+        }
 
         var manager = getSystemService(NotificationManager.class);
         if (manager != null) {
-            manager.notify(2, notification);
+            manager.notify(2, builder.build());
         }
     }
 }
