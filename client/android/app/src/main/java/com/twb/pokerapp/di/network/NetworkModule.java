@@ -3,6 +3,7 @@ package com.twb.pokerapp.di.network;
 import static com.twb.pokerapp.BuildConfig.API_BASE_URL;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -102,6 +103,12 @@ public class NetworkModule {
                 .writeTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .addInterceptor(loggingInterceptor)
                 .cache(cache);
+    }
+
+    @Provides
+    @Singleton
+    public ConnectivityManager connectivityManager(@ApplicationContext Context context) {
+        return (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
     }
 
     @Provides

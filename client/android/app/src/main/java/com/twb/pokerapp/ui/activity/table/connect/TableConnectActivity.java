@@ -2,7 +2,6 @@ package com.twb.pokerapp.ui.activity.table.connect;
 
 import static com.twb.pokerapp.ui.util.ActivityUtil.setupToolbar;
 
-import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -10,14 +9,13 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.model.dto.table.TableDTO;
 import com.twb.pokerapp.databinding.ActivityTableConnectBinding;
 import com.twb.pokerapp.ui.activity.game.texas.TexasGameActivity;
-import com.twb.pokerapp.ui.activity.login.BaseAuthActivity;
+import com.twb.pokerapp.ui.activity.base.BaseAuthActivity;
 
 import java.util.Locale;
 

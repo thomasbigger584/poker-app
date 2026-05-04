@@ -23,10 +23,10 @@
         /* Container for the links */
         .container {
             width: 100%;
-            max-width: 800px;
+            max-width: 900px; /* Slightly wider to accommodate more cards */
             background-color: #ffffff;
-            border-radius: 12px; /* Rounded corners for the main container */
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Soft shadow */
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
             padding: 30px;
             box-sizing: border-box;
         }
@@ -34,7 +34,7 @@
         /* Header Styling */
         h1 {
             text-align: center;
-            color: #2c3e50; /* Darker blue-gray */
+            color: #2c3e50;
             margin-bottom: 30px;
             font-weight: 700;
             font-size: 2.2em;
@@ -43,43 +43,43 @@
         /* Grid for links */
         .links-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Responsive grid */
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
         }
 
         /* Individual Link Card */
         .link-card {
-            background-color: #f8f9fa; /* Slightly off-white for cards */
+            background-color: #f8f9fa;
             border: 1px solid #e0e0e0;
-            border-radius: 10px; /* Rounded corners for cards */
+            border-radius: 10px;
             padding: 20px;
             text-align: center;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* Subtle card shadow */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
 
         .link-card:hover {
-            transform: translateY(-5px); /* Lift effect on hover */
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); /* Enhanced shadow on hover */
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
         }
 
         .link-card h2 {
             font-size: 1.4em;
-            color: #34495e; /* Dark blue-gray */
+            color: #34495e;
             margin-top: 0;
             margin-bottom: 15px;
             font-weight: 600;
         }
 
         .link-card a {
-            display: inline-block; /* Allows padding and margin */
-            background-color: #3498db; /* Blue button */
+            display: inline-block;
+            background-color: #3498db;
             color: #ffffff;
             padding: 12px 25px;
-            border-radius: 8px; /* Rounded button corners */
+            border-radius: 8px;
             text-decoration: none;
             font-weight: 600;
             transition: background-color 0.2s ease, transform 0.1s ease;
@@ -87,26 +87,58 @@
         }
 
         .link-card a:hover {
-            background-color: #2980b9; /* Darker blue on hover */
-            transform: translateY(-1px); /* Slight press effect */
+            background-color: #2980b9;
+            transform: translateY(-1px);
         }
 
-        /* Specific colors for different link types (optional, for visual distinction) */
-        .keycloak-color { background-color: #e74c3c !important; } /* Red */
-        .keycloak-color:hover { background-color: #c0392b !important; }
-        .pgadmin-color { background-color: #27ae60 !important; } /* Green */
-        .pgadmin-color:hover { background-color: #229a56 !important; }
-        .rabbitmq-color { background-color: #f39c12 !important; } /* Orange */
-        .rabbitmq-color:hover { background-color: #e67e22 !important; }
-        .nginx-color { background-color: #8e44ad !important; } /* Purple */
-        .nginx-color:hover { background-color: #7d3c98 !important; }
+        /* Service specific colors */
+        .keycloak-color {
+            background-color: #e74c3c !important;
+        }
+
+        .keycloak-color:hover {
+            background-color: #c0392b !important;
+        }
+
+        .pgadmin-color {
+            background-color: #27ae60 !important;
+        }
+
+        .pgadmin-color:hover {
+            background-color: #229a56 !important;
+        }
+
+        .rabbitmq-color {
+            background-color: #f39c12 !important;
+        }
+
+        .rabbitmq-color:hover {
+            background-color: #e67e22 !important;
+        }
+
+        .shell-color {
+            background-color: #2c3e50 !important;
+        }
+
+        .shell-color:hover {
+            background-color: #1a252f !important;
+        }
+
+        .github-color {
+            background-color: #24292e !important;
+        }
+
+        /* GitHub Black */
+        .github-color:hover {
+            background-color: #000000 !important;
+        }
 
         /* Footer / Disclaimer */
         .footer {
             text-align: center;
             margin-top: 40px;
             font-size: 0.9em;
-            color: #7f8c8d; /* Gray */
+            color: #7f8c8d;
         }
 
         /* Responsive adjustments */
@@ -114,12 +146,15 @@
             .container {
                 padding: 20px;
             }
+
             h1 {
                 font-size: 1.8em;
             }
+
             .link-card h2 {
                 font-size: 1.2em;
             }
+
             .link-card a {
                 padding: 10px 20px;
                 font-size: 0.9em;
@@ -132,39 +167,44 @@
     <h1>Poker App Services Dashboard</h1>
 
     <div class="links-grid">
-        <!-- Keycloak Admin Console -->
         <div class="link-card">
-            <h2>Keycloak Admin Console</h2>
+            <h2>Keycloak Admin</h2>
             <p>Manage users, realms, and clients.</p>
-            <a href="https://poker-app.dinosaur-emperor.ts.net/auth/admin/" target="_blank" class="keycloak-color">Go to Admin</a>
+            <a href="https://poker-app.dinosaur-emperor.ts.net/auth/admin/" target="_blank" class="keycloak-color">Go to
+                Admin</a>
         </div>
 
-        <!-- Keycloak User Login -->
         <div class="link-card">
-            <h2>Keycloak Account Console</h2>
-            <p>User login and account management.</p>
-            <a href="https://poker-app.dinosaur-emperor.ts.net/auth/realms/master/account/" target="_blank" class="keycloak-color">Go to Login</a>
+            <h2>Raspberry Pi Shell</h2>
+            <p>Remote terminal access via Connect.</p>
+            <a href="https://connect.raspberrypi.com/devices/28df8f14-b2e4-4525-8ddd-99e92425a5b3/remote-shell-session"
+               target="_blank" class="shell-color">Open Shell</a>
         </div>
 
-        <!-- pgAdmin -->
+        <div class="link-card">
+            <h2>GitHub Repo</h2>
+            <p>View source code and project history.</p>
+            <a href="https://github.com/thomasbigger584/poker-app" target="_blank" class="github-color">View on
+                GitHub</a>
+        </div>
+
         <div class="link-card">
             <h2>pgAdmin 4</h2>
             <p>Database administration for PostgreSQL.</p>
-            <a href="https://poker-app.dinosaur-emperor.ts.net/pgadmin/" target="_blank" class="pgadmin-color">Go to pgAdmin</a>
+            <a href="https://poker-app.dinosaur-emperor.ts.net/pgadmin/" target="_blank" class="pgadmin-color">Go to
+                pgAdmin</a>
         </div>
 
-        <!-- RabbitMQ Management -->
         <div class="link-card">
-            <h2>RabbitMQ Management</h2>
-            <p>Monitor and manage your message queues.</p>
-            <a href="https://poker-app.dinosaur-emperor.ts.net/rabbitmq/" target="_blank" class="rabbitmq-color">Go to RabbitMQ</a>
+            <h2>RabbitMQ</h2>
+            <p>Monitor and manage message queues.</p>
+            <a href="https://poker-app.dinosaur-emperor.ts.net/rabbitmq/" target="_blank" class="rabbitmq-color">Go to
+                RabbitMQ</a>
         </div>
 
-        <!-- Placeholder for Poker App Frontend (if you add one) -->
         <div class="link-card">
-            <h2>Poker App Frontend</h2>
+            <h2>Poker Frontend</h2>
             <p>Access the main poker application.</p>
-            <!-- Update this link when your frontend is deployed -->
             <a href="#" target="_blank">Coming Soon!</a>
         </div>
     </div>
