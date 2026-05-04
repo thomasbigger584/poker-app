@@ -3,6 +3,7 @@ package com.twb.pokerapp.di.network;
 import static com.twb.pokerapp.BuildConfig.API_BASE_URL;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -22,6 +23,7 @@ import com.twb.pokerapp.di.network.qualifiers.Authenticated;
 import com.twb.pokerapp.di.network.qualifiers.Unauthenticated;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -105,6 +107,12 @@ public class NetworkModule {
 
     @Provides
     @Singleton
+    public ConnectivityManager connectivityManager(@ApplicationContext Context context) {
+        return (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+    }
+
+    @Provides
+    @Singleton
     public Gson gson() {
         var gsonBuilder = new GsonBuilder();
         gsonBuilder.registerTypeAdapter(Date.class, (JsonDeserializer<Date>) (json, typeOfT, context) -> {
@@ -116,6 +124,8 @@ public class NetworkModule {
                 return null;
             }
         });
+        gsonBuilder.registerTypeAdapter(LocalDateTime.class, (JsonDeserializer<LocalDateTime>) (json, typeOfT, context) ->
+                LocalDateTime.parse(json.getAsString()));
         gsonBuilder.registerTypeAdapter(ServerMessageDTO.class, new ServerMessageDeserializer());
         if (BuildConfig.DEBUG) {
             gsonBuilder.setPrettyPrinting();

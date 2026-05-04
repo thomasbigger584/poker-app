@@ -1,8 +1,10 @@
 package com.twb.pokerapp.service.keycloak;
 
 import com.twb.pokerapp.configuration.Constants;
+import com.twb.pokerapp.domain.enumeration.TransactionHistoryType;
 import com.twb.pokerapp.mapper.UserMapper;
 import com.twb.pokerapp.repository.UserRepository;
+import com.twb.pokerapp.service.TransactionHistoryService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -10,6 +12,8 @@ import org.keycloak.admin.client.resource.GroupResource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.UUID;
@@ -28,9 +32,13 @@ public class KeycloakUserService {
     @Autowired
     private UserMapper userMapper;
 
+    @Autowired
+    private TransactionHistoryService transactionHistoryService;
+
     /*
      * Synchronizing users api database with those stored in keycloak on application startup
      */
+    @Transactional(propagation = Propagation.MANDATORY)
     public void init() {
         log.debug("Synchronizing Keycloak users...");
         var userMembers = userGroupResource.members();
@@ -51,8 +59,10 @@ public class KeycloakUserService {
                 updatedUsers++;
             } else {
                 var appUser = userMapper.representationToModel(representation);
-                appUser.setTotalFunds(Constants.INITIAL_USER_FUNDS);
-                userRepository.save(appUser);
+                var totalFunds = Constants.INITIAL_USER_FUNDS;
+                appUser.setTotalFunds(totalFunds);
+                appUser = userRepository.save(appUser);
+                transactionHistoryService.create(appUser, totalFunds, TransactionHistoryType.DEPOSIT);
                 createdUsers++;
             }
         }

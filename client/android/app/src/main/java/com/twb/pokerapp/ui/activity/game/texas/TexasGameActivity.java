@@ -24,7 +24,7 @@ import com.twb.pokerapp.data.model.dto.table.TableDTO;
 import com.twb.pokerapp.data.model.enumeration.ActionType;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerActionedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerTurnDTO;
-import com.twb.pokerapp.ui.activity.login.BaseAuthActivity;
+import com.twb.pokerapp.ui.activity.base.BaseAuthActivity;
 import com.twb.pokerapp.ui.activity.game.chatbox.ChatBoxRecyclerAdapter;
 import com.twb.pokerapp.ui.activity.game.texas.controller.ControlsController;
 import com.twb.pokerapp.ui.activity.game.texas.controller.TableController;
