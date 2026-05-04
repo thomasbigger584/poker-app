@@ -15,7 +15,7 @@
     <description>API</description>
     <properties>
         <java.version>21</java.version>
-        <org.projectlombok.version>1.18.44</org.projectlombok.version>
+        <org.projectlombok.version>1.18.46</org.projectlombok.version>
         <org.mapstruct.version>1.6.3</org.mapstruct.version>
         <error-prone.version>2.49.0</error-prone.version>
         <spring-security-jwt.version>1.1.1.RELEASE</spring-security-jwt.version>
