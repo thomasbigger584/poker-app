@@ -1,9 +1,14 @@
 name: 'keycloak'
 services:
   keycloak-base:
-    build: .
+    build:
+      context: .
+      args:
+        - DOMAIN
     image: com.twb.pokerapp/keycloak
     container_name: keycloak
+    env_file:
+      - ../env/.secrets.env
     environment:
       # Keycloak Database Configuration
       KC_DB: postgres
@@ -19,7 +24,7 @@ services:
 
       # Keycloak Hostname & Proxy Configuration
       KC_PROXY: edge
-      KC_HOSTNAME: poker-app.dinosaur-emperor.ts.net
+      KC_HOSTNAME: ${DOMAIN}
       KC_HOSTNAME_STRICT: true
       KC_HTTP_RELATIVE_PATH: /auth
       KC_PROXY_HEADERS: xforwarded # Deprecated in KC 25+, but kept for compatibility if needed; KC_PROXY is preferred
@@ -38,7 +43,6 @@ services:
       KK_TO_RMQ_USE_TLS: false
     command: [ "start-dev", "--import-realm", "--verbose" ]
     volumes:
-      - ./poker-app-realm.json:/opt/keycloak/data/import/poker-app-realm.json
       - ./keycloak-to-rabbit-3.0.5.jar:/opt/keycloak/providers/keycloak-to-rabbit-3.0.5.jar
     healthcheck:
       test: [ "CMD-SHELL", "{ printf 'HEAD /auth/health/ready HTTP/1.0\r\n\r\n' >&0; grep 'HTTP/1.0 200'; } 0<>/dev/tcp/localhost/9000" ]
