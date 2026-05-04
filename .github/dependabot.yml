@@ -9,6 +9,50 @@ updates:
     directory: "/server/api"
     schedule:
       interval: "daily"
+    groups:
+      # 1. Testcontainers & Ecosystem
+      testcontainers-suite:
+        patterns:
+          - "*testcontainers*"
+          - "com.github.dasniko*"
+
+      # 2. Spring Framework & Security
+      spring-ecosystem:
+        patterns:
+          - "org.springframework*"
+          - "jakarta.servlet*"
+
+      # 3. Keycloak Infrastructure
+      keycloak-suite:
+        patterns:
+          - "org.keycloak*"
+
+      # 4. Code Generation
+      code-gen-tools:
+        patterns:
+          - "org.projectlombok*"
+          - "org.mapstruct*"
+
+      # 5. Common Utilities
+      common-utils:
+        patterns:
+          - "org.apache.commons*"
+          - "commons-io*"
+          - "com.google.guava*"
+          - "com.antkorwin*"
+
+      # 6. Build & Test Plugins
+      maven-plugins:
+        patterns:
+          - "org.apache.maven.plugins*"
+          - "org.codehaus.mojo*"
+          - "com.google.errorprone*"
+
+      # 7. Testing Library Updates
+      testing-libraries:
+        patterns:
+          - "org.assertj*"
+          - "org.awaitility*"
   # - package-ecosystem: "gradle"
   #   directory: "/client/android"
   #   schedule:
