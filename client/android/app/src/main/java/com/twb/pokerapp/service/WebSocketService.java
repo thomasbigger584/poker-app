@@ -209,6 +209,7 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
     }
 
     private void onStopAction() {
+        repository.setTableId(null);
         stopForeground(true);
         stopSelf();
     }

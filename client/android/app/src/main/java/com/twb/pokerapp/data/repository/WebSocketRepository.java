@@ -49,19 +49,17 @@ public class WebSocketRepository {
     }
 
     public void setTableId(UUID tableId) {
-        if (tableId == null) {
-            this.currentTableId = null;
-            this.internalList.clear();
-            this._messages.postValue(new ArrayList<>());
-            this._connected.postValue(false);
-            return;
-        }
-        if (tableId.equals(this.currentTableId)) {
-            return;
-        }
         this.currentTableId = tableId;
         this.internalList.clear();
-        this._messages.postValue(new ArrayList<>(internalList));
+        this._messages.postValue(new ArrayList<>());
+        this._connected.postValue(false);
+        this._errors.postValue(null);
+        this.currentPlayerTurn = null;
+        this.currentPlayerTurnTimestamp = 0L;
+
+        if (tableId == null) {
+            return;
+        }
 
         // Load existing messages from DB for "catch-up"
         var ignored = serverMessageDAO.getMessagesByTableId(tableId)

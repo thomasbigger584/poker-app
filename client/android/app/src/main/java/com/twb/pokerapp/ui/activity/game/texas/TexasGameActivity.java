@@ -163,7 +163,6 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void dispatchMessage(ServerMessageDTO<?> message) {
         switch (message.getType()) {
             case PLAYER_SUBSCRIBED:

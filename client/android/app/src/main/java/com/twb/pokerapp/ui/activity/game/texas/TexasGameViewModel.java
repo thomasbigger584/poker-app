@@ -46,6 +46,7 @@ public class TexasGameViewModel extends ViewModel implements WebSocketClient.Sen
 
     public void setTableId(UUID tableId) {
         this.tableId = tableId;
+        repository.setTableId(tableId);
     }
 
     public void sendChatMessage(String message) {
