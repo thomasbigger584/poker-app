@@ -9,6 +9,14 @@ updates:
     directory: "/server/api"
     schedule:
       interval: "daily"
+    groups:
+      testcontainers-dependencies:
+        patterns:
+          - "*testcontainers*"
+      spring-dependencies:
+        patterns:
+          - "org.springframework*"
+          - "com.fasterxml.jackson*"
   # - package-ecosystem: "gradle"
   #   directory: "/client/android"
   #   schedule:
