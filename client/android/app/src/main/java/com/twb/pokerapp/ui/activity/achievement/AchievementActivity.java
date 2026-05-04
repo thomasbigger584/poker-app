@@ -3,18 +3,16 @@ package com.twb.pokerapp.ui.activity.achievement;
 import static com.twb.pokerapp.ui.dialog.DialogHelper.createLoadingSpinner;
 import static com.twb.pokerapp.ui.util.ActivityUtil.setupToolbar;
 
-import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 import com.twb.pokerapp.databinding.ActivityAchievementBinding;
-import com.twb.pokerapp.ui.activity.login.BaseAuthActivity;
-import com.twb.pokerapp.ui.dialog.DialogHelper;
+import com.twb.pokerapp.ui.activity.base.BaseAuthActivity;
+
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
