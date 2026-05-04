@@ -52,8 +52,6 @@ public class AppUser extends Auditable {
     @Column(name = "groups", columnDefinition = "jsonb")
     private List<String> groups = new ArrayList<>();
 
-    // -----------------------------------------------------------------
-
     @Column(name = "total_funds", precision = 19, scale = 2)
     private BigDecimal totalFunds = BigDecimal.ZERO;
 

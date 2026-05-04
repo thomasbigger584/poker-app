@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
     <domain-config>
-        <domain includeSubdomains="true">poker-app.taila8b6c7.ts.net</domain>
+        <domain includeSubdomains="true">poker-app.dinosaur-emperor.ts.net</domain>
         <trust-anchors>
             <certificates src="system" />
             <certificates src="user" />

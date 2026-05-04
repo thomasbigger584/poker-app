@@ -86,7 +86,6 @@ public class AlertModalDialog extends DialogFragment {
         }
 
         var subtitle = args.getString(KEY_ALERT_SUBTITLE);
-        subtitle = capitalize(subtitle);
         binding.subtitleTextView.setText(subtitle);
 
         if (shouldShowCancelButton) {

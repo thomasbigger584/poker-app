@@ -464,15 +464,26 @@ obj/
 #########################################################################################################################################################################################
 # Specific App related ignores
 
-# 1. Un-ignore the specific parent folder for Git to look inside
-!/server/api/.idea/
-# 2. Re-ignore everything inside .idea/ (files and subdirectories)
-/server/api/.idea/*
-# 3. EXPLICITLY UN-IGNORE the runConfigurations folder (must be after the re-ignore)
-!/server/api/.idea/runConfigurations/
-# 4. EXPLICITLY UN-IGNORE the contents (files) inside runConfigurations/
-!/server/api/.idea/runConfigurations/*
 
+# Re-allow .idea folder structure where runConfigurations might exist
+!**/.idea/
+
+# Still ignore user-specific or sensitive .idea files
+**/.idea/**
+**/.idea/**/workspace.xml
+**/.idea/**/tasks.xml
+**/.idea/**/usage.statistics.xml
+**/.idea/**/dictionaries
+**/.idea/**/shelf
+**/.idea/**/dataSources/
+**/.idea/**/dataSources.ids
+**/.idea/**/dataSources.local.xml
+**/.idea/**/sqlDataSources.xml
+**/.idea/**/dynamic.xml
+
+# Allow runConfigurations globally
+!**/runConfigurations/
+!**/runConfigurations/**
 
 !/server/keycloak/keycloak-to-rabbit-3.0.5.jar
 

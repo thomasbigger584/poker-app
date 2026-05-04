@@ -363,4 +363,33 @@
                                  baseTableName="betting_round_refund" baseColumnNames="betting_round_id"
                                  referencedTableName="betting_round" referencedColumnNames="id"/>
     </changeSet>
+
+    <changeSet author="tbigg" id="13">
+        <createTable tableName="transaction_history">
+            <column name="id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="decimal(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date_time" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_date_time" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey columnNames="id" constraintName="pk_transaction_history" tableName="transaction_history"/>
+        <addForeignKeyConstraint constraintName="fk_transaction_history_user_id" onDelete="CASCADE"
+                                 baseTableName="transaction_history" baseColumnNames="user_id"
+                                 referencedTableName="app_user" referencedColumnNames="id"/>
+    </changeSet>
+
+
 </databaseChangeLog>

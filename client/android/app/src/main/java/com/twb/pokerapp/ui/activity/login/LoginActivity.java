@@ -10,6 +10,9 @@ import android.view.View;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.WorkerThread;
+
+import com.twb.pokerapp.ui.activity.base.BaseNetworkActivity;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.browser.customtabs.CustomTabColorSchemeParams;
 import androidx.browser.customtabs.CustomTabsIntent;
@@ -17,7 +20,6 @@ import androidx.core.content.ContextCompat;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.twb.pokerapp.R;
-import com.twb.pokerapp.data.auth.AuthConfiguration;
 import com.twb.pokerapp.data.auth.AuthStateManager;
 import com.twb.pokerapp.databinding.ActivityLoginBinding;
 import com.twb.pokerapp.ui.activity.table.list.TableListActivity;
@@ -36,8 +38,6 @@ import net.openid.appauth.browser.AnyBrowserMatcher;
 
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.inject.Inject;
@@ -45,7 +45,7 @@ import javax.inject.Inject;
 import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
-public final class LoginActivity extends AppCompatActivity {
+public final class LoginActivity extends BaseNetworkActivity {
     private static final String TAG = LoginActivity.class.getSimpleName();
     private static final String EXTRA_FAILED = "com.twb.pokerapp.auth.failed";
     private static final Class<? extends AppCompatActivity> AUTH_COMPLETED_ACTIVITY = TableListActivity.class;
@@ -57,17 +57,14 @@ public final class LoginActivity extends AppCompatActivity {
 
     @Inject
     public AuthStateManager authStateManager;
-    @Inject
-    public AuthConfiguration authConfiguration;
 
     private ActivityLoginBinding binding;
     private AuthorizationService authService;
-    private ExecutorService executor;
+    private boolean isAppAuthInitialized = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        executor = Executors.newSingleThreadExecutor();
         binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
@@ -81,8 +78,8 @@ public final class LoginActivity extends AppCompatActivity {
         // 2. Already Authorized Check
         if (authStateManager.getCurrent().isAuthorized()) {
             Log.i(TAG, "User is already authenticated, proceeding to next activity");
-            startActivity(new Intent(this, AUTH_COMPLETED_ACTIVITY));
             binding.loginButton.setEnabled(true);
+            startActivity(new Intent(this, AUTH_COMPLETED_ACTIVITY));
             finish();
             return;
         }
@@ -98,21 +95,26 @@ public final class LoginActivity extends AppCompatActivity {
         if (getIntent().getBooleanExtra(EXTRA_FAILED, false)) {
             displaySnackbarMessage("Authorization Canceled or Failed");
         }
+    }
 
-        // Disable login until browser is ready (optional but recommended)
-        binding.loginButton.setEnabled(false);
-        executor.submit(this::initializeAppAuth);
+    @Override
+    protected void onTailscaleSuccess() {
+        binding.loginButton.setEnabled(true);
+        if (!isAppAuthInitialized) {
+            isAppAuthInitialized = true;
+            networkExecutor.submit(this::initializeAppAuth);
+        }
     }
 
     public void onLoginClick(View view) {
         // Prevent double clicks or clicking before initialization is done
         binding.loginButton.setEnabled(false);
-        executor.submit(this::doAuth);
+        networkExecutor.submit(this::doAuth);
     }
 
     public void onWebsiteClick(View view) {
         var intent = new CustomTabsIntent.Builder().build();
-        intent.launchUrl(this, Uri.parse("https://poker-app.taila8b6c7.ts.net"));
+        intent.launchUrl(this, Uri.parse("https://poker-app.dinosaur-emperor.ts.net"));
     }
 
     @WorkerThread
@@ -147,7 +149,7 @@ public final class LoginActivity extends AppCompatActivity {
             return;
         }
         authStateManager.replace(new AuthState(config));
-        executor.submit(this::initializeClient);
+        networkExecutor.submit(this::initializeClient);
     }
 
     @WorkerThread
@@ -206,7 +208,7 @@ public final class LoginActivity extends AppCompatActivity {
     }
 
     private void warmUpBrowser() {
-        executor.execute(() -> {
+        networkExecutor.execute(() -> {
             Log.i(TAG, "Warming up browser");
             var intentBuilder = authService.createCustomTabsIntentBuilder(authRequest.get().toUri());
             intentBuilder.setDefaultColorSchemeParams(new CustomTabColorSchemeParams.Builder()
@@ -258,7 +260,6 @@ public final class LoginActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         if (authService != null) authService.dispose();
-        executor.shutdownNow();
         super.onDestroy();
     }
 

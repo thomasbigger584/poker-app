@@ -1,6 +1,8 @@
 package com.twb.pokerapp.ui.activity.table.create;
 
-import android.graphics.PorterDuff;
+import static com.twb.pokerapp.ui.dialog.DialogHelper.createLoadingSpinner;
+import static com.twb.pokerapp.ui.util.ActivityUtil.setupToolbar;
+
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -9,12 +11,11 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.databinding.ActivityTableCreateBinding;
-import com.twb.pokerapp.ui.activity.login.BaseAuthActivity;
+import com.twb.pokerapp.ui.activity.base.BaseAuthActivity;
 import com.twb.pokerapp.ui.dialog.AlertModalDialog;
 import com.twb.pokerapp.ui.dialog.DialogHelper;
 
@@ -35,12 +36,12 @@ public class TableCreateActivity extends BaseAuthActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setupToolbar(this, binding.toolbar);
 
-        setupToolbar();
-
-        loadingSpinner = DialogHelper.createLoadingSpinner(this);
+        loadingSpinner = createLoadingSpinner(this);
 
         viewModel = new ViewModelProvider(this).get(TableCreateViewModel.class);
+        viewModel.clearError();
         viewModel.errors.observe(this, throwable -> {
             if (throwable == null) return;
             DialogHelper.dismiss(loadingSpinner);
@@ -109,20 +110,5 @@ public class TableCreateActivity extends BaseAuthActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    private void setupToolbar() {
-        setSupportActionBar(binding.toolbar);
-
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setDisplayShowHomeEnabled(true);
-
-            var upArrow = ContextCompat.getDrawable(this, androidx.appcompat.R.drawable.abc_ic_ab_back_material);
-            if (upArrow != null) {
-                upArrow.setColorFilter(ContextCompat.getColor(this, android.R.color.white), PorterDuff.Mode.SRC_ATOP);
-                getSupportActionBar().setHomeAsUpIndicator(upArrow);
-            }
-        }
     }
 }

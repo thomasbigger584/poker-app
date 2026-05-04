@@ -6,4 +6,14 @@
     <string-array name="game_types_array">
         <item>TEXAS_HOLDEM</item>
     </string-array>
+
+    <string-array name="transaction_history_types_array">
+        <item>ALL</item>
+        <item>ALL_SIMPLIFIED</item>
+    </string-array>
+
+    <string-array name="transaction_history_types_str_array">
+        <item>All</item>
+        <item>All (Simplified)</item>
+    </string-array>
 </resources>
