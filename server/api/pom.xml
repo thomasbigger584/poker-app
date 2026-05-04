@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.5</version>
+        <version>4.0.6</version>
         <relativePath/>
     </parent>
     <groupId>com.twb</groupId>
@@ -34,7 +34,7 @@
         <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>3.5.5</maven-failsafe-plugin.version>
         <testcontainers.version>2.0.5</testcontainers.version>
-        <testcontainers-keycloak.version>4.2.0</testcontainers-keycloak.version>
+        <testcontainers-keycloak.version>4.2.1</testcontainers-keycloak.version>
         <testcontainers-rabbitmq.version>2.0.5</testcontainers-rabbitmq.version>
     </properties>
 
