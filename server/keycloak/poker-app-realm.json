@@ -251,7 +251,7 @@
             }
           },
           "clientRole": true,
-          "containerId": "2fce84a2-5487-4bb7-a786-29e5c6c2e542",
+          "containerId": "8abbdabe-7af5-4190-bcbe-3163236e121b",
           "attributes": {}
         },
         {
@@ -946,9 +946,9 @@
       "clientId": "poker-game-android-client",
       "name": "Poker Game Android Client",
       "description": "Poker Game Android Client",
-      "rootUrl": "https://poker-app.dinosaur-emperor.ts.net/auth",
-      "adminUrl": "https://poker-app.dinosaur-emperor.ts.net/auth",
-      "baseUrl": "https://poker-app.dinosaur-emperor.ts.net/auth",
+      "rootUrl": "__DOMAIN_PLACEHOLDER__/auth",
+      "adminUrl": "__DOMAIN_PLACEHOLDER__/auth",
+      "baseUrl": "__DOMAIN_PLACEHOLDER__/auth",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": true,
@@ -1017,10 +1017,10 @@
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "http://api.twbdev.site/*"
+        "__DOMAIN_PLACEHOLDER__/api/*"
       ],
       "webOrigins": [
-        "http://api.twbdev.site"
+        "__DOMAIN_PLACEHOLDER__/api"
       ],
       "notBefore": 0,
       "bearerOnly": false,
@@ -1457,7 +1457,7 @@
     {
       "id": "d8344801-1d42-42bb-9c86-d8cc797f9aaf",
       "name": "basic",
-      "description": "OpenID Connect scope for add all basic claims to the token",
+      "description": "OpenID Connect built-in scope for add all basic claims to the token",
       "protocol": "openid-connect",
       "attributes": {
         "include.in.token.scope": "false",
@@ -1946,7 +1946,7 @@
         }
       },
       {
-        "id": "76af4e7e-02e5-4a86-9c36-8533b6949a7c",
+        "id": "76af4e7e-02e5-4a86-9c36-8536b6949a7c",
         "name": "Consent Required",
         "providerId": "consent-required",
         "subType": "anonymous",
