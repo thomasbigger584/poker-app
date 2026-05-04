@@ -79,6 +79,37 @@ public class TableGameService {
         });
     }
 
+    public void onBotConnected(UUID tableId, UUID botUserId, BigDecimal buyInAmount) {
+        mutex.execute(tableId, () -> writeTx.executeWithoutResult(status -> {
+            var table = getThrowPlayerErrorLog(tableRepository.findById(tableId), "No table found for Table ID: " + tableId);
+
+            // Validate buy-in amount
+            if (buyInAmount.compareTo(table.getMinBuyin()) < 0 || buyInAmount.compareTo(table.getMaxBuyin()) > 0) {
+                var message = "Buy-In amount must be between $%.2f and $%.2f for table %s".formatted(table.getMinBuyin(), table.getMaxBuyin(), tableId);
+                throw new GamePlayerErrorLogException(message);
+            }
+
+            var botUser = getThrowPlayerErrorLog(userRepository.findById(botUserId), "Failed to connect bot %s to table %s as bot user not found".formatted(botUserId, tableId));
+
+            // Check if bot has enough funds
+            if (buyInAmount.compareTo(botUser.getTotalFunds()) > 0) {
+                var message = "Bot user %s does not have enough total funds for Buy-In $%.2f, has $%.2f".formatted(botUserId, buyInAmount, botUser.getTotalFunds());
+                throw new GamePlayerErrorLogException(message);
+            }
+
+            var playerSessionOpt = playerSessionRepository.findByTableIdAndUserId(tableId, botUserId);
+
+            if (playerSessionOpt.isEmpty()) {
+                // Check if a game thread exists before connecting the bot
+                var ignored = getThrowPlayerErrorLog(threadManager.getIfExists(tableId), "No game thread exists for table %s. Cannot connect bot.".formatted(tableId));
+                var playerSession = playerSessionService.connectUserToRound(table, botUser, ConnectionType.PLAYER, buyInAmount);
+                afterCommit(() -> dispatcher.send(tableId, messageFactory.playerConnected(playerSession)));
+            } else {
+                log.debug("Bot user {} already connected to table {}", botUserId, tableId);
+            }
+        }));
+    }
+
     public void onPlayerAction(UUID tableId, String username, CreatePlayerActionDTO action) {
         mutex.execute(tableId, () -> {
             try {
