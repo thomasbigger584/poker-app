@@ -32,6 +32,8 @@ import net.openid.appauth.TokenResponse;
 
 import org.json.JSONException;
 
+import android.os.Build;
+import java.io.File;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -146,19 +148,47 @@ public class AuthStateManager {
 
     private SharedPreferences createEncryptedSharedPreferences(Context context) {
         try {
-            var masterKey = new MasterKey.Builder(context)
-                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                    .build();
-            return EncryptedSharedPreferences.create(
-                    context,
-                    STORE_NAME,
-                    masterKey,
-                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-            );
+            return create(context);
         } catch (Exception e) {
-            Log.e(TAG, "Failed to create EncryptedSharedPreferences", e);
-            return context.getSharedPreferences(STORE_NAME, Context.MODE_PRIVATE);
+            Log.e(TAG, "Failed to create EncryptedSharedPreferences, attempting to clear and recreate", e);
+            deleteSharedPreferences(context, STORE_NAME);
+            deleteSharedPreferences(context, "__androidx_security_crypto_encrypted_prefs_key_keyset__");
+            try {
+                return create(context);
+            } catch (Exception ex) {
+                Log.e(TAG, "Failed to recreate EncryptedSharedPreferences, falling back to unencrypted", ex);
+                return context.getSharedPreferences(STORE_NAME, Context.MODE_PRIVATE);
+            }
         }
+    }
+
+    private void deleteSharedPreferences(Context context, String name) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                context.deleteSharedPreferences(name);
+            } else {
+                context.getSharedPreferences(name, Context.MODE_PRIVATE).edit().clear().apply();
+                File dir = new File(context.getApplicationInfo().dataDir, "shared_prefs");
+                File file = new File(dir, name + ".xml");
+                if (file.exists()) {
+                    file.delete();
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to delete shared preferences: " + name, e);
+        }
+    }
+
+    private SharedPreferences create(Context context) throws Exception {
+        var masterKey = new MasterKey.Builder(context)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build();
+        return EncryptedSharedPreferences.create(
+                context,
+                STORE_NAME,
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        );
     }
 }

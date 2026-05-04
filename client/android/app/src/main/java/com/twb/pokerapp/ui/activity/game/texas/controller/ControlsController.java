@@ -35,11 +35,11 @@ public class ControlsController {
         allButtons.add(binding.foldButton);
     }
 
-    public void show(PlayerTurnDTO playerTurn) {
+    public void show(PlayerTurnDTO playerTurn, long messageTimestamp) {
         hide();
         showActionTypeButtons(playerTurn);
         updateGridSpan();
-        startSecondsLeftProgressBar(playerTurn);
+        startSecondsLeftProgressBar(playerTurn, messageTimestamp);
     }
 
     public void hide() {
@@ -122,15 +122,27 @@ public class ControlsController {
         return Math.round((float) dp * density);
     }
 
-    private void startSecondsLeftProgressBar(PlayerTurnDTO playerTurn) {
+    private void startSecondsLeftProgressBar(PlayerTurnDTO playerTurn, long messageTimestamp) {
         if (animator != null) {
             animator.cancel();
         }
+
+        var totalWaitMs = playerTurn.getPlayerTurnWaitMs();
+        var elapsedTimeMs = Math.max(0, System.currentTimeMillis() - messageTimestamp);
+        var remainingWaitMs = totalWaitMs - elapsedTimeMs;
+
+        if (remainingWaitMs <= 0) {
+            setInvisible(binding.secondsLeftProgressBar);
+            return;
+        }
+
         var max = 100;
         binding.secondsLeftProgressBar.setMax(max);
-        animator = ValueAnimator.ofInt(max, 0);
-        var countdownTimeInMs = playerTurn.getPlayerTurnWaitMs() * 0.95;
-        animator.setDuration((long) countdownTimeInMs);
+
+        var startProgress = Math.min(max, (int) ((remainingWaitMs / (double) totalWaitMs) * max));
+
+        animator = ValueAnimator.ofInt(startProgress, 0);
+        animator.setDuration((long) (remainingWaitMs * 0.95));
         animator.setInterpolator(new LinearInterpolator());
         animator.addUpdateListener(animation -> {
             var progress = (int) animation.getAnimatedValue();
