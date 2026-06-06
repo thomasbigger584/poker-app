@@ -4,9 +4,12 @@ import com.twb.pokerapp.configuration.Constants;
 import com.twb.pokerapp.domain.AppUser;
 import com.twb.pokerapp.domain.PhysicalUser;
 import com.twb.pokerapp.domain.enumeration.TransactionHistoryType;
+import com.twb.pokerapp.domain.BotUser;
 import com.twb.pokerapp.dto.appuser.AppUserDTO;
+import com.twb.pokerapp.dto.appuser.BotDTO;
 import com.twb.pokerapp.dto.appuser.UserAmountDTO;
 import com.twb.pokerapp.mapper.UserMapper;
+import com.twb.pokerapp.repository.BotUserRepository;
 import com.twb.pokerapp.repository.UserRepository;
 import com.twb.pokerapp.web.exception.ValidationException;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +18,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -22,8 +26,30 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository repository;
+    private final BotUserRepository botUserRepository;
     private final UserMapper mapper;
     private final TransactionHistoryService transactionHistoryService;
+
+    @Transactional(readOnly = true)
+    public List<BotDTO> listBots() {
+        return botUserRepository.findAll().stream()
+                .map(UserService::toBotDto)
+                .toList();
+    }
+
+    private static BotDTO toBotDto(BotUser bot) {
+        var dto = new BotDTO();
+        dto.setId(bot.getId());
+        dto.setUsername(bot.getUsername());
+        dto.setFirstName(bot.getFirstName());
+        dto.setLastName(bot.getLastName());
+        var persona = bot.getPersona();
+        if (persona != null) {
+            dto.setPersonaName(persona.getName());
+            dto.setPersonaInstructions(persona.getInstructions());
+        }
+        return dto;
+    }
 
     public AppUser create(UserRepresentation representation) {
         var physicalUser = mapper.representationToModel(representation);

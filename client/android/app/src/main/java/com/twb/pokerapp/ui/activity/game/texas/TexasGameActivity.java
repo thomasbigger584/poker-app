@@ -20,8 +20,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.databinding.ActivityGameTexasBinding;
 import com.twb.pokerapp.data.auth.AuthService;
+import com.twb.pokerapp.data.model.dto.appuser.BotDTO;
 import com.twb.pokerapp.data.model.dto.table.TableDTO;
 import com.twb.pokerapp.data.model.enumeration.ActionType;
+import com.twb.pokerapp.data.repository.RepositoryCallback;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerActionedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerTurnDTO;
 import com.twb.pokerapp.ui.activity.base.BaseAuthActivity;
@@ -35,6 +37,7 @@ import com.twb.pokerapp.ui.dialog.DialogHelper;
 import com.twb.pokerapp.ui.dialog.FinishActivityOnClickListener;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -351,6 +354,9 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         if (itemId == R.id.action_leave_table) {
             onLeaveTable();
             return true;
+        } else if (itemId == R.id.action_add_bot) {
+            onAddBotClick();
+            return true;
         } else if (itemId == R.id.action_show_current_width) {
             var width = getResources().getConfiguration().screenWidthDp;
             Toast.makeText(this, "Width: " + width + "dp", Toast.LENGTH_SHORT).show();
@@ -369,6 +375,59 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         } else {
             Log.d("DEBUG", "Dialog leave_table_modal already visible!");
         }
+    }
+
+    private void onAddBotClick() {
+        viewModel.getBots(new RepositoryCallback<>() {
+            @Override
+            public void onSuccess(List<BotDTO> bots) {
+                if (bots == null || bots.isEmpty()) {
+                    Toast.makeText(TexasGameActivity.this, R.string.no_bots_available, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                showBotPickerDialog(bots);
+            }
+
+            @Override
+            public void onFailure(Throwable throwable) {
+                Toast.makeText(TexasGameActivity.this, R.string.failed_to_load_bots, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void showBotPickerDialog(List<BotDTO> bots) {
+        var labels = new String[bots.size()];
+        for (var i = 0; i < bots.size(); i++) {
+            var bot = bots.get(i);
+            var displayName = bot.getPersonaName() != null ? bot.getPersonaName() : bot.getUsername();
+            labels[i] = getString(R.string.bot_picker_item_format, displayName, bot.getUsername());
+        }
+        var builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.select_bot);
+        builder.setItems(labels, (dialog, which) -> {
+            var bot = bots.get(which);
+            viewModel.sendBotConnection(bot.getId(), getBotBuyInAmount());
+            chatBoxAdapter.add(getString(R.string.bot_added_format, bot.getUsername()));
+        });
+        builder.setNegativeButton(R.string.cancel, (dialog, which) -> dialog.cancel());
+        builder.show();
+    }
+
+    /**
+     * Picks a buy-in for the bot that is guaranteed valid for this table: the current user's own
+     * buy-in when it falls within the table range, otherwise clamped to the table's min/max.
+     */
+    private double getBotBuyInAmount() {
+        var min = table.getMinBuyin();
+        var max = table.getMaxBuyin();
+        var amount = (buyInAmount != null) ? buyInAmount : 0d;
+        if (min != null && amount < min) {
+            amount = min;
+        }
+        if (max != null && amount > max) {
+            amount = max;
+        }
+        return amount;
     }
 
     /*

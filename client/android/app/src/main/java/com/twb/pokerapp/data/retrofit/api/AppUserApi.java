@@ -1,6 +1,9 @@
 package com.twb.pokerapp.data.retrofit.api;
 
 import com.twb.pokerapp.data.model.dto.appuser.AppUserDTO;
+import com.twb.pokerapp.data.model.dto.appuser.BotDTO;
+
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
@@ -10,6 +13,9 @@ public interface AppUserApi {
 
     @GET("/api/app-user/current")
     Call<AppUserDTO> getCurrentUser();
+
+    @GET("/api/app-user/bots")
+    Call<List<BotDTO>> getBots();
 
     @POST("/api/app-user/reset-funds")
     Call<AppUserDTO> resetFunds();
