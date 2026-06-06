@@ -1,6 +1,7 @@
 package com.twb.pokerapp.service.player;
 
 import com.twb.pokerapp.domain.AppUser;
+import com.twb.pokerapp.domain.PhysicalUser;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
@@ -56,9 +57,11 @@ public class PlayerSessionService {
             session.setPosition(position);
             session.setFunds(buyInAmount);
 
-            user.setTotalFunds(user.getTotalFunds().subtract(buyInAmount));
-            userRepository.save(user);
-            transactionHistoryService.create(user, buyInAmount.negate(), TransactionHistoryType.BUYIN);
+            if (user instanceof PhysicalUser) {
+                user.setTotalFunds(user.getTotalFunds().subtract(buyInAmount));
+                userRepository.save(user);
+                transactionHistoryService.create(user, buyInAmount.negate(), TransactionHistoryType.BUYIN);
+            }
         }
 
         session = repository.save(session);
@@ -72,11 +75,15 @@ public class PlayerSessionService {
         }
 
         var sessionFundsRemaining = session.getFunds();
-        if (session.getConnectionType() == ConnectionType.PLAYER && sessionFundsRemaining != null) {
+        if (session.getConnectionType() == ConnectionType.PLAYER
+                && sessionFundsRemaining != null) {
             var user = session.getUser();
-            user.setTotalFunds(user.getTotalFunds().add(sessionFundsRemaining));
-            userRepository.save(user);
-            transactionHistoryService.create(user, sessionFundsRemaining, TransactionHistoryType.CASHOUT);
+            if (user instanceof PhysicalUser) {
+                var totalNewFunds = user.getTotalFunds().add(sessionFundsRemaining);
+                user.setTotalFunds(totalNewFunds);
+                userRepository.save(user);
+                transactionHistoryService.create(user, sessionFundsRemaining, TransactionHistoryType.CASHOUT);
+            }
         }
 
         session.setSessionState(SessionState.DISCONNECTED);

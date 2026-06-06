@@ -165,19 +165,16 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     private boolean isPlayersJoined() {
         var minPlayerCount = table.getMinPlayers();
         return readTx.execute(status -> {
-            var connectedPlayers = playerSessionRepository
-                    .findConnectedByTableId(table.getId());
+            var connectedPlayers = playerSessionRepository.findConnectedByTableId(table.getId());
             var playerPlayerUsers = connectedPlayers.stream()
                     .filter(playerSession -> playerSession.getConnectionType() == ConnectionType.PLAYER)
                     .filter(playerSession -> playerSession.getFunds() != null && playerSession.getFunds().compareTo(BigDecimal.ZERO) > 0)
+                    .filter(playerSession -> !(playerSession.getUser() instanceof BotUser))
                     .toList();
             var connectedUsers = userWebsocketService.getConnectedUsers(table);
             if (playerPlayerUsers.isEmpty() && connectedUsers.isEmpty()) {
                 throw new GameInterruptedException("No players connected to table so stopping");
             }
-            // Bots count towards the player count but have no websocket session, so they must be
-            // excluded from the websocket-presence reconciliation below — otherwise a table with
-            // bots would never be considered "joined" and the game could never start.
             if (playerPlayerUsers.size() < minPlayerCount) {
                 log.debug("Waiting for PlayerSessions to connect ({}/{})...", playerPlayerUsers.size(), minPlayerCount);
                 return false;
@@ -357,6 +354,9 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
 
     @CallerThread
     public void stopGame() {
+        writeTx.executeWithoutResult(status ->
+                playerSessionRepository.findConnectedPlayersByTableId(table.getId())
+                        .forEach(playerSession -> playerSessionService.disconnectUser(playerSession)));
         interruptGame.set(true);
         try {
             var terminated = params.getEndLatch().await(GAME_STOP_TIMEOUT_IN_SECS, TimeUnit.SECONDS);

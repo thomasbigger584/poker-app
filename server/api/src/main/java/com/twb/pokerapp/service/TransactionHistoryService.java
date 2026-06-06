@@ -1,6 +1,7 @@
 package com.twb.pokerapp.service;
 
 import com.twb.pokerapp.domain.AppUser;
+import com.twb.pokerapp.domain.BotUser;
 import com.twb.pokerapp.domain.TransactionHistory;
 import com.twb.pokerapp.domain.enumeration.TransactionHistoryType;
 import com.twb.pokerapp.dto.transactionhistory.TransactionHistoryDTO;
@@ -29,6 +30,10 @@ public class TransactionHistoryService {
 
     @Transactional(propagation = Propagation.MANDATORY)
     public Optional<TransactionHistory> create(AppUser user, BigDecimal amount, TransactionHistoryType type) {
+        if (user instanceof BotUser) {
+            log.info("Attempting to create a transaction history but user {} is a bot", user.getUsername());
+            return Optional.empty();
+        }
         if (amount.compareTo(BigDecimal.ZERO) == 0) {
             log.info("Attempting to create a transaction history but amount is 0 for user: {}", user.getUsername());
             return Optional.empty();

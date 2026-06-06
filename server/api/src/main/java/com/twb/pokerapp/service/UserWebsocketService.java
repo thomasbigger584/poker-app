@@ -1,5 +1,6 @@
 package com.twb.pokerapp.service;
 
+import com.twb.pokerapp.domain.BotUser;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.PokerTable;
 import lombok.RequiredArgsConstructor;
@@ -26,13 +27,17 @@ public class UserWebsocketService {
     }
 
     private boolean isUserConnected(PokerTable table, PlayerSession session) {
-        var username = session.getUser().getUsername();
-        var user = userRegistry.getUser(username);
-        if (user == null) {
+        var user = session.getUser();
+        if (user instanceof BotUser) {
+            return false;
+        }
+        var username = user.getUsername();
+        var websocketUser = userRegistry.getUser(username);
+        if (websocketUser == null) {
             return false;
         }
         var destination = TOPIC_PREFIX + table.getId();
-        return isSubscribedToTable(user, destination);
+        return isSubscribedToTable(websocketUser, destination);
     }
 
     private boolean isSubscribedToTable(SimpUser user, String destination) {
