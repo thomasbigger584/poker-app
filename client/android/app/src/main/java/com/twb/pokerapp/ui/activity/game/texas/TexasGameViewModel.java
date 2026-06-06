@@ -6,7 +6,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.twb.pokerapp.data.model.dto.appuser.BotDTO;
+import com.twb.pokerapp.data.model.dto.appuser.AppUserDTO;
 import com.twb.pokerapp.data.model.enumeration.ActionType;
 import com.twb.pokerapp.data.repository.AppUserRepository;
 import com.twb.pokerapp.data.repository.RepositoryCallback;
@@ -194,7 +194,7 @@ public class TexasGameViewModel extends ViewModel
         webSocketClient.sendChatMessage(tableId, dto, this);
     }
 
-    public void getBots(RepositoryCallback<List<BotDTO>> callback) {
+    public void getBots(RepositoryCallback<List<AppUserDTO>> callback) {
         appUserRepository.getBots(callback);
     }
 

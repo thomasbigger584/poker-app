@@ -1,9 +1,8 @@
 package com.twb.pokerapp.web.rest;
 
 import com.twb.pokerapp.dto.appuser.AppUserDTO;
-import com.twb.pokerapp.dto.appuser.BotDTO;
 import com.twb.pokerapp.dto.appuser.UserAmountDTO;
-import com.twb.pokerapp.service.UserService;
+import com.twb.pokerapp.service.user.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +25,7 @@ public class AppUserResource {
     }
 
     @GetMapping("/bots")
-    public ResponseEntity<List<BotDTO>> getBots() {
+    public ResponseEntity<List<AppUserDTO>> getBots() {
         return ResponseEntity.ok(service.listBots());
     }
 

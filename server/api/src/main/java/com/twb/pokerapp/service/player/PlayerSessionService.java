@@ -1,4 +1,4 @@
-package com.twb.pokerapp.service;
+package com.twb.pokerapp.service.player;
 
 import com.twb.pokerapp.domain.AppUser;
 import com.twb.pokerapp.domain.PlayerSession;
@@ -10,6 +10,7 @@ import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.mapper.PlayerSessionMapper;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.UserRepository;
+import com.twb.pokerapp.service.TransactionHistoryService;
 import com.twb.pokerapp.service.game.exception.GamePlayerErrorLogException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

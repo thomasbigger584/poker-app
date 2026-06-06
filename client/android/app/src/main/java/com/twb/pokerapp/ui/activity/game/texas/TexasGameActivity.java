@@ -20,7 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.databinding.ActivityGameTexasBinding;
 import com.twb.pokerapp.data.auth.AuthService;
-import com.twb.pokerapp.data.model.dto.appuser.BotDTO;
+import com.twb.pokerapp.data.model.dto.appuser.AppUserDTO;
 import com.twb.pokerapp.data.model.dto.table.TableDTO;
 import com.twb.pokerapp.data.model.enumeration.ActionType;
 import com.twb.pokerapp.data.repository.RepositoryCallback;
@@ -380,7 +380,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     private void onAddBotClick() {
         viewModel.getBots(new RepositoryCallback<>() {
             @Override
-            public void onSuccess(List<BotDTO> bots) {
+            public void onSuccess(List<AppUserDTO> bots) {
                 if (bots == null || bots.isEmpty()) {
                     Toast.makeText(TexasGameActivity.this, R.string.no_bots_available, Toast.LENGTH_SHORT).show();
                     return;
@@ -395,11 +395,11 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         });
     }
 
-    private void showBotPickerDialog(List<BotDTO> bots) {
+    private void showBotPickerDialog(List<AppUserDTO> bots) {
         var labels = new String[bots.size()];
         for (var i = 0; i < bots.size(); i++) {
             var bot = bots.get(i);
-            var displayName = bot.getPersonaName() != null ? bot.getPersonaName() : bot.getUsername();
+            var displayName = bot.getPersona() != null ? bot.getPersona() : bot.getUsername();
             labels[i] = getString(R.string.bot_picker_item_format, displayName, bot.getUsername());
         }
         var builder = new AlertDialog.Builder(this);

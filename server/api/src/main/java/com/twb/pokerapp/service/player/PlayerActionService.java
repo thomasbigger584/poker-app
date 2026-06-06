@@ -1,4 +1,4 @@
-package com.twb.pokerapp.service;
+package com.twb.pokerapp.service.player;
 
 import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.PlayerAction;

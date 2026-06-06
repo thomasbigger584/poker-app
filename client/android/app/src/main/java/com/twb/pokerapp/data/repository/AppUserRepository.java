@@ -3,7 +3,6 @@ package com.twb.pokerapp.data.repository;
 import androidx.annotation.NonNull;
 
 import com.twb.pokerapp.data.model.dto.appuser.AppUserDTO;
-import com.twb.pokerapp.data.model.dto.appuser.BotDTO;
 import com.twb.pokerapp.data.retrofit.api.AppUserApi;
 
 import java.util.List;
@@ -40,10 +39,10 @@ public class AppUserRepository extends BaseRepository {
         });
     }
 
-    public void getBots(RepositoryCallback<List<BotDTO>> callback) {
+    public void getBots(RepositoryCallback<List<AppUserDTO>> callback) {
         api.getBots().enqueue(new Callback<>() {
             @Override
-            public void onResponse(@NonNull Call<List<BotDTO>> call, @NonNull Response<List<BotDTO>> response) {
+            public void onResponse(@NonNull Call<List<AppUserDTO>> call, @NonNull Response<List<AppUserDTO>> response) {
                 if (response.isSuccessful()) {
                     callback.onSuccess(response.body());
                 } else {
@@ -54,7 +53,7 @@ public class AppUserRepository extends BaseRepository {
             }
 
             @Override
-            public void onFailure(@NonNull Call<List<BotDTO>> call, @NonNull Throwable throwable) {
+            public void onFailure(@NonNull Call<List<AppUserDTO>> call, @NonNull Throwable throwable) {
                 _errorLiveData.setValue(throwable);
                 callback.onFailure(throwable);
             }

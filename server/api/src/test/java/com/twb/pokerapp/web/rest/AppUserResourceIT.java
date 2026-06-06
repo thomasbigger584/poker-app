@@ -1,7 +1,6 @@
 package com.twb.pokerapp.web.rest;
 
 import com.twb.pokerapp.dto.appuser.AppUserDTO;
-import com.twb.pokerapp.dto.appuser.BotDTO;
 import com.twb.pokerapp.testutils.TestEnvironment;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -68,7 +67,7 @@ class AppUserResourceIT {
         var userRestClient = env.getUserRestClient("user1");
 
         // when
-        var response = userRestClient.get(BotDTO[].class, ENDPOINT + "/bots");
+        var response = userRestClient.get(AppUserDTO[].class, ENDPOINT + "/bots");
 
         // then
         assertEquals(HttpStatus.OK.value(), response.httpResponse().statusCode());
@@ -79,13 +78,13 @@ class AppUserResourceIT {
         for (var bot : bots) {
             assertNotNull(bot.getId());
             assertNotNull(bot.getUsername());
-            assertNotNull(bot.getPersonaName());
+            assertNotNull(bot.getPersona());
         }
         var rock = Arrays.stream(bots)
                 .filter(bot -> "stone_cold_steve".equals(bot.getUsername()))
                 .findFirst();
         assertTrue(rock.isPresent(), "Expected seeded bot 'stone_cold_steve' to be present");
-        assertEquals("The Rock", rock.get().getPersonaName());
+        assertEquals("The Rock", rock.get().getPersona());
     }
 
     @Test

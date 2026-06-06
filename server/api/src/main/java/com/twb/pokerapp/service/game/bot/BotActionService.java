@@ -11,7 +11,7 @@ import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
  * <p>
  * The current implementation is a deterministic stub. The intent is to later swap
  * in an LLM-backed implementation that drives the decision from the bot's
- * {@link com.twb.pokerapp.domain.Persona} instructions (play style / temperament)
+ * {@link com.twb.pokerapp.domain.enumeration.Persona} instructions (play style / temperament)
  * and the live game state.
  */
 public interface BotActionService {

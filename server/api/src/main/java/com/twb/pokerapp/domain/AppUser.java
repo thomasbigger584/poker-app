@@ -38,14 +38,6 @@ public abstract class AppUser extends Auditable {
     @Column(name = "total_funds", precision = 19, scale = 2)
     private BigDecimal totalFunds = BigDecimal.ZERO;
 
-    /**
-     * Whether this user is an automated bot player rather than a human.
-     * Declared abstract so the check is resolved polymorphically — this is
-     * proxy-safe (Hibernate proxies delegate the call to the concrete entity),
-     * unlike an {@code instanceof BotUser} check against a lazy proxy.
-     */
-    public abstract boolean isBot();
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -13,6 +13,7 @@ public class AppUserDTO {
     private boolean emailVerified;
     private boolean enabled;
     private Double totalFunds;
+    private String persona;
 
     public UUID getId() {
         return id;
@@ -78,6 +79,14 @@ public class AppUserDTO {
         this.totalFunds = totalFunds;
     }
 
+    public String getPersona() {
+        return persona;
+    }
+
+    public void setPersona(String persona) {
+        this.persona = persona;
+    }
+
     @NonNull
     @Override
     public String toString() {
@@ -90,6 +99,7 @@ public class AppUserDTO {
                 ", emailVerified=" + emailVerified +
                 ", enabled=" + enabled +
                 ", totalFunds=" + totalFunds +
+                ", persona='" + persona + '\'' +
                 '}';
     }
 }

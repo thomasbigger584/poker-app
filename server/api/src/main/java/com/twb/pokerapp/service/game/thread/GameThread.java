@@ -1,5 +1,6 @@
 package com.twb.pokerapp.service.game.thread;
 
+import com.twb.pokerapp.domain.BotUser;
 import com.twb.pokerapp.domain.Card;
 import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
@@ -182,7 +183,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                 return false;
             }
             var humanConnectedSessions = connectedPlayers.stream()
-                    .filter(playerSession -> !playerSession.getUser().isBot())
+                    .filter(playerSession -> !(playerSession.getUser() instanceof BotUser))
                     .toList();
             var expectedWebsocketCount = humanConnectedSessions.size();
             if (connectedUsers.size() < expectedWebsocketCount) {
@@ -196,7 +197,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
             var connectedUsernames = connectedUsers.stream()
                     .map(SimpUser::getName).toList();
             var connectedPlayerNames = playerPlayerUsers.stream()
-                    .filter(playerSession -> !playerSession.getUser().isBot())
+                    .filter(playerSession -> !(playerSession.getUser() instanceof BotUser))
                     .map(playerSession -> playerSession.getUser().getUsername()).toList();
             var allPlayersConnected = new HashSet<>(connectedUsernames).containsAll(connectedPlayerNames);
             if (!allPlayersConnected) {

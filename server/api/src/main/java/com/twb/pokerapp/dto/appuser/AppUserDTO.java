@@ -15,4 +15,5 @@ public class AppUserDTO {
     private boolean emailVerified;
     private boolean enabled;
     private BigDecimal totalFunds;
+    private String persona;
 }

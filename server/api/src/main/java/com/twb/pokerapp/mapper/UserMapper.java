@@ -4,6 +4,7 @@ import com.twb.pokerapp.configuration.Constants;
 import com.twb.pokerapp.domain.AppUser;
 import com.twb.pokerapp.domain.BotUser;
 import com.twb.pokerapp.domain.PhysicalUser;
+import com.twb.pokerapp.domain.enumeration.Persona;
 import com.twb.pokerapp.dto.appuser.AppUserDTO;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.mapstruct.Mapper;
@@ -26,9 +27,16 @@ public interface UserMapper {
     @SubclassMapping(source = BotUser.class, target = AppUserDTO.class)
     AppUserDTO modelToDto(AppUser appUser);
 
+    @Mapping(target = "persona", ignore = true)
     AppUserDTO physicalToDto(PhysicalUser physicalUser);
 
+    @Mapping(target = "persona", source = "persona", qualifiedByName = "personaDisplayName")
     AppUserDTO botToDto(BotUser botUser);
+
+    @Named("personaDisplayName")
+    default String personaDisplayName(Persona persona) {
+        return persona == null ? null : persona.getDisplayName();
+    }
 
     default UUID mapUuid(String id) {
         return UUID.fromString(id);

@@ -1,6 +1,7 @@
 package com.twb.pokerapp.service.game.thread.impl.texas.bettinground;
 
 import com.twb.pokerapp.domain.BettingRound;
+import com.twb.pokerapp.domain.BotUser;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.Round;
 import com.twb.pokerapp.domain.enumeration.BettingRoundState;
@@ -11,7 +12,7 @@ import com.twb.pokerapp.repository.PlayerActionRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.RoundRepository;
 import com.twb.pokerapp.service.BettingRoundService;
-import com.twb.pokerapp.service.PlayerActionService;
+import com.twb.pokerapp.service.player.PlayerActionService;
 import com.twb.pokerapp.service.UserWebsocketService;
 import com.twb.pokerapp.service.game.bot.BotActionService;
 import com.twb.pokerapp.service.game.exception.GameInterruptedException;
@@ -237,7 +238,7 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
     }
 
     private void runPlayerTurn() {
-        if (currentPlayer.getUser().isBot()) {
+        if (currentPlayer.getUser() instanceof BotUser) {
             handleBotPlayerTurn();
         } else if (isPlayerDisconnected(currentPlayer)) {
             log.debug("Player {} disconnected, auto-folding/checking...", currentPlayer.getUser().getUsername());

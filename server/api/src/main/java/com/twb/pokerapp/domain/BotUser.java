@@ -1,6 +1,8 @@
 package com.twb.pokerapp.domain;
 
+import com.twb.pokerapp.domain.enumeration.Persona;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,19 +12,15 @@ import lombok.Setter;
 @Table(name = "bot_user")
 public class BotUser extends AppUser {
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "persona_id")
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "persona")
     private Persona persona;
-
-    @Override
-    public boolean isBot() {
-        return true;
-    }
 
     @Override
     public String toString() {
         return "BotUser{" +
-                "persona=" + (persona != null ? persona.getName() : "null") +
+                "persona=" + persona +
                 "} " + super.toString();
     }
 }

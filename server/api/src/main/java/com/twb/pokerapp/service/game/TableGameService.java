@@ -6,7 +6,7 @@ import com.twb.pokerapp.repository.BettingRoundRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.TableRepository;
 import com.twb.pokerapp.repository.UserRepository;
-import com.twb.pokerapp.service.PlayerSessionService;
+import com.twb.pokerapp.service.player.PlayerSessionService;
 import com.twb.pokerapp.service.game.exception.GamePlayerErrorLogException;
 import com.twb.pokerapp.service.game.exception.GamePlayerLogException;
 import com.twb.pokerapp.service.game.thread.GameLogService;

@@ -4,23 +4,6 @@
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
 
     <changeSet author="tbigg" id="1">
-        <createTable tableName="persona">
-            <column name="id" type="uuid">
-                <constraints nullable="false"/>
-            </column>
-            <column name="name" type="text">
-                <constraints nullable="false"/>
-            </column>
-            <column name="instructions" type="text"/>
-            <column name="created_date_time" type="TIMESTAMP WITH TIME ZONE">
-                <constraints nullable="false"/>
-            </column>
-            <column name="modified_date_time" type="TIMESTAMP WITH TIME ZONE">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
-        <addPrimaryKey columnNames="id" constraintName="pk_persona" tableName="persona"/>
-
         <createTable tableName="app_user">
             <column name="id" type="uuid">
                 <constraints nullable="false"/>
@@ -65,7 +48,7 @@
             <column name="id" type="uuid">
                 <constraints nullable="false"/>
             </column>
-            <column name="persona_id" type="uuid">
+            <column name="persona" type="text">
                 <constraints nullable="false"/>
             </column>
         </createTable>
@@ -74,9 +57,6 @@
                                  baseTableName="bot_user" baseColumnNames="id"
                                  referencedTableName="app_user" referencedColumnNames="id"
                                  onDelete="CASCADE"/>
-        <addForeignKeyConstraint constraintName="fk_bot_user_persona_id"
-                                 baseTableName="bot_user" baseColumnNames="persona_id"
-                                 referencedTableName="persona" referencedColumnNames="id"/>
     </changeSet>
 
     <changeSet author="tbigg" id="2">
@@ -433,5 +413,4 @@
                                  baseTableName="transaction_history" baseColumnNames="user_id"
                                  referencedTableName="app_user" referencedColumnNames="id"/>
     </changeSet>
-
 </databaseChangeLog>
