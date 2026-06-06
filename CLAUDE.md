@@ -21,6 +21,10 @@ cd server && docker compose up --build
 
 # Run ALL tests — surefire + failsafe are SKIPPED unless this profile is active
 cd server/api && ./mvnw clean verify -P run-tests
+
+# Run a SINGLE test (still needs -P run-tests, or it is skipped)
+cd server/api && ./mvnw test -P run-tests -Dtest=HandTypeEvaluatorTest          # unit (surefire)
+cd server/api && ./mvnw verify -P run-tests -Dit.test=TexasGame3PlayerIT        # integration (failsafe)
 ```
 
 Android (from `client/android`):
