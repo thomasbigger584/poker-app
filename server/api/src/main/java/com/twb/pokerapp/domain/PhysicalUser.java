@@ -28,6 +28,11 @@ public class PhysicalUser extends AppUser {
     private List<String> groups = new ArrayList<>();
 
     @Override
+    public boolean isBot() {
+        return false;
+    }
+
+    @Override
     public String toString() {
         return "PhysicalUser{" +
                 "email='" + email + '\'' +

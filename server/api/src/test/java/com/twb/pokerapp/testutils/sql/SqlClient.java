@@ -138,6 +138,26 @@ public class SqlClient implements AutoCloseable {
         return getById(id, AppUser.class);
     }
 
+    public Optional<AppUser> getAppUserByUsername(String username) {
+        em.clear();
+        try {
+            return Optional.of(em.createQuery("SELECT u FROM AppUser u WHERE u.username = :username", AppUser.class)
+                    .setParameter("username", username)
+                    .setHint(HibernateHints.HINT_READ_ONLY, true)
+                    .getSingleResult());
+        } catch (NoResultException e) {
+            return Optional.empty();
+        }
+    }
+
+    public List<Round> getRounds() {
+        return getAll(Round.class);
+    }
+
+    public List<PlayerAction> getPlayerActions() {
+        return getAll(PlayerAction.class);
+    }
+
     public Optional<PokerTable> getPokerTable(UUID id) {
         return getById(id, PokerTable.class);
     }

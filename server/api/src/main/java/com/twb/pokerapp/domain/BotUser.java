@@ -15,6 +15,11 @@ public class BotUser extends AppUser {
     private Persona persona;
 
     @Override
+    public boolean isBot() {
+        return true;
+    }
+
+    @Override
     public String toString() {
         return "BotUser{" +
                 "persona=" + (persona != null ? persona.getName() : "null") +

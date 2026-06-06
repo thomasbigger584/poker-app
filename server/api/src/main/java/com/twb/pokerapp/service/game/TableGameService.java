@@ -91,11 +91,8 @@ public class TableGameService {
 
             var botUser = getThrowPlayerErrorLog(userRepository.findById(botUserId), "Failed to connect bot %s to table %s as bot user not found".formatted(botUserId, tableId));
 
-            // Check if bot has enough funds
-            if (buyInAmount.compareTo(botUser.getTotalFunds()) > 0) {
-                var message = "Bot user %s does not have enough total funds for Buy-In $%.2f, has $%.2f".formatted(botUserId, buyInAmount, botUser.getTotalFunds());
-                throw new GamePlayerErrorLogException(message);
-            }
+            // Unlike human players, bots are not gated on having enough total funds — they can join any
+            // table regardless of balance. The "connect only once" guard below still applies.
 
             var playerSessionOpt = playerSessionRepository.findByTableIdAndUserId(tableId, botUserId);
 

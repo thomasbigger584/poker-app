@@ -174,29 +174,36 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
             if (playerPlayerUsers.isEmpty() && connectedUsers.isEmpty()) {
                 throw new GameInterruptedException("No players connected to table so stopping");
             }
+            // Bots count towards the player count but have no websocket session, so they must be
+            // excluded from the websocket-presence reconciliation below — otherwise a table with
+            // bots would never be considered "joined" and the game could never start.
             if (playerPlayerUsers.size() < minPlayerCount) {
                 log.debug("Waiting for PlayerSessions to connect ({}/{})...", playerPlayerUsers.size(), minPlayerCount);
                 return false;
             }
-            var websocketUsersCount = connectedPlayers.size();
-            if (connectedUsers.size() < websocketUsersCount) {
-                log.debug("Waiting for Websocket Users to connect ({}/{})...", connectedUsers.size(), websocketUsersCount);
+            var humanConnectedSessions = connectedPlayers.stream()
+                    .filter(playerSession -> !playerSession.getUser().isBot())
+                    .toList();
+            var expectedWebsocketCount = humanConnectedSessions.size();
+            if (connectedUsers.size() < expectedWebsocketCount) {
+                log.debug("Waiting for Websocket Users to connect ({}/{})...", connectedUsers.size(), expectedWebsocketCount);
                 return false;
             }
-            if (connectedUsers.size() != websocketUsersCount) {
-                log.warn("Connected PlayerSessions doesnt equal the connected websocket users ({} vs {})", connectedPlayers.size(), websocketUsersCount);
+            if (connectedUsers.size() != expectedWebsocketCount) {
+                log.warn("Connected human PlayerSessions doesnt equal the connected websocket users ({} vs {})", expectedWebsocketCount, connectedUsers.size());
                 return false;
             }
             var connectedUsernames = connectedUsers.stream()
                     .map(SimpUser::getName).toList();
             var connectedPlayerNames = playerPlayerUsers.stream()
+                    .filter(playerSession -> !playerSession.getUser().isBot())
                     .map(playerSession -> playerSession.getUser().getUsername()).toList();
             var allPlayersConnected = new HashSet<>(connectedUsernames).containsAll(connectedPlayerNames);
             if (!allPlayersConnected) {
                 log.warn("Connected PlayerSessions usernames doesnt equal the connected websocket users usernames ({} vs {})", connectedPlayerNames, connectedUsernames);
                 return false;
             }
-            log.debug("Connected PlayerSessions match the connected websocket users ({} vs {})", connectedPlayerNames, connectedUsernames);
+            log.debug("Connected human PlayerSessions match the connected websocket users ({} vs {})", connectedPlayerNames, connectedUsernames);
             return true;
         });
     }

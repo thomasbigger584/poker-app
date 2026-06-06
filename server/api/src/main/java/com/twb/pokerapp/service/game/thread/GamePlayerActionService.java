@@ -33,6 +33,17 @@ public abstract class GamePlayerActionService {
 
     @Transactional(propagation = Propagation.MANDATORY)
     public void playerAction(PlayerSession playerSession, GameThread gameThread, CreatePlayerActionDTO createDto) {
+        playerAction(playerSession, gameThread, createDto, true);
+    }
+
+    /**
+     * @param enforceIdempotency whether to apply the short-lived duplicate-action guard. Human actions
+     *                           arrive over the websocket and can be double-submitted, so they enforce it.
+     *                           Server-generated bot actions are trusted and act instantly across streets,
+     *                           which would otherwise collide with the idempotency window, so they skip it.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void playerAction(PlayerSession playerSession, GameThread gameThread, CreatePlayerActionDTO createDto, boolean enforceIdempotency) {
         if (gameThread.isStopping()) {
             log.warn("Game Thread is stopping so ignoring player action {} for user {}", createDto.getAction(), playerSession.getUser().getUsername());
             return;
@@ -41,7 +52,9 @@ public abstract class GamePlayerActionService {
 
         var table = getThrowPlayerErrorLog(Optional.ofNullable(playerSession.getPokerTable()), playerSession, "Table Not Found");
         var round = getThrowPlayerLog(roundRepository.findCurrentByTableId(table.getId()), playerSession, "Round Not Found");
-        checkIdempotency(playerSession, round, createDto);
+        if (enforceIdempotency) {
+            checkIdempotency(playerSession, round, createDto);
+        }
         var bettingRound = getThrowPlayerLog(bettingRoundRepository.findCurrentByTableId(table.getId()), playerSession, "Betting Round Not Found");
 
         var playerAction = onPlayerAction(playerSession, bettingRound, gameThread, createDto);

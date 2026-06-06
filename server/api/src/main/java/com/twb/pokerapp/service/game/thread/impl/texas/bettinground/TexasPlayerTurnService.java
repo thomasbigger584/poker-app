@@ -13,6 +13,7 @@ import com.twb.pokerapp.repository.RoundRepository;
 import com.twb.pokerapp.service.BettingRoundService;
 import com.twb.pokerapp.service.PlayerActionService;
 import com.twb.pokerapp.service.UserWebsocketService;
+import com.twb.pokerapp.service.game.bot.BotActionService;
 import com.twb.pokerapp.service.game.exception.GameInterruptedException;
 import com.twb.pokerapp.service.game.exception.RoundInterruptedException;
 import com.twb.pokerapp.service.game.thread.GamePlayerTurnService;
@@ -89,6 +90,9 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
 
     @Autowired
     private UserWebsocketService userWebsocketService;
+
+    @Autowired
+    private BotActionService botActionService;
 
     private final GameThread gameThread;
     private final GameThreadParams params;
@@ -233,12 +237,30 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
     }
 
     private void runPlayerTurn() {
-        if (isPlayerDisconnected(currentPlayer)) {
+        if (currentPlayer.getUser().isBot()) {
+            handleBotPlayerTurn();
+        } else if (isPlayerDisconnected(currentPlayer)) {
             log.debug("Player {} disconnected, auto-folding/checking...", currentPlayer.getUser().getUsername());
             handleDisconnectedPlayerTurn();
         } else {
             waitPlayerTurn();
         }
+    }
+
+    /**
+     * A bot has no websocket session to wait on, so instead of blocking on the player turn latch
+     * we resolve the bot's action immediately and apply it on the game thread. Idempotency is
+     * skipped because these actions are server-generated and trusted (see {@code playerAction}).
+     */
+    private void handleBotPlayerTurn() {
+        dispatcher.send(params, messageFactory.playerTurn(currentPlayer, bettingRound, nextActions, params.getPlayerTurnWaitMs()));
+        writeTx.executeWithoutResult(status -> {
+            var playerSessionManaged = getThrowGameInterrupted(playerSessionRepository.findById(currentPlayer.getId()), "Player Session not found during bot player turn: " + currentPlayer.getId());
+            var prevPlayerActions = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId());
+            var botNextActions = playerActionService.getNextActions(playerSessionManaged, prevPlayerActions);
+            var createDto = botActionService.decideAction(playerSessionManaged, bettingRound, botNextActions);
+            texasPlayerActionService.playerAction(playerSessionManaged, gameThread, createDto, false);
+        });
     }
 
     private void handleDisconnectedPlayerTurn() {

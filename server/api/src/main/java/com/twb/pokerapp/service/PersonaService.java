@@ -9,11 +9,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class PersonaService {
+    // Bots are seeded with ample funds so buy-in accounting stays positive; their ability to join a
+    // table is not gated on funds (see TableGameService#onBotConnected).
+    private static final BigDecimal DEFAULT_BOT_FUNDS = BigDecimal.valueOf(1_000_000);
+
     private final PersonaRepository personaRepository;
     private final UserRepository userRepository;
 
@@ -41,6 +46,7 @@ public class PersonaService {
         bot.setLastName(lastName);
         bot.setEnabled(true);
         bot.setPersona(persona);
+        bot.setTotalFunds(DEFAULT_BOT_FUNDS);
         userRepository.save(bot);
     }
 }
