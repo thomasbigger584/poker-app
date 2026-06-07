@@ -12,6 +12,11 @@ fi
 REAL_USER=$SUDO_USER
 REAL_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
 
+if [ -z "$REAL_USER" ] || [ -z "$REAL_HOME" ]; then
+  echo "❌ Could not resolve the invoking user/home. Run via: sudo bash deployment.sh"
+  exit 1
+fi
+
 REPO_DIR="$REAL_HOME/poker-app"
 SERVER_DIR="$REPO_DIR/server"
 ENV_FILE="$SERVER_DIR/env/.secrets.env"
@@ -29,8 +34,8 @@ echo "🛠️ Orchestrating setup for $REAL_USER..."
 # 2. Cleanup old service (Idempotency)
 if systemctl list-unit-files | grep -q "$SERVICE_NAME"; then
     echo "♻️ Removing existing service..."
-    systemctl stop "$SERVICE_NAME" 2>/dev/null
-    systemctl disable "$SERVICE_NAME" 2>/dev/null
+    systemctl stop "$SERVICE_NAME" 2>/dev/null || true
+    systemctl disable "$SERVICE_NAME" 2>/dev/null || true
     rm -f "/etc/systemd/system/$SERVICE_NAME"
     systemctl daemon-reload
 fi
@@ -107,11 +112,11 @@ fi
 
 # Ensure persistent Tailscale volume exists
 VOLUME_NAME="tailscale_certs"
-if ! docker volume inspect "$VOLUME_NAME" >/dev/null 2>&1; then
-    echo "📦 Volume '$VOLUME_NAME' not found. Creating..."
-    docker volume create "$VOLUME_NAME"
+if ! docker volume inspect "\$VOLUME_NAME" >/dev/null 2>&1; then
+    echo "📦 Volume '\$VOLUME_NAME' not found. Creating..."
+    docker volume create "\$VOLUME_NAME"
 else
-    echo "✅ Volume '$VOLUME_NAME' already exists. Skipping creation."
+    echo "✅ Volume '\$VOLUME_NAME' already exists. Skipping creation."
 fi
 
 # Docker Deploy
