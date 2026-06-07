@@ -80,6 +80,8 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     private Double buyInAmount;
 
     private long lastRenderedTimestamp = 0L;
+    private boolean hasEverConnected = false;
+    private boolean connectionLostShown = false;
 
     public static void startActivity(Activity activity, TableDTO table, String connectionType, Double buyInAmount) {
         var intent = new Intent(activity, TexasGameActivity.class);
@@ -134,8 +136,17 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         viewModel.setTableId(table.getId());
         viewModel.messages.observe(this, this::onMessagesReceived);
         viewModel.connected.observe(this, connected -> {
-            if (Boolean.TRUE.equals(connected)) {
+            var isConnected = Boolean.TRUE.equals(connected);
+            if (isConnected) {
                 DialogHelper.dismiss(loadingSpinner);
+                if (connectionLostShown) {
+                    chatBoxAdapter.add(getString(R.string.reconnected));
+                }
+                hasEverConnected = true;
+                connectionLostShown = false;
+            } else if (hasEverConnected && !connectionLostShown) {
+                chatBoxAdapter.add(getString(R.string.connection_lost_reconnecting));
+                connectionLostShown = true;
             }
         });
         viewModel.errors.observe(this, throwable -> {

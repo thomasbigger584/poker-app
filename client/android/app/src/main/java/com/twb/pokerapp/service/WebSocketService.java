@@ -7,7 +7,9 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -56,6 +58,20 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
     AuthService authService;
 
     private UUID tableId;
+    private String connectionType;
+    private double buyInAmount;
+
+    // Reconnect-on-drop state. Runs while the foreground service is alive; stops only on an
+    // explicit leave (ACTION_STOP / destroy).
+    private static final long BASE_RECONNECT_DELAY_MS = 2000L;
+    private static final long MAX_RECONNECT_DELAY_MS = 30000L;
+    private static final int MAX_BACKOFF_SHIFT = 4;
+
+    private final Handler reconnectHandler = new Handler(Looper.getMainLooper());
+    private final Runnable reconnectRunnable = this::attemptReconnect;
+    private int reconnectAttempts = 0;
+    private boolean hasConnectedOnce = false;
+    private boolean shuttingDown = false;
 
     // ***************************************************************
     // Service Lifecycle
@@ -84,6 +100,8 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
 
     @Override
     public void onDestroy() {
+        shuttingDown = true;
+        cancelReconnect();
         webSocketClient.disconnect();
         super.onDestroy();
     }
@@ -101,13 +119,21 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
     @Override
     public void onOpened(LifecycleEvent event) {
         Log.i(TAG, "WebSocket Opened");
+        hasConnectedOnce = true;
+        reconnectAttempts = 0;
+        cancelReconnect();
         repository.setConnected(true);
     }
 
     @Override
     public void onConnectError(LifecycleEvent event) {
         Log.e(TAG, "Connect Error: " + event.getMessage());
-        if (event.getException() != null) {
+        if (hasConnectedOnce) {
+            // A drop during an established session — recover silently instead of surfacing a fatal
+            // error to the UI.
+            repository.setConnected(false);
+            scheduleReconnect();
+        } else if (event.getException() != null) {
             repository.handleError(event.getException());
         } else {
             repository.handleError(new RuntimeException(event.getMessage()));
@@ -118,11 +144,14 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
     public void onClosed(LifecycleEvent event) {
         Log.i(TAG, "WebSocket Closed");
         repository.setConnected(false);
+        scheduleReconnect();
     }
 
     @Override
     public void onFailedServerHeartbeat(LifecycleEvent event) {
         Log.e(TAG, "Heartbeat Failed");
+        repository.setConnected(false);
+        scheduleReconnect();
     }
 
     @Override
@@ -172,21 +201,32 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
 
     private void onStartAction(Intent intent) {
         var newTableId = (UUID) intent.getSerializableExtra(EXTRA_TABLE_ID);
-        var connectionType = intent.getStringExtra(EXTRA_CONNECTION_TYPE);
-        var buyInAmount = intent.getDoubleExtra(EXTRA_BUY_IN_AMOUNT, 0);
+        var newConnectionType = intent.getStringExtra(EXTRA_CONNECTION_TYPE);
+        var newBuyInAmount = intent.getDoubleExtra(EXTRA_BUY_IN_AMOUNT, 0);
 
         startForeground(NOTIFICATION_ID, createNotification());
 
-        // Activity re-entry (config change / returning to foreground) while we are still
-        // connected: keep the live session and its accumulated log untouched.
-        if (webSocketClient.isConnected() && newTableId != null && newTableId.equals(tableId)) {
-            Log.i(TAG, "Already connected to table " + newTableId + ", keeping existing session");
+        // Activity re-entry (config change / returning to foreground) into a session we are
+        // already managing for this table: keep the accumulated log untouched. If the connection
+        // dropped while we were away, reconnect promptly instead of waiting out the backoff.
+        if (!shuttingDown && newTableId != null && newTableId.equals(tableId)) {
+            Log.i(TAG, "Re-entering existing session for table " + newTableId);
+            if (!webSocketClient.isConnected()) {
+                cancelReconnect();
+                attemptReconnect();
+            }
             return;
         }
 
         this.tableId = newTableId;
+        this.connectionType = newConnectionType;
+        this.buyInAmount = newBuyInAmount;
+        this.shuttingDown = false;
+        this.hasConnectedOnce = false;
+        this.reconnectAttempts = 0;
+        cancelReconnect();
         repository.onConnectionStarted(newTableId);
-        webSocketClient.connect(newTableId, this, connectionType, buyInAmount);
+        webSocketClient.connect(newTableId, this, newConnectionType, newBuyInAmount);
     }
 
     private void onPlayerAction(Intent intent) {
@@ -217,11 +257,45 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
     }
 
     private void onStopAction() {
+        shuttingDown = true;
+        cancelReconnect();
         webSocketClient.disconnect();
         repository.clearSession();
         this.tableId = null;
         stopForeground(STOP_FOREGROUND_REMOVE);
         stopSelf();
+    }
+
+    // ***************************************************************
+    // Reconnection
+    // ***************************************************************
+
+    private void scheduleReconnect() {
+        if (shuttingDown || tableId == null) {
+            return;
+        }
+        var delay = reconnectDelayMs();
+        Log.i(TAG, "Scheduling reconnect in " + delay + "ms (attempt " + (reconnectAttempts + 1) + ")");
+        reconnectHandler.removeCallbacks(reconnectRunnable);
+        reconnectHandler.postDelayed(reconnectRunnable, delay);
+    }
+
+    private void attemptReconnect() {
+        if (shuttingDown || tableId == null) {
+            return;
+        }
+        reconnectAttempts++;
+        Log.i(TAG, "Attempting reconnect #" + reconnectAttempts + " to table " + tableId);
+        webSocketClient.reconnect(tableId, this, connectionType, buyInAmount);
+    }
+
+    private void cancelReconnect() {
+        reconnectHandler.removeCallbacks(reconnectRunnable);
+    }
+
+    private long reconnectDelayMs() {
+        var shift = Math.min(reconnectAttempts, MAX_BACKOFF_SHIFT);
+        return Math.min(MAX_RECONNECT_DELAY_MS, BASE_RECONNECT_DELAY_MS << shift);
     }
 
     private boolean isDirectAction(String action) {

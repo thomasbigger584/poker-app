@@ -82,10 +82,26 @@ public class WebSocketClient {
     }
 
     public void connect(UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount) {
-        if (stompClient != null && stompClient.isConnected()) {
+        if (isConnected()) {
             return;
         }
+        establishConnection(tableId, listener, connectionType, buyInAmount);
+    }
 
+    /**
+     * Force a fresh connection, tearing down any existing (possibly half-dead, e.g. after a
+     * server heartbeat failure where the socket never reports CLOSED) connection first. Used by
+     * the service to reconnect after a drop.
+     */
+    public void reconnect(UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount) {
+        if (stompClient != null) {
+            stompClient.disconnect();
+            stompClient = null;
+        }
+        establishConnection(tableId, listener, connectionType, buyInAmount);
+    }
+
+    private void establishConnection(UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount) {
         resetSubscriptions();
 
         compositeDisposable.add(Single.fromCallable(authService::getAccessTokenWithRefresh)

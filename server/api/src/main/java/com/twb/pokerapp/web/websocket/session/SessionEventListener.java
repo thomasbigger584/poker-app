@@ -1,7 +1,6 @@
 package com.twb.pokerapp.web.websocket.session;
 
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
-import com.twb.pokerapp.web.websocket.TableWebSocketController;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +20,7 @@ public class SessionEventListener {
     private static final String HEADER_BUYIN_AMOUNT = "X-BuyIn-Amount";
 
     private final SessionService sessionService;
-    private final TableWebSocketController webSocketController;
+    private final DisconnectGraceService disconnectGraceService;
     private final MessageDispatcher dispatcher;
 
     // *****************************************************************************************
@@ -82,6 +81,9 @@ public class SessionEventListener {
             log.warn("Session disconnect cannot disconnect player as no poker table id found on session");
             return;
         }
-        webSocketController.sendDisconnectPlayer(principal, headerAccessor, tableIdOpt.get());
+        // Defer the actual disconnect so a quick reconnect (transient drop / app backgrounded)
+        // keeps the player seated. The grace service verifies the user is genuinely gone before
+        // removing them.
+        disconnectGraceService.scheduleDisconnect(tableIdOpt.get(), principal.getName());
     }
 }

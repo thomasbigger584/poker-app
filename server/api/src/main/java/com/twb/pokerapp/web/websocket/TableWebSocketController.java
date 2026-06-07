@@ -8,6 +8,7 @@ import com.twb.pokerapp.web.websocket.message.client.CreateChatMessageDTO;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
+import com.twb.pokerapp.web.websocket.session.DisconnectGraceService;
 import com.twb.pokerapp.web.websocket.session.SessionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +52,7 @@ public class TableWebSocketController {
     private final ServerMessageFactory messageFactory;
     private final MessageDispatcher dispatcher;
     private final TableGameService tableGameService;
+    private final DisconnectGraceService disconnectGraceService;
 
     /**
      * Triggered when a user subscribes to /app/loops.{tableId}.
@@ -62,6 +64,8 @@ public class TableWebSocketController {
                                            @DestinationVariable(TABLE_ID) UUID tableId) {
 
         sessionService.putPokerTableId(headerAccessor, tableId);
+        // The user is (re)subscribing — cancel any pending grace-period disconnect from a prior drop.
+        disconnectGraceService.cancelPending(tableId, principal.getName());
         var connectionType = getConnectionType(headerAccessor);
         var buyInAmount = getBuyInAmount(headerAccessor);
 
