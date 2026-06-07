@@ -71,6 +71,11 @@ public class TableController {
         cardPairLayout.updateDetails(playerSession);
     }
 
+    public void foldPlayer(PlayerSessionDTO playerSession) {
+        var cardPairLayout = getCardPairLayout(playerSession.getPosition());
+        cardPairLayout.fold();
+    }
+
     public void disconnectOtherPlayer(String username) {
         var cardPairLayout = findCardPairLayout(username);
         if (cardPairLayout != null) {

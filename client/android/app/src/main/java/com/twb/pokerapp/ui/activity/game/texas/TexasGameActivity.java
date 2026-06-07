@@ -190,8 +190,13 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         viewModel.playerActioned.observe(this, playerActioned -> {
             dismissDialogs();
 
-            var playerSession = playerActioned.getAction().getPlayerSession();
+            var action = playerActioned.getAction();
+            var playerSession = action.getPlayerSession();
             tableController.updateDetails(playerSession);
+
+            if (ActionType.FOLD.name().equals(action.getActionType())) {
+                tableController.foldPlayer(playerSession);
+            }
 
             tableController.hidePlayerTurns();
             controlsController.hide();
