@@ -7,7 +7,6 @@ import lombok.Setter;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
@@ -35,9 +34,6 @@ public abstract class AppUser extends Auditable {
     @Column(name = "enabled")
     private boolean enabled;
 
-    @Column(name = "total_funds", precision = 19, scale = 2)
-    private BigDecimal totalFunds = BigDecimal.ZERO;
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -60,7 +56,6 @@ public abstract class AppUser extends Auditable {
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", enabled=" + enabled +
-                ", totalFunds=" + totalFunds +
                 '}';
     }
 }

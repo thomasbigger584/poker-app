@@ -73,7 +73,7 @@ public class SqlClient implements AutoCloseable {
         runInTransaction(() -> {
             for (var scenarioPlayer : params.getScenarioPlayers()) {
                 em.createQuery("""
-                            UPDATE AppUser u
+                            UPDATE PhysicalUser u
                             SET u.totalFunds = :totalFunds
                             WHERE u.username = :username
                             """)
@@ -87,7 +87,7 @@ public class SqlClient implements AutoCloseable {
     public void updateUsersTotalFunds(String username, BigDecimal totalFunds) {
         runInTransaction(() -> {
             em.createQuery("""
-                            UPDATE AppUser u
+                            UPDATE PhysicalUser u
                             SET u.totalFunds = :totalFunds
                             WHERE u.username = :username
                             """)

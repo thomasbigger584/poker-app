@@ -8,6 +8,7 @@ import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +24,9 @@ public class PhysicalUser extends AppUser {
     @Column(name = "email_verified")
     private boolean emailVerified;
 
+    @Column(name = "total_funds", precision = 19, scale = 2)
+    private BigDecimal totalFunds = BigDecimal.ZERO;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "groups", columnDefinition = "jsonb")
     private List<String> groups = new ArrayList<>();
@@ -32,6 +36,7 @@ public class PhysicalUser extends AppUser {
         return "PhysicalUser{" +
                 "email='" + email + '\'' +
                 ", emailVerified=" + emailVerified +
+                ", totalFunds=" + totalFunds +
                 ", groups=" + groups +
                 "} " + super.toString();
     }

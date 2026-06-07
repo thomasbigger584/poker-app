@@ -1,6 +1,7 @@
 package com.twb.pokerapp.service.game;
 
 import com.antkorwin.xsync.XSync;
+import com.twb.pokerapp.domain.PhysicalUser;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.domain.enumeration.SessionState;
 import com.twb.pokerapp.repository.BettingRoundRepository;
@@ -57,9 +58,9 @@ public class TableGameService {
                     }
                 }
                 var user = getThrowPlayerErrorLog(userRepository.findByUsername(username), "Failed to connect user %s to table %s as user not found".formatted(username, tableId));
-                if (connectionType == ConnectionType.PLAYER) {
-                    if (buyInAmount.compareTo(user.getTotalFunds()) > 0) {
-                        var message = "User %s does not have enough total funds for Buy-In $%.2f, has $%.2f".formatted(username, buyInAmount, user.getTotalFunds());
+                if (connectionType == ConnectionType.PLAYER && user instanceof PhysicalUser physicalUser) {
+                    if (buyInAmount.compareTo(physicalUser.getTotalFunds()) > 0) {
+                        var message = "User %s does not have enough total funds for Buy-In $%.2f, has $%.2f".formatted(username, buyInAmount, physicalUser.getTotalFunds());
                         throw new GamePlayerErrorLogException(message);
                     }
                 }
