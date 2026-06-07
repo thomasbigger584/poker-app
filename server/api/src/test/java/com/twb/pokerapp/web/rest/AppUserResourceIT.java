@@ -79,9 +79,9 @@ class AppUserResourceIT {
             assertNotNull(bot.getPersona());
         }
         var rock = Arrays.stream(bots)
-                .filter(bot -> "stone_cold_steve".equals(bot.getUsername()))
+                .filter(bot -> "stone_cold".equals(bot.getUsername()))
                 .findFirst();
-        assertTrue(rock.isPresent(), "Expected seeded bot 'stone_cold_steve' to be present");
+        assertTrue(rock.isPresent(), "Expected seeded bot 'stone_cold' to be present");
         assertEquals("The Rock", rock.get().getPersona());
     }
 

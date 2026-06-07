@@ -45,7 +45,7 @@ class TexasBotGameIT {
 
     private static final boolean FIXED_SCENARIO = false;
     private static final String HUMAN_USERNAME = "user1";
-    private static final List<String> BOT_USERNAMES = List.of("stone_cold_steve", "sticky_stan");
+    private static final List<String> BOT_USERNAMES = List.of("stone_cold", "sticky_stan");
     private static final BigDecimal BUY_IN = BigDecimal.valueOf(5_000);
     private static final long BOT_CONNECT_STAGGER_MS = 500L;
     private static final int GAME_TIMEOUT_SECS = 180;
