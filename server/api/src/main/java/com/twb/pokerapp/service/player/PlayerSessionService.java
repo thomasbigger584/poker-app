@@ -73,7 +73,7 @@ public class PlayerSessionService {
         if (session.getSessionState() == SessionState.DISCONNECTED) {
             return;
         }
-
+        log.info("Disconnecting user {}", session.getUser().getUsername());
         var sessionFundsRemaining = session.getFunds();
         if (session.getConnectionType() == ConnectionType.PLAYER
                 && sessionFundsRemaining != null) {

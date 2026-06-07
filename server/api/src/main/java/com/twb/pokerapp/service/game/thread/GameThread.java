@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
 
 import static com.twb.pokerapp.repository.RepositoryUtil.getThrowGameInterrupted;
 import static com.twb.pokerapp.util.TransactionUtil.afterCommit;
@@ -166,10 +167,13 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
         var minPlayerCount = table.getMinPlayers();
         return readTx.execute(status -> {
             var connectedPlayers = playerSessionRepository.findConnectedByTableId(table.getId());
+            if (connectedPlayers.stream()
+                    .allMatch(playerSession -> playerSession.getUser() instanceof BotUser)) {
+                throw new GameInterruptedException("Only bots connected to table so stopping");
+            }
             var playerPlayerUsers = connectedPlayers.stream()
                     .filter(playerSession -> playerSession.getConnectionType() == ConnectionType.PLAYER)
                     .filter(playerSession -> playerSession.getFunds() != null && playerSession.getFunds().compareTo(BigDecimal.ZERO) > 0)
-                    .filter(playerSession -> !(playerSession.getUser() instanceof BotUser))
                     .toList();
             var connectedUsers = userWebsocketService.getConnectedUsers(table);
             if (playerPlayerUsers.isEmpty() && connectedUsers.isEmpty()) {
@@ -354,6 +358,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
 
     @CallerThread
     public void stopGame() {
+        log.info("Stopping game for table {}...", table.getId());
         writeTx.executeWithoutResult(status ->
                 playerSessionRepository.findConnectedPlayersByTableId(table.getId())
                         .forEach(playerSession -> playerSessionService.disconnectUser(playerSession)));
