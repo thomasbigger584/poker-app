@@ -171,14 +171,22 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
     }
 
     private void onStartAction(Intent intent) {
-        this.tableId = (UUID) intent.getSerializableExtra(EXTRA_TABLE_ID);
+        var newTableId = (UUID) intent.getSerializableExtra(EXTRA_TABLE_ID);
         var connectionType = intent.getStringExtra(EXTRA_CONNECTION_TYPE);
         var buyInAmount = intent.getDoubleExtra(EXTRA_BUY_IN_AMOUNT, 0);
 
         startForeground(NOTIFICATION_ID, createNotification());
-        repository.setTableId(tableId);
 
-        webSocketClient.connect(tableId, this, connectionType, buyInAmount);
+        // Activity re-entry (config change / returning to foreground) while we are still
+        // connected: keep the live session and its accumulated log untouched.
+        if (webSocketClient.isConnected() && newTableId != null && newTableId.equals(tableId)) {
+            Log.i(TAG, "Already connected to table " + newTableId + ", keeping existing session");
+            return;
+        }
+
+        this.tableId = newTableId;
+        repository.onConnectionStarted(newTableId);
+        webSocketClient.connect(newTableId, this, connectionType, buyInAmount);
     }
 
     private void onPlayerAction(Intent intent) {
@@ -209,8 +217,10 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
     }
 
     private void onStopAction() {
-        repository.setTableId(null);
-        stopForeground(true);
+        webSocketClient.disconnect();
+        repository.clearSession();
+        this.tableId = null;
+        stopForeground(STOP_FOREGROUND_REMOVE);
         stopSelf();
     }
 
@@ -227,8 +237,9 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
                 PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
 
         var contentText = "Betting Round: " + turn.getBettingRound().getType();
-        if (turn.getAmountToCall() > 0) {
-            contentText += " - Call: $" + turn.getAmountToCall();
+        var amountToCall = turn.getAmountToCall();
+        if (amountToCall != null && amountToCall > 0) {
+            contentText += " - Call: $" + amountToCall;
         }
 
         var builder = new NotificationCompat.Builder(this, CHANNEL_ID)

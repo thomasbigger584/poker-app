@@ -54,7 +54,9 @@ public class TexasGameViewModel extends ViewModel implements WebSocketClient.Sen
 
     public void setTableId(UUID tableId) {
         this.tableId = tableId;
-        repository.setTableId(tableId);
+        // Catch up from the persisted log when first observing. The connection lifecycle
+        // (and any stale-data clearing) is owned by WebSocketService.
+        repository.loadFromDatabase(tableId);
     }
 
     public void sendChatMessage(String message) {

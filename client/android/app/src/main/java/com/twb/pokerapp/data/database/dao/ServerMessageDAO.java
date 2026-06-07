@@ -25,4 +25,7 @@ public interface ServerMessageDAO {
             ORDER BY timestamp ASC
             """)
     Single<List<ServerMessageEntity>> getMessagesByTableId(UUID tableId);
+
+    @Query("DELETE FROM server_message WHERE tableId = :tableId")
+    void deleteByTableId(UUID tableId);
 }

@@ -361,7 +361,6 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
 
     @Override
     protected void onAuthorized() {
-        viewModel.setTableId(table.getId());
         var serviceIntent = new Intent(this, WebSocketService.class);
         serviceIntent.setAction(WebSocketService.ACTION_START);
         serviceIntent.putExtra(WebSocketService.EXTRA_TABLE_ID, table.getId());
@@ -382,9 +381,14 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
 
     @Override
     protected void onDestroy() {
-        var serviceIntent = new Intent(this, WebSocketService.class);
-        serviceIntent.setAction(WebSocketService.ACTION_STOP);
-        startService(serviceIntent);
+        // Only tear the background connection down when the user is genuinely leaving the table.
+        // A non-finishing destroy (config change, or the OS reclaiming the activity while the app
+        // is backgrounded) must keep the foreground service alive so we keep receiving updates.
+        if (isFinishing()) {
+            var serviceIntent = new Intent(this, WebSocketService.class);
+            serviceIntent.setAction(WebSocketService.ACTION_STOP);
+            startService(serviceIntent);
+        }
         super.onDestroy();
     }
 

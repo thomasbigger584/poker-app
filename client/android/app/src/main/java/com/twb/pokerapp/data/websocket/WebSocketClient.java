@@ -77,6 +77,10 @@ public class WebSocketClient {
     // WebSocket Lifecycle
     // ***************************************************************
 
+    public boolean isConnected() {
+        return stompClient != null && stompClient.isConnected();
+    }
+
     public void connect(UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount) {
         if (stompClient != null && stompClient.isConnected()) {
             return;
@@ -248,6 +252,10 @@ public class WebSocketClient {
     // ----------------------------------------------------------------
 
     private void sendMessage(String destination, String message, SendListener listener) {
+        if (stompClient == null || compositeDisposable == null) {
+            listener.onSendFailure(new IllegalStateException("WebSocket is not connected"));
+            return;
+        }
         compositeDisposable.add(stompClient.send(destination, message)
                 .compose(applySchedulers())
                 .subscribe(listener::onSendSuccess, listener::onSendFailure));
