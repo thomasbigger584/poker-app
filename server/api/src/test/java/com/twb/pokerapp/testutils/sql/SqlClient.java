@@ -157,6 +157,10 @@ public class SqlClient implements AutoCloseable {
         return getAll(PlayerAction.class);
     }
 
+    public List<Hand> getHands() {
+        return getAll(Hand.class);
+    }
+
     public Optional<PokerTable> getPokerTable(UUID id) {
         return getById(id, PokerTable.class);
     }

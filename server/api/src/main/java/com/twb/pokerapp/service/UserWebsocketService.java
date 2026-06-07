@@ -29,7 +29,7 @@ public class UserWebsocketService {
     private boolean isUserConnected(PokerTable table, PlayerSession session) {
         var user = session.getUser();
         if (user instanceof BotUser) {
-            return false;
+            return true;
         }
         var username = user.getUsername();
         var websocketUser = userRegistry.getUser(username);

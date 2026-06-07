@@ -71,6 +71,16 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
     int countConnected(@Param("connectionType") ConnectionType connectionType);
 
     @Query("""
+            SELECT count(s)
+            FROM PlayerSession s
+            WHERE s.pokerTable.id = :tableId
+            AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
+            AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
+            AND TYPE(s.user) = com.twb.pokerapp.domain.PhysicalUser
+            """)
+    int countConnectedPhysicalPlayersByTableId(@Param("tableId") UUID tableId);
+
+    @Query("""
             SELECT s
             FROM PlayerSession s
             WHERE s.pokerTable.id = :tableId

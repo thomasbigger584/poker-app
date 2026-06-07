@@ -2,6 +2,7 @@ package com.twb.pokerapp.service.game;
 
 import com.antkorwin.xsync.XSync;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
+import com.twb.pokerapp.domain.enumeration.SessionState;
 import com.twb.pokerapp.repository.BettingRoundRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.TableRepository;
@@ -63,7 +64,12 @@ public class TableGameService {
                     }
                 }
                 var playerSessionOpt = playerSessionRepository.findByTableIdAndUsername(tableId, username);
-                if (playerSessionOpt.isEmpty()) {
+                // Connect when there is no live session yet. This covers both first-time subscribers
+                // and players/listeners reconnecting on a row left behind (DISCONNECTED) by a previous
+                // session, which would otherwise be skipped and never restart the game thread.
+                var alreadyConnected = playerSessionOpt.isPresent()
+                        && playerSessionOpt.get().getSessionState() == SessionState.CONNECTED;
+                if (!alreadyConnected) {
                     if (connectionType == ConnectionType.PLAYER) {
                         threadManager.createIfNotExist(table);
                     }
@@ -140,40 +146,47 @@ public class TableGameService {
     }
 
     public void onUserDisconnected(UUID tableId, String username) {
-        mutex.execute(tableId, () -> writeTx.executeWithoutResult(status -> {
-            var tableOpt = tableRepository.findById(tableId);
-            if (tableOpt.isEmpty()) {
-                log.warn("No table found for table: {}", tableId);
-                return;
-            }
-            var table = tableOpt.get();
-            var playerSessionOpt = playerSessionRepository.findByTableIdAndUsername(tableId, username);
-            if (playerSessionOpt.isEmpty()) {
-                log.warn("No session found for user {} on table {}", username, tableId);
-                return;
-            }
-            var playerSession = playerSessionOpt.get();
+        mutex.execute(tableId, () -> {
+            var stopThread = writeTx.execute(status -> {
+                var tableOpt = tableRepository.findById(tableId);
+                if (tableOpt.isEmpty()) {
+                    log.warn("No table found for table: {}", tableId);
+                    return false;
+                }
+                var table = tableOpt.get();
+                var playerSessionOpt = playerSessionRepository.findByTableIdAndUsername(tableId, username);
+                if (playerSessionOpt.isEmpty()) {
+                    log.warn("No session found for user {} on table {}", username, tableId);
+                    return false;
+                }
+                var playerSession = playerSessionOpt.get();
+                var wasPlayer = playerSession.getConnectionType() == ConnectionType.PLAYER;
 
-            playerSessionService.disconnectUser(playerSession);
+                playerSessionService.disconnectUser(playerSession);
 
-            afterCommit(() -> dispatcher.send(tableId, messageFactory.playerDisconnected(username)));
+                afterCommit(() -> dispatcher.send(tableId, messageFactory.playerDisconnected(username)));
 
-            var threadOpt = threadManager.getIfExists(tableId);
-            if (threadOpt.isEmpty()) {
-                log.debug("No game thread for table ID: {}", tableId);
-                return;
-            }
-            var gameThread = threadOpt.get();
-            if (playerSession.getConnectionType() == ConnectionType.PLAYER) {
-                var playerTurnLatch = gameThread.getPlayerTurnLatch();
-                if (playerTurnLatch != null && username.equals(playerTurnLatch.playerSession().getUser().getUsername())) {
-                    var bettingRoundOpt = bettingRoundRepository.findCurrentByTableId(tableId);
-                    bettingRoundOpt.ifPresent(bettingRound -> {
-                        table.getGameType().getPlayerActionService(context)
-                                .onExecuteAutoAction(playerSession, bettingRound, gameThread);
+                if (wasPlayer) {
+                    if (playerSessionRepository.countConnectedPhysicalPlayersByTableId(tableId) == 0) {
+                        return true;
+                    }
+                    threadManager.getIfExists(tableId).ifPresent(gameThread -> {
+                        var playerTurnLatch = gameThread.getPlayerTurnLatch();
+                        if (playerTurnLatch != null && username.equals(playerTurnLatch.playerSession().getUser().getUsername())) {
+                            bettingRoundRepository.findCurrentByTableId(tableId).ifPresent(bettingRound ->
+                                    table.getGameType().getPlayerActionService(context)
+                                            .onExecuteAutoAction(playerSession, bettingRound, gameThread));
+                        }
                     });
                 }
+                return false;
+            });
+            if (Boolean.TRUE.equals(stopThread)) {
+                threadManager.getIfExists(tableId).ifPresent(gameThread -> {
+                    log.info("Last physical player left table {}, stopping game thread", tableId);
+                    gameThread.stopGame();
+                });
             }
-        }));
+        });
     }
 }

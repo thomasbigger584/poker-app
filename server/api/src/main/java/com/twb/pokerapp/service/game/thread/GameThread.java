@@ -94,8 +94,14 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
         } catch (Exception e) {
             log.error("Unexpected error in GameThread for table {}: {}", table.getId(), e.getMessage(), e);
         } finally {
-            finishRound();
-            finishGame();
+            // Run teardown, then count down the end latch last so a caller blocked in stopGame()
+            // only returns once the thread has fully cleaned up (sessions disconnected, deregistered).
+            try {
+                finishRound();
+                finishGame();
+            } finally {
+                params.getEndLatch().countDown();
+            }
         }
     }
 
@@ -167,7 +173,11 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
         var minPlayerCount = table.getMinPlayers();
         return readTx.execute(status -> {
             var connectedPlayers = playerSessionRepository.findConnectedByTableId(table.getId());
-            if (connectedPlayers.stream()
+            // Only treat "all bots" as a stop condition when someone is actually connected. An empty
+            // list matches allMatch() vacuously and would otherwise kill a thread that has just been
+            // started, before its first player session has committed. Tearing the game down when the
+            // last physical player leaves is owned by the disconnect path, not this loop.
+            if (!connectedPlayers.isEmpty() && connectedPlayers.stream()
                     .allMatch(playerSession -> playerSession.getUser() instanceof BotUser)) {
                 throw new GameInterruptedException("Only bots connected to table so stopping");
             }
@@ -177,7 +187,9 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                     .toList();
             var connectedUsers = userWebsocketService.getConnectedUsers(table);
             if (playerPlayerUsers.isEmpty() && connectedUsers.isEmpty()) {
-                throw new GameInterruptedException("No players connected to table so stopping");
+                // Nobody is here yet (or only listeners). Keep waiting rather than tearing down — this
+                // covers the start-up window before the first session commits.
+                return false;
             }
             if (playerPlayerUsers.size() < minPlayerCount) {
                 log.debug("Waiting for PlayerSessions to connect ({}/{})...", playerPlayerUsers.size(), minPlayerCount);
@@ -284,7 +296,13 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
             if (!userWebsocketService.getConnectedUsers(table).isEmpty()) {
                 dispatcher.send(table, messageFactory.gameFinished());
             }
-            threadManager.delete(table.getId());
+            // Whatever path stopped the game, leave the DB clean: disconnect every remaining session
+            // so no stale CONNECTED rows (especially bots) outlive the thread. disconnectUser is
+            // idempotent, so already-disconnected sessions are skipped.
+            writeTx.executeWithoutResult(status ->
+                    playerSessionRepository.findConnectedByTableId(table.getId())
+                            .forEach(playerSessionService::disconnectUser));
+            threadManager.delete(table.getId(), this);
         }
     }
 
@@ -341,10 +359,6 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
 
     private void checkGameInterrupted() {
         if (interruptGame.get() || Thread.interrupted()) {
-            var endLatch = params.getEndLatch();
-            while (endLatch.getCount() > 0) {
-                endLatch.countDown();
-            }
             throw new GameInterruptedException("Game is interrupted");
         }
     }
@@ -359,9 +373,9 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     @CallerThread
     public void stopGame() {
         log.info("Stopping game for table {}...", table.getId());
-        writeTx.executeWithoutResult(status ->
-                playerSessionRepository.findConnectedPlayersByTableId(table.getId())
-                        .forEach(playerSession -> playerSessionService.disconnectUser(playerSession)));
+        // Just request the stop and wait for the thread to tear itself down. The actual cleanup
+        // (disconnecting sessions, deregistering the thread) is done once, by finishGame() on the
+        // game thread, so it runs on every exit path — not only when stopGame() is the trigger.
         interruptGame.set(true);
         try {
             var terminated = params.getEndLatch().await(GAME_STOP_TIMEOUT_IN_SECS, TimeUnit.SECONDS);

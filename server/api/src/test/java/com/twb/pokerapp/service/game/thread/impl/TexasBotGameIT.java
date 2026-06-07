@@ -1,6 +1,8 @@
 package com.twb.pokerapp.service.game.thread.impl;
 
 import com.twb.pokerapp.domain.AppUser;
+import com.twb.pokerapp.domain.Card;
+import com.twb.pokerapp.domain.enumeration.CardType;
 import com.twb.pokerapp.domain.enumeration.GameType;
 import com.twb.pokerapp.domain.enumeration.RoundState;
 import com.twb.pokerapp.dto.table.CreateTableDTO;
@@ -21,8 +23,10 @@ import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -137,10 +141,29 @@ class TexasBotGameIT {
 
         // The bots were seated as players on the table.
         var connectedBotIds = bots.stream().map(AppUser::getId).toList();
-        var seatedBots = sqlClient.getPlayerSessions().stream()
+        var seatedBotSessions = sqlClient.getPlayerSessions().stream()
                 .filter(session -> session.getUser() != null && connectedBotIds.contains(session.getUser().getId()))
-                .count();
-        assertEquals(bots.size(), seatedBots, "Expected both bots to have been seated at the table");
+                .toList();
+        assertEquals(bots.size(), seatedBotSessions.size(), "Expected both bots to have been seated at the table");
+
+        // Each seated bot must have been dealt its two hole cards (PLAYER_CARD_1 + PLAYER_CARD_2),
+        // proving the bots were dealt into the hand rather than merely seated.
+        var hands = sqlClient.getHands();
+        for (var botSession : seatedBotSessions) {
+            var botUsername = botSession.getUser().getUsername();
+            var botHands = hands.stream()
+                    .filter(hand -> hand.getPlayerSession() != null
+                            && botSession.getId().equals(hand.getPlayerSession().getId()))
+                    .toList();
+            assertFalse(botHands.isEmpty(), "Expected bot " + botUsername + " to have been dealt a hand");
+            for (var hand : botHands) {
+                var holeCardTypes = hand.getCards().stream()
+                        .map(Card::getCardType)
+                        .collect(Collectors.toSet());
+                assertEquals(Set.of(CardType.PLAYER_CARD_1, CardType.PLAYER_CARD_2), holeCardTypes,
+                        "Expected bot " + botUsername + " to be dealt exactly two hole cards");
+            }
+        }
     }
 
     // *****************************************************************************************
