@@ -2,6 +2,7 @@ package com.twb.pokerapp.web.rest;
 
 import com.twb.pokerapp.dto.appuser.AppUserDTO;
 import com.twb.pokerapp.dto.appuser.UserAmountDTO;
+import com.twb.pokerapp.service.user.BotUserService;
 import com.twb.pokerapp.service.user.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AppUserResource {
     private final UserService service;
+    private final BotUserService botUserService;
 
     @GetMapping("/current")
     public ResponseEntity<AppUserDTO> getCurrent(Principal principal) {
@@ -26,7 +28,7 @@ public class AppUserResource {
 
     @GetMapping("/bots")
     public ResponseEntity<List<AppUserDTO>> getBots() {
-        return ResponseEntity.ok(service.listBots());
+        return ResponseEntity.ok(botUserService.listBots());
     }
 
     @PostMapping("/reset-funds")

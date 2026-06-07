@@ -65,9 +65,6 @@ public class TableGameService {
                     }
                 }
                 var playerSessionOpt = playerSessionRepository.findByTableIdAndUsername(tableId, username);
-                // Connect when there is no live session yet. This covers both first-time subscribers
-                // and players/listeners reconnecting on a row left behind (DISCONNECTED) by a previous
-                // session, which would otherwise be skipped and never restart the game thread.
                 var alreadyConnected = playerSessionOpt.isPresent()
                         && playerSessionOpt.get().getSessionState() == SessionState.CONNECTED;
                 if (!alreadyConnected) {
@@ -89,20 +86,12 @@ public class TableGameService {
     public void onBotConnected(UUID tableId, UUID botUserId, BigDecimal buyInAmount) {
         mutex.execute(tableId, () -> writeTx.executeWithoutResult(status -> {
             var table = getThrowPlayerErrorLog(tableRepository.findById(tableId), "No table found for Table ID: " + tableId);
-
-            // Validate buy-in amount
             if (buyInAmount.compareTo(table.getMinBuyin()) < 0 || buyInAmount.compareTo(table.getMaxBuyin()) > 0) {
                 var message = "Buy-In amount must be between $%.2f and $%.2f for table %s".formatted(table.getMinBuyin(), table.getMaxBuyin(), tableId);
                 throw new GamePlayerErrorLogException(message);
             }
-
             var botUser = getThrowPlayerErrorLog(userRepository.findById(botUserId), "Failed to connect bot %s to table %s as bot user not found".formatted(botUserId, tableId));
-
-            // Unlike human players, bots are not gated on having enough total funds — they can join any
-            // table regardless of balance. The "connect only once" guard below still applies.
-
             var playerSessionOpt = playerSessionRepository.findByTableIdAndUserId(tableId, botUserId);
-
             if (playerSessionOpt.isEmpty()) {
                 // Check if a game thread exists before connecting the bot
                 var ignored = getThrowPlayerErrorLog(threadManager.getIfExists(tableId), "No game thread exists for table %s. Cannot connect bot.".formatted(tableId));

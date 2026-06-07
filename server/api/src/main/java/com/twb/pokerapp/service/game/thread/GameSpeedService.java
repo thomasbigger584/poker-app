@@ -30,19 +30,6 @@ public class GameSpeedService {
         return getFinalDelay(speedMultiplier, playerTurnWaitMs, MIN_PLAYER_TURN_WAIT);
     }
 
-    /**
-     * Sleeps for whatever remains of a short, randomised "thinking" budget after the caller has
-     * already spent time computing the bot's action. The base budget of {@value #MIN_BOT_THINK_WAIT}ms
-     * to {@value #MAX_BOT_THINK_WAIT}ms is scaled down by the table speed multiplier so bots respond
-     * proportionally faster on faster tables, and is then capped at {@value #MAX_BOT_THINK_TURN_FRACTION}
-     * of the player-turn limit ({@link #getPlayerTurnWait}) so the bot always acts within its turn and
-     * never hits the timeout. If the processing already took longer than the budget, it does not sleep
-     * at all.
-     *
-     * @param bettingRound     the current betting round, used to read the table speed multiplier
-     * @param playerTurnWaitMs the base (un-scaled) player turn wait, in milliseconds
-     * @param turnStartMillis  the {@link System#currentTimeMillis()} captured when the bot's turn began
-     */
     public void sleepBotThinkingTime(BettingRound bettingRound, long playerTurnWaitMs, long turnStartMillis) {
         var speedMultiplier = bettingRound.getRound().getPokerTable().getSpeedMultiplier();
         var multiplier = Optional.ofNullable(speedMultiplier).orElse(1d);

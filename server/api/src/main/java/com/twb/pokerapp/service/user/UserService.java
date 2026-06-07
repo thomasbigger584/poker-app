@@ -25,16 +25,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository repository;
-    private final BotUserRepository botUserRepository;
     private final UserMapper mapper;
     private final TransactionHistoryService transactionHistoryService;
-
-    @Transactional(readOnly = true)
-    public List<AppUserDTO> listBots() {
-        return botUserRepository.findAll().stream()
-                .map(mapper::modelToDto)
-                .toList();
-    }
 
     public AppUser create(UserRepresentation representation) {
         var physicalUser = mapper.representationToModel(representation);
