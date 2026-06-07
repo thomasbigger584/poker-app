@@ -30,15 +30,6 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Validates that bot players can connect to a running game and play a hand to completion.
- * <p>
- * A single human player (driven by {@link OptimisticTurnHandler}, so it bets/calls) starts the
- * game; two seeded bots then join the running table via {@code sendBotConnected}. The table's
- * min-player count is set so the round cannot start — and the betting rounds cannot complete —
- * unless the bots both join and take their own turns. Reaching a FINISHED round therefore proves
- * the bots fully played the hand.
- */
 @Slf4j
 class TexasBotGameIT {
     private static final TestEnvironment env = new TestEnvironment();

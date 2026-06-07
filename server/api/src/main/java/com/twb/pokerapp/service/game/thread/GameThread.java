@@ -89,8 +89,6 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
         } catch (Exception e) {
             log.error("Unexpected error in GameThread for table {}: {}", table.getId(), e.getMessage(), e);
         } finally {
-            // Run teardown, then count down the end latch last so a caller blocked in stopGame()
-            // only returns once the thread has fully cleaned up (sessions disconnected, deregistered).
             try {
                 finishRound();
                 finishGame();
@@ -178,6 +176,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                     .toList();
             var connectedUsers = userWebsocketService.getConnectedUsers(table);
             if (playerPlayerUsers.isEmpty() && connectedUsers.isEmpty()) {
+                log.debug("Waiting for PlayerSessions to connect...");
                 return false;
             }
             if (playerPlayerUsers.size() < minPlayerCount) {

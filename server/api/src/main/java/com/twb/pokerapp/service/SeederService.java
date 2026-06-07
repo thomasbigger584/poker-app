@@ -6,10 +6,12 @@ import com.twb.pokerapp.service.table.TableService;
 import com.twb.pokerapp.service.user.BotUserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class SeederService {
@@ -29,5 +31,9 @@ public class SeederService {
         roundService.reset();
         bettingRoundService.reset();
         tableService.createTestTables();
+
+        // Log is used to notify the tests that the container is up
+        // i.e. seeding is done
+        log.info("Application seeding completed");
     }
 }

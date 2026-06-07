@@ -15,8 +15,6 @@ public class GameSpeedService {
     private static final long MIN_PLAYER_TURN_WAIT = 5000;
     private static final long MIN_BOT_THINK_WAIT = 2000;
     private static final long MAX_BOT_THINK_WAIT = 4000;
-    // Largest share of the player-turn limit a bot's total turn (processing + thinking) may consume,
-    // leaving headroom so it always acts before the turn times out.
     private static final double MAX_BOT_THINK_TURN_FRACTION = 0.8;
 
     public void sleep(PokerTable table, long delay) {
@@ -32,7 +30,7 @@ public class GameSpeedService {
 
     public void sleepBotThinkingTime(BettingRound bettingRound, long playerTurnWaitMs, long turnStartMillis) {
         var speedMultiplier = bettingRound.getRound().getPokerTable().getSpeedMultiplier();
-        var multiplier = Optional.ofNullable(speedMultiplier).orElse(1d);
+        double multiplier = Optional.ofNullable(speedMultiplier).orElse(1d);
 
         // Faster tables (higher multiplier) shrink the think budget so bots keep pace with the table.
         var minThink = (long) (MIN_BOT_THINK_WAIT / multiplier);

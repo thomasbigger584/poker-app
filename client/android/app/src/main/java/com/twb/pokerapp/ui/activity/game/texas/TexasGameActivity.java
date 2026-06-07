@@ -401,10 +401,6 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         });
     }
 
-    /**
-     * Drops any bot already seated at the table so the user can only pick bots that are not
-     * currently playing, matching seated players by username.
-     */
     private List<AppUserDTO> filterSeatedBots(List<AppUserDTO> bots) {
         var availableBots = new ArrayList<AppUserDTO>();
         if (bots == null) {
@@ -437,10 +433,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         builder.show();
     }
 
-    /**
-     * Picks a buy-in for the bot that is guaranteed valid for this table: the current user's own
-     * buy-in when it falls within the table range, otherwise clamped to the table's min/max.
-     */
+    // todo: this could potentially be moved to server as a default if provided null
     private double getBotBuyInAmount() {
         var min = table.getMinBuyin();
         var max = table.getMaxBuyin();

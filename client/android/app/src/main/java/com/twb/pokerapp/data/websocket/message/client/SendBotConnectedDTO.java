@@ -2,10 +2,6 @@ package com.twb.pokerapp.data.websocket.message.client;
 
 import java.util.UUID;
 
-/**
- * Mirror of the server-side {@code com.twb.pokerapp.web.websocket.message.client.CreateBotConnectionDTO}.
- * Sent to {@code /app/pokerTable.{tableId}.sendBotConnected} to connect a bot player to the table.
- */
 public class SendBotConnectedDTO {
     private UUID botUserId;
     private Double buyInAmount;

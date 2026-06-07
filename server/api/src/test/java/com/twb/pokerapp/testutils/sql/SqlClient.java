@@ -16,10 +16,7 @@ import java.util.UUID;
 
 public class SqlClient implements AutoCloseable {
     private static final String PERSISTENCE_UNIT_NAME = "poker-app-test";
-
-    private static final List<Class<?>> SKIP_TRUNCATE_ENTITIES = List.of(
-            AppUser.class
-    );
+    private static final List<Class<?>> SKIP_TRUNCATE_ENTITIES = List.of(AppUser.class);
 
     private final EntityManagerFactory emf;
     private final EntityManager em;

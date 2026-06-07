@@ -3,10 +3,6 @@ package com.twb.pokerapp.domain.enumeration;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Fixed bot play styles. The {@code instructions} carry the free-text play-style guidance that will
- * eventually drive an LLM-backed {@link com.twb.pokerapp.service.game.bot.BotActionService}.
- */
 @Getter
 @RequiredArgsConstructor
 public enum Persona {
