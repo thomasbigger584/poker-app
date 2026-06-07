@@ -2,7 +2,7 @@ package com.twb.pokerapp.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.twb.pokerapp.configuration.ProfileConfiguration;
-import com.twb.pokerapp.service.UserService;
+import com.twb.pokerapp.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.events.Event;
 import org.keycloak.events.admin.AdminEvent;

@@ -12,9 +12,16 @@ fi
 REAL_USER=$SUDO_USER
 REAL_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
 
+if [ -z "$REAL_USER" ] || [ -z "$REAL_HOME" ]; then
+  echo "❌ Could not resolve the invoking user/home. Run via: sudo bash deployment.sh"
+  exit 1
+fi
+
 REPO_DIR="$REAL_HOME/poker-app"
 SERVER_DIR="$REPO_DIR/server"
 ENV_FILE="$SERVER_DIR/env/.secrets.env"
+CONFIG_FILE="$SERVER_DIR/raspberrypi/deploy.config"
+DB_VOLUME="poker-app_postgres_data"
 TS_REGEX="^poker-app"
 TS_TAILNET="dinosaur-emperor.ts.net"
 WORKER_SCRIPT="$REAL_HOME/startup-task.sh"
@@ -27,8 +34,8 @@ echo "🛠️ Orchestrating setup for $REAL_USER..."
 # 2. Cleanup old service (Idempotency)
 if systemctl list-unit-files | grep -q "$SERVICE_NAME"; then
     echo "♻️ Removing existing service..."
-    systemctl stop "$SERVICE_NAME" 2>/dev/null
-    systemctl disable "$SERVICE_NAME" 2>/dev/null
+    systemctl stop "$SERVICE_NAME" 2>/dev/null || true
+    systemctl disable "$SERVICE_NAME" 2>/dev/null || true
     rm -f "/etc/systemd/system/$SERVICE_NAME"
     systemctl daemon-reload
 fi
@@ -105,17 +112,29 @@ fi
 
 # Ensure persistent Tailscale volume exists
 VOLUME_NAME="tailscale_certs"
-if ! docker volume inspect "$VOLUME_NAME" >/dev/null 2>&1; then
-    echo "📦 Volume '$VOLUME_NAME' not found. Creating..."
-    docker volume create "$VOLUME_NAME"
+if ! docker volume inspect "\$VOLUME_NAME" >/dev/null 2>&1; then
+    echo "📦 Volume '\$VOLUME_NAME' not found. Creating..."
+    docker volume create "\$VOLUME_NAME"
 else
-    echo "✅ Volume '$VOLUME_NAME' already exists. Skipping creation."
+    echo "✅ Volume '\$VOLUME_NAME' already exists. Skipping creation."
 fi
 
 # Docker Deploy
 cd "$SERVER_DIR" || exit 1
 set +e
 docker compose down --remove-orphans
+
+# Optionally wipe the Postgres data volume before starting (controlled by deploy.config)
+WIPE_DB_DATA=0
+if [ -f "$CONFIG_FILE" ]; then
+    source "$CONFIG_FILE"
+fi
+if [ "\$WIPE_DB_DATA" == "1" ]; then
+    echo "🧹 WIPE_DB_DATA=1 -> wiping Postgres volume '$DB_VOLUME' for a fresh database..."
+    docker volume rm "$DB_VOLUME" 2>/dev/null || true
+else
+    echo "💾 WIPE_DB_DATA=\$WIPE_DB_DATA -> keeping existing Postgres volume '$DB_VOLUME'."
+fi
 
 if [ "\$CURRENT_HASH" == "\$DEPLOYED_HASH" ]; then
     echo "⏩ No code changes detected (\$CURRENT_HASH). Skipping build..."

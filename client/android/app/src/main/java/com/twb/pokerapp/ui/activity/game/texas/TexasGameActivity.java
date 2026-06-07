@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.auth.AuthService;
+import com.twb.pokerapp.data.model.dto.appuser.AppUserDTO;
 import com.twb.pokerapp.data.model.dto.table.TableDTO;
 import com.twb.pokerapp.data.model.enumeration.ActionType;
 import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
@@ -31,6 +32,7 @@ import com.twb.pokerapp.data.websocket.message.server.payload.DealerDeterminedDT
 import com.twb.pokerapp.data.websocket.message.server.payload.ErrorMessageDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.GameFinishedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.LogMessageDTO;
+import com.twb.pokerapp.data.repository.RepositoryCallback;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerActionedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerConnectedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerDisconnectedDTO;
@@ -268,7 +270,11 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         dismissDialogs();
         clearCurrentPlayerTurn();
         var playerSession = playerActioned.getAction().getPlayerSession();
+        var action = playerActioned.getAction();
         tableController.updateDetails(playerSession);
+        if (ActionType.FOLD.name().equals(action.getActionType())) {
+            tableController.foldPlayer(playerSession);
+        }
         tableController.hidePlayerTurns();
         controlsController.hide();
         chatBoxAdapter.add(getPlayerActionedMessage(playerActioned));
@@ -443,6 +449,9 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         if (itemId == R.id.action_leave_table) {
             onLeaveTable();
             return true;
+        } else if (itemId == R.id.action_add_bot) {
+            onAddBotClick();
+            return true;
         } else if (itemId == R.id.action_show_current_width) {
             var width = getResources().getConfiguration().screenWidthDp;
             Toast.makeText(this, "Width: " + width + "dp", Toast.LENGTH_SHORT).show();
@@ -461,6 +470,71 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         } else {
             Log.d("DEBUG", "Dialog leave_table_modal already visible!");
         }
+    }
+
+    private void onAddBotClick() {
+        viewModel.getBots(new RepositoryCallback<>() {
+            @Override
+            public void onSuccess(List<AppUserDTO> bots) {
+                var availableBots = filterSeatedBots(bots);
+                if (availableBots.isEmpty()) {
+                    Toast.makeText(TexasGameActivity.this, R.string.no_bots_available, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                showBotPickerDialog(availableBots);
+            }
+
+            @Override
+            public void onFailure(Throwable throwable) {
+                Toast.makeText(TexasGameActivity.this, R.string.failed_to_load_bots, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private List<AppUserDTO> filterSeatedBots(List<AppUserDTO> bots) {
+        var availableBots = new ArrayList<AppUserDTO>();
+        if (bots == null) {
+            return availableBots;
+        }
+        var seatedUsernames = tableController.getSeatedUsernames();
+        for (var bot : bots) {
+            if (!seatedUsernames.contains(bot.getUsername())) {
+                availableBots.add(bot);
+            }
+        }
+        return availableBots;
+    }
+
+    private void showBotPickerDialog(List<AppUserDTO> bots) {
+        var labels = new String[bots.size()];
+        for (var i = 0; i < bots.size(); i++) {
+            var bot = bots.get(i);
+            var displayName = bot.getPersona() != null ? bot.getPersona() : bot.getUsername();
+            labels[i] = getString(R.string.bot_picker_item_format, displayName, bot.getUsername());
+        }
+        var builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.select_bot);
+        builder.setItems(labels, (dialog, which) -> {
+            var bot = bots.get(which);
+            viewModel.sendBotConnection(bot.getId(), getBotBuyInAmount());
+            chatBoxAdapter.add(getString(R.string.bot_added_format, bot.getUsername()));
+        });
+        builder.setNegativeButton(R.string.cancel, (dialog, which) -> dialog.cancel());
+        builder.show();
+    }
+
+    // todo: this could potentially be moved to server as a default if provided null
+    private double getBotBuyInAmount() {
+        var min = table.getMinBuyin();
+        var max = table.getMaxBuyin();
+        var amount = (buyInAmount != null) ? buyInAmount : 0d;
+        if (min != null && amount < min) {
+            amount = min;
+        }
+        if (max != null && amount > max) {
+            amount = max;
+        }
+        return amount;
     }
 
     /*

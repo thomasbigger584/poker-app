@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.twb.pokerapp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -34,12 +35,13 @@ public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationTo
     private final ObjectMapper objectMapper;
 
     @Override
-    public AbstractAuthenticationToken convert(Jwt jwt) {
+    public AbstractAuthenticationToken convert(@NonNull Jwt jwt) {
         var authorities = Stream.concat(
                 jwtGrantedAuthoritiesConverter.convert(jwt).stream(),
                 extractResourceRoles(jwt).stream()).collect(Collectors.toList());
 
-        var authToken = new JwtAuthenticationToken(jwt, authorities, getPrincipalClaimName(jwt));
+        var principal = getPrincipalClaimName(jwt);
+        var authToken = new JwtAuthenticationToken(jwt, authorities, principal);
         setUserDetails(authToken);
         return authToken;
     }

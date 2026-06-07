@@ -63,4 +63,24 @@ public class RankEvaluator {
                 cards.get(5).getRankValue(),
                 cards.get(6).getRankValue());
     }
+
+    /**
+     * Evaluates a seven-card hand straight from pre-encoded rank values
+     * (see {@link com.twb.pokerapp.service.game.deck.CardLibraryMapper#toLibraryInt}).
+     * <p>
+     * This avoids allocating {@link Card} objects and is intended for hot loops such as the
+     * Monte-Carlo equity simulation the bots run on every turn. As with {@link #getRank(List)},
+     * a <em>lower</em> result is a stronger hand.
+     *
+     * @param cardRankValues exactly seven encoded card values (2 hole + 5 board)
+     * @return the rank of the hand (lower is stronger)
+     * @throws IllegalArgumentException if the number of card values is not seven
+     */
+    public int getRank(int[] cardRankValues) {
+        if (cardRankValues.length != 7) {
+            throw new IllegalArgumentException("Not enough cards in hand: " + cardRankValues.length);
+        }
+        return getRankNative(cardRankValues[0], cardRankValues[1], cardRankValues[2],
+                cardRankValues[3], cardRankValues[4], cardRankValues[5], cardRankValues[6]);
+    }
 }

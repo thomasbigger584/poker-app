@@ -139,6 +139,13 @@
     <string name="leave_table">Leave Table</string>
     <string name="leave_table_confirm">Are you sure you wish to leave the table?</string>
 
+    <string name="add_bot">Add Bot</string>
+    <string name="select_bot">Select a bot to add</string>
+    <string name="bot_picker_item_format">%1$s (%2$s)</string>
+    <string name="no_bots_available">No bots available</string>
+    <string name="bot_added_format">Adding bot %1$s…</string>
+    <string name="failed_to_load_bots">Failed to load bots</string>
+
     <string name="developer">Developer</string>
     <string name="show_current_width">Show Current Width</string>
     <string name="you_have_been_signed_out">You have been signed out</string>

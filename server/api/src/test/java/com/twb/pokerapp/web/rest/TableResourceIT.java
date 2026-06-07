@@ -69,7 +69,7 @@ class TableResourceIT {
         assertEquals(createDto.getMinPlayers(), createdTableDto.getMinPlayers());
         assertEquals(createDto.getMaxPlayers(), createdTableDto.getMaxPlayers());
         assertEquals(0, createDto.getMinBuyin().compareTo(createdTableDto.getMinBuyin()));
-    assertEquals(0, createDto.getMaxBuyin().compareTo(createdTableDto.getMaxBuyin()));
+        assertEquals(0, createDto.getMaxBuyin().compareTo(createdTableDto.getMaxBuyin()));
 
         var getResponse = adminRestClient.get(AvailableTableDTO[].class, ENDPOINT);
         assertEquals(HttpStatus.OK.value(), getResponse.httpResponse().statusCode());
@@ -88,6 +88,6 @@ class TableResourceIT {
         assertEquals(createdTableDto.getMinPlayers(), createdTableFetched.getMinPlayers());
         assertEquals(createdTableDto.getMaxPlayers(), createdTableFetched.getMaxPlayers());
         assertEquals(0, createdTableDto.getMinBuyin().compareTo(createdTableFetched.getMinBuyin()));
-    assertEquals(0, createdTableDto.getMaxBuyin().compareTo(createdTableFetched.getMaxBuyin()));
+        assertEquals(0, createdTableDto.getMaxBuyin().compareTo(createdTableFetched.getMaxBuyin()));
     }
 }

@@ -1,6 +1,7 @@
 package com.twb.pokerapp.service.keycloak;
 
 import com.twb.pokerapp.configuration.Constants;
+import com.twb.pokerapp.domain.PhysicalUser;
 import com.twb.pokerapp.domain.enumeration.TransactionHistoryType;
 import com.twb.pokerapp.mapper.UserMapper;
 import com.twb.pokerapp.repository.UserRepository;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 @Slf4j
 @Component
@@ -42,7 +44,10 @@ public class KeycloakUserService {
     public void init() {
         log.debug("Synchronizing Keycloak users...");
         var userMembers = userGroupResource.members();
-        var databaseUsersFetched = new ArrayList<>(userRepository.findAll());
+        var databaseUsersFetched = new ArrayList<>(userRepository.findAll()
+                .stream()
+                .filter(appUser -> appUser instanceof PhysicalUser)
+                .toList());
 
         var updatedUsers = 0;
         var createdUsers = 0;

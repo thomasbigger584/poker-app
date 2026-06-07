@@ -64,10 +64,10 @@ public class TestScenario {
         for (var index = 0; index < turnHandlers.length; index++) {
             scenarioPlayers.add(
                     ScenarioPlayer.builder()
-                        .username("user" + (index + 1))
-                        .buyIn(DEFAULT_BUY_IN_AMOUNT)
-                        .turnHandler(turnHandlers[index])
-                        .build()
+                            .username("user" + (index + 1))
+                            .buyIn(DEFAULT_BUY_IN_AMOUNT)
+                            .turnHandler(turnHandlers[index])
+                            .build()
             );
         }
         var scenarioParams = ScenarioParams.builder()
@@ -108,7 +108,7 @@ public class TestScenario {
         var timeout = System.currentTimeMillis() + (WAIT_DISCONNECT_TIMEOUT_SECS * 1000);
         while (System.currentTimeMillis() < timeout) {
             var sessions = env.getSqlClient().getPlayerSessions();
-            if (sessions.isEmpty()|| isAllDisconnected(sessions)) {
+            if (sessions.isEmpty() || isAllDisconnected(sessions)) {
                 log.debug("All sessions disconnected, so finishing scenario");
                 return;
             }

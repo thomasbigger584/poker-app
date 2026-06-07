@@ -11,6 +11,7 @@ import com.twb.pokerapp.BuildConfig;
 import com.twb.pokerapp.data.auth.AuthConfiguration;
 import com.twb.pokerapp.data.auth.AuthEventBus;
 import com.twb.pokerapp.data.auth.AuthService;
+import com.twb.pokerapp.data.websocket.message.client.SendBotConnectedDTO;
 import com.twb.pokerapp.data.websocket.message.client.SendChatMessageDTO;
 import com.twb.pokerapp.data.websocket.message.client.SendPlayerActionDTO;
 import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
@@ -50,6 +51,7 @@ public class WebSocketClient {
     private static final String SEND_ENDPOINT_PREFIX = "/app/pokerTable.%s";
     private static final String SEND_CHAT_MESSAGE = ".sendChatMessage";
     private static final String SEND_PLAYER_ACTION = ".sendPlayerAction";
+    private static final String SEND_BOT_CONNECTED = ".sendBotConnected";
 
     private final AuthService authService;
     private final AuthConfiguration authConfiguration;
@@ -234,6 +236,11 @@ public class WebSocketClient {
 
     public void sendPlayerAction(UUID tableId, SendPlayerActionDTO dto, SendListener listener) {
         var destination = String.format(Locale.getDefault(), SEND_ENDPOINT_PREFIX + SEND_PLAYER_ACTION, tableId);
+        sendMessage(destination, gson.toJson(dto), listener);
+    }
+
+    public void sendBotConnection(UUID tableId, SendBotConnectedDTO dto, SendListener listener) {
+        var destination = String.format(Locale.getDefault(), SEND_ENDPOINT_PREFIX + SEND_BOT_CONNECTED, tableId);
         sendMessage(destination, gson.toJson(dto), listener);
     }
 

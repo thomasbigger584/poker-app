@@ -27,6 +27,15 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             SELECT s
             FROM PlayerSession s
             WHERE s.pokerTable.id = :tableId
+            AND s.user.id = :userId
+            """)
+    Optional<PlayerSession> findByTableIdAndUserId(@Param("tableId") UUID tableId,
+                                                   @Param("userId") UUID userId);
+
+    @Query("""
+            SELECT s
+            FROM PlayerSession s
+            WHERE s.pokerTable.id = :tableId
             AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
             ORDER BY s.position ASC
             """)
@@ -62,6 +71,16 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
     int countConnected(@Param("connectionType") ConnectionType connectionType);
 
     @Query("""
+            SELECT count(s)
+            FROM PlayerSession s
+            WHERE s.pokerTable.id = :tableId
+            AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
+            AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
+            AND TYPE(s.user) = com.twb.pokerapp.domain.PhysicalUser
+            """)
+    int countConnectedPhysicalPlayersByTableId(@Param("tableId") UUID tableId);
+
+    @Query("""
             SELECT s
             FROM PlayerSession s
             WHERE s.pokerTable.id = :tableId
@@ -83,5 +102,4 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             ORDER BY s.position ASC
             """)
     List<PlayerSession> findPlayersOnRound(@Param("roundId") UUID roundId);
-
 }

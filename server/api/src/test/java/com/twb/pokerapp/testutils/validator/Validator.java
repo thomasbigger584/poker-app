@@ -14,11 +14,11 @@ import com.twb.pokerapp.dto.table.TableDTO;
 import com.twb.pokerapp.testutils.game.params.scenario.ScenarioParams;
 import com.twb.pokerapp.testutils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.testutils.sql.SqlClient;
+import com.twb.pokerapp.web.exception.validation.ValidationDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
 import com.twb.pokerapp.web.websocket.message.server.payload.PlayerConnectedDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.PlayerSubscribedDTO;
-import com.twb.pokerapp.web.exception.validation.ValidationDTO;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Comparator;
@@ -209,10 +209,12 @@ public abstract class Validator {
         assertEquals(appUserDto.getUsername(), appUser.getUsername());
         assertEquals(appUserDto.getFirstName(), appUser.getFirstName());
         assertEquals(appUserDto.getLastName(), appUser.getLastName());
-        assertEquals(appUserDto.getEmail(), appUser.getEmail());
-        assertEquals(appUserDto.isEmailVerified(), appUser.isEmailVerified());
         assertEquals(appUserDto.isEnabled(), appUser.isEnabled());
         assertTrue(appUser.isEnabled());
+        if (appUser instanceof PhysicalUser physicalUser) {
+            assertEquals(appUserDto.getEmail(), physicalUser.getEmail());
+            assertEquals(appUserDto.isEmailVerified(), physicalUser.isEmailVerified());
+        }
         return appUser;
     }
 
