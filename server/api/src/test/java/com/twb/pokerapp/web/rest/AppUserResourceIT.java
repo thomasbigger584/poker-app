@@ -12,9 +12,7 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 
 import static com.twb.pokerapp.configuration.Constants.INITIAL_USER_FUNDS;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class AppUserResourceIT {
     private static final String ENDPOINT = "/app-user";

@@ -308,9 +308,7 @@ public class StubBotActionService implements BotActionService {
             sampleWithoutReplacement(deck, draws, random);
 
             // Complete the shared board (known community cards + freshly sampled ones).
-            for (var i = 0; i < board.length; i++) {
-                hero[HOLE_SIZE + i] = board[i];
-            }
+            System.arraycopy(board, 0, hero, 2, board.length);
             for (var i = 0; i < boardNeeded; i++) {
                 hero[HOLE_SIZE + board.length + i] = deck[i];
             }

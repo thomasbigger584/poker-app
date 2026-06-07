@@ -87,6 +87,6 @@ public class RabbitMqConfiguration implements WebSocketMessageBrokerConfigurer {
                 .withSockJS()
                 .setStreamBytesLimit(streamLimitMb * 1024 * 1024)
                 .setHttpMessageCacheSize(httpMessageCacheSize)
-                .setDisconnectDelay(disconnectDelaySecs * 1000);
+                .setDisconnectDelay(disconnectDelaySecs * 1000L);
     }
 }

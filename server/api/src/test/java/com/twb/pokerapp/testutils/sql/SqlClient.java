@@ -73,10 +73,10 @@ public class SqlClient implements AutoCloseable {
         runInTransaction(() -> {
             for (var scenarioPlayer : params.getScenarioPlayers()) {
                 em.createQuery("""
-                            UPDATE PhysicalUser u
-                            SET u.totalFunds = :totalFunds
-                            WHERE u.username = :username
-                            """)
+                                UPDATE PhysicalUser u
+                                SET u.totalFunds = :totalFunds
+                                WHERE u.username = :username
+                                """)
                         .setParameter("totalFunds", scenarioPlayer.getBuyIn())
                         .setParameter("username", scenarioPlayer.getUsername())
                         .executeUpdate();

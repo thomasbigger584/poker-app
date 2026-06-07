@@ -1,10 +1,6 @@
 package com.twb.pokerapp.service.game.thread;
 
-import com.twb.pokerapp.domain.BotUser;
-import com.twb.pokerapp.domain.Card;
-import com.twb.pokerapp.domain.PlayerAction;
-import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.domain.PokerTable;
+import com.twb.pokerapp.domain.*;
 import com.twb.pokerapp.domain.enumeration.BettingRoundState;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.domain.enumeration.RoundState;
@@ -25,7 +21,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Predicate;
 
 import static com.twb.pokerapp.repository.RepositoryUtil.getThrowGameInterrupted;
 import static com.twb.pokerapp.util.TransactionUtil.afterCommit;

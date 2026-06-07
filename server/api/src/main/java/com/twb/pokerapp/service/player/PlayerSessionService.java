@@ -38,7 +38,7 @@ public class PlayerSessionService {
     @Transactional(propagation = Propagation.MANDATORY)
     public PlayerSessionDTO connectUserToRound(PokerTable table, AppUser user, ConnectionType connectionType, BigDecimal buyInAmount) {
         var sessionOpt = repository.findByTableIdAndUsername(table.getId(), user.getUsername());
-        
+
         if (sessionOpt.isPresent() && sessionOpt.get().getSessionState() == SessionState.CONNECTED) {
             var message = String.format("User %s is already connected to table %s", user.getUsername(), table.getId());
             log.warn(message);
@@ -94,7 +94,7 @@ public class PlayerSessionService {
         session.setDealer(null);
         session.setCurrent(null);
         session.setConnectionType(null);
-        
+
         repository.save(session);
     }
 

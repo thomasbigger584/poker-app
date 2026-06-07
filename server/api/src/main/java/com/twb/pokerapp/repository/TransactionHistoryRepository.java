@@ -49,31 +49,31 @@ public interface TransactionHistoryRepository extends JpaRepository<TransactionH
             ORDER BY created_date_time DESC, id DESC
             """,
             countQuery = """
-            SELECT count(*) FROM (
-                WITH RankedTransactions AS (
-                    SELECT t.amount, t.type, t.user_id, t.id, t.created_date_time,
-                           LAG(t.amount) OVER (PARTITION BY t.user_id ORDER BY t.created_date_time ASC, t.id ASC) as prev_amt,
-                           LAG(t.type) OVER (PARTITION BY t.user_id ORDER BY t.created_date_time ASC, t.id ASC) as prev_type,
-                           LEAD(t.amount) OVER (PARTITION BY t.user_id ORDER BY t.created_date_time ASC, t.id ASC) as next_amt,
-                           LEAD(t.type) OVER (PARTITION BY t.user_id ORDER BY t.created_date_time ASC, t.id ASC) as next_type
-                    FROM transaction_history t
-                    JOIN app_user u ON t.user_id = u.id
-                    WHERE u.username = :username
-                )
-                SELECT id FROM RankedTransactions
-                WHERE type = 'RESET'
-                OR (
-                    NOT (COALESCE(ABS(amount) = ABS(next_amt) AND (
-                        (type = 'BUYIN' AND next_type = 'CASHOUT') OR
-                        (type = 'DEPOSIT' AND next_type = 'WITHDRAW')
-                    ), FALSE))
-                    AND NOT (COALESCE(ABS(amount) = ABS(prev_amt) AND (
-                        (type = 'CASHOUT' AND prev_type = 'BUYIN') OR
-                        (type = 'WITHDRAW' AND prev_type = 'DEPOSIT')
-                    ), FALSE))
-                )
-            ) AS filtered_transactions
-            """,
+                    SELECT count(*) FROM (
+                        WITH RankedTransactions AS (
+                            SELECT t.amount, t.type, t.user_id, t.id, t.created_date_time,
+                                   LAG(t.amount) OVER (PARTITION BY t.user_id ORDER BY t.created_date_time ASC, t.id ASC) as prev_amt,
+                                   LAG(t.type) OVER (PARTITION BY t.user_id ORDER BY t.created_date_time ASC, t.id ASC) as prev_type,
+                                   LEAD(t.amount) OVER (PARTITION BY t.user_id ORDER BY t.created_date_time ASC, t.id ASC) as next_amt,
+                                   LEAD(t.type) OVER (PARTITION BY t.user_id ORDER BY t.created_date_time ASC, t.id ASC) as next_type
+                            FROM transaction_history t
+                            JOIN app_user u ON t.user_id = u.id
+                            WHERE u.username = :username
+                        )
+                        SELECT id FROM RankedTransactions
+                        WHERE type = 'RESET'
+                        OR (
+                            NOT (COALESCE(ABS(amount) = ABS(next_amt) AND (
+                                (type = 'BUYIN' AND next_type = 'CASHOUT') OR
+                                (type = 'DEPOSIT' AND next_type = 'WITHDRAW')
+                            ), FALSE))
+                            AND NOT (COALESCE(ABS(amount) = ABS(prev_amt) AND (
+                                (type = 'CASHOUT' AND prev_type = 'BUYIN') OR
+                                (type = 'WITHDRAW' AND prev_type = 'DEPOSIT')
+                            ), FALSE))
+                        )
+                    ) AS filtered_transactions
+                    """,
             nativeQuery = true)
     Page<TransactionHistory> findSimplifiedByUsername(@Param("username") String username, Pageable pageable);
 }

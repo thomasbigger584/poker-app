@@ -7,7 +7,6 @@ import com.twb.pokerapp.domain.enumeration.TransactionHistoryType;
 import com.twb.pokerapp.dto.appuser.AppUserDTO;
 import com.twb.pokerapp.dto.appuser.UserAmountDTO;
 import com.twb.pokerapp.mapper.UserMapper;
-import com.twb.pokerapp.repository.BotUserRepository;
 import com.twb.pokerapp.repository.UserRepository;
 import com.twb.pokerapp.service.TransactionHistoryService;
 import com.twb.pokerapp.web.exception.ValidationException;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
-import java.util.List;
 import java.util.Optional;
 
 @Component

@@ -14,11 +14,11 @@ import com.twb.pokerapp.dto.table.TableDTO;
 import com.twb.pokerapp.testutils.game.params.scenario.ScenarioParams;
 import com.twb.pokerapp.testutils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.testutils.sql.SqlClient;
+import com.twb.pokerapp.web.exception.validation.ValidationDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
 import com.twb.pokerapp.web.websocket.message.server.payload.PlayerConnectedDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.PlayerSubscribedDTO;
-import com.twb.pokerapp.web.exception.validation.ValidationDTO;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Comparator;
