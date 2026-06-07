@@ -36,12 +36,6 @@ public abstract class GamePlayerActionService {
         playerAction(playerSession, gameThread, createDto, true);
     }
 
-    /**
-     * @param enforceIdempotency whether to apply the short-lived duplicate-action guard. Human actions
-     *                           arrive over the websocket and can be double-submitted, so they enforce it.
-     *                           Server-generated bot actions are trusted and act instantly across streets,
-     *                           which would otherwise collide with the idempotency window, so they skip it.
-     */
     @Transactional(propagation = Propagation.MANDATORY)
     public void playerAction(PlayerSession playerSession, GameThread gameThread, CreatePlayerActionDTO createDto, boolean enforceIdempotency) {
         if (gameThread.isStopping()) {
@@ -56,9 +50,7 @@ public abstract class GamePlayerActionService {
             checkIdempotency(playerSession, round, createDto);
         }
         var bettingRound = getThrowPlayerLog(bettingRoundRepository.findCurrentByTableId(table.getId()), playerSession, "Betting Round Not Found");
-
         var playerAction = onPlayerAction(playerSession, bettingRound, gameThread, createDto);
-
         gameThread.onPostPlayerAction(playerAction);
     }
 

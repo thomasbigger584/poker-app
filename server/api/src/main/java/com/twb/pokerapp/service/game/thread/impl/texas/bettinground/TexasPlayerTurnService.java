@@ -252,29 +252,18 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
         }
     }
 
-    /**
-     * A bot has no websocket session to wait on, so instead of blocking on the player turn latch
-     * we resolve the bot's action ourselves on the game thread: decide it, pause for a short
-     * "thinking" delay, then apply it.
-     */
     private void handleBotPlayerTurn() {
         var turnStartMillis = System.currentTimeMillis();
         dispatcher.send(params, messageFactory.playerTurn(currentPlayer, bettingRound, nextActions, params.getPlayerTurnWaitMs()));
 
-        // Decide the action first — this runs the equity simulation — in a read-only transaction.
         var createDto = readTx.execute(status -> {
             var playerSessionManaged = getThrowGameInterrupted(playerSessionRepository.findById(currentPlayer.getId()), "Player Session not found during bot player turn: " + currentPlayer.getId());
             var prevPlayerActions = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId());
             var botNextActions = playerActionService.getNextActions(playerSessionManaged, prevPlayerActions);
             return botActionService.decideAction(playerSessionManaged, bettingRound, botNextActions);
         });
+        gameSpeedService.sleepBotThinkingTime(bettingRound, params.getPlayerTurnWaitMs(), turnStartMillis);
 
-        // Then spend only whatever is left of the think budget waiting, so the visible delay is the
-        // think time itself rather than the think time stacked on top of the processing time.
-        gameSpeedService.sleepBotThinkingTime(turnStartMillis);
-
-        // Finally apply the decided action. Idempotency is skipped because these actions are
-        // server-generated and trusted (see {@code playerAction}).
         writeTx.executeWithoutResult(status -> {
             var playerSessionManaged = getThrowGameInterrupted(playerSessionRepository.findById(currentPlayer.getId()), "Player Session not found during bot player turn: " + currentPlayer.getId());
             texasPlayerActionService.playerAction(playerSessionManaged, gameThread, createDto, false);
