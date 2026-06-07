@@ -57,10 +57,10 @@ public class PlayerSessionService {
             session.setPosition(position);
             session.setFunds(buyInAmount);
 
-            if (user instanceof PhysicalUser) {
-                user.setTotalFunds(user.getTotalFunds().subtract(buyInAmount));
-                userRepository.save(user);
-                transactionHistoryService.create(user, buyInAmount.negate(), TransactionHistoryType.BUYIN);
+            if (user instanceof PhysicalUser physicalUser) {
+                physicalUser.setTotalFunds(physicalUser.getTotalFunds().subtract(buyInAmount));
+                userRepository.save(physicalUser);
+                transactionHistoryService.create(physicalUser, buyInAmount.negate(), TransactionHistoryType.BUYIN);
             }
         }
 
@@ -78,11 +78,11 @@ public class PlayerSessionService {
         if (session.getConnectionType() == ConnectionType.PLAYER
                 && sessionFundsRemaining != null) {
             var user = session.getUser();
-            if (user instanceof PhysicalUser) {
-                var totalNewFunds = user.getTotalFunds().add(sessionFundsRemaining);
-                user.setTotalFunds(totalNewFunds);
-                userRepository.save(user);
-                transactionHistoryService.create(user, sessionFundsRemaining, TransactionHistoryType.CASHOUT);
+            if (user instanceof PhysicalUser physicalUser) {
+                var totalNewFunds = physicalUser.getTotalFunds().add(sessionFundsRemaining);
+                physicalUser.setTotalFunds(totalNewFunds);
+                userRepository.save(physicalUser);
+                transactionHistoryService.create(physicalUser, sessionFundsRemaining, TransactionHistoryType.CASHOUT);
             }
         }
 

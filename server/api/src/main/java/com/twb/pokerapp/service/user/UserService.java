@@ -2,6 +2,7 @@ package com.twb.pokerapp.service.user;
 
 import com.twb.pokerapp.configuration.Constants;
 import com.twb.pokerapp.domain.AppUser;
+import com.twb.pokerapp.domain.PhysicalUser;
 import com.twb.pokerapp.domain.enumeration.TransactionHistoryType;
 import com.twb.pokerapp.dto.appuser.AppUserDTO;
 import com.twb.pokerapp.dto.appuser.UserAmountDTO;
@@ -53,40 +54,49 @@ public class UserService {
         if (principal == null) {
             return Optional.empty();
         }
-        return repository.findByUsername(principal.getName()).map(user -> {
-            var resetFunds = Constants.INITIAL_USER_FUNDS;
-            var difference = resetFunds.subtract(user.getTotalFunds());
-            transactionHistoryService.create(user, difference, TransactionHistoryType.RESET);
-            user.setTotalFunds(resetFunds);
-            var savedUser = repository.save(user);
-            return mapper.modelToDto(savedUser);
-        });
+        return repository.findByUsername(principal.getName())
+                .filter(PhysicalUser.class::isInstance)
+                .map(PhysicalUser.class::cast)
+                .map(user -> {
+                    var resetFunds = Constants.INITIAL_USER_FUNDS;
+                    var difference = resetFunds.subtract(user.getTotalFunds());
+                    transactionHistoryService.create(user, difference, TransactionHistoryType.RESET);
+                    user.setTotalFunds(resetFunds);
+                    var savedUser = repository.save(user);
+                    return mapper.modelToDto(savedUser);
+                });
     }
 
     public Optional<AppUserDTO> deposit(Principal principal, UserAmountDTO amountDto) {
         if (principal == null) {
             return Optional.empty();
         }
-        return repository.findByUsername(principal.getName()).map(user -> {
-            user.setTotalFunds(user.getTotalFunds().add(amountDto.getAmount()));
-            var savedUser = repository.save(user);
-            transactionHistoryService.create(savedUser, amountDto.getAmount(), TransactionHistoryType.DEPOSIT);
-            return mapper.modelToDto(savedUser);
-        });
+        return repository.findByUsername(principal.getName())
+                .filter(PhysicalUser.class::isInstance)
+                .map(PhysicalUser.class::cast)
+                .map(user -> {
+                    user.setTotalFunds(user.getTotalFunds().add(amountDto.getAmount()));
+                    var savedUser = repository.save(user);
+                    transactionHistoryService.create(savedUser, amountDto.getAmount(), TransactionHistoryType.DEPOSIT);
+                    return mapper.modelToDto(savedUser);
+                });
     }
 
     public Optional<AppUserDTO> withdraw(Principal principal, UserAmountDTO amountDto) {
         if (principal == null) {
             return Optional.empty();
         }
-        return repository.findByUsername(principal.getName()).map(user -> {
-            if (user.getTotalFunds().compareTo(amountDto.getAmount()) < 0) {
-                throw new ValidationException("amount", "User does not have enough funds to withdraw " + amountDto.getAmount());
-            }
-            user.setTotalFunds(user.getTotalFunds().subtract(amountDto.getAmount()));
-            var savedUser = repository.save(user);
-            transactionHistoryService.create(savedUser, amountDto.getAmount().negate(), TransactionHistoryType.WITHDRAW);
-            return mapper.modelToDto(savedUser);
-        });
+        return repository.findByUsername(principal.getName())
+                .filter(PhysicalUser.class::isInstance)
+                .map(PhysicalUser.class::cast)
+                .map(user -> {
+                    if (user.getTotalFunds().compareTo(amountDto.getAmount()) < 0) {
+                        throw new ValidationException("amount", "User does not have enough funds to withdraw " + amountDto.getAmount());
+                    }
+                    user.setTotalFunds(user.getTotalFunds().subtract(amountDto.getAmount()));
+                    var savedUser = repository.save(user);
+                    transactionHistoryService.create(savedUser, amountDto.getAmount().negate(), TransactionHistoryType.WITHDRAW);
+                    return mapper.modelToDto(savedUser);
+                });
     }
 }

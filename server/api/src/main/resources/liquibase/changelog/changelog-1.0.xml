@@ -13,9 +13,6 @@
             </column>
             <column name="first_name" type="text"/>
             <column name="last_name" type="text"/>
-            <column name="total_funds" type="decimal(19,2)" defaultValueNumeric="0">
-                <constraints nullable="false"/>
-            </column>
             <column name="enabled" type="boolean" defaultValue="0">
                 <constraints nullable="false"/>
             </column>
@@ -34,6 +31,9 @@
             </column>
             <column name="email" type="text"/>
             <column name="email_verified" type="boolean" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_funds" type="decimal(19,2)" defaultValueNumeric="0">
                 <constraints nullable="false"/>
             </column>
             <column name="groups" type="jsonb"/>

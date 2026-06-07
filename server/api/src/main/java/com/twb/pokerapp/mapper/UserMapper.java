@@ -30,6 +30,7 @@ public interface UserMapper {
     @Mapping(target = "persona", ignore = true)
     AppUserDTO physicalToDto(PhysicalUser physicalUser);
 
+    @Mapping(target = "totalFunds", ignore = true)
     @Mapping(target = "persona", source = "persona", qualifiedByName = "personaDisplayName")
     AppUserDTO botToDto(BotUser botUser);
 
