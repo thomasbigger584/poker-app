@@ -6,9 +6,13 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.twb.pokerapp.data.model.dto.appuser.AppUserDTO;
 import com.twb.pokerapp.data.model.enumeration.ActionType;
+import com.twb.pokerapp.data.repository.AppUserRepository;
+import com.twb.pokerapp.data.repository.RepositoryCallback;
 import com.twb.pokerapp.data.repository.WebSocketRepository;
 import com.twb.pokerapp.data.websocket.WebSocketClient;
+import com.twb.pokerapp.data.websocket.message.client.SendBotConnectedDTO;
 import com.twb.pokerapp.data.websocket.message.client.SendChatMessageDTO;
 import com.twb.pokerapp.data.websocket.message.client.SendPlayerActionDTO;
 import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
@@ -27,6 +31,7 @@ public class TexasGameViewModel extends ViewModel implements WebSocketClient.Sen
 
     private static final String TAG = TexasGameViewModel.class.getSimpleName();
     private final WebSocketRepository repository;
+    private final AppUserRepository appUserRepository;
     private final WebSocketClient webSocketClient;
 
     public final LiveData<List<ServerMessageDTO<?>>> messages;
@@ -36,8 +41,11 @@ public class TexasGameViewModel extends ViewModel implements WebSocketClient.Sen
     private UUID tableId;
 
     @Inject
-    public TexasGameViewModel(WebSocketRepository repository, WebSocketClient webSocketClient) {
+    public TexasGameViewModel(WebSocketRepository repository,
+                              AppUserRepository appUserRepository,
+                              WebSocketClient webSocketClient) {
         this.repository = repository;
+        this.appUserRepository = appUserRepository;
         this.webSocketClient = webSocketClient;
         this.messages = repository.messages;
         this.errors = repository.errors;
@@ -54,6 +62,17 @@ public class TexasGameViewModel extends ViewModel implements WebSocketClient.Sen
         var dto = new SendChatMessageDTO();
         dto.setMessage(message);
         webSocketClient.sendChatMessage(tableId, dto, this);
+    }
+
+    public void getBots(RepositoryCallback<List<AppUserDTO>> callback) {
+        appUserRepository.getBots(callback);
+    }
+
+    public void sendBotConnection(UUID botUserId, Double buyInAmount) {
+        var dto = new SendBotConnectedDTO();
+        dto.setBotUserId(botUserId);
+        dto.setBuyInAmount(buyInAmount);
+        webSocketClient.sendBotConnection(tableId, dto, this);
     }
 
     public void onPlayerAction(ActionType actionType) {
