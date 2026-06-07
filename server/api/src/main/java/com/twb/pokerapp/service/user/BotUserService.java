@@ -24,9 +24,9 @@ public class BotUserService {
     public void init() {
         if (botUserRepository.count() > 0) return;
 
-        create("stone_cold_steve", "Steve", "Stone", Persona.THE_ROCK);
-        create("wild_bill_poker", "Bill", "Wild", Persona.THE_MANIAC);
-        create("algorithm_al", "Al", "Gorithm", Persona.THE_SHARK);
+        create("stone_cold", "Steve", "Stone", Persona.THE_ROCK);
+        create("wild_bill", "Bill", "Wild", Persona.THE_MANIAC);
+        create("algo_al", "Al", "Gorithm", Persona.THE_SHARK);
         create("sticky_stan", "Stan", "Sticky", Persona.CALLING_STATION);
         create("silent_sarah", "Sarah", "Silent", Persona.THE_TRAPPER);
     }

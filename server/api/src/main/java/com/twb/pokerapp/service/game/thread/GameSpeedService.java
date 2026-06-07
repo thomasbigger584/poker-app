@@ -6,12 +6,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 @Component
 public class GameSpeedService {
     private static final long MIN_NETWORK_FLOOR = 250;
     private static final long MIN_PLAYER_TURN_WAIT = 5000;
+    private static final long MIN_BOT_THINK_WAIT = 2000;
+    private static final long MAX_BOT_THINK_WAIT = 4000;
 
     public void sleep(PokerTable table, long delay) {
         var speedMultiplier = table.getSpeedMultiplier();
@@ -22,6 +25,24 @@ public class GameSpeedService {
     public Long getPlayerTurnWait(BettingRound bettingRound, long playerTurnWaitMs) {
         var speedMultiplier = bettingRound.getRound().getPokerTable().getSpeedMultiplier();
         return getFinalDelay(speedMultiplier, playerTurnWaitMs, MIN_PLAYER_TURN_WAIT);
+    }
+
+    /**
+     * Sleeps for whatever remains of a short, randomised "thinking" budget after the caller has
+     * already spent time computing the bot's action. The total turn delay (processing + this sleep)
+     * lands between {@value #MIN_BOT_THINK_WAIT}ms and {@value #MAX_BOT_THINK_WAIT}ms — kept well
+     * under the player-turn maximum ({@link #getPlayerTurnWait}) and deliberately not scaled by the
+     * table speed multiplier, so the minimum think time is honoured even on fast tables. If the
+     * processing already took longer than the budget, it does not sleep at all.
+     *
+     * @param turnStartMillis the {@link System#currentTimeMillis()} captured when the bot's turn began
+     */
+    public void sleepBotThinkingTime(long turnStartMillis) {
+        var thinkBudgetMs = ThreadLocalRandom.current().nextLong(MIN_BOT_THINK_WAIT, MAX_BOT_THINK_WAIT + 1);
+        var remainingMs = thinkBudgetMs - (System.currentTimeMillis() - turnStartMillis);
+        if (remainingMs > 0) {
+            sleep(remainingMs);
+        }
     }
 
     public void sleep(long delay) {

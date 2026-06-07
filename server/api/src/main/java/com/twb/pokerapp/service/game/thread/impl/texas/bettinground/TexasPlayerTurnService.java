@@ -18,6 +18,7 @@ import com.twb.pokerapp.service.game.bot.BotActionService;
 import com.twb.pokerapp.service.game.exception.GameInterruptedException;
 import com.twb.pokerapp.service.game.exception.RoundInterruptedException;
 import com.twb.pokerapp.service.game.thread.GamePlayerTurnService;
+import com.twb.pokerapp.service.game.thread.GameSpeedService;
 import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
 import com.twb.pokerapp.service.game.thread.impl.texas.TexasPlayerActionService;
@@ -94,6 +95,9 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
 
     @Autowired
     private BotActionService botActionService;
+
+    @Autowired
+    private GameSpeedService gameSpeedService;
 
     private final GameThread gameThread;
     private final GameThreadParams params;
@@ -250,16 +254,29 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
 
     /**
      * A bot has no websocket session to wait on, so instead of blocking on the player turn latch
-     * we resolve the bot's action immediately and apply it on the game thread. Idempotency is
-     * skipped because these actions are server-generated and trusted (see {@code playerAction}).
+     * we resolve the bot's action ourselves on the game thread: decide it, pause for a short
+     * "thinking" delay, then apply it.
      */
     private void handleBotPlayerTurn() {
+        var turnStartMillis = System.currentTimeMillis();
         dispatcher.send(params, messageFactory.playerTurn(currentPlayer, bettingRound, nextActions, params.getPlayerTurnWaitMs()));
-        writeTx.executeWithoutResult(status -> {
+
+        // Decide the action first — this runs the equity simulation — in a read-only transaction.
+        var createDto = readTx.execute(status -> {
             var playerSessionManaged = getThrowGameInterrupted(playerSessionRepository.findById(currentPlayer.getId()), "Player Session not found during bot player turn: " + currentPlayer.getId());
             var prevPlayerActions = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId());
             var botNextActions = playerActionService.getNextActions(playerSessionManaged, prevPlayerActions);
-            var createDto = botActionService.decideAction(playerSessionManaged, bettingRound, botNextActions);
+            return botActionService.decideAction(playerSessionManaged, bettingRound, botNextActions);
+        });
+
+        // Then spend only whatever is left of the think budget waiting, so the visible delay is the
+        // think time itself rather than the think time stacked on top of the processing time.
+        gameSpeedService.sleepBotThinkingTime(turnStartMillis);
+
+        // Finally apply the decided action. Idempotency is skipped because these actions are
+        // server-generated and trusted (see {@code playerAction}).
+        writeTx.executeWithoutResult(status -> {
+            var playerSessionManaged = getThrowGameInterrupted(playerSessionRepository.findById(currentPlayer.getId()), "Player Session not found during bot player turn: " + currentPlayer.getId());
             texasPlayerActionService.playerAction(playerSessionManaged, gameThread, createDto, false);
         });
     }

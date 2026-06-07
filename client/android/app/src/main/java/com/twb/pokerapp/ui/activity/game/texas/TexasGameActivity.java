@@ -381,11 +381,12 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         viewModel.getBots(new RepositoryCallback<>() {
             @Override
             public void onSuccess(List<AppUserDTO> bots) {
-                if (bots == null || bots.isEmpty()) {
+                var availableBots = filterSeatedBots(bots);
+                if (availableBots.isEmpty()) {
                     Toast.makeText(TexasGameActivity.this, R.string.no_bots_available, Toast.LENGTH_SHORT).show();
                     return;
                 }
-                showBotPickerDialog(bots);
+                showBotPickerDialog(availableBots);
             }
 
             @Override
@@ -393,6 +394,24 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
                 Toast.makeText(TexasGameActivity.this, R.string.failed_to_load_bots, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    /**
+     * Drops any bot already seated at the table so the user can only pick bots that are not
+     * currently playing, matching seated players by username.
+     */
+    private List<AppUserDTO> filterSeatedBots(List<AppUserDTO> bots) {
+        var availableBots = new ArrayList<AppUserDTO>();
+        if (bots == null) {
+            return availableBots;
+        }
+        var seatedUsernames = tableController.getSeatedUsernames();
+        for (var bot : bots) {
+            if (!seatedUsernames.contains(bot.getUsername())) {
+                availableBots.add(bot);
+            }
+        }
+        return availableBots;
     }
 
     private void showBotPickerDialog(List<AppUserDTO> bots) {
