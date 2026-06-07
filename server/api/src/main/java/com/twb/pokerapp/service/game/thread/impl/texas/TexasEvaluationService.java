@@ -131,14 +131,14 @@ public class TexasEvaluationService {
         // In Hold'em, the odd chip goes to the first player to the left of the button.
         var playerSessions = winners.stream().map(EvalPlayerHandDTO::getPlayerSession).toList();
         var sortedWinnersSessions = dealerService.sortDealerLast(playerSessions);
-        
+
         // Match original DTOs to the sorted session order
         var sortedWinners = new ArrayList<EvalPlayerHandDTO>();
         for (var session : sortedWinnersSessions) {
             winners.stream()
-                .filter(w -> w.getPlayerSession().getId().equals(session.getId()))
-                .findFirst()
-                .ifPresent(sortedWinners::add);
+                    .filter(w -> w.getPlayerSession().getId().equals(session.getId()))
+                    .findFirst()
+                    .ifPresent(sortedWinners::add);
         }
 
         // Calculate split in cents to handle odd chips correctly

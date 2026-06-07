@@ -11,9 +11,11 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
+import java.time.Duration;
 import java.util.List;
 
 import static java.lang.management.ManagementFactory.getRuntimeMXBean;
@@ -67,6 +69,8 @@ public class TestEnvironment implements AutoCloseable {
     private static final String ENV_POKERAPP_LOG_LEVEL = "POKERAPP_LOG_LEVEL";
     private static final String DEFAULT_POKERAPP_LOG_LEVEL = "DEBUG";
     private static final String POKERAPP_LOG_LEVEL_KEY = "LOGGING_LEVEL_COM_TWB_POKERAPP";
+    private static final String API_SEEDED_LOG_REGEX = ".*Application seeding completed.*";
+    private static final Duration API_STARTUP_TIMEOUT = Duration.ofMinutes(5);
 
     // Test Containers
     private static final Network NETWORK = Network.newNetwork();
@@ -145,6 +149,8 @@ public class TestEnvironment implements AutoCloseable {
                 .withLogConsumer(new Slf4jLogConsumer(logger).withPrefix(API_SERVICE))
                 .withNetwork(NETWORK)
                 .withNetworkAliases(API_SERVICE)
+                .waitingFor(Wait.forLogMessage(API_SEEDED_LOG_REGEX, 1))
+                .withStartupTimeout(API_STARTUP_TIMEOUT)
                 .dependsOn(KEYCLOAK_CONTAINER, DB_CONTAINER, RABBITMQ_CONTAINER);
 
         var isDebug = getRuntimeMXBean().getInputArguments().toString().contains("jdwp");

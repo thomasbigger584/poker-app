@@ -9,10 +9,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 
 import static com.twb.pokerapp.configuration.Constants.INITIAL_USER_FUNDS;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 class AppUserResourceIT {
     private static final String ENDPOINT = "/app-user";
@@ -57,6 +57,32 @@ class AppUserResourceIT {
         assertNotNull(appUserDTO.getId());
         assertNotNull(appUserDTO.getUsername());
         assertEquals(username, appUserDTO.getUsername());
+    }
+
+    @Test
+    void testGetBots() throws Throwable {
+        // given
+        var userRestClient = env.getUserRestClient("user1");
+
+        // when
+        var response = userRestClient.get(AppUserDTO[].class, ENDPOINT + "/bots");
+
+        // then
+        assertEquals(HttpStatus.OK.value(), response.httpResponse().statusCode());
+        var bots = response.resultBody();
+        assertNotNull(bots);
+        // PersonaService seeds 5 fixed bots on startup
+        assertEquals(5, bots.length);
+        for (var bot : bots) {
+            assertNotNull(bot.getId());
+            assertNotNull(bot.getUsername());
+            assertNotNull(bot.getPersona());
+        }
+        var rock = Arrays.stream(bots)
+                .filter(bot -> "stone_cold".equals(bot.getUsername()))
+                .findFirst();
+        assertTrue(rock.isPresent(), "Expected seeded bot 'stone_cold' to be present");
+        assertEquals("The Rock", rock.get().getPersona());
     }
 
     @Test

@@ -16,9 +16,11 @@ import com.twb.pokerapp.data.websocket.message.server.payload.RoundFinishedDTO;
 import com.twb.pokerapp.ui.layout.texas.CardPairLayout;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class TableController {
@@ -67,6 +69,11 @@ public class TableController {
     public void updateDetails(PlayerSessionDTO playerSession) {
         var cardPairLayout = getCardPairLayout(playerSession.getPosition());
         cardPairLayout.updateDetails(playerSession);
+    }
+
+    public void foldPlayer(PlayerSessionDTO playerSession) {
+        var cardPairLayout = getCardPairLayout(playerSession.getPosition());
+        cardPairLayout.fold();
     }
 
     public void disconnectOtherPlayer(String username) {
@@ -151,6 +158,22 @@ public class TableController {
     @NonNull
     public CardPairLayout getPlayerCardPairLayout() {
         return cardPairLayouts[0];
+    }
+
+    /**
+     * Usernames of every player currently seated at the table (a seat counts as taken when its
+     * {@link CardPairLayout} holds a player session). Used to hide bots that are already playing.
+     */
+    @NonNull
+    public Set<String> getSeatedUsernames() {
+        var seatedUsernames = new HashSet<String>();
+        for (var cardPairLayout : cardPairLayouts) {
+            var playerSession = cardPairLayout.getPlayerSession();
+            if (playerSession != null && playerSession.getUser() != null) {
+                seatedUsernames.add(playerSession.getUser().getUsername());
+            }
+        }
+        return seatedUsernames;
     }
 
     // ------------------------------------------------------------------------------

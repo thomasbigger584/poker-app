@@ -1,6 +1,7 @@
-package com.twb.pokerapp.service;
+package com.twb.pokerapp.service.player;
 
 import com.twb.pokerapp.domain.AppUser;
+import com.twb.pokerapp.domain.PhysicalUser;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
@@ -10,6 +11,7 @@ import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.mapper.PlayerSessionMapper;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.UserRepository;
+import com.twb.pokerapp.service.TransactionHistoryService;
 import com.twb.pokerapp.service.game.exception.GamePlayerErrorLogException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +38,7 @@ public class PlayerSessionService {
     @Transactional(propagation = Propagation.MANDATORY)
     public PlayerSessionDTO connectUserToRound(PokerTable table, AppUser user, ConnectionType connectionType, BigDecimal buyInAmount) {
         var sessionOpt = repository.findByTableIdAndUsername(table.getId(), user.getUsername());
-        
+
         if (sessionOpt.isPresent() && sessionOpt.get().getSessionState() == SessionState.CONNECTED) {
             var message = String.format("User %s is already connected to table %s", user.getUsername(), table.getId());
             log.warn(message);
@@ -55,9 +57,11 @@ public class PlayerSessionService {
             session.setPosition(position);
             session.setFunds(buyInAmount);
 
-            user.setTotalFunds(user.getTotalFunds().subtract(buyInAmount));
-            userRepository.save(user);
-            transactionHistoryService.create(user, buyInAmount.negate(), TransactionHistoryType.BUYIN);
+            if (user instanceof PhysicalUser physicalUser) {
+                physicalUser.setTotalFunds(physicalUser.getTotalFunds().subtract(buyInAmount));
+                userRepository.save(physicalUser);
+                transactionHistoryService.create(physicalUser, buyInAmount.negate(), TransactionHistoryType.BUYIN);
+            }
         }
 
         session = repository.save(session);
@@ -69,13 +73,17 @@ public class PlayerSessionService {
         if (session.getSessionState() == SessionState.DISCONNECTED) {
             return;
         }
-
+        log.info("Disconnecting user {}", session.getUser().getUsername());
         var sessionFundsRemaining = session.getFunds();
-        if (session.getConnectionType() == ConnectionType.PLAYER && sessionFundsRemaining != null) {
+        if (session.getConnectionType() == ConnectionType.PLAYER
+                && sessionFundsRemaining != null) {
             var user = session.getUser();
-            user.setTotalFunds(user.getTotalFunds().add(sessionFundsRemaining));
-            userRepository.save(user);
-            transactionHistoryService.create(user, sessionFundsRemaining, TransactionHistoryType.CASHOUT);
+            if (user instanceof PhysicalUser physicalUser) {
+                var totalNewFunds = physicalUser.getTotalFunds().add(sessionFundsRemaining);
+                physicalUser.setTotalFunds(totalNewFunds);
+                userRepository.save(physicalUser);
+                transactionHistoryService.create(physicalUser, sessionFundsRemaining, TransactionHistoryType.CASHOUT);
+            }
         }
 
         session.setSessionState(SessionState.DISCONNECTED);
@@ -86,7 +94,7 @@ public class PlayerSessionService {
         session.setDealer(null);
         session.setCurrent(null);
         session.setConnectionType(null);
-        
+
         repository.save(session);
     }
 

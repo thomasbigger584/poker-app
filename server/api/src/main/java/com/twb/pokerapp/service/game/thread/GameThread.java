@@ -1,9 +1,6 @@
 package com.twb.pokerapp.service.game.thread;
 
-import com.twb.pokerapp.domain.Card;
-import com.twb.pokerapp.domain.PlayerAction;
-import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.domain.PokerTable;
+import com.twb.pokerapp.domain.*;
 import com.twb.pokerapp.domain.enumeration.BettingRoundState;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.domain.enumeration.RoundState;
@@ -92,8 +89,12 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
         } catch (Exception e) {
             log.error("Unexpected error in GameThread for table {}: {}", table.getId(), e.getMessage(), e);
         } finally {
-            finishRound();
-            finishGame();
+            try {
+                finishRound();
+                finishGame();
+            } finally {
+                params.getEndLatch().countDown();
+            }
         }
     }
 
@@ -164,39 +165,47 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     private boolean isPlayersJoined() {
         var minPlayerCount = table.getMinPlayers();
         return readTx.execute(status -> {
-            var connectedPlayers = playerSessionRepository
-                    .findConnectedByTableId(table.getId());
+            var connectedPlayers = playerSessionRepository.findConnectedByTableId(table.getId());
+            if (!connectedPlayers.isEmpty() && connectedPlayers.stream()
+                    .allMatch(playerSession -> playerSession.getUser() instanceof BotUser)) {
+                throw new GameInterruptedException("Only bots connected to table so stopping");
+            }
             var playerPlayerUsers = connectedPlayers.stream()
                     .filter(playerSession -> playerSession.getConnectionType() == ConnectionType.PLAYER)
                     .filter(playerSession -> playerSession.getFunds() != null && playerSession.getFunds().compareTo(BigDecimal.ZERO) > 0)
                     .toList();
             var connectedUsers = userWebsocketService.getConnectedUsers(table);
             if (playerPlayerUsers.isEmpty() && connectedUsers.isEmpty()) {
-                throw new GameInterruptedException("No players connected to table so stopping");
+                log.debug("Waiting for PlayerSessions to connect...");
+                return false;
             }
             if (playerPlayerUsers.size() < minPlayerCount) {
                 log.debug("Waiting for PlayerSessions to connect ({}/{})...", playerPlayerUsers.size(), minPlayerCount);
                 return false;
             }
-            var websocketUsersCount = connectedPlayers.size();
-            if (connectedUsers.size() < websocketUsersCount) {
-                log.debug("Waiting for Websocket Users to connect ({}/{})...", connectedUsers.size(), websocketUsersCount);
+            var humanConnectedSessions = connectedPlayers.stream()
+                    .filter(playerSession -> !(playerSession.getUser() instanceof BotUser))
+                    .toList();
+            var expectedWebsocketCount = humanConnectedSessions.size();
+            if (connectedUsers.size() < expectedWebsocketCount) {
+                log.debug("Waiting for Websocket Users to connect ({}/{})...", connectedUsers.size(), expectedWebsocketCount);
                 return false;
             }
-            if (connectedUsers.size() != websocketUsersCount) {
-                log.warn("Connected PlayerSessions doesnt equal the connected websocket users ({} vs {})", connectedPlayers.size(), websocketUsersCount);
+            if (connectedUsers.size() != expectedWebsocketCount) {
+                log.warn("Connected human PlayerSessions doesnt equal the connected websocket users ({} vs {})", expectedWebsocketCount, connectedUsers.size());
                 return false;
             }
             var connectedUsernames = connectedUsers.stream()
                     .map(SimpUser::getName).toList();
             var connectedPlayerNames = playerPlayerUsers.stream()
+                    .filter(playerSession -> !(playerSession.getUser() instanceof BotUser))
                     .map(playerSession -> playerSession.getUser().getUsername()).toList();
             var allPlayersConnected = new HashSet<>(connectedUsernames).containsAll(connectedPlayerNames);
             if (!allPlayersConnected) {
                 log.warn("Connected PlayerSessions usernames doesnt equal the connected websocket users usernames ({} vs {})", connectedPlayerNames, connectedUsernames);
                 return false;
             }
-            log.debug("Connected PlayerSessions match the connected websocket users ({} vs {})", connectedPlayerNames, connectedUsernames);
+            log.debug("Connected human PlayerSessions match the connected websocket users ({} vs {})", connectedPlayerNames, connectedUsernames);
             return true;
         });
     }
@@ -275,7 +284,10 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
             if (!userWebsocketService.getConnectedUsers(table).isEmpty()) {
                 dispatcher.send(table, messageFactory.gameFinished());
             }
-            threadManager.delete(table.getId());
+            writeTx.executeWithoutResult(status ->
+                    playerSessionRepository.findConnectedByTableId(table.getId())
+                            .forEach(playerSessionService::disconnectUser));
+            threadManager.delete(table.getId(), this);
         }
     }
 
@@ -332,10 +344,6 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
 
     private void checkGameInterrupted() {
         if (interruptGame.get() || Thread.interrupted()) {
-            var endLatch = params.getEndLatch();
-            while (endLatch.getCount() > 0) {
-                endLatch.countDown();
-            }
             throw new GameInterruptedException("Game is interrupted");
         }
     }
@@ -349,6 +357,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
 
     @CallerThread
     public void stopGame() {
+        log.info("Stopping game for table {}...", table.getId());
         interruptGame.set(true);
         try {
             var terminated = params.getEndLatch().await(GAME_STOP_TIMEOUT_IN_SECS, TimeUnit.SECONDS);

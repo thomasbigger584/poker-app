@@ -16,6 +16,8 @@ import java.util.UUID;
 
 public class SqlClient implements AutoCloseable {
     private static final String PERSISTENCE_UNIT_NAME = "poker-app-test";
+    private static final List<Class<?>> SKIP_TRUNCATE_ENTITIES = List.of(AppUser.class);
+
     private final EntityManagerFactory emf;
     private final EntityManager em;
 
@@ -45,11 +47,11 @@ public class SqlClient implements AutoCloseable {
         runInTransaction(() -> {
             var entities = em.getMetamodel().getEntities();
             for (var entity : entities) {
-                // don't wipe the users as they get populated on app startup
-                if (!entity.getName().equals(AppUser.class.getSimpleName())) {
-                    var nativeTableName = getNativeTableName(entity);
-                    em.createNativeQuery("TRUNCATE TABLE " + nativeTableName + " CASCADE").executeUpdate();
+                if (shouldSkipTruncate(entity.getJavaType())) {
+                    continue;
                 }
+                var nativeTableName = getNativeTableName(entity);
+                em.createNativeQuery("TRUNCATE TABLE " + nativeTableName + " CASCADE").executeUpdate();
             }
         });
     }
@@ -68,10 +70,10 @@ public class SqlClient implements AutoCloseable {
         runInTransaction(() -> {
             for (var scenarioPlayer : params.getScenarioPlayers()) {
                 em.createQuery("""
-                            UPDATE AppUser u
-                            SET u.totalFunds = :totalFunds
-                            WHERE u.username = :username
-                            """)
+                                UPDATE PhysicalUser u
+                                SET u.totalFunds = :totalFunds
+                                WHERE u.username = :username
+                                """)
                         .setParameter("totalFunds", scenarioPlayer.getBuyIn())
                         .setParameter("username", scenarioPlayer.getUsername())
                         .executeUpdate();
@@ -82,7 +84,7 @@ public class SqlClient implements AutoCloseable {
     public void updateUsersTotalFunds(String username, BigDecimal totalFunds) {
         runInTransaction(() -> {
             em.createQuery("""
-                            UPDATE AppUser u
+                            UPDATE PhysicalUser u
                             SET u.totalFunds = :totalFunds
                             WHERE u.username = :username
                             """)
@@ -132,6 +134,30 @@ public class SqlClient implements AutoCloseable {
         return getById(id, AppUser.class);
     }
 
+    public Optional<AppUser> getAppUserByUsername(String username) {
+        em.clear();
+        try {
+            return Optional.of(em.createQuery("SELECT u FROM AppUser u WHERE u.username = :username", AppUser.class)
+                    .setParameter("username", username)
+                    .setHint(HibernateHints.HINT_READ_ONLY, true)
+                    .getSingleResult());
+        } catch (NoResultException e) {
+            return Optional.empty();
+        }
+    }
+
+    public List<Round> getRounds() {
+        return getAll(Round.class);
+    }
+
+    public List<PlayerAction> getPlayerActions() {
+        return getAll(PlayerAction.class);
+    }
+
+    public List<Hand> getHands() {
+        return getAll(Hand.class);
+    }
+
     public Optional<PokerTable> getPokerTable(UUID id) {
         return getById(id, PokerTable.class);
     }
@@ -172,6 +198,15 @@ public class SqlClient implements AutoCloseable {
     // *****************************************************************************************
     // Helper Methods
     // *****************************************************************************************
+
+    private boolean shouldSkipTruncate(Class<?> entityClass) {
+        for (var skipClass : SKIP_TRUNCATE_ENTITIES) {
+            if (skipClass.isAssignableFrom(entityClass)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     private Class<?> getClassForName(String className) {
         try {

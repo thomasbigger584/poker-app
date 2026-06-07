@@ -3,11 +3,12 @@ package com.twb.pokerapp.testutils.game.player;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.testutils.game.GameLatches;
 import com.twb.pokerapp.testutils.http.message.ServerMessageConverter;
+import com.twb.pokerapp.web.exception.validation.ValidationDTO;
+import com.twb.pokerapp.web.websocket.message.client.CreateBotConnectionDTO;
 import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.ErrorMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.payload.LogMessageDTO;
-import com.twb.pokerapp.web.exception.validation.ValidationDTO;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +43,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private static final String GAME_TOPIC_SUFFIX = "/topic/loops.%s";
     private static final String NOTIFICATION_TOPIC = "/user/queue/notifications";
     private static final String SEND_PLAYER_ACTION = "/app/pokerTable.%s.sendPlayerAction";
+    private static final String SEND_BOT_CONNECTED = "/app/pokerTable.%s.sendBotConnected";
 
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String HEADER_CONNECTION_TYPE = "X-Connection-Type";
@@ -222,6 +224,13 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
     public void sendPlayerAction(CreatePlayerActionDTO createDto) {
         send(SEND_PLAYER_ACTION.formatted(params.getTable().getId()), createDto);
+    }
+
+    public void sendBotConnected(UUID botUserId, BigDecimal buyInAmount) {
+        var createDto = new CreateBotConnectionDTO();
+        createDto.setBotUserId(botUserId);
+        createDto.setBuyInAmount(buyInAmount);
+        send(SEND_BOT_CONNECTED.formatted(params.getTable().getId()), createDto);
     }
 
     protected void send(String destination, Object dto) {

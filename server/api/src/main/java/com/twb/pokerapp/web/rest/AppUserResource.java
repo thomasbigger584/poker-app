@@ -2,25 +2,33 @@ package com.twb.pokerapp.web.rest;
 
 import com.twb.pokerapp.dto.appuser.AppUserDTO;
 import com.twb.pokerapp.dto.appuser.UserAmountDTO;
-import com.twb.pokerapp.service.UserService;
+import com.twb.pokerapp.service.user.BotUserService;
+import com.twb.pokerapp.service.user.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/app-user")
 @RequiredArgsConstructor
 public class AppUserResource {
     private final UserService service;
+    private final BotUserService botUserService;
 
     @GetMapping("/current")
     public ResponseEntity<AppUserDTO> getCurrent(Principal principal) {
         return service.getCurrentUser(principal)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/bots")
+    public ResponseEntity<List<AppUserDTO>> getBots() {
+        return ResponseEntity.ok(botUserService.listBots());
     }
 
     @PostMapping("/reset-funds")

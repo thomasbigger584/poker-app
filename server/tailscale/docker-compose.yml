@@ -22,6 +22,7 @@ services:
       - TS_EPHEMERAL=false
       - TS_EXTRA_ARGS=--accept-routes --shields-up=false
       - TS_SOCKET=/tmp/tailscaled.sock
+      - TS_AUTHKEY
     healthcheck:
       # Validates that the container has a Tailscale IP assigned
       test: ["CMD-SHELL", "tailscale ip -4 poker-app | grep -E '^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$$' > /dev/null || exit 1"]

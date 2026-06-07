@@ -3,8 +3,8 @@ package com.twb.pokerapp.testutils.fixture;
 import com.twb.pokerapp.domain.Card;
 import com.twb.pokerapp.domain.enumeration.RankType;
 import com.twb.pokerapp.domain.enumeration.SuitType;
-import com.twb.pokerapp.web.exception.NotFoundException;
 import com.twb.pokerapp.service.game.deck.DeckFactory;
+import com.twb.pokerapp.web.exception.NotFoundException;
 
 import java.util.List;
 import java.util.Map;

@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
+        android:id="@+id/action_add_bot"
+        android:title="@string/add_bot" />
+    <item
         android:id="@+id/action_leave_table"
         android:title="@string/leave_table" />
     <item

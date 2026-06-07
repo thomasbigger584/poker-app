@@ -61,20 +61,21 @@ public class GameThreadManager {
     }
 
     /**
-     * Deletes the game thread for the given table ID.
+     * Removes the given game thread from the registry, but only if it is still the one mapped for
+     * the table. A terminating thread must not evict a freshly-created replacement that
+     * {@link #createIfNotExist(PokerTable)} may have installed for the same table.
+     * <p>
+     * Deliberately does not take the table mutex: the identity-checked {@link java.util.Map#remove(Object, Object)}
+     * is atomic on the {@link ConcurrentHashMap} by itself, and a thread calls this from its own
+     * teardown while a caller may be holding the mutex waiting for that teardown to finish — taking
+     * the mutex here would deadlock that handshake.
      *
      * @param tableId the table ID
-     * @return true if the game thread was deleted, false otherwise
+     * @param thread  the thread requesting its own removal
+     * @return true if the thread was removed, false if it was no longer the mapped thread
      */
-    public boolean delete(UUID tableId) {
-        return mutex.evaluate(tableId, () -> {
-            var threadOpt = getIfExists(tableId);
-            if (threadOpt.isPresent()) {
-                GAME_THREAD_MAP.remove(tableId);
-                return true;
-            }
-            return false;
-        });
+    public boolean delete(UUID tableId, GameThread thread) {
+        return GAME_THREAD_MAP.remove(tableId, thread);
     }
 
     @PreDestroy

@@ -101,6 +101,7 @@ public class CardPairLayout extends ConstraintLayout {
 
     public void deleteDetails() {
         reset();
+        this.playerSession = null;
         var notConnectedText = getContext().getString(R.string.not_connected_text);
         binding.displayNameTextView.setText(notConnectedText);
         binding.fundsTextView.setText(notConnectedText);

@@ -1,6 +1,7 @@
 package com.twb.pokerapp.service.game.thread.impl.texas.bettinground;
 
 import com.twb.pokerapp.domain.BettingRound;
+import com.twb.pokerapp.domain.BotUser;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.Round;
 import com.twb.pokerapp.domain.enumeration.BettingRoundState;
@@ -11,16 +12,18 @@ import com.twb.pokerapp.repository.PlayerActionRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.RoundRepository;
 import com.twb.pokerapp.service.BettingRoundService;
-import com.twb.pokerapp.service.PlayerActionService;
 import com.twb.pokerapp.service.UserWebsocketService;
+import com.twb.pokerapp.service.game.bot.BotActionService;
 import com.twb.pokerapp.service.game.exception.GameInterruptedException;
 import com.twb.pokerapp.service.game.exception.RoundInterruptedException;
 import com.twb.pokerapp.service.game.thread.GamePlayerTurnService;
+import com.twb.pokerapp.service.game.thread.GameSpeedService;
 import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
 import com.twb.pokerapp.service.game.thread.impl.texas.TexasPlayerActionService;
 import com.twb.pokerapp.service.game.thread.impl.texas.dealer.TexasDealerService;
 import com.twb.pokerapp.service.game.thread.impl.texas.dto.NextActionsDTO;
+import com.twb.pokerapp.service.player.PlayerActionService;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -89,6 +92,12 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
 
     @Autowired
     private UserWebsocketService userWebsocketService;
+
+    @Autowired
+    private BotActionService botActionService;
+
+    @Autowired
+    private GameSpeedService gameSpeedService;
 
     private final GameThread gameThread;
     private final GameThreadParams params;
@@ -233,12 +242,32 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
     }
 
     private void runPlayerTurn() {
-        if (isPlayerDisconnected(currentPlayer)) {
+        if (currentPlayer.getUser() instanceof BotUser) {
+            handleBotPlayerTurn();
+        } else if (isPlayerDisconnected(currentPlayer)) {
             log.debug("Player {} disconnected, auto-folding/checking...", currentPlayer.getUser().getUsername());
             handleDisconnectedPlayerTurn();
         } else {
             waitPlayerTurn();
         }
+    }
+
+    private void handleBotPlayerTurn() {
+        var turnStartMillis = System.currentTimeMillis();
+        dispatcher.send(params, messageFactory.playerTurn(currentPlayer, bettingRound, nextActions, params.getPlayerTurnWaitMs()));
+
+        var createDto = readTx.execute(status -> {
+            var playerSessionManaged = getThrowGameInterrupted(playerSessionRepository.findById(currentPlayer.getId()), "Player Session not found during bot player turn: " + currentPlayer.getId());
+            var prevPlayerActions = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId());
+            var botNextActions = playerActionService.getNextActions(playerSessionManaged, prevPlayerActions);
+            return botActionService.decideAction(playerSessionManaged, bettingRound, botNextActions);
+        });
+        gameSpeedService.sleepBotThinkingTime(bettingRound, params.getPlayerTurnWaitMs(), turnStartMillis);
+
+        writeTx.executeWithoutResult(status -> {
+            var playerSessionManaged = getThrowGameInterrupted(playerSessionRepository.findById(currentPlayer.getId()), "Player Session not found during bot player turn: " + currentPlayer.getId());
+            texasPlayerActionService.playerAction(playerSessionManaged, gameThread, createDto, false);
+        });
     }
 
     private void handleDisconnectedPlayerTurn() {
