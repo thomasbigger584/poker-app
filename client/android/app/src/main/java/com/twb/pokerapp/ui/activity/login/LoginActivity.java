@@ -38,6 +38,7 @@ import net.openid.appauth.browser.AnyBrowserMatcher;
 
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.inject.Inject;
@@ -49,6 +50,7 @@ public final class LoginActivity extends BaseNetworkActivity {
     private static final String TAG = LoginActivity.class.getSimpleName();
     private static final String EXTRA_FAILED = "com.twb.pokerapp.auth.failed";
     private static final Class<? extends AppCompatActivity> AUTH_COMPLETED_ACTIVITY = TableListActivity.class;
+    private static final int AUTH_WARMUP_TIMEOUT_SECONDS = 15;
 
     private final AtomicReference<String> clientId = new AtomicReference<>();
     private final AtomicReference<AuthorizationRequest> authRequest = new AtomicReference<>();
@@ -223,9 +225,24 @@ public final class LoginActivity extends BaseNetworkActivity {
     @WorkerThread
     private void doAuth() {
         try {
-            authIntentLatch.await(); // Ensure warmUpBrowser finished
+            // Bounded wait: if warm-up never finished (e.g. discovery/registration failed) we must
+            // recover the button instead of blocking this thread forever and wedging login.
+            if (!authIntentLatch.await(AUTH_WARMUP_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+                Log.w(TAG, "Auth intent not ready before timeout");
+                recoverFromAuthNotReady();
+                return;
+            }
         } catch (InterruptedException ex) {
             Log.w(TAG, "Interrupted waiting for auth intent");
+            Thread.currentThread().interrupt();
+            recoverFromAuthNotReady();
+            return;
+        }
+
+        if (authRequest.get() == null || authIntent.get() == null) {
+            Log.w(TAG, "Auth request/intent unavailable after warm-up");
+            recoverFromAuthNotReady();
+            return;
         }
 
         var completionIntent = new Intent(this, AUTH_COMPLETED_ACTIVITY);
@@ -243,6 +260,21 @@ public final class LoginActivity extends BaseNetworkActivity {
                 completedIntent,
                 canceledIntent,
                 authIntent.get());
+    }
+
+    /**
+     * Called when a login attempt fired before AppAuth finished warming up. Re-enables the button so
+     * the user isn't stuck, and re-kicks initialization so a retry can actually succeed (the warm-up
+     * latch only ever needs one successful count-down).
+     */
+    private void recoverFromAuthNotReady() {
+        runOnUiThread(() -> {
+            binding.loginButton.setEnabled(true);
+            displaySnackbarMessage("Still connecting to the login service — please try again");
+        });
+        if (isAppAuthInitialized) {
+            networkExecutor.submit(this::initializeAppAuth);
+        }
     }
 
     private void recreateAuthorizationService() {

@@ -6,6 +6,9 @@
 
     <string name="keycloak_testing">Keycloak testing</string>
     <string name="login_register">Login / Register</string>
+    <string name="app_logo_content_description">Poker app logo</string>
+    <string name="login_title">TWB POKER</string>
+    <string name="login_subtitle">Texas Hold\'em</string>
 
     <string name="send_mode_1">Send WebSocket</string>
     <string name="send_mode_2">Send REST</string>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rounded backplate used as the logo ImageView's outline so the artwork is clipped to rounded
+     corners (via android:clipToOutline) and sits neatly inside bg_logo_ring. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="21dp" />
+    <solid android:color="@color/roomDark" />
+</shape>

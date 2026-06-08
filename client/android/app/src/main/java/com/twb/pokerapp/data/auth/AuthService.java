@@ -23,7 +23,7 @@ public class AuthService {
     private static final String TAG = AuthService.class.getSimpleName();
     private static final String USERNAME_CLAIM = "preferred_username";
     private static final int TOKEN_EXPIRY_LEEWAY_SECONDS = 10;
-    private static final int REFRESH_TIMEOUT_SECONDS = 3;
+    private static final int REFRESH_TIMEOUT_SECONDS = 15;
     private final AuthStateManager authStateManager;
     private final AuthorizationService authService;
     private final ReentrantLock refreshLock = new ReentrantLock();
