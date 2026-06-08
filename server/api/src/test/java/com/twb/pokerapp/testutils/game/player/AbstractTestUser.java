@@ -44,6 +44,8 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     private static final String NOTIFICATION_TOPIC = "/user/queue/notifications";
     private static final String SEND_PLAYER_ACTION = "/app/pokerTable.%s.sendPlayerAction";
     private static final String SEND_BOT_CONNECTED = "/app/pokerTable.%s.sendBotConnected";
+    private static final String SEND_DISCONNECT_PLAYER = "/app/pokerTable.%s.sendDisconnectPlayer";
+    private static final int DISCONNECT_RECEIPT_TIMEOUT_SECS = 10;
 
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String HEADER_CONNECTION_TYPE = "X-Connection-Type";
@@ -103,12 +105,37 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     public void disconnect() {
         if (session != null && session.isConnected()) {
             log.debug("Disconnecting {} from {}", params.getUsername(), params.getTable().getId());
+            sendDisconnectPlayer();
             session.disconnect();
         }
         if (client != null && client.isRunning()) {
             client.stop();
         }
         session = null;
+    }
+
+    /**
+     * Send the explicit "leave table" message and block until the server confirms it (via the
+     * STOMP receipt sent once {@code onUserDisconnected} has committed), so the seat is given up
+     * before the socket is torn down. Best-effort: logs and proceeds if no receipt arrives.
+     */
+    private void sendDisconnectPlayer() {
+        var destination = SEND_DISCONNECT_PLAYER.formatted(params.getTable().getId());
+        var headers = new StompHeaders();
+        headers.setDestination(destination);
+        headers.setReceipt("receipt-" + params.getUsername() + "-disconnect-" + UUID.randomUUID());
+
+        var receiptLatch = new CountDownLatch(1);
+        var receiptable = session.send(headers, Collections.emptyMap());
+        receiptable.addReceiptTask(receiptLatch::countDown);
+        receiptable.addReceiptLostTask(receiptLatch::countDown);
+        try {
+            if (!receiptLatch.await(DISCONNECT_RECEIPT_TIMEOUT_SECS, TimeUnit.SECONDS)) {
+                log.warn("Timed out awaiting explicit disconnect receipt for user {}", params.getUsername());
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     public void stop() {

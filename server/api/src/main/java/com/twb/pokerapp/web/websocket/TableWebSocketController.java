@@ -133,6 +133,7 @@ public class TableWebSocketController {
 
         log.debug(">>>> sendDisconnectPlayer - Poker Table: {} - User: {}", tableId, principal.getName());
         tableGameService.onUserDisconnected(tableId, principal.getName());
+        dispatcher.sendReceipt(headerAccessor);
     }
 
     // *****************************************************************************************
