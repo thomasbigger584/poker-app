@@ -1,37 +1,168 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="500dp"
+<!-- Landscape-oriented bet/raise dialog: amount + confirm on the left, chip rack +
+     controls on the right, so it stays short. Wrapped in a ScrollView purely as a
+     safety net on very short screens (the window is capped at 80% height in code). -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:background="@color/colorPrimaryDark"
-    android:minWidth="500dp"
-    android:orientation="vertical"
-    android:padding="32dp">
+    android:fillViewport="true"
+    android:scrollbars="none">
 
-    <TextView
-        android:id="@+id/titleTextView"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Bet or Raise"
-        android:textColor="@android:color/white" />
+        android:background="@drawable/bg_dialog_felt"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="20dp">
 
-    <SeekBar
-        android:id="@+id/betRaiseSeekBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
-        android:layout_marginBottom="30dp"
-        android:progressDrawable="@drawable/seekbar_background"
-        android:theme="@style/PokerSeekBar"
-        android:thumb="@drawable/seekbar_thumb">
+        <!-- LEFT: readout + confirm -->
+        <LinearLayout
+            android:layout_width="230dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-    </SeekBar>
+            <TextView
+                android:id="@+id/titleTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.08"
+                android:text="@string/bet_title_bet"
+                android:textAllCaps="true"
+                android:textColor="@color/tableGold"
+                android:textSize="12sp"
+                android:textStyle="bold" />
 
-    <Button
-        android:id="@+id/successButton"
-        style="@style/Widget.AppCompat.Button.Colored"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|right"
-        android:text="OK" />
+            <TextView
+                android:id="@+id/amountTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_amount_display"
+                android:gravity="center"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:text="$0.00"
+                android:textColor="@android:color/white"
+                android:textSize="26sp"
+                android:textStyle="bold"
+                tools:ignore="HardcodedText" />
 
-</LinearLayout>
+            <TextView
+                android:id="@+id/rangeTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="center"
+                android:textColor="#B0FFFFFF"
+                android:textSize="11sp"
+                tools:text="Min $10.00   •   Stack $1000.00" />
+
+            <Button
+                android:id="@+id/successButton"
+                style="@style/PokerActionButton"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/btn_action_green"
+                android:textSize="16sp"
+                tools:text="BET   $50.00" />
+
+        </LinearLayout>
+
+        <!-- divider -->
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="18dp"
+            android:layout_marginEnd="18dp"
+            android:background="#33FFD24A" />
+
+        <!-- RIGHT: chip rack + controls + optional slider -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <androidx.gridlayout.widget.GridLayout
+                android:id="@+id/chipRack"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                app:columnCount="4" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/undoButton"
+                    style="@style/PokerActionButton"
+                    android:layout_width="0dp"
+                    android:layout_height="42dp"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_chip_control"
+                    android:text="@string/bet_undo"
+                    android:textColor="@color/tableGold"
+                    android:textSize="20sp" />
+
+                <Button
+                    android:id="@+id/minButton"
+                    style="@style/PokerActionButton"
+                    android:layout_width="0dp"
+                    android:layout_height="42dp"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_chip_control"
+                    android:text="@string/bet_min"
+                    android:textColor="@color/tableGold" />
+
+                <Button
+                    android:id="@+id/allInButton"
+                    style="@style/PokerActionButton"
+                    android:layout_width="0dp"
+                    android:layout_height="42dp"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_chip_control"
+                    android:text="@string/bet_all_in"
+                    android:textColor="@color/tableGold" />
+
+                <Button
+                    android:id="@+id/customButton"
+                    style="@style/PokerActionButton"
+                    android:layout_width="0dp"
+                    android:layout_height="42dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_chip_control"
+                    android:text="@string/bet_custom"
+                    android:textColor="@color/tableGold" />
+
+            </LinearLayout>
+
+            <SeekBar
+                android:id="@+id/betRaiseSeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:maxHeight="6dp"
+                android:minHeight="6dp"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:progressDrawable="@drawable/seekbar_progress_gold"
+                android:splitTrack="false"
+                android:thumb="@drawable/seekbar_thumb_gold"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

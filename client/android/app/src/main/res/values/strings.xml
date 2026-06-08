@@ -112,6 +112,16 @@
     <string name="currency_format">$%.2f</string>
     <string name="bet_amount_format">Bet: $%.2f</string>
     <string name="raise_amount_format">Raise: $%.2f</string>
+    <string name="bet_confirm_format">BET   $%.2f</string>
+    <string name="raise_confirm_format">RAISE   $%.2f</string>
+    <string name="bet_title_bet">Place Your Bet</string>
+    <string name="bet_title_raise">Raise To</string>
+    <string name="bet_range_format">Min $%1$,.2f   •   Stack $%2$,.2f</string>
+    <string name="bet_undo">−</string>
+    <string name="bet_min">Min</string>
+    <string name="bet_all_in">All-In</string>
+    <string name="bet_custom">Custom</string>
+    <string name="bet_chip_thousands_format">%dK</string>
     <string name="default_pot_size">$00.00</string>
     <string name="player_count_format">%1$d/%2$d</string>
     <string name="not_connected_text">--</string>
@@ -125,6 +135,8 @@
     <string name="bet">BET</string>
     <string name="call">CALL</string>
     <string name="check">CHECK</string>
+    <string name="call_with_amount_format">CALL ($%.2f)</string>
+    <string name="all_in_with_amount_format">ALL IN ($%.2f)</string>
     <string name="no_funds">$00.00</string>
 
     <string name="card_content_description">Card</string>

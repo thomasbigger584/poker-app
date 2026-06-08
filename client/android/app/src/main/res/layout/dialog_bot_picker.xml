@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Felt-and-gold bot picker, matching the game dialogs. Rows are added in code into botList
+     and the whole thing scrolls if there are many bots (window capped at 80% height). -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_dialog_felt"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:letterSpacing="0.08"
+            android:text="@string/select_bot"
+            android:textAllCaps="true"
+            android:textColor="@color/tableGold"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <!-- Bots laid out in two columns so the dialog stays short in landscape; populated in code. -->
+        <androidx.gridlayout.widget.GridLayout
+            android:id="@+id/botList"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            app:columnCount="2" />
+
+        <Button
+            android:id="@+id/cancelButton"
+            style="@style/PokerActionButton"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/btn_chip_control"
+            android:text="@string/cancel"
+            android:textColor="@color/tableGold" />
+
+    </LinearLayout>
+
+</ScrollView>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Gold-outlined control button (undo / min / all-in / custom) for the bet dialog. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#4DFFD24A">
+    <item android:id="@android:id/background">
+        <shape android:shape="rectangle">
+            <corners android:radius="10dp" />
+            <solid android:color="#1AFFFFFF" />
+            <stroke
+                android:width="1dp"
+                android:color="@color/tableGoldDeep" />
+        </shape>
+    </item>
+</ripple>

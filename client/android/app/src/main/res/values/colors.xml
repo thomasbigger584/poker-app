@@ -10,11 +10,14 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="colorPrimaryTranslucent">#991BAAE4</color>
-    <color name="colorPrimaryLight">#FF4EBFEF</color>
-    <color name="colorPrimary">#FF1BAAE4</color>
-    <color name="colorPrimaryDark">#FF047EAC</color>
-    <color name="colorAccent">#FF1A2866</color>
+    <!-- App identity: poker-felt green chrome with a casino-gold accent. These semantic colors
+         drive every toolbar, nav header, primary/outline button, the login gradient and dialogs,
+         so the whole app reads as one piece with the TexasGameActivity table. -->
+    <color name="colorPrimaryTranslucent">#991E7D3A</color>
+    <color name="colorPrimaryLight">#FF3CA75A</color>
+    <color name="colorPrimary">#FF1E7D3A</color>
+    <color name="colorPrimaryDark">#FF0E4D22</color>
+    <color name="colorAccent">#FFC8961E</color>
 
     <color name="colorWhite">#FFFFFF</color>
 
