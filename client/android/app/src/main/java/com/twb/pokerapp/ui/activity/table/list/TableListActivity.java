@@ -236,7 +236,7 @@ public class TableListActivity extends BaseAuthActivity implements
     }
 
     @Override
-    public void onTableClicked(TableDTO table) {
+    public void onConnectClicked(TableDTO table) {
         var intent = new Intent(this, TableConnectActivity.class);
         intent.putExtras(table.toBundle());
         startActivity(intent);

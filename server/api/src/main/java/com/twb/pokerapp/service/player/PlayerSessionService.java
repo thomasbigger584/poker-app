@@ -9,6 +9,7 @@ import com.twb.pokerapp.domain.enumeration.SessionState;
 import com.twb.pokerapp.domain.enumeration.TransactionHistoryType;
 import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.mapper.PlayerSessionMapper;
+import com.twb.pokerapp.repository.HandRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.UserRepository;
 import com.twb.pokerapp.service.TransactionHistoryService;
@@ -27,6 +28,7 @@ import java.math.BigDecimal;
 public class PlayerSessionService {
     private final UserRepository userRepository;
     private final PlayerSessionRepository repository;
+    private final HandRepository handRepository;
     private final PlayerSessionMapper mapper;
     private final TransactionHistoryService transactionHistoryService;
 
@@ -99,14 +101,19 @@ public class PlayerSessionService {
     }
 
     private int getNextAvailablePosition(PokerTable table) {
-        var sessions = repository.findConnectedPlayersByTableId(table.getId());
+        var connectedPositions = repository.findConnectedPlayersByTableId(table.getId()).stream()
+                .map(PlayerSession::getPosition)
+                .filter(java.util.Objects::nonNull)
+                .collect(java.util.stream.Collectors.toSet());
+        // A player who left mid-hand keeps their seat reserved until that hand finishes, so it can't
+        // be re-occupied while the hand is still resolving (the leaver auto-folds out of it).
+        var reservedPositions = handRepository.findOccupiedPositionsInCurrentRound(table.getId());
+
         for (var position = 1; position <= table.getMaxPlayers(); position++) {
-            final var finalPosition = position;
-            if (sessions.stream().noneMatch(s ->
-                    s.getPosition() != null && s.getPosition() == finalPosition)) {
+            if (!connectedPositions.contains(position) && !reservedPositions.contains(position)) {
                 return position;
             }
         }
-        return 1;
+        throw new GamePlayerErrorLogException("Table %s is full".formatted(table.getId()));
     }
 }

@@ -344,6 +344,16 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
     }
 
     private boolean isPlayerDisconnected(PlayerSession playerSession) {
+        // Authoritative check first: an explicit "leave table" marks the session DISCONNECTED
+        // synchronously (before the websocket registry catches up), so we fold the player the
+        // instant their turn comes up instead of waiting out the turn timer. The in-memory copy in
+        // the betting rotation can be stale, so re-read the current state by id.
+        var current = playerSessionRepository.findById(playerSession.getId()).orElse(null);
+        if (current == null || current.getSessionState() != SessionState.CONNECTED) {
+            return true;
+        }
+        // Registry check still covers a passive socket drop, where the DB session stays CONNECTED
+        // for the duration of the disconnect grace window.
         return userWebsocketService.isUserDisconnected(params.getTable(), playerSession);
     }
 

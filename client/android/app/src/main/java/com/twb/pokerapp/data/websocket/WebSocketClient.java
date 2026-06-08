@@ -52,6 +52,7 @@ public class WebSocketClient {
     private static final String SEND_CHAT_MESSAGE = ".sendChatMessage";
     private static final String SEND_PLAYER_ACTION = ".sendPlayerAction";
     private static final String SEND_BOT_CONNECTED = ".sendBotConnected";
+    private static final String SEND_DISCONNECT_PLAYER = ".sendDisconnectPlayer";
 
     private final AuthService authService;
     private final AuthConfiguration authConfiguration;
@@ -264,6 +265,16 @@ public class WebSocketClient {
     public void sendBotConnection(UUID tableId, SendBotConnectedDTO dto, SendListener listener) {
         var destination = String.format(Locale.getDefault(), SEND_ENDPOINT_PREFIX + SEND_BOT_CONNECTED, tableId);
         sendMessage(destination, gson.toJson(dto), listener);
+    }
+
+    /**
+     * Explicitly leave the table — the player gives up their seat immediately (no grace window;
+     * auto-folds at the first opportunity if mid-hand), unlike a passive socket drop. The body is
+     * ignored by the server; the destination identifies the action.
+     */
+    public void sendDisconnectPlayer(UUID tableId, SendListener listener) {
+        var destination = String.format(Locale.getDefault(), SEND_ENDPOINT_PREFIX + SEND_DISCONNECT_PLAYER, tableId);
+        sendMessage(destination, "{}", listener);
     }
 
     // WebSocket Send Helper Methods

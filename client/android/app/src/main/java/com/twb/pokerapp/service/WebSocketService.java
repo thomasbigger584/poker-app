@@ -263,6 +263,30 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
     private void onStopAction() {
         shuttingDown = true;
         cancelReconnect();
+
+        // Explicit leave: tell the server to give up the seat right away (immediate disconnect,
+        // auto-fold at the first opportunity if mid-hand) before closing the socket. Closing alone
+        // would only trigger the passive grace-period disconnect. Tear down once the message has
+        // flushed (or failed) so the DISCONNECT frame can't race ahead of it.
+        if (tableId != null && webSocketClient.isConnected()) {
+            webSocketClient.sendDisconnectPlayer(tableId, new WebSocketClient.SendListener() {
+                @Override
+                public void onSendSuccess() {
+                    teardown();
+                }
+
+                @Override
+                public void onSendFailure(Throwable throwable) {
+                    Log.e(TAG, "Failed to send explicit disconnect; tearing down anyway", throwable);
+                    teardown();
+                }
+            });
+        } else {
+            teardown();
+        }
+    }
+
+    private void teardown() {
         webSocketClient.disconnect();
         repository.clearSession();
         this.tableId = null;
