@@ -9,6 +9,7 @@ import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -20,6 +21,19 @@ public class UserWebsocketService {
         var destination = TOPIC_PREFIX + table.getId();
         return userRegistry.getUsers().stream()
                 .filter(user -> isSubscribedToTable(user, destination)).toList();
+    }
+
+    /**
+     * Whether the given username currently has any live websocket session subscribed to the
+     * table's topic. Used to verify a user is genuinely gone before disconnecting them after a
+     * grace period (handles reconnects that opened a fresh session).
+     */
+    public boolean isUserConnectedToTable(UUID tableId, String username) {
+        var websocketUser = userRegistry.getUser(username);
+        if (websocketUser == null) {
+            return false;
+        }
+        return isSubscribedToTable(websocketUser, TOPIC_PREFIX + tableId);
     }
 
     public boolean isUserDisconnected(PokerTable table, PlayerSession session) {

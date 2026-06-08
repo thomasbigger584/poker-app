@@ -13,6 +13,8 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+
 @Slf4j
 @Component("texasGameThread")
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -52,16 +54,36 @@ public class TexasGameThread extends GameThread {
     private void initDeal() {
         var activePlayers = playerSessionRepository
                 .findActivePlayersByTableId(table.getId(), roundId);
+
+        // A player who isn't actually connected at deal time (e.g. dropped during the disconnect
+        // grace window, where the DB session is still CONNECTED but the socket is gone) can't be
+        // dealt cards. Remove them from the round entirely so they can't linger as an active
+        // player with no hole cards; otherwise they could reach a showdown / win with no hand.
+        var dealtPlayers = new ArrayList<PlayerSession>();
+        for (var playerSession : activePlayers) {
+            checkRoundInterrupted();
+            if (userWebsocketService.isUserDisconnected(table, playerSession)) {
+                log.debug("Deactivating disconnected player for round: {}", playerSession.getUser().getUsername());
+                deactivatePlayerForRound(playerSession);
+            } else {
+                dealtPlayers.add(playerSession);
+            }
+        }
+
         for (var cardType : CardType.PLAYER_CARDS) {
-            for (var playerSession : activePlayers) {
+            for (var playerSession : dealtPlayers) {
                 checkRoundInterrupted();
-                if (userWebsocketService.isUserDisconnected(table, playerSession)) {
-                    log.debug("Skipping dealing {} to disconnected player: {}", cardType, playerSession.getUser().getUsername());
-                    continue;
-                }
                 dealPlayerCard(cardType, playerSession);
             }
         }
+    }
+
+    private void deactivatePlayerForRound(PlayerSession playerSession) {
+        writeTx.executeWithoutResult(status ->
+                playerSessionRepository.findById(playerSession.getId()).ifPresent(session -> {
+                    session.setActive(false);
+                    playerSessionRepository.save(session);
+                }));
     }
 
     private void dealPlayerCard(CardType cardType, PlayerSession playerSession) {

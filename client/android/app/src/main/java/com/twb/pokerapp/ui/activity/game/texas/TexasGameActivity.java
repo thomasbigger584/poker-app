@@ -2,6 +2,7 @@ package com.twb.pokerapp.ui.activity.game.texas;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
@@ -18,23 +19,39 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.twb.pokerapp.R;
-import com.twb.pokerapp.databinding.ActivityGameTexasBinding;
 import com.twb.pokerapp.data.auth.AuthService;
 import com.twb.pokerapp.data.model.dto.appuser.AppUserDTO;
 import com.twb.pokerapp.data.model.dto.table.TableDTO;
 import com.twb.pokerapp.data.model.enumeration.ActionType;
+import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
+import com.twb.pokerapp.data.websocket.message.server.payload.BettingRoundUpdatedDTO;
+import com.twb.pokerapp.data.websocket.message.server.payload.ChatMessageDTO;
+import com.twb.pokerapp.data.websocket.message.server.payload.DealCommunityCardDTO;
+import com.twb.pokerapp.data.websocket.message.server.payload.DealPlayerCardDTO;
+import com.twb.pokerapp.data.websocket.message.server.payload.DealerDeterminedDTO;
+import com.twb.pokerapp.data.websocket.message.server.payload.ErrorMessageDTO;
+import com.twb.pokerapp.data.websocket.message.server.payload.GameFinishedDTO;
+import com.twb.pokerapp.data.websocket.message.server.payload.LogMessageDTO;
 import com.twb.pokerapp.data.repository.RepositoryCallback;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerActionedDTO;
+import com.twb.pokerapp.data.websocket.message.server.payload.PlayerConnectedDTO;
+import com.twb.pokerapp.data.websocket.message.server.payload.PlayerDisconnectedDTO;
+import com.twb.pokerapp.data.websocket.message.server.payload.PlayerSubscribedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerTurnDTO;
+import com.twb.pokerapp.data.websocket.message.server.payload.RoundFinishedDTO;
+import com.twb.pokerapp.data.websocket.message.server.payload.RoundStateDTO;
+import com.twb.pokerapp.data.websocket.message.server.payload.ValidationDTO;
+import com.twb.pokerapp.databinding.ActivityGameTexasBinding;
+import com.twb.pokerapp.service.WebSocketService;
 import com.twb.pokerapp.ui.activity.base.BaseAuthActivity;
 import com.twb.pokerapp.ui.activity.game.chatbox.ChatBoxRecyclerAdapter;
 import com.twb.pokerapp.ui.activity.game.texas.controller.ControlsController;
 import com.twb.pokerapp.ui.activity.game.texas.controller.TableController;
 import com.twb.pokerapp.ui.dialog.AlertModalDialog;
-import com.twb.pokerapp.ui.dialog.game.BaseGameDialog;
-import com.twb.pokerapp.ui.dialog.game.BetRaiseGameDialog;
 import com.twb.pokerapp.ui.dialog.DialogHelper;
 import com.twb.pokerapp.ui.dialog.FinishActivityOnClickListener;
+import com.twb.pokerapp.ui.dialog.game.BaseGameDialog;
+import com.twb.pokerapp.ui.dialog.game.BetRaiseGameDialog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +65,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     private static final String TAG = TexasGameActivity.class.getSimpleName();
     private static final String KEY_CONNECTION_TYPE = "CONNECTION_TYPE";
     private static final String KEY_BUY_IN_AMOUNT = "BUY_IN_AMOUNT";
+    private static final String KEY_RECONNECT = "RECONNECT";
 
     @Inject
     AuthService authService;
@@ -62,14 +80,27 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     private ControlsController controlsController;
     private String connectionType;
     private Double buyInAmount;
+    private boolean reconnect;
 
-    private PlayerTurnDTO currentPlayerTurn;
+    private long lastRenderedTimestamp = 0L;
+    private boolean hasEverConnected = false;
+    private boolean connectionLostShown = false;
 
     public static void startActivity(Activity activity, TableDTO table, String connectionType, Double buyInAmount) {
+        startActivity(activity, table, connectionType, buyInAmount, false);
+    }
+
+    /**
+     * @param reconnect true when resuming an existing seat (e.g. the "Reconnect" button on the
+     *                  table list). The server resumes the seat as-is; if the grace window already
+     *                  expired it returns an error instead of buying the player back in.
+     */
+    public static void startActivity(Activity activity, TableDTO table, String connectionType, Double buyInAmount, boolean reconnect) {
         var intent = new Intent(activity, TexasGameActivity.class);
         intent.putExtras(table.toBundle());
         intent.putExtra(KEY_CONNECTION_TYPE, connectionType);
         intent.putExtra(KEY_BUY_IN_AMOUNT, buyInAmount);
+        intent.putExtra(KEY_RECONNECT, reconnect);
         activity.startActivity(intent);
     }
 
@@ -115,147 +146,267 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         });
 
         viewModel = new ViewModelProvider(this).get(TexasGameViewModel.class);
-        viewModel.errors.observe(this, throwable -> {
-            if (throwable == null) return;
-            DialogHelper.dismiss(loadingSpinner);
-            var alertModalDialog = AlertModalDialog
-                    .newInstance(AlertModalDialog.AlertModalType.ERROR, throwable.getMessage(), null);
-            var prev = getSupportFragmentManager().findFragmentByTag("error_modal");
-            if (prev == null) {
-                alertModalDialog.show(getSupportFragmentManager(), "error_modal");
-            } else {
-                Log.d("DEBUG", "Dialog error_modal already visible!");
-            }
-            chatBoxAdapter.add(throwable.getMessage());
-        });
-        viewModel.closedConnection.observe(this, aVoid -> {
-            dismissDialogs();
-            var message = getString(R.string.lost_connection);
-            var alertModalDialog = AlertModalDialog
-                    .newInstance(AlertModalDialog.AlertModalType.ERROR, message, new FinishActivityOnClickListener(this));
-            var prev = getSupportFragmentManager().findFragmentByTag("closed_connection_modal");
-            if (prev == null) {
-                alertModalDialog.show(getSupportFragmentManager(), "closed_connection_modal");
-            } else {
-                Log.d("DEBUG", "Dialog closed_connection_modal already visible!");
-            }
-            chatBoxAdapter.add(message);
-        });
-        viewModel.playerSubscribed.observe(this, playerSubscribed -> {
-            var currentUsername = authService.getCurrentUser();
-            var currentPlayerSession =
-                    playerSubscribed.getCurrentPlayerSession(currentUsername);
-            tableController.connectCurrentPlayer(currentPlayerSession);
-            for (var playerSession : playerSubscribed.getPlayerSessions()) {
-                if (!playerSession.getUser().getUsername().equals(currentUsername)) {
-                    tableController.connectOtherPlayer(playerSession);
+        viewModel.setTableId(table.getId());
+        viewModel.messages.observe(this, this::onMessagesReceived);
+        viewModel.connected.observe(this, connected -> {
+            var isConnected = Boolean.TRUE.equals(connected);
+            if (isConnected) {
+                DialogHelper.dismiss(loadingSpinner);
+                if (connectionLostShown) {
+                    chatBoxAdapter.add(getString(R.string.reconnected));
                 }
+                hasEverConnected = true;
+                connectionLostShown = false;
+            } else if (hasEverConnected && !connectionLostShown) {
+                chatBoxAdapter.add(getString(R.string.connection_lost_reconnecting));
+                connectionLostShown = true;
             }
-            chatBoxAdapter.add(getString(R.string.connected_format, currentUsername));
-            dismissDialogs();
         });
-        viewModel.playerConnected.observe(this, playerConnected -> {
-            var playerSession = playerConnected.getPlayerSession();
-            if (!authService.isCurrentUser(playerSession.getUser())) {
+        viewModel.errors.observe(this, throwable -> {
+            if (throwable != null) {
+                handleErrorMessage(throwable.getMessage());
+            }
+        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        var turn = viewModel.getCurrentPlayerTurn();
+        var timestamp = viewModel.getCurrentPlayerTurnTimestamp();
+        if (turn != null) {
+            handlePlayerTurn(turn, timestamp);
+        }
+    }
+
+    private void onMessagesReceived(List<ServerMessageDTO<?>> messages) {
+        if (messages == null) return;
+        for (var message : messages) {
+            if (message.getTimestamp() > lastRenderedTimestamp) {
+                dispatchMessage(message);
+                lastRenderedTimestamp = message.getTimestamp();
+            }
+        }
+    }
+
+    private void dispatchMessage(ServerMessageDTO<?> message) {
+        switch (message.getType()) {
+            case PLAYER_SUBSCRIBED:
+                handlePlayerSubscribed((PlayerSubscribedDTO) message.getPayload());
+                break;
+            case PLAYER_CONNECTED:
+                handlePlayerConnected((PlayerConnectedDTO) message.getPayload());
+                break;
+            case DEALER_DETERMINED:
+                handleDealerDetermined((DealerDeterminedDTO) message.getPayload());
+                break;
+            case DEAL_INIT:
+                handleDealPlayerCard((DealPlayerCardDTO) message.getPayload());
+                break;
+            case DEAL_COMMUNITY:
+                handleDealCommunityCard((DealCommunityCardDTO) message.getPayload());
+                break;
+            case PLAYER_TURN:
+                handlePlayerTurn((PlayerTurnDTO) message.getPayload(), message.getTimestamp());
+                break;
+            case PLAYER_ACTIONED:
+                handlePlayerActioned((PlayerActionedDTO) message.getPayload());
+                break;
+            case BETTING_ROUND_UPDATED:
+                handleBettingRoundUpdated((BettingRoundUpdatedDTO) message.getPayload());
+                break;
+            case ROUND_FINISHED:
+                handleRoundFinished((RoundFinishedDTO) message.getPayload());
+                break;
+            case GAME_FINISHED:
+                handleGameFinished((GameFinishedDTO) message.getPayload());
+                break;
+            case CHAT:
+                handleChatMessage((ChatMessageDTO) message.getPayload());
+                break;
+            case LOG:
+                handleLogMessage((LogMessageDTO) message.getPayload());
+                break;
+            case ERROR:
+                handleErrorMessage(((ErrorMessageDTO) message.getPayload()).getMessage());
+                break;
+            case VALIDATION:
+                handleValidationMessage((ValidationDTO) message.getPayload());
+                break;
+            case PLAYER_DISCONNECTED:
+                handlePlayerDisconnected((PlayerDisconnectedDTO) message.getPayload());
+                break;
+        }
+    }
+
+    private void handlePlayerSubscribed(PlayerSubscribedDTO playerSubscribed) {
+        clearCurrentPlayerTurn();
+        var currentUsername = authService.getCurrentUser();
+        var currentPlayerSession = playerSubscribed.getCurrentPlayerSession(currentUsername);
+        tableController.connectCurrentPlayer(currentPlayerSession);
+        for (var playerSession : playerSubscribed.getPlayerSessions()) {
+            if (!playerSession.getUser().getUsername().equals(currentUsername)) {
                 tableController.connectOtherPlayer(playerSession);
-                chatBoxAdapter.add(getString(R.string.connected_format, playerSession.getUser().getUsername()));
             }
-        });
-        viewModel.dealerDetermined.observe(this, dealerDetermined -> {
-            dismissDialogs();
-            tableController.dealerDetermined(dealerDetermined.getPlayerSession());
-        });
-        viewModel.dealPlayerCard.observe(this, dealPlayerCard -> {
-            dismissDialogs();
-            tableController.hidePlayerTurns();
-            controlsController.hide();
-            var playerSession = dealPlayerCard.getPlayerSession();
+        }
+        chatBoxAdapter.add(getString(R.string.connected_format, currentUsername));
+        dismissDialogs();
+
+        // Resume an in-progress hand (reconnect / app restart mid-round) where it left off.
+        if (playerSubscribed.getRoundState() != null) {
+            renderRoundState(playerSubscribed.getRoundState());
+        }
+    }
+
+    private void renderRoundState(RoundStateDTO roundState) {
+        // Clear transient state first so re-applying a snapshot (e.g. a reconnect while the table
+        // was still rendered) doesn't stack duplicate board cards or leave stale turn highlights.
+        tableController.resetCommunityCards();
+        tableController.hidePlayerTurns();
+        controlsController.hide();
+
+        if (roundState.getDealer() != null) {
+            tableController.dealerDetermined(roundState.getDealer());
+        }
+
+        // Hole cards: own cards face-up, opponents' face-down (same rule as live dealing).
+        for (var dealtCard : roundState.getPlayerCards()) {
+            var playerSession = dealtCard.getPlayerSession();
             if (authService.isCurrentUser(playerSession.getUser())) {
-                tableController.dealCurrentPlayerCard(dealPlayerCard);
+                tableController.dealCurrentPlayerCard(dealtCard);
             } else {
-                tableController.dealOtherPlayerCard(dealPlayerCard);
+                tableController.dealOtherPlayerCard(dealtCard);
             }
-        });
-        viewModel.playerTurn.observe(this, playerTurn -> {
-            var playerSession = playerTurn.getPlayerSession();
-            tableController.updatePlayerTurn(playerSession);
-            if (authService.isCurrentUser(playerSession.getUser())) {
-                controlsController.show(playerTurn);
-                currentPlayerTurn = playerTurn;
-            } else {
-                controlsController.hide();
-                currentPlayerTurn = null;
-            }
-        });
-        viewModel.playerActioned.observe(this, playerActioned -> {
-            dismissDialogs();
+        }
 
-            var action = playerActioned.getAction();
-            var playerSession = action.getPlayerSession();
-            tableController.updateDetails(playerSession);
-
-            if (ActionType.FOLD.name().equals(action.getActionType())) {
-                tableController.foldPlayer(playerSession);
-            }
-
-            tableController.hidePlayerTurns();
-            controlsController.hide();
-
-            chatBoxAdapter.add(getPlayerActionedMessage(playerActioned));
-        });
-        viewModel.bettingRoundUpdated.observe(this, bettingRoundUpdated -> {
-            tableController.updateBettingRound(bettingRoundUpdated);
-        });
-        viewModel.dealCommunityCard.observe(this, dealCommunityCard -> {
-            dismissDialogs();
-            controlsController.hide();
+        for (var communityCard : roundState.getCommunityCards()) {
+            var dealCommunityCard = new DealCommunityCardDTO();
+            dealCommunityCard.setCard(communityCard);
             tableController.dealCommunityCard(dealCommunityCard);
-        });
-        viewModel.roundFinished.observe(this, roundFinished -> {
-            dismissDialogs();
-            tableController.hidePlayerTurns();
+        }
+
+        if (roundState.getBettingRound() != null || !roundState.getRoundPots().isEmpty()) {
+            var bettingRoundUpdated = new BettingRoundUpdatedDTO();
+            bettingRoundUpdated.setRound(roundState.getRound());
+            bettingRoundUpdated.setBettingRound(roundState.getBettingRound());
+            bettingRoundUpdated.setRoundPots(roundState.getRoundPots());
+            tableController.updateBettingRound(bettingRoundUpdated);
+        }
+
+        for (var foldedPlayer : roundState.getFoldedPlayers()) {
+            tableController.foldPlayer(foldedPlayer);
+        }
+
+        // Render the live turn last so action buttons / countdown sit on top of the restored table.
+        if (roundState.getCurrentTurn() != null) {
+            handlePlayerTurn(roundState.getCurrentTurn(), System.currentTimeMillis());
+        }
+    }
+
+    private void handlePlayerConnected(PlayerConnectedDTO playerConnected) {
+        var playerSession = playerConnected.getPlayerSession();
+        if (!authService.isCurrentUser(playerSession.getUser())) {
+            tableController.connectOtherPlayer(playerSession);
+            chatBoxAdapter.add(getString(R.string.connected_format, playerSession.getUser().getUsername()));
+        }
+    }
+
+    private void handleDealerDetermined(DealerDeterminedDTO dealerDetermined) {
+        dismissDialogs();
+        clearCurrentPlayerTurn();
+        tableController.dealerDetermined(dealerDetermined.getPlayerSession());
+    }
+
+    private void handleDealPlayerCard(DealPlayerCardDTO dealPlayerCard) {
+        dismissDialogs();
+        clearCurrentPlayerTurn();
+        tableController.hidePlayerTurns();
+        controlsController.hide();
+        var playerSession = dealPlayerCard.getPlayerSession();
+        if (authService.isCurrentUser(playerSession.getUser())) {
+            tableController.dealCurrentPlayerCard(dealPlayerCard);
+        } else {
+            tableController.dealOtherPlayerCard(dealPlayerCard);
+        }
+    }
+
+    private void handlePlayerTurn(PlayerTurnDTO playerTurn, long messageTimestamp) {
+        var playerSession = playerTurn.getPlayerSession();
+        tableController.updatePlayerTurn(playerSession);
+        if (authService.isCurrentUser(playerSession.getUser())) {
+            controlsController.show(playerTurn, messageTimestamp);
+        } else {
             controlsController.hide();
-            tableController.update(roundFinished);
-        });
-        viewModel.gameFinished.observe(this, gameFinished -> {
-            var clickListener = new FinishActivityOnClickListener(this);
-            var alertModalDialog = AlertModalDialog
-                    .newInstance(AlertModalDialog.AlertModalType.INFO, getString(R.string.game_finished), clickListener);
-            var prev = getSupportFragmentManager().findFragmentByTag("game_finished_modal");
-            if (prev == null) {
-                alertModalDialog.show(getSupportFragmentManager(), "game_finished_modal");
-            } else {
-                Log.d("DEBUG", "Dialog game_finished_modal already visible!");
-            }
-            chatBoxAdapter.add(getString(R.string.game_finished));
-        });
-        viewModel.chatMessage.observe(this, chatMessage -> {
-            var user = chatMessage.getUsername();
-            if (chatMessage.getUsername().equals(authService.getCurrentUser())) {
-               user = "You";
-            }
-            chatBoxAdapter.add(getString(R.string.chat_message_format, user, chatMessage.getMessage()));
-        });
-        viewModel.logMessage.observe(this, logMessage -> {
-            chatBoxAdapter.add(logMessage.getMessage());
-        });
-        viewModel.errorMessage.observe(this, errorMessage -> {
-            handleErrorMessage(errorMessage.getMessage());
-        });
-        viewModel.validationMessage.observe(this, validation -> {
-            Log.w(TAG, "VALIDATION: Invalid PlayerAction Request: " + validation.toString());
-            Toast.makeText(this, getString(R.string.invalid_player_action), Toast.LENGTH_SHORT).show();
-        });
-        viewModel.playerDisconnected.observe(this, playerDisconnected -> {
-            var username = playerDisconnected.getUsername();
-            chatBoxAdapter.add(getString(R.string.disconnected_format, username));
-            var current = authService.getCurrentUser();
-            if (username.equals(current)) {
-                finish();
-            } else {
-                tableController.disconnectOtherPlayer(username);
-            }
-        });
+        }
+    }
+
+    private void handlePlayerActioned(PlayerActionedDTO playerActioned) {
+        dismissDialogs();
+        clearCurrentPlayerTurn();
+        var playerSession = playerActioned.getAction().getPlayerSession();
+        var action = playerActioned.getAction();
+        tableController.updateDetails(playerSession);
+        if (ActionType.FOLD.name().equals(action.getActionType())) {
+            tableController.foldPlayer(playerSession);
+        }
+        tableController.hidePlayerTurns();
+        controlsController.hide();
+        chatBoxAdapter.add(getPlayerActionedMessage(playerActioned));
+    }
+
+    private void handleBettingRoundUpdated(BettingRoundUpdatedDTO bettingRoundUpdated) {
+        tableController.updateBettingRound(bettingRoundUpdated);
+    }
+
+    private void handleDealCommunityCard(DealCommunityCardDTO dealCommunityCard) {
+        dismissDialogs();
+        clearCurrentPlayerTurn();
+        controlsController.hide();
+        tableController.dealCommunityCard(dealCommunityCard);
+    }
+
+    private void handleRoundFinished(RoundFinishedDTO roundFinished) {
+        dismissDialogs();
+        clearCurrentPlayerTurn();
+        tableController.hidePlayerTurns();
+        controlsController.hide();
+        tableController.update(roundFinished);
+    }
+
+    private void handleGameFinished(GameFinishedDTO gameFinished) {
+        clearCurrentPlayerTurn();
+        var clickListener = new FinishActivityOnClickListener(this);
+        var alertModalDialog = AlertModalDialog.newInstance(AlertModalDialog.AlertModalType.INFO, getString(R.string.game_finished), clickListener);
+        alertModalDialog.show(getSupportFragmentManager(), "game_finished_modal");
+        chatBoxAdapter.add(getString(R.string.game_finished));
+    }
+
+    private void handleChatMessage(ChatMessageDTO chatMessage) {
+        var user = chatMessage.getUsername();
+        if (chatMessage.getUsername().equals(authService.getCurrentUser())) {
+            user = "You";
+        }
+        chatBoxAdapter.add(getString(R.string.chat_message_format, user, chatMessage.getMessage()));
+    }
+
+    private void handleLogMessage(LogMessageDTO logMessage) {
+        chatBoxAdapter.add(logMessage.getMessage());
+    }
+
+    private void handleValidationMessage(ValidationDTO validation) {
+        for (var field : validation.getFields()) {
+            chatBoxAdapter.add(field.getMessage());
+        }
+    }
+
+    private void handlePlayerDisconnected(PlayerDisconnectedDTO playerDisconnected) {
+        var username = playerDisconnected.getUsername();
+        chatBoxAdapter.add(getString(R.string.disconnected_format, username));
+        if (username.equals(authService.getCurrentUser())) {
+            finish();
+        } else {
+            tableController.disconnectOtherPlayer(username);
+        }
     }
 
     private void initClickListeners() {
@@ -284,7 +435,18 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
 
     @Override
     protected void onAuthorized() {
-        viewModel.connect(table.getId(), connectionType, buyInAmount);
+        var serviceIntent = new Intent(this, WebSocketService.class);
+        serviceIntent.setAction(WebSocketService.ACTION_START);
+        serviceIntent.putExtra(WebSocketService.EXTRA_TABLE_ID, table.getId());
+        serviceIntent.putExtra(WebSocketService.EXTRA_CONNECTION_TYPE, connectionType);
+        serviceIntent.putExtra(WebSocketService.EXTRA_BUY_IN_AMOUNT, buyInAmount);
+        serviceIntent.putExtra(WebSocketService.EXTRA_RECONNECT, reconnect);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent);
+        } else {
+            startService(serviceIntent);
+        }
     }
 
     @Override
@@ -294,7 +456,14 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
 
     @Override
     protected void onDestroy() {
-        viewModel.disconnect();
+        // Only tear the background connection down when the user is genuinely leaving the table.
+        // A non-finishing destroy (config change, or the OS reclaiming the activity while the app
+        // is backgrounded) must keep the foreground service alive so we keep receiving updates.
+        if (isFinishing()) {
+            var serviceIntent = new Intent(this, WebSocketService.class);
+            serviceIntent.setAction(WebSocketService.ACTION_STOP);
+            startService(serviceIntent);
+        }
         super.onDestroy();
     }
 
@@ -476,17 +645,23 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         table = TableDTO.fromBundle(extras);
         connectionType = intent.getStringExtra(KEY_CONNECTION_TYPE);
         buyInAmount = intent.getDoubleExtra(KEY_BUY_IN_AMOUNT, 0d);
+        reconnect = intent.getBooleanExtra(KEY_RECONNECT, false);
         return true;
     }
 
     private double getRaiseMinimumBet() {
-        if (currentPlayerTurn != null) {
-            var amountToCall = currentPlayerTurn.getAmountToCall();
+        var turn = viewModel.getCurrentPlayerTurn();
+        if (turn != null) {
+            var amountToCall = turn.getAmountToCall();
             if (amountToCall != null) {
                 return amountToCall + 0.01;
             }
         }
         return 10d;
+    }
+
+    private void clearCurrentPlayerTurn() {
+        // Handled by Repository
     }
 
     private String getPlayerActionedMessage(PlayerActionedDTO playerActioned) {

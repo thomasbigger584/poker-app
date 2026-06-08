@@ -16,6 +16,7 @@ public class SessionService {
     private static final String SESSION_CONNECTION_TYPE = "SESSION_CONNECTION_TYPE";
     private static final String SESSION_TABLE_ID = "SESSION_TABLE_ID";
     private static final String SESSION_BUYIN_AMOUNT = "SESSION_BUYIN_AMOUNT";
+    private static final String SESSION_RECONNECT = "SESSION_RECONNECT";
 
     // *****************************************************************************************
     // PUT Methods
@@ -33,6 +34,10 @@ public class SessionService {
         put(headerAccessor, SESSION_BUYIN_AMOUNT, buyInAmount);
     }
 
+    public void putReconnect(StompHeaderAccessor headerAccessor, boolean reconnect) {
+        put(headerAccessor, SESSION_RECONNECT, reconnect);
+    }
+
     // *****************************************************************************************
     // GET Methods
     // *****************************************************************************************
@@ -47,6 +52,10 @@ public class SessionService {
 
     public Optional<BigDecimal> getBuyInAmount(StompHeaderAccessor headerAccessor) {
         return get(headerAccessor, SESSION_BUYIN_AMOUNT);
+    }
+
+    public boolean isReconnect(StompHeaderAccessor headerAccessor) {
+        return this.<Boolean>get(headerAccessor, SESSION_RECONNECT).orElse(false);
     }
 
     // *****************************************************************************************

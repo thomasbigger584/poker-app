@@ -56,6 +56,9 @@ app:
   player-turn-wait-ms: 30000
   round-start-wait-ms: 3000
   round-end-wait-ms: 3000
+  # Grace window after a websocket drops before the player is actually disconnected from the
+  # table, giving a transient drop / backgrounded app time to reconnect and keep their seat.
+  disconnect-grace-period-seconds: 20
 logging:
   level:
     com.twb.pokerapp: DEBUG

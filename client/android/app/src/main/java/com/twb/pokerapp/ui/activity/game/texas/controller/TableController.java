@@ -126,6 +126,14 @@ public class TableController {
         binding.communityCardLayout.dealCard(dealCommunityCard.getCard());
     }
 
+    /**
+     * Clears the community board so an in-progress hand can be re-dealt from a reconnect snapshot
+     * without stacking duplicate cards (cards are appended, not replaced).
+     */
+    public void resetCommunityCards() {
+        binding.communityCardLayout.reset();
+    }
+
     public void updateBettingRound(BettingRoundUpdatedDTO bettingRoundUpdated) {
         var totalPotAmount = bettingRoundUpdated.getRoundPots()
                 .stream()

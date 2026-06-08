@@ -5,6 +5,8 @@ import android.util.Log;
 import androidx.annotation.MainThread;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.twb.pokerapp.BuildConfig;
 import com.twb.pokerapp.data.auth.AuthConfiguration;
 import com.twb.pokerapp.data.auth.AuthEventBus;
@@ -13,6 +15,7 @@ import com.twb.pokerapp.data.websocket.message.client.SendBotConnectedDTO;
 import com.twb.pokerapp.data.websocket.message.client.SendChatMessageDTO;
 import com.twb.pokerapp.data.websocket.message.client.SendPlayerActionDTO;
 import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
+import com.twb.pokerapp.data.websocket.message.server.enumeration.ServerMessageType;
 import com.twb.pokerapp.di.network.qualifiers.Authenticated;
 import com.twb.stomplib.dto.LifecycleEvent;
 import com.twb.stomplib.dto.StompHeader;
@@ -25,6 +28,7 @@ import java.util.Locale;
 import java.util.UUID;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import io.reactivex.CompletableTransformer;
 import io.reactivex.Single;
@@ -33,6 +37,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
 
+@Singleton
 public class WebSocketClient {
     private static final String TAG = WebSocketClient.class.getSimpleName();
     private static final String UNAUTHORIZED_ERROR_CODE = "401";
@@ -47,6 +52,7 @@ public class WebSocketClient {
     private static final String SEND_CHAT_MESSAGE = ".sendChatMessage";
     private static final String SEND_PLAYER_ACTION = ".sendPlayerAction";
     private static final String SEND_BOT_CONNECTED = ".sendBotConnected";
+    private static final String SEND_DISCONNECT_PLAYER = ".sendDisconnectPlayer";
 
     private final AuthService authService;
     private final AuthConfiguration authConfiguration;
@@ -72,11 +78,32 @@ public class WebSocketClient {
     // WebSocket Lifecycle
     // ***************************************************************
 
-    public void connect(UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount) {
-        if (stompClient != null && stompClient.isConnected()) {
+    public boolean isConnected() {
+        return stompClient != null && stompClient.isConnected();
+    }
+
+    public void connect(UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount, boolean reconnect) {
+        if (isConnected()) {
             return;
         }
+        establishConnection(tableId, listener, connectionType, buyInAmount, reconnect);
+    }
 
+    /**
+     * Force a fresh connection, tearing down any existing (possibly half-dead, e.g. after a
+     * server heartbeat failure where the socket never reports CLOSED) connection first. Used by
+     * the service to reconnect after a drop — always a reconnect intent (resume the existing seat,
+     * never silently buy back in).
+     */
+    public void reconnect(UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount) {
+        if (stompClient != null) {
+            stompClient.disconnect();
+            stompClient = null;
+        }
+        establishConnection(tableId, listener, connectionType, buyInAmount, true);
+    }
+
+    private void establishConnection(UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount, boolean reconnect) {
         resetSubscriptions();
 
         compositeDisposable.add(Single.fromCallable(authService::getAccessTokenWithRefresh)
@@ -87,13 +114,11 @@ public class WebSocketClient {
                         listener.onConnectError(new LifecycleEvent(LifecycleEvent.Type.ERROR));
                         return;
                     }
-                    connectInternal(accessToken, tableId, listener, connectionType, buyInAmount);
-                }, throwable -> {
-                    listener.onSubscribeError(throwable);
-                }));
+                    connectInternal(accessToken, tableId, listener, connectionType, buyInAmount, reconnect);
+                }, listener::onSubscribeError));
     }
 
-    private void connectInternal(String accessToken, UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount) {
+    private void connectInternal(String accessToken, UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount, boolean reconnect) {
         var protocol = authConfiguration.isHttpsRequired() ? "wss://" : "ws://";
         var websocketUrl = protocol + BuildConfig.API_BASE_URL + WEBSOCKET_ENDPOINT + "/websocket";
 
@@ -105,6 +130,7 @@ public class WebSocketClient {
         connectHeaders.add(new StompHeader("Authorization", "Bearer " + accessToken));
         connectHeaders.add(new StompHeader("X-Connection-Type", connectionType));
         connectHeaders.add(new StompHeader("X-BuyIn-Amount", String.format(Locale.getDefault(), "%.2f", buyInAmount)));
+        connectHeaders.add(new StompHeader("X-Reconnect", Boolean.toString(reconnect)));
 
         stompClient.withClientHeartbeat(HEARTBEAT_MS)
                 .withServerHeartbeat(HEARTBEAT_MS);
@@ -184,7 +210,21 @@ public class WebSocketClient {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(stompMessage -> {
-                    var message = gson.fromJson(stompMessage.getPayload(), ServerMessageDTO.class);
+                    var jsonObject = gson.fromJson(stompMessage.getPayload(), JsonObject.class);
+                    var type = ServerMessageType.valueOf(jsonObject.get("type").getAsString());
+                    var timestamp = jsonObject.get("timestamp").getAsLong();
+                    var payloadElement = jsonObject.get("payload");
+                    
+                    JsonObject rawPayload = null;
+                    if (payloadElement != null && payloadElement.isJsonObject()) {
+                        rawPayload = payloadElement.getAsJsonObject();
+                    }
+
+                    var message = new ServerMessageDTO<>(type, rawPayload, timestamp);
+                    var payloadClass = type.getPayloadClass();
+                    if (payloadClass != null && rawPayload != null) {
+                        message.setPayload(gson.fromJson(rawPayload, payloadClass));
+                    }
                     listener.onMessage(message);
                 }, throwable -> {
                     Log.e(TAG, "Subscription error on topic: " + topic, throwable);
@@ -227,10 +267,24 @@ public class WebSocketClient {
         sendMessage(destination, gson.toJson(dto), listener);
     }
 
+    /**
+     * Explicitly leave the table — the player gives up their seat immediately (no grace window;
+     * auto-folds at the first opportunity if mid-hand), unlike a passive socket drop. The body is
+     * ignored by the server; the destination identifies the action.
+     */
+    public void sendDisconnectPlayer(UUID tableId, SendListener listener) {
+        var destination = String.format(Locale.getDefault(), SEND_ENDPOINT_PREFIX + SEND_DISCONNECT_PLAYER, tableId);
+        sendMessage(destination, "{}", listener);
+    }
+
     // WebSocket Send Helper Methods
     // ----------------------------------------------------------------
 
     private void sendMessage(String destination, String message, SendListener listener) {
+        if (stompClient == null || compositeDisposable == null) {
+            listener.onSendFailure(new IllegalStateException("WebSocket is not connected"));
+            return;
+        }
         compositeDisposable.add(stompClient.send(destination, message)
                 .compose(applySchedulers())
                 .subscribe(listener::onSendSuccess, listener::onSendFailure));

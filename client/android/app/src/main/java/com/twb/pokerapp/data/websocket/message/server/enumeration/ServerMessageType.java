@@ -142,4 +142,11 @@ public enum ServerMessageType {
                 throw new IllegalStateException("Unknown Server Message Type: " + this);
         }
     }
+
+    public boolean isTurnEndingMessage() {
+        return this != ServerMessageType.CHAT
+                && this != ServerMessageType.LOG
+                && this != ServerMessageType.PLAYER_CONNECTED
+                && this != ServerMessageType.PLAYER_DISCONNECTED;
+    }
 }

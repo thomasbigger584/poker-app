@@ -54,6 +54,7 @@
     <string name="cancel">Cancel</string>
     <string name="create_table">Create Table</string>
     <string name="connect">Connect</string>
+    <string name="reconnect">Reconnect</string>
     <string name="made_by">made by twb</string>
 
     <string name="connect_to_table_format">Connect to %s</string>
@@ -100,6 +101,8 @@
     <string name="created_table">Created Table</string>
 
     <string name="lost_connection">Lost connection with server</string>
+    <string name="connection_lost_reconnecting">Connection lost. Reconnecting…</string>
+    <string name="reconnected">Reconnected</string>
     <string name="game_finished">Game Finished</string>
     <string name="connected_format">Connected: %s</string>
     <string name="disconnected_format">Disconnected: %s</string>
