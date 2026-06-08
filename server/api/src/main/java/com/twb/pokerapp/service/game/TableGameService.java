@@ -40,6 +40,7 @@ public class TableGameService {
     private final BettingRoundRepository bettingRoundRepository;
 
     private final GameThreadManager threadManager;
+    private final RoundStateService roundStateService;
     private final ServerMessageFactory messageFactory;
     private final GameLogService gameLogService;
     private final MessageDispatcher dispatcher;
@@ -47,39 +48,53 @@ public class TableGameService {
     private final ApplicationContext context;
     private final TransactionTemplate writeTx;
 
-    public ServerMessageDTO onUserConnected(UUID tableId, ConnectionType connectionType, String username, BigDecimal buyInAmount) {
+    public ServerMessageDTO onUserConnected(UUID tableId, ConnectionType connectionType, String username, BigDecimal buyInAmount, boolean reconnect) {
         return mutex.evaluate(tableId, () -> {
-            var allPlayerSessions = writeTx.execute(status -> {
+            var playerSubscribed = writeTx.execute(status -> {
                 var table = getThrowPlayerErrorLog(tableRepository.findById(tableId), "No table found for Table ID: " + tableId);
-                if (connectionType == ConnectionType.PLAYER) {
-                    if (buyInAmount.compareTo(table.getMinBuyin()) < 0 || buyInAmount.compareTo(table.getMaxBuyin()) > 0) {
-                        var message = "Buy-In amount must be between $%.2f and $%.2f for table %s".formatted(table.getMinBuyin(), table.getMaxBuyin(), tableId);
-                        throw new GamePlayerErrorLogException(message);
-                    }
-                }
-                var user = getThrowPlayerErrorLog(userRepository.findByUsername(username), "Failed to connect user %s to table %s as user not found".formatted(username, tableId));
-                if (connectionType == ConnectionType.PLAYER && user instanceof PhysicalUser physicalUser) {
-                    if (buyInAmount.compareTo(physicalUser.getTotalFunds()) > 0) {
-                        var message = "User %s does not have enough total funds for Buy-In $%.2f, has $%.2f".formatted(username, buyInAmount, physicalUser.getTotalFunds());
-                        throw new GamePlayerErrorLogException(message);
-                    }
-                }
+
+                // A reconnect to a session that is still CONNECTED (dropped within the grace window,
+                // or backgrounded) must resume the existing seat as-is: no new buy-in, and no
+                // buy-in/funds validation (the reconnecting client may not even send a buy-in).
                 var playerSessionOpt = playerSessionRepository.findByTableIdAndUsername(tableId, username);
                 var alreadyConnected = playerSessionOpt.isPresent()
                         && playerSessionOpt.get().getSessionState() == SessionState.CONNECTED;
                 if (!alreadyConnected) {
+                    // A reconnect that finds no live session lost its seat (grace window expired) —
+                    // reject it rather than silently buying the player back in. The client surfaces
+                    // the error and lets them connect (and re-buy-in) fresh.
+                    if (reconnect) {
+                        throw new GamePlayerErrorLogException(
+                                "Your seat is no longer available — the reconnect window expired. Please connect again.");
+                    }
+                    if (connectionType == ConnectionType.PLAYER) {
+                        if (buyInAmount.compareTo(table.getMinBuyin()) < 0 || buyInAmount.compareTo(table.getMaxBuyin()) > 0) {
+                            var message = "Buy-In amount must be between $%.2f and $%.2f for table %s".formatted(table.getMinBuyin(), table.getMaxBuyin(), tableId);
+                            throw new GamePlayerErrorLogException(message);
+                        }
+                    }
+                    var user = getThrowPlayerErrorLog(userRepository.findByUsername(username), "Failed to connect user %s to table %s as user not found".formatted(username, tableId));
+                    if (connectionType == ConnectionType.PLAYER && user instanceof PhysicalUser physicalUser) {
+                        if (buyInAmount.compareTo(physicalUser.getTotalFunds()) > 0) {
+                            var message = "User %s does not have enough total funds for Buy-In $%.2f, has $%.2f".formatted(username, buyInAmount, physicalUser.getTotalFunds());
+                            throw new GamePlayerErrorLogException(message);
+                        }
+                    }
                     if (connectionType == ConnectionType.PLAYER) {
                         threadManager.createIfNotExist(table);
                     }
                     var playerSession = playerSessionService.connectUserToRound(table, user, connectionType, buyInAmount);
                     afterCommit(() -> dispatcher.send(tableId, messageFactory.playerConnected(playerSession)));
                 }
-                return playerSessionRepository.findConnectedByTableId(tableId);
+                var sessions = playerSessionRepository.findConnectedByTableId(tableId);
+                // Snapshot the in-progress hand (if any) so the client resumes where it left off.
+                var roundState = roundStateService.buildCurrentRoundState(tableId);
+                return messageFactory.playerSubscribed(sessions, roundState);
             });
-            if (allPlayerSessions == null) {
+            if (playerSubscribed == null) {
                 throw new GamePlayerErrorLogException("No player sessions during subscribe as all player sessions are null");
             }
-            return messageFactory.playerSubscribed(allPlayerSessions);
+            return playerSubscribed;
         });
     }
 

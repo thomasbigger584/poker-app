@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 public class SessionEventListener {
     private static final String HEADER_CONNECTION_TYPE = "X-Connection-Type";
     private static final String HEADER_BUYIN_AMOUNT = "X-BuyIn-Amount";
+    private static final String HEADER_RECONNECT = "X-Reconnect";
 
     private final SessionService sessionService;
     private final DisconnectGraceService disconnectGraceService;
@@ -34,6 +35,13 @@ public class SessionEventListener {
         var headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
         var connectionTypeHeader = headerAccessor.getNativeHeader(HEADER_CONNECTION_TYPE);
         var buyInAmountHeader = headerAccessor.getNativeHeader(HEADER_BUYIN_AMOUNT);
+        var reconnectHeader = headerAccessor.getNativeHeader(HEADER_RECONNECT);
+
+        // A reconnect must resume an existing seat — if the grace window already expired and the
+        // seat is gone, the connect is rejected (rather than silently buying the player back in).
+        var reconnect = CollectionUtils.isNotEmpty(reconnectHeader)
+                && Boolean.parseBoolean(reconnectHeader.getFirst());
+        sessionService.putReconnect(headerAccessor, reconnect);
 
         if (CollectionUtils.isNotEmpty(connectionTypeHeader)) {
             var connectionType = ConnectionType.valueOf(connectionTypeHeader.getFirst());

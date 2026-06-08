@@ -46,7 +46,9 @@ public class TableListAdapter extends ListAdapter<AvailableTableDTO, TableListAd
     }
 
     public interface TableClickListener {
-        void onTableClicked(TableDTO table);
+        void onConnectClicked(TableDTO table);
+
+        void onReconnectClicked(AvailableTableDTO availableTable);
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -65,7 +67,15 @@ public class TableListAdapter extends ListAdapter<AvailableTableDTO, TableListAd
             binding.nameTextView.setText(table.getName());
             binding.gameTypeTextView.setText(table.getGameTypeDisplayName(context));
             binding.playersTextView.setText(context.getString(R.string.player_count_format, availableTable.getPlayersConnected(), table.getMaxPlayers()));
-            binding.connectButton.setOnClickListener(v -> clickListener.onTableClicked(table));
+            if (availableTable.isCurrentUserConnected()) {
+                // The user still has a live session here (dropped within the grace window, or
+                // backgrounded) — offer a straight jump back into the running game.
+                binding.connectButton.setText(R.string.reconnect);
+                binding.connectButton.setOnClickListener(v -> clickListener.onReconnectClicked(availableTable));
+            } else {
+                binding.connectButton.setText(R.string.connect);
+                binding.connectButton.setOnClickListener(v -> clickListener.onConnectClicked(table));
+            }
         }
     }
 }

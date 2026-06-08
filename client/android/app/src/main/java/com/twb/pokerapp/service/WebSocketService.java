@@ -45,6 +45,7 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
     public static final String EXTRA_TABLE_ID = "EXTRA_TABLE_ID";
     public static final String EXTRA_CONNECTION_TYPE = "EXTRA_CONNECTION_TYPE";
     public static final String EXTRA_BUY_IN_AMOUNT = "EXTRA_BUY_IN_AMOUNT";
+    public static final String EXTRA_RECONNECT = "EXTRA_RECONNECT";
     public static final String EXTRA_ACTION = "EXTRA_ACTION";
     public static final String EXTRA_AMOUNT = "EXTRA_AMOUNT";
 
@@ -203,6 +204,7 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
         var newTableId = (UUID) intent.getSerializableExtra(EXTRA_TABLE_ID);
         var newConnectionType = intent.getStringExtra(EXTRA_CONNECTION_TYPE);
         var newBuyInAmount = intent.getDoubleExtra(EXTRA_BUY_IN_AMOUNT, 0);
+        var newReconnect = intent.getBooleanExtra(EXTRA_RECONNECT, false);
 
         startForeground(NOTIFICATION_ID, createNotification());
 
@@ -226,7 +228,9 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
         this.reconnectAttempts = 0;
         cancelReconnect();
         repository.onConnectionStarted(newTableId);
-        webSocketClient.connect(newTableId, this, newConnectionType, newBuyInAmount);
+        // newReconnect is the user's intent on this entry (e.g. tapped "Reconnect" on the table
+        // list). Subsequent automatic reconnects after a drop are always reconnect intents.
+        webSocketClient.connect(newTableId, this, newConnectionType, newBuyInAmount, newReconnect);
     }
 
     private void onPlayerAction(Intent intent) {

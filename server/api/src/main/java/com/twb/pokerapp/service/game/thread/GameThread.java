@@ -7,6 +7,7 @@ import com.twb.pokerapp.domain.enumeration.RoundState;
 import com.twb.pokerapp.service.game.exception.GameInterruptedException;
 import com.twb.pokerapp.service.game.exception.RoundInterruptedException;
 import com.twb.pokerapp.service.game.thread.annotation.CallerThread;
+import com.twb.pokerapp.service.game.thread.dto.ActiveTurnDTO;
 import com.twb.pokerapp.service.game.thread.dto.PlayerTurnLatchDTO;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -58,6 +59,12 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
 
     @Getter
     private PlayerTurnLatchDTO playerTurnLatch;
+
+    // The turn currently being awaited, captured when PLAYER_TURN is dispatched so a reconnecting
+    // client can be re-served the live turn with the correct remaining wait. Read from the
+    // subscribe (caller) thread, written from the game thread — hence volatile.
+    @Getter
+    private volatile ActiveTurnDTO activeTurn;
 
     @Override
     public void run() {
@@ -309,6 +316,14 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     public PlayerTurnLatchDTO newPlayerTurnLatch(PlayerSession turnPlayerSession) {
         playerTurnLatch = PlayerTurnLatchDTO.of(turnPlayerSession);
         return playerTurnLatch;
+    }
+
+    public void setActiveTurn(ActiveTurnDTO activeTurn) {
+        this.activeTurn = activeTurn;
+    }
+
+    public void clearActiveTurn() {
+        this.activeTurn = null;
     }
 
     @CallerThread

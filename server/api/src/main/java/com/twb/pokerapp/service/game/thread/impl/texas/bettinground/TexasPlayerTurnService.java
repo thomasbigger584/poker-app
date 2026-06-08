@@ -20,12 +20,14 @@ import com.twb.pokerapp.service.game.thread.GamePlayerTurnService;
 import com.twb.pokerapp.service.game.thread.GameSpeedService;
 import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
+import com.twb.pokerapp.service.game.thread.dto.ActiveTurnDTO;
 import com.twb.pokerapp.service.game.thread.impl.texas.TexasPlayerActionService;
 import com.twb.pokerapp.service.game.thread.impl.texas.dealer.TexasDealerService;
 import com.twb.pokerapp.service.game.thread.impl.texas.dto.NextActionsDTO;
 import com.twb.pokerapp.service.player.PlayerActionService;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
+import com.twb.pokerapp.web.websocket.message.server.payload.PlayerTurnDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -278,11 +280,17 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
     }
 
     private void waitPlayerTurn() {
-        dispatcher.send(params, messageFactory.playerTurn(currentPlayer, bettingRound, nextActions, params.getPlayerTurnWaitMs()));
+        var turnMessage = messageFactory.playerTurn(currentPlayer, bettingRound, nextActions, params.getPlayerTurnWaitMs());
+        dispatcher.send(params, turnMessage);
+        // Capture the live turn so a client reconnecting mid-turn is re-served the action buttons /
+        // countdown (with the remaining wait) instead of being stuck until the auto-fold timeout.
+        gameThread.setActiveTurn(new ActiveTurnDTO((PlayerTurnDTO) turnMessage.getPayload(), System.currentTimeMillis()));
         waitPlayerTurn(params, gameThread, currentPlayer);
     }
 
     private void postPlayerTurn() {
+        // The awaited turn is over (action taken or timed out) — stop offering it to reconnects.
+        gameThread.clearActiveTurn();
         writeTx.executeWithoutResult(status -> {
             var latestPlayerActionOpt = playerActionRepository.findByBettingRoundAndPlayer(bettingRound.getId(), currentPlayer.getId());
             latestPlayerActionOpt.ifPresentOrElse(actionJustTaken -> {

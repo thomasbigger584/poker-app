@@ -26,8 +26,13 @@ public class ServerMessageFactory {
     private final GameSpeedService gameSpeedService;
 
     public ServerMessageDTO playerSubscribed(List<PlayerSession> playerSessions) {
+        return playerSubscribed(playerSessions, null);
+    }
+
+    public ServerMessageDTO playerSubscribed(List<PlayerSession> playerSessions, RoundStateDTO roundState) {
         var payload = new PlayerSubscribedDTO();
         payload.setPlayerSessions(playerSessions.stream().map(playerSessionMapper::modelToDto).toList());
+        payload.setRoundState(roundState);
         return ServerMessageDTO.create(ServerMessageType.PLAYER_SUBSCRIBED, payload);
     }
 

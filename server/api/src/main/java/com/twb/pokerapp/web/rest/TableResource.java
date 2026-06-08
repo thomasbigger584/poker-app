@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -31,8 +32,8 @@ public class TableResource {
     }
 
     @GetMapping
-    public ResponseEntity<List<AvailableTableDTO>> getAll(Pageable pageable) {
-        var page = service.getAllAvailable(pageable);
+    public ResponseEntity<List<AvailableTableDTO>> getAll(Pageable pageable, Principal principal) {
+        var page = service.getAllAvailable(pageable, principal.getName());
         var headers = paginationService.createHeaders(page);
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }

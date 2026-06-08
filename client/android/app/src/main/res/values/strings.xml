@@ -54,6 +54,7 @@
     <string name="cancel">Cancel</string>
     <string name="create_table">Create Table</string>
     <string name="connect">Connect</string>
+    <string name="reconnect">Reconnect</string>
     <string name="made_by">made by twb</string>
 
     <string name="connect_to_table_format">Connect to %s</string>

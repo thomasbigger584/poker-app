@@ -2,6 +2,8 @@ package com.twb.pokerapp.ui.activity.table.list;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -22,8 +24,10 @@ import com.twb.pokerapp.data.model.dto.appuser.AppUserDTO;
 import com.twb.pokerapp.data.repository.RepositoryCallback;
 import com.twb.pokerapp.databinding.ActivityTableListBinding;
 import com.twb.pokerapp.databinding.NavHeaderTableListBinding;
+import com.twb.pokerapp.data.model.dto.table.AvailableTableDTO;
 import com.twb.pokerapp.data.model.dto.table.TableDTO;
 import com.twb.pokerapp.ui.activity.achievement.AchievementActivity;
+import com.twb.pokerapp.ui.activity.game.texas.TexasGameActivity;
 import com.twb.pokerapp.ui.activity.leaderboard.LeaderboardActivity;
 import com.twb.pokerapp.ui.activity.base.BaseAuthActivity;
 import com.twb.pokerapp.ui.activity.stats.StatsActivity;
@@ -31,6 +35,8 @@ import com.twb.pokerapp.ui.activity.table.connect.TableConnectActivity;
 import com.twb.pokerapp.ui.activity.table.create.TableCreateActivity;
 import com.twb.pokerapp.ui.activity.transaction.TransactionHistoryActivity;
 import com.twb.pokerapp.ui.dialog.AlertModalDialog;
+
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -42,6 +48,11 @@ public class TableListActivity extends BaseAuthActivity implements
 
     @Inject
     public AuthService authService;
+
+    // Buffer past the grace deadline so the server has processed the disconnect before we re-fetch.
+    private static final long RECONNECT_EXPIRY_REFRESH_BUFFER_MS = 1000L;
+
+    private final Handler reconnectExpiryHandler = new Handler(Looper.getMainLooper());
 
     private ActivityTableListBinding binding;
     private TableListViewModel viewModel;
@@ -84,6 +95,7 @@ public class TableListActivity extends BaseAuthActivity implements
         viewModel.tablesLiveData.observe(this, tables -> {
             adapter.submitList(tables);
             binding.swipeRefreshLayout.setRefreshing(false);
+            scheduleReconnectExpiryRefresh(tables);
         });
 
         viewModel.userLiveData.observe(this, this::updateDrawerHeader);
@@ -231,6 +243,19 @@ public class TableListActivity extends BaseAuthActivity implements
     }
 
     @Override
+    public void onReconnectClicked(AvailableTableDTO availableTable) {
+        // Existing session still alive server-side — skip the connect/buy-in screen and go straight
+        // back into the game. The server resumes the same seat (no new buy-in), so the buy-in we
+        // pass is only used to satisfy the connect headers and is ignored for an existing session.
+        var table = availableTable.getTable();
+        var connectionType = availableTable.getCurrentUserConnectionType();
+        if (connectionType == null) {
+            connectionType = "PLAYER";
+        }
+        TexasGameActivity.startActivity(this, table, connectionType, table.getMinBuyin(), true);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.table_list_menu, menu);
         return true;
@@ -250,5 +275,36 @@ public class TableListActivity extends BaseAuthActivity implements
     private void refreshData() {
         binding.swipeRefreshLayout.setRefreshing(true);
         viewModel.refresh();
+    }
+
+    /**
+     * If any table currently shows "Reconnect" with a running grace countdown, schedule a silent
+     * refresh just after the soonest one elapses. By then the server has given up the seat, so the
+     * re-fetched list reports it as available and the button flips Reconnect -> Connect on its own
+     * (no failed reconnect attempt needed).
+     */
+    private void scheduleReconnectExpiryRefresh(List<AvailableTableDTO> tables) {
+        reconnectExpiryHandler.removeCallbacksAndMessages(null);
+        if (tables == null) {
+            return;
+        }
+        Long soonestRemaining = null;
+        for (var table : tables) {
+            var remaining = table.getReconnectMillisRemaining();
+            if (table.isCurrentUserConnected() && remaining != null
+                    && (soonestRemaining == null || remaining < soonestRemaining)) {
+                soonestRemaining = remaining;
+            }
+        }
+        if (soonestRemaining != null) {
+            reconnectExpiryHandler.postDelayed(viewModel::refresh,
+                    soonestRemaining + RECONNECT_EXPIRY_REFRESH_BUFFER_MS);
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        reconnectExpiryHandler.removeCallbacksAndMessages(null);
+        super.onStop();
     }
 }

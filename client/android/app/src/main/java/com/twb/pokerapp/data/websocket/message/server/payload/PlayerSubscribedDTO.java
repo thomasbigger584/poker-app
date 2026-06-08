@@ -9,6 +9,7 @@ import java.util.List;
 
 public class PlayerSubscribedDTO {
     private List<PlayerSessionDTO> playerSessions = new ArrayList<>();
+    private RoundStateDTO roundState;
 
     public PlayerSessionDTO getCurrentPlayerSession(String username) {
         for (var playerSession : playerSessions) {
@@ -25,6 +26,14 @@ public class PlayerSubscribedDTO {
 
     public void setPlayerSessions(List<PlayerSessionDTO> playerSessions) {
         this.playerSessions = playerSessions;
+    }
+
+    public RoundStateDTO getRoundState() {
+        return roundState;
+    }
+
+    public void setRoundState(RoundStateDTO roundState) {
+        this.roundState = roundState;
     }
 
     @NonNull

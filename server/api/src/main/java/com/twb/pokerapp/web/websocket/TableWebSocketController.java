@@ -68,12 +68,13 @@ public class TableWebSocketController {
         disconnectGraceService.cancelPending(tableId, principal.getName());
         var connectionType = getConnectionType(headerAccessor);
         var buyInAmount = getBuyInAmount(headerAccessor);
+        var reconnect = sessionService.isReconnect(headerAccessor);
 
-        log.debug(">>>> userSubscribed - Table: {}, User: {}, Connection: {}, BuyIn: {}",
-                tableId, principal.getName(), connectionType, buyInAmount);
+        log.debug(">>>> userSubscribed - Table: {}, User: {}, Connection: {}, BuyIn: {}, Reconnect: {}",
+                tableId, principal.getName(), connectionType, buyInAmount, reconnect);
 
         try {
-            return tableGameService.onUserConnected(tableId, connectionType, principal.getName(), buyInAmount);
+            return tableGameService.onUserConnected(tableId, connectionType, principal.getName(), buyInAmount, reconnect);
         } catch (Exception e) {
             log.error("Failed to subscribe user {} to table {}", principal.getName(), tableId, e);
             return messageFactory.errorMessage(e.getMessage());

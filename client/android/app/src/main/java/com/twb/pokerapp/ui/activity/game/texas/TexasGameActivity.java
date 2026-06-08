@@ -39,6 +39,7 @@ import com.twb.pokerapp.data.websocket.message.server.payload.PlayerDisconnected
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerSubscribedDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerTurnDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.RoundFinishedDTO;
+import com.twb.pokerapp.data.websocket.message.server.payload.RoundStateDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.ValidationDTO;
 import com.twb.pokerapp.databinding.ActivityGameTexasBinding;
 import com.twb.pokerapp.service.WebSocketService;
@@ -64,6 +65,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     private static final String TAG = TexasGameActivity.class.getSimpleName();
     private static final String KEY_CONNECTION_TYPE = "CONNECTION_TYPE";
     private static final String KEY_BUY_IN_AMOUNT = "BUY_IN_AMOUNT";
+    private static final String KEY_RECONNECT = "RECONNECT";
 
     @Inject
     AuthService authService;
@@ -78,16 +80,27 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     private ControlsController controlsController;
     private String connectionType;
     private Double buyInAmount;
+    private boolean reconnect;
 
     private long lastRenderedTimestamp = 0L;
     private boolean hasEverConnected = false;
     private boolean connectionLostShown = false;
 
     public static void startActivity(Activity activity, TableDTO table, String connectionType, Double buyInAmount) {
+        startActivity(activity, table, connectionType, buyInAmount, false);
+    }
+
+    /**
+     * @param reconnect true when resuming an existing seat (e.g. the "Reconnect" button on the
+     *                  table list). The server resumes the seat as-is; if the grace window already
+     *                  expired it returns an error instead of buying the player back in.
+     */
+    public static void startActivity(Activity activity, TableDTO table, String connectionType, Double buyInAmount, boolean reconnect) {
         var intent = new Intent(activity, TexasGameActivity.class);
         intent.putExtras(table.toBundle());
         intent.putExtra(KEY_CONNECTION_TYPE, connectionType);
         intent.putExtra(KEY_BUY_IN_AMOUNT, buyInAmount);
+        intent.putExtra(KEY_RECONNECT, reconnect);
         activity.startActivity(intent);
     }
 
@@ -238,6 +251,56 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         }
         chatBoxAdapter.add(getString(R.string.connected_format, currentUsername));
         dismissDialogs();
+
+        // Resume an in-progress hand (reconnect / app restart mid-round) where it left off.
+        if (playerSubscribed.getRoundState() != null) {
+            renderRoundState(playerSubscribed.getRoundState());
+        }
+    }
+
+    private void renderRoundState(RoundStateDTO roundState) {
+        // Clear transient state first so re-applying a snapshot (e.g. a reconnect while the table
+        // was still rendered) doesn't stack duplicate board cards or leave stale turn highlights.
+        tableController.resetCommunityCards();
+        tableController.hidePlayerTurns();
+        controlsController.hide();
+
+        if (roundState.getDealer() != null) {
+            tableController.dealerDetermined(roundState.getDealer());
+        }
+
+        // Hole cards: own cards face-up, opponents' face-down (same rule as live dealing).
+        for (var dealtCard : roundState.getPlayerCards()) {
+            var playerSession = dealtCard.getPlayerSession();
+            if (authService.isCurrentUser(playerSession.getUser())) {
+                tableController.dealCurrentPlayerCard(dealtCard);
+            } else {
+                tableController.dealOtherPlayerCard(dealtCard);
+            }
+        }
+
+        for (var communityCard : roundState.getCommunityCards()) {
+            var dealCommunityCard = new DealCommunityCardDTO();
+            dealCommunityCard.setCard(communityCard);
+            tableController.dealCommunityCard(dealCommunityCard);
+        }
+
+        if (roundState.getBettingRound() != null || !roundState.getRoundPots().isEmpty()) {
+            var bettingRoundUpdated = new BettingRoundUpdatedDTO();
+            bettingRoundUpdated.setRound(roundState.getRound());
+            bettingRoundUpdated.setBettingRound(roundState.getBettingRound());
+            bettingRoundUpdated.setRoundPots(roundState.getRoundPots());
+            tableController.updateBettingRound(bettingRoundUpdated);
+        }
+
+        for (var foldedPlayer : roundState.getFoldedPlayers()) {
+            tableController.foldPlayer(foldedPlayer);
+        }
+
+        // Render the live turn last so action buttons / countdown sit on top of the restored table.
+        if (roundState.getCurrentTurn() != null) {
+            handlePlayerTurn(roundState.getCurrentTurn(), System.currentTimeMillis());
+        }
     }
 
     private void handlePlayerConnected(PlayerConnectedDTO playerConnected) {
@@ -377,7 +440,8 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         serviceIntent.putExtra(WebSocketService.EXTRA_TABLE_ID, table.getId());
         serviceIntent.putExtra(WebSocketService.EXTRA_CONNECTION_TYPE, connectionType);
         serviceIntent.putExtra(WebSocketService.EXTRA_BUY_IN_AMOUNT, buyInAmount);
-        
+        serviceIntent.putExtra(WebSocketService.EXTRA_RECONNECT, reconnect);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(serviceIntent);
         } else {
@@ -581,6 +645,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         table = TableDTO.fromBundle(extras);
         connectionType = intent.getStringExtra(KEY_CONNECTION_TYPE);
         buyInAmount = intent.getDoubleExtra(KEY_BUY_IN_AMOUNT, 0d);
+        reconnect = intent.getBooleanExtra(KEY_RECONNECT, false);
         return true;
     }
 

@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -55,6 +56,20 @@ public class DisconnectGraceService {
                 () -> runDisconnect(key, tableId, username), gracePeriodSeconds, TimeUnit.SECONDS);
         pending.put(key, future);
         log.debug("Scheduled disconnect for {} on table {} in {}s", username, tableId, gracePeriodSeconds);
+    }
+
+    /**
+     * Milliseconds left before a dropped user is actually disconnected from the table, or empty if
+     * there is no pending disconnect (the user is still genuinely connected, or already gone). Lets
+     * the client count the grace window down and flip "Reconnect" back to "Connect" on expiry.
+     */
+    public Optional<Long> getRemainingMillis(UUID tableId, String username) {
+        var future = pending.get(key(tableId, username));
+        if (future == null || future.isDone()) {
+            return Optional.empty();
+        }
+        var remaining = future.getDelay(TimeUnit.MILLISECONDS);
+        return remaining > 0 ? Optional.of(remaining) : Optional.empty();
     }
 
     /**

@@ -81,27 +81,28 @@ public class WebSocketClient {
         return stompClient != null && stompClient.isConnected();
     }
 
-    public void connect(UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount) {
+    public void connect(UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount, boolean reconnect) {
         if (isConnected()) {
             return;
         }
-        establishConnection(tableId, listener, connectionType, buyInAmount);
+        establishConnection(tableId, listener, connectionType, buyInAmount, reconnect);
     }
 
     /**
      * Force a fresh connection, tearing down any existing (possibly half-dead, e.g. after a
      * server heartbeat failure where the socket never reports CLOSED) connection first. Used by
-     * the service to reconnect after a drop.
+     * the service to reconnect after a drop — always a reconnect intent (resume the existing seat,
+     * never silently buy back in).
      */
     public void reconnect(UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount) {
         if (stompClient != null) {
             stompClient.disconnect();
             stompClient = null;
         }
-        establishConnection(tableId, listener, connectionType, buyInAmount);
+        establishConnection(tableId, listener, connectionType, buyInAmount, true);
     }
 
-    private void establishConnection(UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount) {
+    private void establishConnection(UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount, boolean reconnect) {
         resetSubscriptions();
 
         compositeDisposable.add(Single.fromCallable(authService::getAccessTokenWithRefresh)
@@ -112,11 +113,11 @@ public class WebSocketClient {
                         listener.onConnectError(new LifecycleEvent(LifecycleEvent.Type.ERROR));
                         return;
                     }
-                    connectInternal(accessToken, tableId, listener, connectionType, buyInAmount);
+                    connectInternal(accessToken, tableId, listener, connectionType, buyInAmount, reconnect);
                 }, listener::onSubscribeError));
     }
 
-    private void connectInternal(String accessToken, UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount) {
+    private void connectInternal(String accessToken, UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount, boolean reconnect) {
         var protocol = authConfiguration.isHttpsRequired() ? "wss://" : "ws://";
         var websocketUrl = protocol + BuildConfig.API_BASE_URL + WEBSOCKET_ENDPOINT + "/websocket";
 
@@ -128,6 +129,7 @@ public class WebSocketClient {
         connectHeaders.add(new StompHeader("Authorization", "Bearer " + accessToken));
         connectHeaders.add(new StompHeader("X-Connection-Type", connectionType));
         connectHeaders.add(new StompHeader("X-BuyIn-Amount", String.format(Locale.getDefault(), "%.2f", buyInAmount)));
+        connectHeaders.add(new StompHeader("X-Reconnect", Boolean.toString(reconnect)));
 
         stompClient.withClientHeartbeat(HEARTBEAT_MS)
                 .withServerHeartbeat(HEARTBEAT_MS);
