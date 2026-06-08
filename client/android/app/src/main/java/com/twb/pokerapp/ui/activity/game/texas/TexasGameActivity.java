@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.auth.AuthService;
 import com.twb.pokerapp.data.model.dto.appuser.AppUserDTO;
+import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.data.model.dto.table.TableDTO;
 import com.twb.pokerapp.data.model.enumeration.ActionType;
 import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
@@ -52,6 +53,7 @@ import com.twb.pokerapp.ui.dialog.DialogHelper;
 import com.twb.pokerapp.ui.dialog.FinishActivityOnClickListener;
 import com.twb.pokerapp.ui.dialog.game.BaseGameDialog;
 import com.twb.pokerapp.ui.dialog.game.BetRaiseGameDialog;
+import com.twb.pokerapp.ui.util.HapticUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -85,6 +87,9 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     private long lastRenderedTimestamp = 0L;
     private boolean hasEverConnected = false;
     private boolean connectionLostShown = false;
+    // Identifies the turn we last vibrated for, so re-rendering the same turn (onResume,
+    // reconnect snapshot) doesn't buzz the player repeatedly.
+    private String lastVibratedTurnKey = null;
 
     public static void startActivity(Activity activity, TableDTO table, String connectionType, Double buyInAmount) {
         startActivity(activity, table, connectionType, buyInAmount, false);
@@ -335,9 +340,24 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         tableController.updatePlayerTurn(playerSession);
         if (authService.isCurrentUser(playerSession.getUser())) {
             controlsController.show(playerTurn, messageTimestamp);
+            buzzForOwnTurn(playerSession, messageTimestamp);
         } else {
             controlsController.hide();
         }
+    }
+
+    /**
+     * Vibrate to alert the player it's their turn — but only once per turn. The same turn can be
+     * re-delivered (onResume, reconnect snapshot), so we key on the session + timestamp and skip
+     * repeats.
+     */
+    private void buzzForOwnTurn(PlayerSessionDTO playerSession, long messageTimestamp) {
+        var turnKey = playerSession.getId() + "@" + messageTimestamp;
+        if (turnKey.equals(lastVibratedTurnKey)) {
+            return;
+        }
+        lastVibratedTurnKey = turnKey;
+        HapticUtil.yourTurn(this);
     }
 
     private void handlePlayerActioned(PlayerActionedDTO playerActioned) {
