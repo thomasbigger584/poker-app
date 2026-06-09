@@ -20,12 +20,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.google.android.material.navigation.NavigationView;
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.auth.AuthService;
-import com.twb.pokerapp.data.model.dto.appuser.AppUserDTO;
+import com.twb.pokerapp.proto.AppUserDTO;
 import com.twb.pokerapp.data.repository.RepositoryCallback;
 import com.twb.pokerapp.databinding.ActivityTableListBinding;
 import com.twb.pokerapp.databinding.NavHeaderTableListBinding;
-import com.twb.pokerapp.data.model.dto.table.AvailableTableDTO;
-import com.twb.pokerapp.data.model.dto.table.TableDTO;
+import com.twb.pokerapp.proto.AvailableTableDTO;
+import com.twb.pokerapp.proto.TableDTO;
+import com.twb.pokerapp.util.Protos;
 import com.twb.pokerapp.ui.activity.achievement.AchievementActivity;
 import com.twb.pokerapp.ui.activity.game.texas.TexasGameActivity;
 import com.twb.pokerapp.ui.activity.leaderboard.LeaderboardActivity;
@@ -139,7 +140,7 @@ public class TableListActivity extends BaseAuthActivity implements
 
         headerBinding.usernameTextView.setText(user.getUsername());
         headerBinding.emailTextView.setText(user.getEmail());
-        headerBinding.fundsTextView.setText(getString(R.string.funds_format, user.getTotalFunds()));
+        headerBinding.fundsTextView.setText(getString(R.string.funds_format, Protos.money(user.getTotalFunds())));
     }
 
     @Override
@@ -238,7 +239,7 @@ public class TableListActivity extends BaseAuthActivity implements
     @Override
     public void onConnectClicked(TableDTO table) {
         var intent = new Intent(this, TableConnectActivity.class);
-        intent.putExtras(table.toBundle());
+        intent.putExtra(TableConnectActivity.EXTRA_TABLE, table.toByteArray());
         startActivity(intent);
     }
 
@@ -248,11 +249,10 @@ public class TableListActivity extends BaseAuthActivity implements
         // back into the game. The server resumes the same seat (no new buy-in), so the buy-in we
         // pass is only used to satisfy the connect headers and is ignored for an existing session.
         var table = availableTable.getTable();
-        var connectionType = availableTable.getCurrentUserConnectionType();
-        if (connectionType == null) {
-            connectionType = "PLAYER";
-        }
-        TexasGameActivity.startActivity(this, table, connectionType, table.getMinBuyin(), true);
+        var connectionType = availableTable.hasCurrentUserConnectionType()
+                ? Protos.connectionTypeName(availableTable.getCurrentUserConnectionType())
+                : "PLAYER";
+        TexasGameActivity.startActivity(this, table, connectionType, Protos.money(table.getMinBuyin()), true);
     }
 
     @Override
@@ -290,10 +290,11 @@ public class TableListActivity extends BaseAuthActivity implements
         }
         Long soonestRemaining = null;
         for (var table : tables) {
-            var remaining = table.getReconnectMillisRemaining();
-            if (table.isCurrentUserConnected() && remaining != null
-                    && (soonestRemaining == null || remaining < soonestRemaining)) {
-                soonestRemaining = remaining;
+            if (table.getCurrentUserConnected() && table.hasReconnectMillisRemaining()) {
+                var remaining = table.getReconnectMillisRemaining();
+                if (soonestRemaining == null || remaining < soonestRemaining) {
+                    soonestRemaining = remaining;
+                }
             }
         }
         if (soonestRemaining != null) {

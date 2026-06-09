@@ -1,0 +1,148 @@
+syntax = "proto3";
+
+package poker;
+
+import "poker/common.proto";
+
+option java_package = "com.twb.pokerapp.proto";
+option java_multiple_files = true;
+option java_outer_classname = "WebsocketProto";
+
+// =====================================================================
+// WebSocket (STOMP) message protocol — sent as binary protobuf frames.
+//
+// The polymorphic ServerMessageDTO {type, payload} envelope becomes a
+// `oneof`. The oneof field names mirror the old ServerMessageType values
+// so generated getPayloadCase() reads almost identically on the client.
+// =====================================================================
+
+// ---------------------------------------------------------------------
+// Server -> client envelope
+// ---------------------------------------------------------------------
+
+message ServerMessageDTO {
+  int64 timestamp = 1; // epoch millis
+  oneof payload {
+    PlayerSubscribedDTO player_subscribed = 2;
+    PlayerConnectedDTO player_connected = 3;
+    DealerDeterminedDTO dealer_determined = 4;
+    DealPlayerCardDTO deal_init = 5;
+    DealCommunityCardDTO deal_community = 6;
+    PlayerTurnDTO player_turn = 7;
+    PlayerActionedDTO player_actioned = 8;
+    BettingRoundUpdatedDTO betting_round_updated = 9;
+    RoundFinishedDTO round_finished = 10;
+    GameFinishedDTO game_finished = 11;
+    ChatMessageDTO chat = 12;
+    LogMessageDTO log = 13;
+    ErrorMessageDTO error = 14;
+    ValidationDTO validation = 15;
+    PlayerDisconnectedDTO player_disconnected = 16;
+  }
+}
+
+// ---------------------------------------------------------------------
+// Server -> client payloads
+// ---------------------------------------------------------------------
+
+message PlayerSubscribedDTO {
+  repeated PlayerSessionDTO player_sessions = 1;
+  // In-progress hand state so a (re)subscribing client resumes mid-hand.
+  // Absent when no hand is currently being played.
+  optional RoundStateDTO round_state = 2;
+}
+
+message PlayerConnectedDTO {
+  PlayerSessionDTO player_session = 1;
+}
+
+message DealerDeterminedDTO {
+  PlayerSessionDTO player_session = 1;
+}
+
+message DealPlayerCardDTO {
+  PlayerSessionDTO player_session = 1;
+  CardDTO card = 2;
+}
+
+message DealCommunityCardDTO {
+  CardDTO card = 1;
+}
+
+message PlayerTurnDTO {
+  PlayerSessionDTO player_session = 1;
+  BettingRoundDTO betting_round = 2;
+  repeated ActionType next_actions = 3;
+  string amount_to_call = 4; // BigDecimal
+  optional int64 player_turn_wait_ms = 5;
+}
+
+message PlayerActionedDTO {
+  PlayerActionDTO action = 1;
+}
+
+message BettingRoundUpdatedDTO {
+  RoundDTO round = 1;
+  BettingRoundDTO betting_round = 2;
+  repeated RoundPotDTO round_pots = 3;
+}
+
+message RoundFinishedDTO {
+  repeated RoundWinnerDTO winners = 1;
+}
+
+message GameFinishedDTO {
+}
+
+message ChatMessageDTO {
+  string username = 1;
+  string message = 2;
+}
+
+message LogMessageDTO {
+  string message = 1;
+}
+
+message ErrorMessageDTO {
+  string message = 1;
+}
+
+message PlayerDisconnectedDTO {
+  string username = 1;
+}
+
+// Snapshot of the in-progress hand, sent with PlayerSubscribedDTO when a
+// client (re)subscribes mid-round so it can re-render exactly where it
+// left off (cards on the table, pot, whose turn).
+message RoundStateDTO {
+  RoundDTO round = 1;
+  PlayerSessionDTO dealer = 2;
+  repeated DealPlayerCardDTO player_cards = 3;
+  repeated CardDTO community_cards = 4;
+  BettingRoundDTO betting_round = 5;
+  repeated RoundPotDTO round_pots = 6;
+  // Players dealt into this hand but no longer active (folded / dropped).
+  repeated PlayerSessionDTO folded_players = 7;
+  optional PlayerTurnDTO current_turn = 8;
+}
+
+// ---------------------------------------------------------------------
+// Client -> server messages
+// ---------------------------------------------------------------------
+
+// /app/pokerTable.{tableId}.sendPlayerAction
+message CreatePlayerActionDTO {
+  ActionType action = 1;
+  string amount = 2; // BigDecimal (positive or zero)
+}
+
+// /app/pokerTable.{tableId}.sendChatMessage
+message CreateChatMessageDTO {
+  string message = 1;
+}
+
+// /app/pokerTable.{tableId}.sendBotConnected
+message CreateBotConnectionDTO {
+  string bot_user_id = 1; // UUID
+  string buy_in_amount = 2; // BigDecimal
+}

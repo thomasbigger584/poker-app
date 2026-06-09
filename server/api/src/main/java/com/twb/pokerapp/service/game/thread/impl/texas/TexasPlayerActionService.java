@@ -9,7 +9,7 @@ import com.twb.pokerapp.service.game.exception.GamePlayerLogException;
 import com.twb.pokerapp.service.game.thread.GamePlayerActionService;
 import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.service.player.PlayerActionService;
-import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
+import com.twb.pokerapp.service.game.thread.dto.PlayerActionCommand;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -31,7 +31,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
 
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
-    public PlayerAction onPlayerAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread, CreatePlayerActionDTO createDto) {
+    public PlayerAction onPlayerAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread, PlayerActionCommand createDto) {
         return switch (createDto.getAction()) {
             case FOLD -> foldAction(playerSession, bettingRound, createDto);
             case CHECK -> checkAction(playerSession, bettingRound, createDto);
@@ -47,17 +47,17 @@ public class TexasPlayerActionService extends GamePlayerActionService {
         var playersNotFolded = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId());
         var amountToCall = playerActionService.getAmountToCall(playerSession, playersNotFolded);
 
-        var createActionDto = new CreatePlayerActionDTO();
+        var createActionDto = new PlayerActionCommand();
         createActionDto.setAction((amountToCall.compareTo(BigDecimal.ZERO) > 0) ? ActionType.FOLD : ActionType.CHECK);
         super.playerAction(playerSession, gameThread, createActionDto);
     }
 
-    private PlayerAction foldAction(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
+    private PlayerAction foldAction(PlayerSession playerSession, BettingRound bettingRound, PlayerActionCommand createActionDto) {
         createActionDto.setAmount(null);
         return playerActionService.create(playerSession, bettingRound, createActionDto);
     }
 
-    private PlayerAction checkAction(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
+    private PlayerAction checkAction(PlayerSession playerSession, BettingRound bettingRound, PlayerActionCommand createActionDto) {
         var canPerformCheck = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId())
                 .stream().allMatch(action -> action.getActionType() == ActionType.CHECK);
         if (!canPerformCheck) {
@@ -67,7 +67,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
         return playerActionService.create(playerSession, bettingRound, createActionDto);
     }
 
-    private PlayerAction betAction(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
+    private PlayerAction betAction(PlayerSession playerSession, BettingRound bettingRound, PlayerActionCommand createActionDto) {
         if (createActionDto.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new GamePlayerLogException(playerSession, "Cannot bet $%.2f as amount is less than or equal to zero".formatted(createActionDto.getAmount()));
         }
@@ -84,7 +84,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
         return playerActionService.create(playerSession, bettingRound, createActionDto);
     }
 
-    private PlayerAction callAction(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
+    private PlayerAction callAction(PlayerSession playerSession, BettingRound bettingRound, PlayerActionCommand createActionDto) {
         var lastPlayerActions = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId());
         if (lastPlayerActions.isEmpty()) {
             throw new GamePlayerLogException(playerSession, "Cannot call as there was no previous action");
@@ -109,7 +109,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
         return playerActionService.create(playerSession, bettingRound, createActionDto);
     }
 
-    private PlayerAction raiseAction(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
+    private PlayerAction raiseAction(PlayerSession playerSession, BettingRound bettingRound, PlayerActionCommand createActionDto) {
         var lastPlayerActions = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId());
         if (lastPlayerActions.isEmpty()) {
             throw new GamePlayerLogException(playerSession, "Cannot raise as there was no previous action");
@@ -129,7 +129,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
         return playerActionService.create(playerSession, bettingRound, createActionDto);
     }
 
-    private PlayerAction allInAction(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createActionDto) {
+    private PlayerAction allInAction(PlayerSession playerSession, BettingRound bettingRound, PlayerActionCommand createActionDto) {
         var playerSessionFunds = playerSession.getFunds();
         var createActionAmount = createActionDto.getAmount();
         if (createActionAmount == null || createActionAmount.compareTo(playerSessionFunds) != 0) {

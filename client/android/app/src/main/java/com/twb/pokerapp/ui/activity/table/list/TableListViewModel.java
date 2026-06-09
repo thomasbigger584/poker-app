@@ -4,8 +4,8 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.twb.pokerapp.data.model.dto.appuser.AppUserDTO;
-import com.twb.pokerapp.data.model.dto.table.AvailableTableDTO;
+import com.twb.pokerapp.proto.AppUserDTO;
+import com.twb.pokerapp.proto.AvailableTableDTO;
 import com.twb.pokerapp.data.repository.AppUserRepository;
 import com.twb.pokerapp.data.repository.RepositoryCallback;
 import com.twb.pokerapp.data.repository.TableRepository;

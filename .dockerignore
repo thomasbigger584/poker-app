@@ -1,0 +1,12 @@
+# The api image build context is the repo root (so the shared proto/ contract, a sibling of
+# server/, is reachable). Only server/api sources + the proto contract are needed — keep the
+# context small by excluding everything else.
+.git
+.github
+client
+**/target
+**/.idea
+**/*.iml
+**/.gradle
+server/api/mvnw.cmd
+server/api/docker-compose.yml

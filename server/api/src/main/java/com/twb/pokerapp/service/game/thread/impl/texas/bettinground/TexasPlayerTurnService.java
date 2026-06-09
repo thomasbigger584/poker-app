@@ -27,7 +27,6 @@ import com.twb.pokerapp.service.game.thread.impl.texas.dto.NextActionsDTO;
 import com.twb.pokerapp.service.player.PlayerActionService;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
-import com.twb.pokerapp.web.websocket.message.server.payload.PlayerTurnDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -284,7 +283,7 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
         dispatcher.send(params, turnMessage);
         // Capture the live turn so a client reconnecting mid-turn is re-served the action buttons /
         // countdown (with the remaining wait) instead of being stuck until the auto-fold timeout.
-        gameThread.setActiveTurn(new ActiveTurnDTO((PlayerTurnDTO) turnMessage.getPayload(), System.currentTimeMillis()));
+        gameThread.setActiveTurn(new ActiveTurnDTO(turnMessage.getPlayerTurn(), System.currentTimeMillis()));
         waitPlayerTurn(params, gameThread, currentPlayer);
     }
 

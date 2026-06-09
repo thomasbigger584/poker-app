@@ -2,7 +2,8 @@ package com.twb.pokerapp.data.repository;
 
 import androidx.annotation.NonNull;
 
-import com.twb.pokerapp.data.model.dto.appuser.AppUserDTO;
+import com.twb.pokerapp.proto.AppUserDTO;
+import com.twb.pokerapp.proto.AppUserListResponse;
 import com.twb.pokerapp.data.retrofit.api.AppUserApi;
 
 import java.util.List;
@@ -42,9 +43,9 @@ public class AppUserRepository extends BaseRepository {
     public void getBots(RepositoryCallback<List<AppUserDTO>> callback) {
         api.getBots().enqueue(new Callback<>() {
             @Override
-            public void onResponse(@NonNull Call<List<AppUserDTO>> call, @NonNull Response<List<AppUserDTO>> response) {
-                if (response.isSuccessful()) {
-                    callback.onSuccess(response.body());
+            public void onResponse(@NonNull Call<AppUserListResponse> call, @NonNull Response<AppUserListResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body().getUsersList());
                 } else {
                     var exception = new RuntimeException("Failed to get bots: " + response.code());
                     _errorLiveData.setValue(exception);
@@ -53,7 +54,7 @@ public class AppUserRepository extends BaseRepository {
             }
 
             @Override
-            public void onFailure(@NonNull Call<List<AppUserDTO>> call, @NonNull Throwable throwable) {
+            public void onFailure(@NonNull Call<AppUserListResponse> call, @NonNull Throwable throwable) {
                 _errorLiveData.setValue(throwable);
                 callback.onFailure(throwable);
             }

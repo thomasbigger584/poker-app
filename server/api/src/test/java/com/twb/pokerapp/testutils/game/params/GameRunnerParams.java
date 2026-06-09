@@ -1,6 +1,6 @@
 package com.twb.pokerapp.testutils.game.params;
 
-import com.twb.pokerapp.dto.table.TableDTO;
+import com.twb.pokerapp.proto.TableDTO;
 import com.twb.pokerapp.testutils.game.GameLatches;
 import com.twb.pokerapp.testutils.game.params.scenario.ScenarioParams;
 import com.twb.pokerapp.testutils.keycloak.KeycloakClients;

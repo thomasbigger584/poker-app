@@ -1,11 +1,12 @@
 package com.twb.pokerapp.testutils.game.turn.impl;
 
-import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.domain.enumeration.BettingRoundType;
+import com.twb.pokerapp.mapper.ProtoConvert;
+import com.twb.pokerapp.proto.ActionType;
+import com.twb.pokerapp.proto.CreatePlayerActionDTO;
+import com.twb.pokerapp.proto.PlayerTurnDTO;
 import com.twb.pokerapp.testutils.game.player.AbstractTestUser;
 import com.twb.pokerapp.testutils.game.turn.TurnHandler;
-import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
-import com.twb.pokerapp.web.websocket.message.server.payload.PlayerTurnDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 
@@ -44,22 +45,22 @@ public class FixedScenarioTurnHandler implements TurnHandler {
                 continue;
             }
 
-            var bettingRoundActions = this.bettingRoundActions
+            var queue = this.bettingRoundActions
                     .computeIfAbsent(bettingRoundType, k -> new ArrayDeque<>());
 
-            var action = new CreatePlayerActionDTO();
-            action.setAction(ActionType.valueOf(parts[1].trim()));
+            var builder = CreatePlayerActionDTO.newBuilder()
+                    .setAction(ActionType.valueOf("ACTION_TYPE_" + parts[1].trim()));
 
             if (parts.length > 2) {
-                action.setAmount(new BigDecimal(parts[2].trim()));
+                builder.setAmount(new BigDecimal(parts[2].trim()).toPlainString());
             }
-            bettingRoundActions.add(action);
+            queue.add(builder.build());
         }
     }
 
     @Override
     public void handle(AbstractTestUser user, StompHeaders headers, PlayerTurnDTO playerTurn) {
-        var bettingRoundType = playerTurn.getBettingRound().getType();
+        var bettingRoundType = ProtoConvert.toModel(playerTurn.getBettingRound().getType());
         var actions = bettingRoundActions.get(bettingRoundType);
         if (actions == null || actions.isEmpty()) {
             throw new IllegalStateException("No action defined for " + bettingRoundType + " for user " + user.getUsername());

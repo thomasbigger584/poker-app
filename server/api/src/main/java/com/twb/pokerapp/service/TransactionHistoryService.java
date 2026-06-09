@@ -4,7 +4,7 @@ import com.twb.pokerapp.domain.AppUser;
 import com.twb.pokerapp.domain.BotUser;
 import com.twb.pokerapp.domain.TransactionHistory;
 import com.twb.pokerapp.domain.enumeration.TransactionHistoryType;
-import com.twb.pokerapp.dto.transactionhistory.TransactionHistoryDTO;
+import com.twb.pokerapp.proto.TransactionHistoryDTO;
 import com.twb.pokerapp.mapper.TransactionHistoryMapper;
 import com.twb.pokerapp.repository.TransactionHistoryRepository;
 import lombok.RequiredArgsConstructor;

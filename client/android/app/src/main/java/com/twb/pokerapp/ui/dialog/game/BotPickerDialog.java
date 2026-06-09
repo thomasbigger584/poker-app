@@ -9,7 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.gridlayout.widget.GridLayout;
 
-import com.twb.pokerapp.data.model.dto.appuser.AppUserDTO;
+import com.twb.pokerapp.proto.AppUserDTO;
 import com.twb.pokerapp.databinding.DialogBotPickerBinding;
 import com.twb.pokerapp.databinding.ItemBotPickerBinding;
 
@@ -51,7 +51,7 @@ public class BotPickerDialog extends BaseGameDialog {
         for (var bot : bots) {
             var row = ItemBotPickerBinding.inflate(inflater, binding.botList, false);
 
-            var displayName = (bot.getPersona() != null) ? bot.getPersona() : bot.getUsername();
+            var displayName = !bot.getPersona().isEmpty() ? bot.getPersona() : bot.getUsername();
             row.botNameTextView.setText(displayName);
             row.botUsernameTextView.setText(bot.getUsername());
             row.getRoot().setOnClickListener(v -> {

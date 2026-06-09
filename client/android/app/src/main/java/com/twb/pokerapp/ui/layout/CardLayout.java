@@ -9,7 +9,7 @@ import androidx.annotation.DrawableRes;
 
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.databinding.CardBinding;
-import com.twb.pokerapp.data.model.dto.card.CardDTO;
+import com.twb.pokerapp.proto.CardDTO;
 import com.twb.pokerapp.ui.util.CardDrawableUtil;
 
 public class CardLayout extends FrameLayout {

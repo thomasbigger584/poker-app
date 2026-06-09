@@ -3,7 +3,7 @@ package com.twb.pokerapp.service.game.bot;
 import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.service.game.thread.impl.texas.dto.NextActionsDTO;
-import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
+import com.twb.pokerapp.service.game.thread.dto.PlayerActionCommand;
 
 /**
  * Decides which action a bot player should take on its turn, in place of waiting
@@ -20,7 +20,7 @@ public interface BotActionService {
      * @param botSession   the bot's managed player session (current funds, position, etc.)
      * @param bettingRound the betting round the decision is being made for
      * @param nextActions  the actions currently available to the bot, plus the amount to call
-     * @return a valid {@link CreatePlayerActionDTO} the game engine can apply
+     * @return a valid {@link PlayerActionCommand} the game engine can apply
      */
-    CreatePlayerActionDTO decideAction(PlayerSession botSession, BettingRound bettingRound, NextActionsDTO nextActions);
+    PlayerActionCommand decideAction(PlayerSession botSession, BettingRound bettingRound, NextActionsDTO nextActions);
 }

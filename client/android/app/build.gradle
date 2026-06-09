@@ -3,6 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'kotlin-kapt'
     id 'com.google.dagger.hilt.android'
+    id 'com.google.protobuf'
 }
 
 android {
@@ -56,10 +57,34 @@ android {
         }
     }
     buildToolsVersion '35.0.0'
+
+    sourceSets {
+        main {
+            // Shared protobuf contract — single source of truth with the backend
+            proto {
+                srcDir '../../../proto'
+            }
+        }
+    }
 }
 
 kapt {
     correctErrorTypes true
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:4.31.1"
+    }
+    generateProtoTasks {
+        all().each { task ->
+            task.builtins {
+                java {
+                    option "lite"
+                }
+            }
+        }
+    }
 }
 
 dependencies {
@@ -84,6 +109,8 @@ dependencies {
     implementation 'com.squareup.retrofit2:adapter-rxjava2:2.3.0'
     implementation 'com.squareup.retrofit2:retrofit:2.3.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:3.8.0'
+    // Shared protobuf contract — lite runtime for Android (binary only)
+    implementation 'com.google.protobuf:protobuf-javalite:4.31.1'
     implementation project(':stomp-lib')
 
     // supporting older devices (sdk19)

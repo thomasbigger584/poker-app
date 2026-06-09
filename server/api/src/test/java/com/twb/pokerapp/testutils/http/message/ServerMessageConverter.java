@@ -1,53 +1,48 @@
 package com.twb.pokerapp.testutils.http.message;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
-import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
+import com.google.protobuf.Message;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.support.GenericMessage;
 
-import java.nio.charset.StandardCharsets;
+import java.lang.reflect.Method;
+import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * STOMP {@link MessageConverter} for the test client, mirroring the server's binary-protobuf wire
+ * format. Inbound frames carry a raw protobuf body which is parsed into the target proto type via
+ * its generated static {@code parseFrom(byte[])}; outbound proto payloads are serialized with
+ * {@code toByteArray()}. This is the test-side counterpart to the server's
+ * {@code ProtobufMessageConverter}.
+ */
 @Slf4j
 public class ServerMessageConverter implements MessageConverter {
-    private static final String SERVER_MESSAGE_TYPE_KEY = "type";
-    private static final String TIMESTAMP_KEY = "timestamp";
-    private static final String PAYLOAD_KEY = "payload";
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ConcurrentHashMap<Class<?>, Method> PARSER_CACHE = new ConcurrentHashMap<>();
 
     @Override
-    public Object fromMessage(Message<?> message, @NotNull Class<?> targetClass) {
+    public Object fromMessage(org.springframework.messaging.Message<?> message, @NotNull Class<?> targetClass) {
         var payload = (byte[]) message.getPayload();
         try {
-            var rootNode = objectMapper.readTree(payload);
-            var typeStr = rootNode.get(SERVER_MESSAGE_TYPE_KEY).asText();
-            var messageType = ServerMessageType.valueOf(typeStr);
-
-            var timestamp = System.currentTimeMillis();
-            if (rootNode.has(TIMESTAMP_KEY)) {
-                timestamp = rootNode.get(TIMESTAMP_KEY).asLong();
-            }
-            var payloadNode = rootNode.get(PAYLOAD_KEY);
-            var payloadObject = objectMapper.treeToValue(payloadNode, messageType.getPayloadClass());
-            return ServerMessageDTO.create(messageType, timestamp, payloadObject);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to convert message", e);
+            var parseFrom = PARSER_CACHE.computeIfAbsent(targetClass, ServerMessageConverter::parseFromMethod);
+            return parseFrom.invoke(null, (Object) payload);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException("Failed to parse protobuf message of type " + targetClass, e);
         }
     }
 
     @Override
-    public Message<?> toMessage(@NotNull Object payload, MessageHeaders headers) {
+    public org.springframework.messaging.Message<?> toMessage(@NotNull Object payload, MessageHeaders headers) {
+        var bytes = ((Message) payload).toByteArray();
+        return new GenericMessage<>(bytes, headers);
+    }
+
+    private static Method parseFromMethod(Class<?> targetClass) {
         try {
-            var json = objectMapper.writeValueAsString(payload);
-            var payloadBytes = json.getBytes(StandardCharsets.UTF_8);
-            return new GenericMessage<>(payloadBytes, headers);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to parse bytes for payload", e);
+            return targetClass.getMethod("parseFrom", byte[].class);
+        } catch (NoSuchMethodException e) {
+            throw new IllegalStateException("No parseFrom(byte[]) on protobuf type " + targetClass, e);
         }
     }
 }

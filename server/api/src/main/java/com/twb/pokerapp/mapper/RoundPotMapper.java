@@ -1,11 +1,29 @@
 package com.twb.pokerapp.mapper;
 
 import com.twb.pokerapp.domain.RoundPot;
-import com.twb.pokerapp.dto.roundpot.RoundPotDTO;
-import org.mapstruct.Mapper;
+import com.twb.pokerapp.proto.RoundPotDTO;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring", uses = {PlayerSessionMapper.class})
-public interface RoundPotMapper {
+@Component
+@RequiredArgsConstructor
+public class RoundPotMapper {
+    private final PlayerSessionMapper playerSessionMapper;
 
-    RoundPotDTO modelToDto(RoundPot model);
+    public RoundPotDTO modelToDto(RoundPot model) {
+        if (model == null) {
+            return null;
+        }
+        var builder = RoundPotDTO.newBuilder()
+                .setId(ProtoConvert.uuidStr(model.getId()))
+                .setPotAmount(ProtoConvert.money(model.getPotAmount()));
+        if (model.getPotIndex() != null) {
+            builder.setPotIndex(model.getPotIndex());
+        }
+        if (model.getEligiblePlayers() != null) {
+            model.getEligiblePlayers()
+                    .forEach(player -> builder.addEligiblePlayers(playerSessionMapper.modelToDto(player)));
+        }
+        return builder.build();
+    }
 }

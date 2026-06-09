@@ -16,9 +16,10 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.databinding.CardPairBinding;
-import com.twb.pokerapp.data.model.dto.card.CardDTO;
-import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
+import com.twb.pokerapp.proto.CardDTO;
+import com.twb.pokerapp.proto.PlayerSessionDTO;
 import com.twb.pokerapp.ui.util.CardDrawableUtil;
+import com.twb.pokerapp.util.Protos;
 
 public class CardPairLayout extends ConstraintLayout {
     private CardPairBinding binding;
@@ -96,8 +97,8 @@ public class CardPairLayout extends ConstraintLayout {
         binding.displayNameTextView.setText(user.getUsername());
 
         var funds = playerSession.getFunds();
-        if (funds != null) {
-            binding.fundsTextView.setText(getContext().getString(R.string.currency_format, funds));
+        if (!funds.isEmpty()) {
+            binding.fundsTextView.setText(getContext().getString(R.string.currency_format, Protos.money(funds)));
         }
     }
 

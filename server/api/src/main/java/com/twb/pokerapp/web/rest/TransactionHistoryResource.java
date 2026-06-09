@@ -1,6 +1,6 @@
 package com.twb.pokerapp.web.rest;
 
-import com.twb.pokerapp.dto.transactionhistory.TransactionHistoryDTO;
+import com.twb.pokerapp.proto.TransactionHistoryListResponse;
 import com.twb.pokerapp.service.PaginationService;
 import com.twb.pokerapp.service.TransactionHistoryService;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
-import java.util.List;
 
 @RestController
 @RequestMapping("/transaction-history")
@@ -23,10 +22,13 @@ public class TransactionHistoryResource {
     private final PaginationService paginationService;
 
     @GetMapping("/current")
-    public ResponseEntity<List<TransactionHistoryDTO>> getCurrent(Principal principal, Pageable pageable,
-                                                                  @RequestParam(value = "type", required = false) String type) {
+    public ResponseEntity<TransactionHistoryListResponse> getCurrent(Principal principal, Pageable pageable,
+                                                                     @RequestParam(value = "type", required = false) String type) {
         var page = service.findCurrent(principal, type, pageable);
         var headers = paginationService.createHeaders(page);
-        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+        var response = TransactionHistoryListResponse.newBuilder()
+                .addAllTransactions(page.getContent())
+                .build();
+        return new ResponseEntity<>(response, headers, HttpStatus.OK);
     }
 }

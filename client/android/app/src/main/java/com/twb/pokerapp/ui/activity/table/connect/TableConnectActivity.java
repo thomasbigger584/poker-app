@@ -11,11 +11,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.twb.pokerapp.R;
-import com.twb.pokerapp.data.model.dto.table.TableDTO;
+import com.twb.pokerapp.proto.TableDTO;
 import com.twb.pokerapp.databinding.ActivityTableConnectBinding;
 import com.twb.pokerapp.ui.activity.game.texas.TexasGameActivity;
 import com.twb.pokerapp.ui.activity.base.BaseAuthActivity;
+import com.twb.pokerapp.util.Protos;
 
 import java.util.Locale;
 
@@ -23,6 +25,9 @@ import dagger.hilt.android.AndroidEntryPoint;
 
 @AndroidEntryPoint
 public class TableConnectActivity extends BaseAuthActivity {
+
+    /** Binary-protobuf {@link TableDTO} passed in by the caller. */
+    public static final String EXTRA_TABLE = "EXTRA_TABLE";
 
     private ActivityTableConnectBinding binding;
     private TableDTO table;
@@ -48,16 +53,16 @@ public class TableConnectActivity extends BaseAuthActivity {
         });
 
         binding.buttonMinBuyIn.setOnClickListener(v -> {
-            binding.buyInEditText.setText(String.format(Locale.getDefault(), "%.2f", table.getMinBuyin()));
+            binding.buyInEditText.setText(String.format(Locale.getDefault(), "%.2f", Protos.money(table.getMinBuyin())));
         });
         binding.buttonMaxBuyIn.setOnClickListener(v -> {
-            binding.buyInEditText.setText(String.format(Locale.getDefault(), "%.2f", table.getMaxBuyin()));
+            binding.buyInEditText.setText(String.format(Locale.getDefault(), "%.2f", Protos.money(table.getMaxBuyin())));
         });
 
         viewModel = new ViewModelProvider(this).get(TableConnectViewModel.class);
         viewModel.errorResId.observe(this, resId -> {
             if (resId == R.string.error_buy_in_range) {
-                Toast.makeText(this, getString(resId, table.getMinBuyin(), table.getMaxBuyin()), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(resId, Protos.money(table.getMinBuyin()), Protos.money(table.getMaxBuyin())), Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(this, resId, Toast.LENGTH_SHORT).show();
             }
@@ -81,12 +86,17 @@ public class TableConnectActivity extends BaseAuthActivity {
             Toast.makeText(this, "Intent is null", Toast.LENGTH_SHORT).show();
             return false;
         }
-        var extras = intent.getExtras();
-        if (extras == null) {
-            Toast.makeText(this, "Bundle extras is null", Toast.LENGTH_SHORT).show();
+        var tableBytes = intent.getByteArrayExtra(EXTRA_TABLE);
+        if (tableBytes == null) {
+            Toast.makeText(this, "Table is missing", Toast.LENGTH_SHORT).show();
             return false;
         }
-        table = TableDTO.fromBundle(extras);
+        try {
+            table = TableDTO.parseFrom(tableBytes);
+        } catch (InvalidProtocolBufferException e) {
+            Toast.makeText(this, "Table is invalid", Toast.LENGTH_SHORT).show();
+            return false;
+        }
         return true;
     }
 

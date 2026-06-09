@@ -3,10 +3,10 @@ package com.twb.pokerapp.service.game.thread.impl;
 import com.twb.pokerapp.domain.AppUser;
 import com.twb.pokerapp.domain.Card;
 import com.twb.pokerapp.domain.enumeration.CardType;
-import com.twb.pokerapp.domain.enumeration.GameType;
 import com.twb.pokerapp.domain.enumeration.RoundState;
-import com.twb.pokerapp.dto.table.CreateTableDTO;
-import com.twb.pokerapp.dto.table.TableDTO;
+import com.twb.pokerapp.proto.CreateTableDTO;
+import com.twb.pokerapp.proto.GameType;
+import com.twb.pokerapp.proto.TableDTO;
 import com.twb.pokerapp.testutils.TestEnvironment;
 import com.twb.pokerapp.testutils.game.GameLatches;
 import com.twb.pokerapp.testutils.game.player.TestUserParams;
@@ -159,15 +159,16 @@ class TexasBotGameIT {
     // *****************************************************************************************
 
     private TableDTO createTable(int minPlayers) throws Exception {
-        var createDto = new CreateTableDTO();
-        createDto.setName(UUID.randomUUID().toString());
-        createDto.setGameType(GameType.TEXAS_HOLDEM);
-        createDto.setSpeedMultiplier(2.0);
-        createDto.setTotalRounds(1);
-        createDto.setMinPlayers(minPlayers);
-        createDto.setMaxPlayers(6);
-        createDto.setMinBuyin(BigDecimal.valueOf(1_000));
-        createDto.setMaxBuyin(BigDecimal.valueOf(10_000));
+        var createDto = CreateTableDTO.newBuilder()
+                .setName(UUID.randomUUID().toString())
+                .setGameType(GameType.GAME_TYPE_TEXAS_HOLDEM)
+                .setSpeedMultiplier(2.0)
+                .setTotalRounds(1)
+                .setMinPlayers(minPlayers)
+                .setMaxPlayers(6)
+                .setMinBuyin(BigDecimal.valueOf(1_000).toPlainString())
+                .setMaxBuyin(BigDecimal.valueOf(10_000).toPlainString())
+                .build();
 
         var response = env.getAdminRestClient().post(TableDTO.class, createDto, "/poker-table");
         assertEquals(HttpStatus.CREATED.value(), response.httpResponse().statusCode());

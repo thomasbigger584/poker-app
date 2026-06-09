@@ -1,6 +1,7 @@
 package com.twb.pokerapp.web.rest;
 
-import com.twb.pokerapp.dto.appuser.AppUserDTO;
+import com.twb.pokerapp.proto.AppUserDTO;
+import com.twb.pokerapp.proto.AppUserListResponse;
 import com.twb.pokerapp.testutils.TestEnvironment;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -9,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
 
 import static com.twb.pokerapp.configuration.Constants.INITIAL_USER_FUNDS;
 import static org.junit.jupiter.api.Assertions.*;
@@ -54,8 +54,8 @@ class AppUserResourceIT {
         assertEquals(HttpStatus.OK.value(), response.httpResponse().statusCode());
         AppUserDTO appUserDTO = response.resultBody();
         assertNotNull(appUserDTO);
-        assertNotNull(appUserDTO.getId());
-        assertNotNull(appUserDTO.getUsername());
+        assertFalse(appUserDTO.getId().isEmpty());
+        assertFalse(appUserDTO.getUsername().isEmpty());
         assertEquals(username, appUserDTO.getUsername());
     }
 
@@ -65,20 +65,20 @@ class AppUserResourceIT {
         var userRestClient = env.getUserRestClient("user1");
 
         // when
-        var response = userRestClient.get(AppUserDTO[].class, ENDPOINT + "/bots");
+        var response = userRestClient.get(AppUserListResponse.class, ENDPOINT + "/bots");
 
         // then
         assertEquals(HttpStatus.OK.value(), response.httpResponse().statusCode());
-        var bots = response.resultBody();
+        var bots = response.resultBody().getUsersList();
         assertNotNull(bots);
         // PersonaService seeds 5 fixed bots on startup
-        assertEquals(5, bots.length);
+        assertEquals(5, bots.size());
         for (var bot : bots) {
-            assertNotNull(bot.getId());
-            assertNotNull(bot.getUsername());
-            assertNotNull(bot.getPersona());
+            assertFalse(bot.getId().isEmpty());
+            assertFalse(bot.getUsername().isEmpty());
+            assertFalse(bot.getPersona().isEmpty());
         }
-        var rock = Arrays.stream(bots)
+        var rock = bots.stream()
                 .filter(bot -> "stone_cold".equals(bot.getUsername()))
                 .findFirst();
         assertTrue(rock.isPresent(), "Expected seeded bot 'stone_cold' to be present");
@@ -101,13 +101,13 @@ class AppUserResourceIT {
         assertEquals(HttpStatus.OK.value(), response.httpResponse().statusCode());
         AppUserDTO appUserDTO = response.resultBody();
         assertNotNull(appUserDTO);
-        assertEquals(0, INITIAL_USER_FUNDS.compareTo(appUserDTO.getTotalFunds()));
+        assertEquals(0, INITIAL_USER_FUNDS.compareTo(new BigDecimal(appUserDTO.getTotalFunds())));
 
         // Verify by fetching again
         var getResponse = userRestClient.get(AppUserDTO.class, ENDPOINT + "/current");
         assertEquals(HttpStatus.OK.value(), getResponse.httpResponse().statusCode());
         AppUserDTO fetchedAppUserDTO = getResponse.resultBody();
         assertNotNull(fetchedAppUserDTO);
-        assertEquals(0, INITIAL_USER_FUNDS.compareTo(fetchedAppUserDTO.getTotalFunds()));
+        assertEquals(0, INITIAL_USER_FUNDS.compareTo(new BigDecimal(fetchedAppUserDTO.getTotalFunds())));
     }
 }

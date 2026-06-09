@@ -1,9 +1,9 @@
 package com.twb.pokerapp.testutils.game.turn;
 
-import com.twb.pokerapp.domain.enumeration.ActionType;
+import com.twb.pokerapp.proto.ActionType;
+import com.twb.pokerapp.proto.CreatePlayerActionDTO;
+import com.twb.pokerapp.proto.PlayerTurnDTO;
 import com.twb.pokerapp.testutils.game.player.AbstractTestUser;
-import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
-import com.twb.pokerapp.web.websocket.message.server.payload.PlayerTurnDTO;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 
 import java.math.BigDecimal;
@@ -23,9 +23,15 @@ public interface TurnHandler {
     }
 
     static void sendPlayerAction(AbstractTestUser user, ActionType action, BigDecimal amount) {
-        var createActionDto = new CreatePlayerActionDTO();
-        createActionDto.setAction(action);
-        createActionDto.setAmount(amount);
-        user.sendPlayerAction(createActionDto);
+        var builder = CreatePlayerActionDTO.newBuilder();
+        // A null action / amount stays as the proto3 default (UNSPECIFIED / "") so invalid-action
+        // scenarios still exercise server-side validation.
+        if (action != null) {
+            builder.setAction(action);
+        }
+        if (amount != null) {
+            builder.setAmount(amount.toPlainString());
+        }
+        user.sendPlayerAction(builder.build());
     }
 }

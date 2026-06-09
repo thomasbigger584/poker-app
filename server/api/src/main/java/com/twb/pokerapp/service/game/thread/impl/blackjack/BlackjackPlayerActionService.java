@@ -5,7 +5,7 @@ import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.service.game.thread.GamePlayerActionService;
 import com.twb.pokerapp.service.game.thread.GameThread;
-import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
+import com.twb.pokerapp.service.game.thread.dto.PlayerActionCommand;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
@@ -24,7 +24,7 @@ public class BlackjackPlayerActionService extends GamePlayerActionService {
     // *****************************************************************************************
 
     @Override
-    public PlayerAction onPlayerAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread, CreatePlayerActionDTO createDto) {
+    public PlayerAction onPlayerAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread, PlayerActionCommand createDto) {
         throw new NotImplementedException("Blackjack player actions not implemented yet");
     }
 

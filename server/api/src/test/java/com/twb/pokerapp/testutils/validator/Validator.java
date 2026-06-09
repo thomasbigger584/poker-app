@@ -4,25 +4,23 @@ import com.twb.pokerapp.domain.*;
 import com.twb.pokerapp.domain.enumeration.CardType;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.domain.enumeration.SessionState;
-import com.twb.pokerapp.dto.appuser.AppUserDTO;
-import com.twb.pokerapp.dto.bettinground.BettingRoundDTO;
-import com.twb.pokerapp.dto.card.CardDTO;
-import com.twb.pokerapp.dto.playeraction.PlayerActionDTO;
-import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
-import com.twb.pokerapp.dto.round.RoundDTO;
-import com.twb.pokerapp.dto.table.TableDTO;
+import com.twb.pokerapp.mapper.ProtoConvert;
+import com.twb.pokerapp.proto.AppUserDTO;
+import com.twb.pokerapp.proto.BettingRoundDTO;
+import com.twb.pokerapp.proto.CardDTO;
+import com.twb.pokerapp.proto.PlayerActionDTO;
+import com.twb.pokerapp.proto.PlayerSessionDTO;
+import com.twb.pokerapp.proto.RoundDTO;
+import com.twb.pokerapp.proto.ServerMessageDTO;
+import com.twb.pokerapp.proto.TableDTO;
 import com.twb.pokerapp.testutils.game.params.scenario.ScenarioParams;
 import com.twb.pokerapp.testutils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.testutils.sql.SqlClient;
-import com.twb.pokerapp.web.exception.validation.ValidationDTO;
-import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
-import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
-import com.twb.pokerapp.web.websocket.message.server.payload.PlayerConnectedDTO;
-import com.twb.pokerapp.web.websocket.message.server.payload.PlayerSubscribedDTO;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 import static com.twb.pokerapp.testutils.fixture.HandFixture.findCard;
 import static org.junit.jupiter.api.Assertions.*;
@@ -49,17 +47,16 @@ public abstract class Validator {
     }
 
     public void validateInvalidAction(PlayersServerMessages messages) {
-        var validationMessages = get(2, messages, ServerMessageType.VALIDATION);
+        var validationMessages = get(2, messages, ServerMessageDTO.PayloadCase.VALIDATION);
         assertEquals(1, validationMessages.size());
         var validationMessage = validationMessages.getFirst();
-        var validationDto = (ValidationDTO) validationMessage.getPayload();
-        var fields = validationDto.getFields();
+        var validationDto = validationMessage.getValidation();
+        var fields = validationDto.getFieldsList();
 
-        var fieldsExpected = List.of("action", "amount");
-        assertEquals(fieldsExpected.size(), fields.size());
-
-        assertTrue(fields.stream().anyMatch(validationFieldDto ->
-                fieldsExpected.contains(validationFieldDto.getField())));
+        // The server validates fail-fast: a missing/unspecified action short-circuits before the
+        // amount check, so exactly one "action" validation field is reported.
+        assertEquals(1, fields.size());
+        assertEquals("action", fields.getFirst().getField());
     }
 
     // ***************************************************************
@@ -67,10 +64,10 @@ public abstract class Validator {
     // ***************************************************************
 
     private void assertPlayersConnected(List<ServerMessageDTO> listenerMessages) {
-        var messages = get(listenerMessages, ServerMessageType.PLAYER_CONNECTED);
+        var messages = get(listenerMessages, ServerMessageDTO.PayloadCase.PLAYER_CONNECTED);
         assertEquals(params.getScenarioPlayers().size(), messages.size());
         messages.forEach(message -> {
-            var payload = (PlayerConnectedDTO) message.getPayload();
+            var payload = message.getPlayerConnected();
 
             var playerSessionDto = payload.getPlayerSession();
             assertPlayerSession(playerSessionDto);
@@ -81,12 +78,12 @@ public abstract class Validator {
     }
 
     private void assertPlayersSubscribed(List<ServerMessageDTO> listenerMessages) {
-        var messages = get(listenerMessages, ServerMessageType.PLAYER_SUBSCRIBED);
+        var messages = get(listenerMessages, ServerMessageDTO.PayloadCase.PLAYER_SUBSCRIBED);
         assertEquals(1, messages.size());
         messages.forEach(message -> {
-            var payload = (PlayerSubscribedDTO) message.getPayload();
+            var payload = message.getPlayerSubscribed();
 
-            var playerSessions = payload.getPlayerSessions();
+            var playerSessions = payload.getPlayerSessionsList();
             assertFalse(playerSessions.isEmpty());
 
             var viewerSessionOpt = playerSessions.stream()
@@ -131,12 +128,17 @@ public abstract class Validator {
 
     protected PlayerAction assertPlayerAction(PlayerActionDTO playerActionDto) {
         var playerActionId = playerActionDto.getId();
-        var playerActionOpt = sqlClient.getPlayerAction(playerActionId);
+        var playerActionOpt = sqlClient.getPlayerAction(UUID.fromString(playerActionId));
         assertTrue(playerActionOpt.isPresent());
         var playerAction = playerActionOpt.get();
-        assertEquals(playerActionId, playerAction.getId());
-        assertEquals(playerActionDto.getActionType(), playerAction.getActionType());
-        assertEquals(playerActionDto.getAmount(), playerAction.getAmount());
+        assertEquals(playerActionId, playerAction.getId().toString());
+        assertEquals(ProtoConvert.toModel(playerActionDto.getActionType()), playerAction.getActionType());
+        var dtoAmount = ProtoConvert.bigDecimal(playerActionDto.getAmount());
+        if (dtoAmount == null) {
+            assertNull(playerAction.getAmount());
+        } else {
+            assertEquals(0, dtoAmount.compareTo(playerAction.getAmount()));
+        }
 
         assertPlayerSession(playerActionDto.getPlayerSession());
         assertBettingRound(playerActionDto.getBettingRound());
@@ -145,56 +147,59 @@ public abstract class Validator {
 
     protected BettingRound assertBettingRound(BettingRoundDTO bettingRoundDto) {
         var bettingRoundId = bettingRoundDto.getId();
-        var bettingRoundOpt = sqlClient.getBettingRound(bettingRoundId);
+        var bettingRoundOpt = sqlClient.getBettingRound(UUID.fromString(bettingRoundId));
         assertTrue(bettingRoundOpt.isPresent());
         var bettingRound = bettingRoundOpt.get();
-        assertEquals(bettingRoundId, bettingRound.getId());
-        assertEquals(bettingRoundDto.getType(), bettingRound.getType());
+        assertEquals(bettingRoundId, bettingRound.getId().toString());
+        assertEquals(ProtoConvert.toModel(bettingRoundDto.getType()), bettingRound.getType());
         return bettingRound;
     }
 
     protected Card assertCard(CardDTO cardDto, CardType cardType) {
-        var foundCardFromDeck = findCard(cardDto.getRankType(), cardDto.getSuitType());
-        assertEquals(cardDto.getRankType(), foundCardFromDeck.getRankType());
+        var rankType = ProtoConvert.toModel(cardDto.getRankType());
+        var suitType = ProtoConvert.toModel(cardDto.getSuitType());
+        var foundCardFromDeck = findCard(rankType, suitType);
+        assertEquals(rankType, foundCardFromDeck.getRankType());
         assertEquals(cardDto.getRankValue(), foundCardFromDeck.getRankValue());
-        assertEquals(cardDto.getSuitType(), foundCardFromDeck.getSuitType());
-        assertEquals(cardDto.getCardType(), cardType);
+        assertEquals(suitType, foundCardFromDeck.getSuitType());
+        assertEquals(ProtoConvert.toModel(cardDto.getCardType()), cardType);
 
-        var cardOpt = sqlClient.getCard(cardDto.getId());
+        var cardOpt = sqlClient.getCard(UUID.fromString(cardDto.getId()));
         assertTrue(cardOpt.isPresent());
         var card = cardOpt.get();
 
-        assertEquals(cardDto.getId(), card.getId());
-        assertEquals(cardDto.getRankType(), card.getRankType());
+        assertEquals(cardDto.getId(), card.getId().toString());
+        assertEquals(rankType, card.getRankType());
         assertEquals(cardDto.getRankValue(), card.getRankValue());
-        assertEquals(cardDto.getSuitType(), card.getSuitType());
-        assertEquals(cardDto.getCardType(), card.getCardType());
+        assertEquals(suitType, card.getSuitType());
+        assertEquals(ProtoConvert.toModel(cardDto.getCardType()), card.getCardType());
         return card;
     }
 
     protected Round assertRound(RoundDTO roundDto) {
         var roundId = roundDto.getId();
-        var roundOpt = sqlClient.getRound(roundId);
+        var roundOpt = sqlClient.getRound(UUID.fromString(roundId));
         assertTrue(roundOpt.isPresent());
         var round = roundOpt.get();
-        assertEquals(roundId, round.getId());
+        assertEquals(roundId, round.getId().toString());
         return round;
     }
 
     protected PlayerSession assertPlayerSession(PlayerSessionDTO playerSessionDto) {
-        assertEquals(SessionState.CONNECTED, playerSessionDto.getSessionState());
+        assertEquals(SessionState.CONNECTED, ProtoConvert.toModel(playerSessionDto.getSessionState()));
 
         var playerSessionId = playerSessionDto.getId();
-        var playerSessionOpt = sqlClient.getPlayerSession(playerSessionId);
+        var playerSessionOpt = sqlClient.getPlayerSession(UUID.fromString(playerSessionId));
         assertTrue(playerSessionOpt.isPresent());
         var playerSession = playerSessionOpt.get();
-        assertEquals(playerSessionId, playerSession.getId());
-        if (playerSessionDto.getConnectionType() == ConnectionType.PLAYER) {
+        assertEquals(playerSessionId, playerSession.getId().toString());
+        if (ProtoConvert.toModel(playerSessionDto.getConnectionType()) == ConnectionType.PLAYER) {
             assertTrue(playerSessionDto.getPosition() > 0);
+            assertEquals(Integer.valueOf(playerSessionDto.getPosition()), playerSession.getPosition());
         } else {
-            assertNull(playerSessionDto.getPosition());
+            assertFalse(playerSessionDto.hasPosition());
+            assertNull(playerSession.getPosition());
         }
-        assertEquals(playerSessionDto.getPosition(), playerSession.getPosition());
         assertAppUser(playerSessionDto.getUser());
         assertTable(playerSessionDto.getPokerTable());
         return playerSession;
@@ -202,30 +207,30 @@ public abstract class Validator {
 
     protected AppUser assertAppUser(AppUserDTO appUserDto) {
         var appUserId = appUserDto.getId();
-        var appUserOpt = sqlClient.getAppUser(appUserId);
+        var appUserOpt = sqlClient.getAppUser(UUID.fromString(appUserId));
         assertTrue(appUserOpt.isPresent());
         var appUser = appUserOpt.get();
-        assertEquals(appUserId, appUser.getId());
+        assertEquals(appUserId, appUser.getId().toString());
         assertEquals(appUserDto.getUsername(), appUser.getUsername());
         assertEquals(appUserDto.getFirstName(), appUser.getFirstName());
         assertEquals(appUserDto.getLastName(), appUser.getLastName());
-        assertEquals(appUserDto.isEnabled(), appUser.isEnabled());
+        assertEquals(appUserDto.getEnabled(), appUser.isEnabled());
         assertTrue(appUser.isEnabled());
         if (appUser instanceof PhysicalUser physicalUser) {
             assertEquals(appUserDto.getEmail(), physicalUser.getEmail());
-            assertEquals(appUserDto.isEmailVerified(), physicalUser.isEmailVerified());
+            assertEquals(appUserDto.getEmailVerified(), physicalUser.isEmailVerified());
         }
         return appUser;
     }
 
     protected PokerTable assertTable(TableDTO tableDto) {
         var tableId = tableDto.getId();
-        var tableOpt = sqlClient.getPokerTable(tableId);
+        var tableOpt = sqlClient.getPokerTable(UUID.fromString(tableId));
         assertTrue(tableOpt.isPresent());
         var table = tableOpt.get();
-        assertEquals(tableId, table.getId());
+        assertEquals(tableId, table.getId().toString());
         assertEquals(tableDto.getName(), table.getName());
-        assertEquals(tableDto.getGameType(), table.getGameType());
+        assertEquals(ProtoConvert.toModel(tableDto.getGameType()), table.getGameType());
         return table;
     }
 
@@ -233,15 +238,15 @@ public abstract class Validator {
     // Helper Methods
     // ***************************************************************
 
-    public List<ServerMessageDTO> get(int userIndex, PlayersServerMessages messages, ServerMessageType type) {
+    public List<ServerMessageDTO> get(int userIndex, PlayersServerMessages messages, ServerMessageDTO.PayloadCase payloadCase) {
         var userMessages = messages.get("user" + userIndex);
-        return get(userMessages, type);
+        return get(userMessages, payloadCase);
     }
 
-    protected List<ServerMessageDTO> get(List<ServerMessageDTO> messages, ServerMessageType type) {
+    protected List<ServerMessageDTO> get(List<ServerMessageDTO> messages, ServerMessageDTO.PayloadCase payloadCase) {
         return messages.stream()
-                .filter(message -> message.getType() == type)
-                .sorted(Comparator.comparing(ServerMessageDTO::getTimestamp))
+                .filter(message -> message.getPayloadCase() == payloadCase)
+                .sorted(Comparator.comparingLong(ServerMessageDTO::getTimestamp))
                 .toList();
     }
 

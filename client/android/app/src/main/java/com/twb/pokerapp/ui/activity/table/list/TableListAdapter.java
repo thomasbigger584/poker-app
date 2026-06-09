@@ -10,8 +10,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.databinding.TableListItemBinding;
-import com.twb.pokerapp.data.model.dto.table.AvailableTableDTO;
-import com.twb.pokerapp.data.model.dto.table.TableDTO;
+import com.twb.pokerapp.proto.AvailableTableDTO;
+import com.twb.pokerapp.proto.TableDTO;
+import com.twb.pokerapp.util.Protos;
 
 public class TableListAdapter extends ListAdapter<AvailableTableDTO, TableListAdapter.ViewHolder> {
     private final TableClickListener clickListener;
@@ -65,9 +66,9 @@ public class TableListAdapter extends ListAdapter<AvailableTableDTO, TableListAd
             var table = availableTable.getTable();
             var context = binding.getRoot().getContext();
             binding.nameTextView.setText(table.getName());
-            binding.gameTypeTextView.setText(table.getGameTypeDisplayName(context));
+            binding.gameTypeTextView.setText(Protos.gameTypeDisplayName(context, table.getGameType()));
             binding.playersTextView.setText(context.getString(R.string.player_count_format, availableTable.getPlayersConnected(), table.getMaxPlayers()));
-            if (availableTable.isCurrentUserConnected()) {
+            if (availableTable.getCurrentUserConnected()) {
                 // The user still has a live session here (dropped within the grace window, or
                 // backgrounded) — offer a straight jump back into the running game.
                 binding.connectButton.setText(R.string.reconnect);

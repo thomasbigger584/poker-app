@@ -1,11 +1,9 @@
 package com.twb.pokerapp.web.websocket.message;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.PokerTable;
+import com.twb.pokerapp.proto.ServerMessageDTO;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
-import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -29,7 +27,6 @@ public class MessageDispatcher {
     private static final String USER_NOTIFICATION_TOPIC = "/queue/notifications";
 
     private final SimpMessagingTemplate template;
-    private final ObjectMapper objectMapper;
     private final ApplicationContext context;
 
     public void send(PokerTable table, ServerMessageDTO message) {
@@ -46,24 +43,15 @@ public class MessageDispatcher {
     }
 
     public void send(UUID tableId, ServerMessageDTO message) {
-        try {
-            var destination = GAME_TOPIC.formatted(tableId);
-            var payload = objectMapper.writeValueAsString(message);
-            template.convertAndSend(destination, payload);
-            log.debug("<<<< {}", payload);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to send message", e);
-        }
+        var destination = GAME_TOPIC.formatted(tableId);
+        // The proto message is serialized to binary by ProtobufMessageConverter in the STOMP chain.
+        template.convertAndSend(destination, message);
+        log.debug("<<<< {} ({} bytes) -> {}", message.getPayloadCase(), message.getSerializedSize(), destination);
     }
 
     public void send(String username, ServerMessageDTO message) {
-        try {
-            var payload = objectMapper.writeValueAsString(message);
-            template.convertAndSendToUser(username, USER_NOTIFICATION_TOPIC, payload);
-            log.debug("<<<< [{}] {}", username, payload);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to send message", e);
-        }
+        template.convertAndSendToUser(username, USER_NOTIFICATION_TOPIC, message);
+        log.debug("<<<< [{}] {} ({} bytes)", username, message.getPayloadCase(), message.getSerializedSize());
     }
 
     public void sendReceipt(StompHeaderAccessor headerAccessor) {

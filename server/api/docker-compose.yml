@@ -4,7 +4,9 @@ services:
     container_name: api
     image: com.twb.pokerapp/api
     build:
-      context: .
+      # Repo root so the shared proto/ contract (sibling to server/) is inside the build context.
+      context: ../..
+      dockerfile: server/api/Dockerfile
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
       interval: 30s

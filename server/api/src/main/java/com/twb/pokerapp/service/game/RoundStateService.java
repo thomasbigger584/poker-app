@@ -11,9 +11,9 @@ import com.twb.pokerapp.repository.HandRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.RoundRepository;
 import com.twb.pokerapp.service.game.thread.GameThreadManager;
-import com.twb.pokerapp.web.websocket.message.server.payload.DealPlayerCardDTO;
-import com.twb.pokerapp.web.websocket.message.server.payload.PlayerTurnDTO;
-import com.twb.pokerapp.web.websocket.message.server.payload.RoundStateDTO;
+import com.twb.pokerapp.proto.DealPlayerCardDTO;
+import com.twb.pokerapp.proto.PlayerTurnDTO;
+import com.twb.pokerapp.proto.RoundStateDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -58,41 +58,44 @@ public class RoundStateService {
         }
         var round = roundOpt.get();
 
-        var dto = new RoundStateDTO();
-        dto.setRound(roundMapper.modelToDto(round));
+        var builder = RoundStateDTO.newBuilder();
+        builder.setRound(roundMapper.modelToDto(round));
 
         var sessions = playerSessionRepository.findConnectedByTableId(tableId);
         for (var session : sessions) {
             var sessionDto = playerSessionMapper.modelToDto(session);
             if (Boolean.TRUE.equals(session.getDealer())) {
-                dto.setDealer(sessionDto);
+                builder.setDealer(sessionDto);
             }
             handRepository.findForPlayerAndRound(session.getId(), round.getId()).ifPresent(hand -> {
                 for (var card : hand.getCards()) {
-                    var dealt = new DealPlayerCardDTO();
-                    dealt.setPlayerSession(sessionDto);
-                    dealt.setCard(cardMapper.modelToDto(card));
-                    dto.getPlayerCards().add(dealt);
+                    builder.addPlayerCards(DealPlayerCardDTO.newBuilder()
+                            .setPlayerSession(sessionDto)
+                            .setCard(cardMapper.modelToDto(card))
+                            .build());
                 }
                 // Dealt in but no longer active => folded (or dropped out of the hand).
                 if (Boolean.FALSE.equals(session.getActive())) {
-                    dto.getFoldedPlayers().add(sessionDto);
+                    builder.addFoldedPlayers(sessionDto);
                 }
             });
         }
 
         cardRepository.findCommunityCardsForRound(round.getId()).stream()
                 .sorted(Comparator.comparingInt(card -> card.getCardType().ordinal()))
-                .forEach(card -> dto.getCommunityCards().add(cardMapper.modelToDto(card)));
+                .forEach(card -> builder.addCommunityCards(cardMapper.modelToDto(card)));
 
         bettingRoundRepository.findCurrentByRoundId(round.getId())
-                .ifPresent(bettingRound -> dto.setBettingRound(bettingRoundMapper.modelToDto(bettingRound)));
+                .ifPresent(bettingRound -> builder.setBettingRound(bettingRoundMapper.modelToDto(bettingRound)));
 
-        dto.setRoundPots(round.getRoundPots().stream().map(roundPotMapper::modelToDto).toList());
+        round.getRoundPots().forEach(roundPot -> builder.addRoundPots(roundPotMapper.modelToDto(roundPot)));
 
-        dto.setCurrentTurn(buildCurrentTurn(tableId));
+        var currentTurn = buildCurrentTurn(tableId);
+        if (currentTurn != null) {
+            builder.setCurrentTurn(currentTurn);
+        }
 
-        return dto;
+        return builder.build();
     }
 
     /**
@@ -112,21 +115,16 @@ public class RoundStateService {
             return null;
         }
         var awaitedPlayerId = latch.playerSession().getId();
-        var turnPlayer = activeTurn.turn().getPlayerSession();
-        if (turnPlayer == null || !awaitedPlayerId.equals(turnPlayer.getId())) {
+        var source = activeTurn.turn();
+        var turnPlayerId = source.getPlayerSession().getId();
+        if (turnPlayerId.isEmpty() || !turnPlayerId.equals(awaitedPlayerId.toString())) {
             return null;
         }
-        var remaining = activeTurn.turn().getPlayerTurnWaitMs() - (System.currentTimeMillis() - activeTurn.startMillis());
+        var remaining = source.getPlayerTurnWaitMs() - (System.currentTimeMillis() - activeTurn.startMillis());
         if (remaining <= 0) {
             return null;
         }
-        var source = activeTurn.turn();
-        var turn = new PlayerTurnDTO();
-        turn.setPlayerSession(source.getPlayerSession());
-        turn.setBettingRound(source.getBettingRound());
-        turn.setNextActions(source.getNextActions());
-        turn.setAmountToCall(source.getAmountToCall());
-        turn.setPlayerTurnWaitMs(remaining);
-        return turn;
+        // Re-stamp the live turn with the remaining wait; all other fields carry over unchanged.
+        return source.toBuilder().setPlayerTurnWaitMs(remaining).build();
     }
 }

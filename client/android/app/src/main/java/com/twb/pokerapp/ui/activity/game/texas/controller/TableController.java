@@ -11,13 +11,14 @@ import androidx.annotation.Nullable;
 
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.databinding.ActivityGameTexasBinding;
-import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
-import com.twb.pokerapp.data.model.dto.roundpot.RoundPotDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.BettingRoundUpdatedDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.DealCommunityCardDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.DealPlayerCardDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.RoundFinishedDTO;
+import com.twb.pokerapp.proto.BettingRoundUpdatedDTO;
+import com.twb.pokerapp.proto.DealCommunityCardDTO;
+import com.twb.pokerapp.proto.DealPlayerCardDTO;
+import com.twb.pokerapp.proto.PlayerSessionDTO;
+import com.twb.pokerapp.proto.RoundFinishedDTO;
+import com.twb.pokerapp.proto.RoundPotDTO;
 import com.twb.pokerapp.ui.layout.texas.CardPairLayout;
+import com.twb.pokerapp.util.Protos;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -67,8 +68,7 @@ public class TableController {
 
     private void connectPlayer(PlayerSessionDTO playerSession, CardPairLayout cardPairLayout) {
         cardPairLayout.updateDetails(playerSession);
-        var dealer = playerSession.getDealer();
-        cardPairLayout.updateDealerChip(dealer != null && dealer);
+        cardPairLayout.updateDealerChip(playerSession.getDealer());
     }
 
     public void updateDetails(PlayerSessionDTO playerSession) {
@@ -140,7 +140,7 @@ public class TableController {
     }
 
     public void updateBettingRound(BettingRoundUpdatedDTO bettingRoundUpdated) {
-        renderPots(bettingRoundUpdated.getRoundPots());
+        renderPots(bettingRoundUpdated.getRoundPotsList());
     }
 
     /**
@@ -156,15 +156,14 @@ public class TableController {
         }
 
         var sortedPots = roundPots.stream()
-                .sorted(Comparator.comparingInt(pot ->
-                        pot.getPotIndex() == null ? 0 : pot.getPotIndex()))
+                .sorted(Comparator.comparingInt(RoundPotDTO::getPotIndex))
                 .collect(Collectors.toList());
 
         var context = container.getContext();
         var topMargin = Math.round(4 * context.getResources().getDisplayMetrics().density);
         for (var index = 0; index < sortedPots.size(); index++) {
             var pot = sortedPots.get(index);
-            var amount = pot.getPotAmount() == null ? 0d : pot.getPotAmount();
+            var amount = Protos.money(pot.getPotAmount());
 
             var pill = new TextView(context);
             pill.setBackgroundResource(R.drawable.bg_pot_pill);
@@ -202,7 +201,7 @@ public class TableController {
             var position = posCardPairEntry.getKey();
             var cardPairLayout = posCardPairEntry.getValue();
             cardPairLayout.reset();
-            var winnerAtPositionList = roundFinished.getWinners()
+            var winnerAtPositionList = roundFinished.getWinnersList()
                     .stream()
                     .filter(roundWinnerDTO -> Objects.equals(roundWinnerDTO.getPlayerSession().getPosition(), position))
                     .collect(Collectors.toList());
@@ -228,7 +227,7 @@ public class TableController {
         var seatedUsernames = new HashSet<String>();
         for (var cardPairLayout : cardPairLayouts) {
             var playerSession = cardPairLayout.getPlayerSession();
-            if (playerSession != null && playerSession.getUser() != null) {
+            if (playerSession != null && playerSession.hasUser()) {
                 seatedUsernames.add(playerSession.getUser().getUsername());
             }
         }

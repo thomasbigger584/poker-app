@@ -4,9 +4,10 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import com.twb.pokerapp.data.model.dto.table.AvailableTableDTO;
-import com.twb.pokerapp.data.model.dto.table.CreateTableDTO;
-import com.twb.pokerapp.data.model.dto.table.TableDTO;
+import com.twb.pokerapp.proto.AvailableTableDTO;
+import com.twb.pokerapp.proto.AvailableTableListResponse;
+import com.twb.pokerapp.proto.CreateTableDTO;
+import com.twb.pokerapp.proto.TableDTO;
 import com.twb.pokerapp.data.retrofit.api.TableApi;
 
 import java.util.HashMap;
@@ -32,16 +33,16 @@ public class TableRepository extends BaseRepository {
     public void refreshAvailableTables() {
         api.getAvailableTables(new HashMap<>()).enqueue(new Callback<>() {
             @Override
-            public void onResponse(@NonNull Call<List<AvailableTableDTO>> call, @NonNull Response<List<AvailableTableDTO>> response) {
-                if (response.isSuccessful()) {
-                    _tablesLiveData.setValue(response.body());
+            public void onResponse(@NonNull Call<AvailableTableListResponse> call, @NonNull Response<AvailableTableListResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    _tablesLiveData.setValue(response.body().getTablesList());
                 } else {
                     _errorLiveData.setValue(new RuntimeException("Failed to get tables: " + response.code()));
                 }
             }
 
             @Override
-            public void onFailure(@NonNull Call<List<AvailableTableDTO>> call, @NonNull Throwable throwable) {
+            public void onFailure(@NonNull Call<AvailableTableListResponse> call, @NonNull Throwable throwable) {
                 _errorLiveData.setValue(throwable);
             }
         });

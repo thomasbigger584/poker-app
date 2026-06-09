@@ -6,7 +6,7 @@ import android.util.Log;
 import androidx.annotation.WorkerThread;
 
 import com.auth0.android.jwt.JWT;
-import com.twb.pokerapp.data.model.dto.appuser.AppUserDTO;
+import com.twb.pokerapp.proto.AppUserDTO;
 
 import net.openid.appauth.AppAuthConfiguration;
 import net.openid.appauth.AuthorizationException;

@@ -20,10 +20,12 @@ import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.auth.AuthService;
 import com.twb.pokerapp.data.repository.WebSocketRepository;
 import com.twb.pokerapp.data.websocket.WebSocketClient;
-import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
-import com.twb.pokerapp.data.websocket.message.server.enumeration.ServerMessageType;
-import com.twb.pokerapp.data.websocket.message.server.payload.PlayerTurnDTO;
+import com.twb.pokerapp.proto.ActionType;
+import com.twb.pokerapp.proto.CreatePlayerActionDTO;
+import com.twb.pokerapp.proto.PlayerTurnDTO;
+import com.twb.pokerapp.proto.ServerMessageDTO;
 import com.twb.pokerapp.ui.activity.game.texas.TexasGameActivity;
+import com.twb.pokerapp.util.Protos;
 import com.twb.stomplib.dto.LifecycleEvent;
 
 import java.util.UUID;
@@ -156,11 +158,11 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
     }
 
     @Override
-    public void onMessage(ServerMessageDTO<?> message) {
+    public void onMessage(ServerMessageDTO message) {
         repository.handleNewMessage(message);
 
-        if (message.getType() == ServerMessageType.PLAYER_TURN) {
-            var turn = (PlayerTurnDTO) message.getPayload();
+        if (message.getPayloadCase() == ServerMessageDTO.PayloadCase.PLAYER_TURN) {
+            var turn = message.getPlayerTurn();
             var username = turn.getPlayerSession().getUser().getUsername();
             if (authService.isCurrentUser(username) && !PokerApplication.isAppInForeground()) {
                 showTurnNotification(turn);
@@ -238,9 +240,10 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
         var amount = intent.getDoubleExtra(EXTRA_AMOUNT, 0);
 
         if (action != null && tableId != null) {
-            var actionDto = new com.twb.pokerapp.data.websocket.message.client.SendPlayerActionDTO();
-            actionDto.setAction(action);
-            actionDto.setAmount(amount);
+            var actionDto = CreatePlayerActionDTO.newBuilder()
+                    .setAction(Protos.actionType(action))
+                    .setAmount(Protos.moneyStr(amount))
+                    .build();
 
             webSocketClient.sendPlayerAction(tableId, actionDto, new WebSocketClient.SendListener() {
                 @Override
@@ -326,10 +329,10 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
         return Math.min(MAX_RECONNECT_DELAY_MS, BASE_RECONNECT_DELAY_MS << shift);
     }
 
-    private boolean isDirectAction(String action) {
-        return "CALL".equalsIgnoreCase(action) ||
-                "CHECK".equalsIgnoreCase(action) ||
-                "FOLD".equalsIgnoreCase(action);
+    private boolean isDirectAction(ActionType action) {
+        return action == ActionType.ACTION_TYPE_CALL ||
+                action == ActionType.ACTION_TYPE_CHECK ||
+                action == ActionType.ACTION_TYPE_FOLD;
     }
 
     private void showTurnNotification(PlayerTurnDTO turn) {
@@ -338,9 +341,9 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
         var pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent,
                 PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
 
-        var contentText = "Betting Round: " + turn.getBettingRound().getType();
-        var amountToCall = turn.getAmountToCall();
-        if (amountToCall != null && amountToCall > 0) {
+        var contentText = "Betting Round: " + Protos.shortName(turn.getBettingRound().getType());
+        var amountToCall = Protos.money(turn.getAmountToCall());
+        if (amountToCall > 0) {
             contentText += " - Call: $" + amountToCall;
         }
 
@@ -353,25 +356,26 @@ public class WebSocketService extends Service implements WebSocketClient.WebSock
                 .setDefaults(Notification.DEFAULT_ALL)
                 .setContentIntent(pendingIntent);
 
-        for (var action : turn.getNextActions()) {
+        for (var action : turn.getNextActionsList()) {
+            var actionLabel = Protos.shortName(action);
             PendingIntent actionPendingIntent;
             if (isDirectAction(action)) {
                 var actionIntent = new Intent(this, WebSocketService.class);
                 actionIntent.setAction(ACTION_PLAYER_ACTION);
-                actionIntent.putExtra(EXTRA_ACTION, action);
-                if ("CALL".equalsIgnoreCase(action)) {
-                    actionIntent.putExtra(EXTRA_AMOUNT, turn.getAmountToCall());
+                actionIntent.putExtra(EXTRA_ACTION, actionLabel);
+                if (action == ActionType.ACTION_TYPE_CALL) {
+                    actionIntent.putExtra(EXTRA_AMOUNT, amountToCall);
                 }
-                actionPendingIntent = PendingIntent.getService(this, action.hashCode(), actionIntent,
+                actionPendingIntent = PendingIntent.getService(this, actionLabel.hashCode(), actionIntent,
                         PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
             } else {
                 var actionIntent = new Intent(this, TexasGameActivity.class);
                 actionIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                actionPendingIntent = PendingIntent.getActivity(this, action.hashCode(), actionIntent,
+                actionPendingIntent = PendingIntent.getActivity(this, actionLabel.hashCode(), actionIntent,
                         PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
             }
 
-            builder.addAction(new NotificationCompat.Action(0, action, actionPendingIntent));
+            builder.addAction(new NotificationCompat.Action(0, actionLabel, actionPendingIntent));
         }
 
         var manager = getSystemService(NotificationManager.class);

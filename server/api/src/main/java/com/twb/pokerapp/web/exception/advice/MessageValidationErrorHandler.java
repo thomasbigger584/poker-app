@@ -1,7 +1,9 @@
 package com.twb.pokerapp.web.exception.advice;
 
-import com.twb.pokerapp.web.exception.validation.ValidationDTO;
-import com.twb.pokerapp.web.exception.validation.ValidationFieldDTO;
+import com.twb.pokerapp.mapper.ProtoConvert;
+import com.twb.pokerapp.proto.ValidationDTO;
+import com.twb.pokerapp.proto.ValidationFieldDTO;
+import com.twb.pokerapp.web.exception.ValidationException;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
 import lombok.RequiredArgsConstructor;
@@ -12,8 +14,6 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 
-import java.util.ArrayList;
-
 @Slf4j
 @ControllerAdvice
 @RequiredArgsConstructor
@@ -23,6 +23,24 @@ public class MessageValidationErrorHandler {
 
     @MessageExceptionHandler
     public void handleValidationException(MethodArgumentNotValidException exception, StompHeaderAccessor headerAccessor) {
+        var username = requireUsername(exception);
+        dispatcher.sendReceipt(headerAccessor);
+        dispatcher.send(username, messageFactory.validationErrors(getValidations(exception)));
+    }
+
+    @MessageExceptionHandler
+    public void handleManualValidationException(ValidationException exception, StompHeaderAccessor headerAccessor) {
+        var username = requireUsername(exception);
+        var validations = ValidationDTO.newBuilder()
+                .addFields(ValidationFieldDTO.newBuilder()
+                        .setField(ProtoConvert.text(exception.getField()))
+                        .setMessage(ProtoConvert.text(exception.getMessage())))
+                .build();
+        dispatcher.sendReceipt(headerAccessor);
+        dispatcher.send(username, messageFactory.validationErrors(validations));
+    }
+
+    private String requireUsername(Exception exception) {
         var context = SecurityContextHolder.getContext();
         var authentication = context.getAuthentication();
         if (authentication == null) {
@@ -32,25 +50,19 @@ public class MessageValidationErrorHandler {
         if (username == null) {
             throw new RuntimeException("Cannot handle exception without username", exception);
         }
-        var validations = getValidations(exception);
-        var message = messageFactory.validationErrors(validations);
-        dispatcher.sendReceipt(headerAccessor);
-        dispatcher.send(username, message);
+        return username;
     }
 
     private ValidationDTO getValidations(MethodArgumentNotValidException exception) {
+        var builder = ValidationDTO.newBuilder();
         var bindingResult = exception.getBindingResult();
-        var fieldErrors = new ArrayList<ValidationFieldDTO>();
         if (bindingResult != null) {
             for (var fieldError : bindingResult.getFieldErrors()) {
-                var validationField = new ValidationFieldDTO();
-                validationField.setField(fieldError.getField());
-                validationField.setMessage(fieldError.getDefaultMessage());
-                fieldErrors.add(validationField);
+                builder.addFields(ValidationFieldDTO.newBuilder()
+                        .setField(ProtoConvert.text(fieldError.getField()))
+                        .setMessage(ProtoConvert.text(fieldError.getDefaultMessage())));
             }
         }
-        var validationDto = new ValidationDTO();
-        validationDto.setFields(fieldErrors);
-        return validationDto;
+        return builder.build();
     }
 }
