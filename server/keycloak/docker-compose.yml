@@ -36,6 +36,11 @@ services:
       KK_TO_RMQ_USERNAME: admin
       KK_TO_RMQ_PASSWORD: admin
       KK_TO_RMQ_USE_TLS: false
+
+      # Custom Tailcloakify Styling
+      TAILCLOAKIFY_HEADER_LOGO_URL: /branding/logo.png
+      TAILCLOAKIFY_FAVICON_URL: /branding/favicon.png
+      TAILCLOAKIFY_ADDITIONAL_STYLES: /branding/poker-theme.css
     command: [ "start-dev", "--import-realm", "--verbose" ]
     volumes:
       - ./poker-app-realm.json:/opt/keycloak/data/import/poker-app-realm.json
