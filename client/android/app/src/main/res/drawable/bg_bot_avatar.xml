@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Gold-ringed disc behind the bot avatar icon. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <gradient
+        android:type="radial"
+        android:gradientRadius="70%"
+        android:centerX="0.4"
+        android:centerY="0.35"
+        android:startColor="#1E7D3A"
+        android:endColor="#0E3D1B" />
+    <stroke
+        android:width="1.5dp"
+        android:color="@color/tableGold" />
+</shape>

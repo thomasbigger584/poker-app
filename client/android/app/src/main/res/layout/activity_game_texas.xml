@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#255925"
+    android:background="@drawable/bg_table_room"
     tools:context=".ui.activity.game.texas.TexasGameActivity">
 
     <View
@@ -33,19 +33,13 @@
         app:layout_constraintTop_toTopOf="parent"
         app:tint="#FFFFFF" />
 
-    <TextView
-        android:id="@+id/potSizeText"
+    <!-- Holds the main pot pill plus one side-pot pill per server pot index. -->
+    <LinearLayout
+        android:id="@+id/potContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_pill_dark"
-        android:paddingStart="12dp"
-        android:paddingTop="4dp"
-        android:paddingEnd="12dp"
-        android:paddingBottom="4dp"
-        android:text="@string/no_funds"
-        android:textColor="#FFFFFF"
-        android:textSize="16sp"
-        android:textStyle="bold"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
         app:layout_constraintBottom_toTopOf="@+id/communityCardLayout"
         app:layout_constraintEnd_toEndOf="@+id/tableVisual"
         app:layout_constraintStart_toStartOf="@+id/tableVisual"
@@ -178,62 +172,44 @@
 
         <Button
             android:id="@+id/checkButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:backgroundTint="#43A047"
+            style="@style/PokerActionButton"
+            android:background="@drawable/btn_action_green"
             android:text="@string/check"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold"
             android:visibility="gone" />
 
         <Button
             android:id="@+id/callButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:backgroundTint="#43A047"
+            style="@style/PokerActionButton"
+            android:background="@drawable/btn_action_green"
             android:text="@string/call"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold"
             android:visibility="gone" />
 
         <Button
             android:id="@+id/betButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:backgroundTint="#1E88E5"
+            style="@style/PokerActionButton"
+            android:background="@drawable/btn_action_blue"
             android:text="@string/bet"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold"
             android:visibility="gone" />
 
         <Button
             android:id="@+id/raiseButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:backgroundTint="#1E88E5"
+            style="@style/PokerActionButton"
+            android:background="@drawable/btn_action_blue"
             android:text="@string/raise"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold"
             android:visibility="gone" />
 
         <Button
             android:id="@+id/allInButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:backgroundTint="#6A1B9A"
+            style="@style/PokerActionButton"
+            android:background="@drawable/btn_action_purple"
             android:text="@string/all_in"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold"
             android:visibility="gone" />
 
         <Button
             android:id="@+id/foldButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:backgroundTint="#E53935"
+            style="@style/PokerActionButton"
+            android:background="@drawable/btn_action_red"
             android:text="@string/fold"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold"
             android:visibility="gone" />
 
     </androidx.gridlayout.widget.GridLayout>

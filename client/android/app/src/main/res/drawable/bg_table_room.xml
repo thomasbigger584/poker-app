@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ambient "card room" backdrop: a soft green spotlight over the table fading
+     to near-black at the edges for depth and focus. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:type="radial"
+        android:gradientRadius="90%p"
+        android:centerX="0.5"
+        android:centerY="0.42"
+        android:startColor="@color/roomDark"
+        android:centerColor="#0A2010"
+        android:endColor="@color/roomDarker" />
+</shape>

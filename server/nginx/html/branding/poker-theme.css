@@ -1,0 +1,130 @@
+/* ============================================================================
+ * TWB Poker — Keycloak login/register theme overrides for Tailcloakify.
+ *
+ * Loaded out-of-the-box via the TAILCLOAKIFY_ADDITIONAL_STYLES env var on the
+ * keycloak container (see server/keycloak/docker-compose.yml). Tailcloakify
+ * injects this file as a <link rel="stylesheet"> after its own bundle, so we
+ * only need to recolour its default Tailwind blue/grey palette to the app's
+ * "felt-and-gold" casino aesthetic — the same palette as the Android client
+ * (client/android/.../res/values/colors.xml and the bg_dialog_felt /
+ * bg_table_room drawables). Everything below maps a Tailcloakify utility class
+ * onto a poker-felt equivalent; !important keeps us ahead of the bundled CSS.
+ * ========================================================================== */
+
+:root {
+  --poker-felt-light:   #2E8B45; /* feltGreenLight */
+  --poker-felt-mid:     #1E6B30; /* feltGreenMid   */
+  --poker-felt-dark:    #0E3D1B; /* feltGreenDark  */
+  --poker-room:         #0A2412; /* roomDark       */
+  --poker-room-deep:    #04140A; /* roomDarker     */
+  --poker-gold:         #FFD24A; /* tableGold      */
+  --poker-gold-deep:    #C8961E; /* tableGoldDeep  */
+  --poker-gold-bright:  #FFE08A;
+  --poker-text:         #F4ECD8; /* warm off-white on felt */
+  --poker-text-muted:   #C9B68A;
+}
+
+/* --- Room backdrop: soft green spotlight fading to near-black at the edges,
+       mirroring bg_table_room.xml so the page reads as the same card room. --- */
+body {
+  background:
+    radial-gradient(circle at 50% 38%,
+      var(--poker-felt-light) 0%,
+      var(--poker-felt-mid)   34%,
+      var(--poker-felt-dark)  68%,
+      var(--poker-room-deep) 100%) fixed !important;
+  color: var(--poker-text) !important;
+}
+
+/* The Tailcloakify page wrapper paints a flat grey (bg-secondary-100); make it
+   transparent so the body gradient shows through. min-h-screen is unique to it. */
+.min-h-screen {
+  background-color: transparent !important;
+}
+
+/* --- Login card: dark felt panel with a gold rim, mirroring bg_dialog_felt.xml.
+       The card is the only .max-w-md element that is also .rounded-lg. --- */
+.max-w-md.rounded-lg {
+  background:
+    linear-gradient(180deg, rgba(21, 83, 42, 0.94), rgba(10, 47, 22, 0.97)) !important;
+  border: 1.5px solid rgba(200, 150, 30, 0.85) !important;
+  border-radius: 18px !important;
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px rgba(255, 210, 74, 0.08) !important;
+  padding: 30px 28px !important;
+}
+
+/* --- Header logo: gold matte ring + dark backplate, mirroring bg_logo_ring.xml.
+       Tailcloakify renders the TAILCLOAKIFY_HEADER_LOGO_URL image as
+       <img alt="Logo" class="mx-auto h-16 w-auto">. --- */
+img[alt="Logo"] {
+  height: 96px !important;
+  width: 96px !important;
+  object-fit: cover;
+  padding: 6px;
+  margin-bottom: 14px;
+  border-radius: 22px;
+  background-color: var(--poker-room-deep);
+  border: 2.5px solid var(--poker-gold);
+  box-shadow: 0 0 22px rgba(255, 210, 74, 0.25);
+}
+
+/* --- Headings & body text --- */
+.font-bold.text-2xl,
+.text-center.text-2xl,
+h1, h2 {
+  color: var(--poker-gold) !important;
+  letter-spacing: 0.04em;
+}
+.text-secondary-600 { color: var(--poker-text) !important; }
+.text-secondary-400 { color: var(--poker-text-muted) !important; }
+
+/* --- Inputs: dark felt fields with a faint gold hairline (the Tailcloakify
+       inputs carry bg-secondary-100 / border-secondary-200). --- */
+input.bg-secondary-100,
+select.bg-secondary-100,
+textarea.bg-secondary-100,
+input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]),
+select,
+textarea {
+  background-color: rgba(4, 20, 10, 0.55) !important;
+  color: var(--poker-text) !important;
+  border-color: rgba(255, 210, 74, 0.30) !important;
+}
+.border-secondary-200 { border-color: rgba(255, 210, 74, 0.28) !important; }
+input::placeholder,
+textarea::placeholder { color: rgba(201, 182, 138, 0.55) !important; }
+
+/* --- Primary action (Sign In / Register): casino-gold gradient with dark felt
+       text, the accent colour from the app's theme. --- */
+.bg-primary-600 {
+  background-color: var(--poker-gold-deep) !important;
+  background-image: linear-gradient(180deg, #FFD86B, var(--poker-gold-deep)) !important;
+  color: #06210F !important;
+  border-color: rgba(0, 0, 0, 0.18) !important;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+.bg-primary-600:hover,
+.hover\:bg-primary-700:hover {
+  background-image: linear-gradient(180deg, var(--poker-gold-bright), #D9A82A) !important;
+}
+
+/* --- Secondary / alternative buttons (e.g. "Try another way", social, locale) --- */
+.bg-secondary-200 {
+  background-color: rgba(255, 210, 74, 0.12) !important;
+  color: var(--poker-gold) !important;
+}
+.bg-secondary-600 { background-color: rgba(4, 20, 10, 0.55) !important; }
+.hover\:text-secondary-900:hover { color: var(--poker-gold-bright) !important; }
+
+/* --- Links, gold accents, focus rings (default palette is blue) --- */
+.text-primary-600 { color: var(--poker-gold) !important; }
+.hover\:text-primary-500:hover,
+.hover\:text-primary-300:hover { color: var(--poker-gold-bright) !important; }
+.border-primary-600 { border-color: var(--poker-gold) !important; }
+.accent-primary-600 { accent-color: var(--poker-gold-deep) !important; }
+.focus\:ring-primary-600:focus { --tw-ring-color: rgba(255, 210, 74, 0.70) !important; }
+.focus\:ring-primary-200:focus { --tw-ring-color: rgba(255, 210, 74, 0.35) !important; }
+.focus\:border-primary-300:focus { border-color: var(--poker-gold) !important; }

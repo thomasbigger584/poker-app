@@ -1,6 +1,10 @@
 package com.twb.pokerapp.ui.activity.game.texas.controller;
 
-import android.annotation.SuppressLint;
+import android.graphics.Typeface;
+import android.util.TypedValue;
+import android.view.Gravity;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -15,9 +19,10 @@ import com.twb.pokerapp.data.websocket.message.server.payload.DealPlayerCardDTO;
 import com.twb.pokerapp.data.websocket.message.server.payload.RoundFinishedDTO;
 import com.twb.pokerapp.ui.layout.texas.CardPairLayout;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Locale;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -135,18 +140,64 @@ public class TableController {
     }
 
     public void updateBettingRound(BettingRoundUpdatedDTO bettingRoundUpdated) {
-        var totalPotAmount = bettingRoundUpdated.getRoundPots()
-                .stream()
-                .mapToDouble(RoundPotDTO::getPotAmount)
-                .sum();
-        binding.potSizeText.setText(binding.getRoot().getContext()
-                .getString(R.string.currency_format, totalPotAmount));
+        renderPots(bettingRoundUpdated.getRoundPots());
     }
 
-    @SuppressLint("SetTextI18n")
+    /**
+     * Renders one chip pill per pot, ordered by the server's {@code potIndex}. The main pot sits on
+     * top with side pots stacked beneath, so multiple pills read naturally as "there are side pots"
+     * without needing labels.
+     */
+    private void renderPots(List<RoundPotDTO> roundPots) {
+        var container = binding.potContainer;
+        container.removeAllViews();
+        if (roundPots == null || roundPots.isEmpty()) {
+            return;
+        }
+
+        var sortedPots = roundPots.stream()
+                .sorted(Comparator.comparingInt(pot ->
+                        pot.getPotIndex() == null ? 0 : pot.getPotIndex()))
+                .collect(Collectors.toList());
+
+        var context = container.getContext();
+        var topMargin = Math.round(4 * context.getResources().getDisplayMetrics().density);
+        for (var index = 0; index < sortedPots.size(); index++) {
+            var pot = sortedPots.get(index);
+            var amount = pot.getPotAmount() == null ? 0d : pot.getPotAmount();
+
+            var pill = new TextView(context);
+            pill.setBackgroundResource(R.drawable.bg_pot_pill);
+            pill.setText(context.getString(R.string.currency_format, amount));
+            pill.setTextColor(0xFFFFFFFF);
+            pill.setTypeface(pill.getTypeface(), Typeface.BOLD);
+            pill.setGravity(Gravity.CENTER_VERTICAL);
+            pill.setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.ic_chip_gold, 0, 0, 0);
+            pill.setCompoundDrawablePadding(dpToPx(context, 6));
+            pill.setPadding(dpToPx(context, 12), dpToPx(context, 3),
+                    dpToPx(context, 14), dpToPx(context, 3));
+
+            // The main pot (first) is slightly larger so it reads as the headline amount.
+            pill.setTextSize(TypedValue.COMPLEX_UNIT_SP, index == 0 ? 16f : 13f);
+
+            var params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            if (index > 0) {
+                params.topMargin = topMargin;
+            }
+            container.addView(pill, params);
+        }
+    }
+
+    private static int dpToPx(android.content.Context context, int dp) {
+        return Math.round(dp * context.getResources().getDisplayMetrics().density);
+    }
+
     public void update(RoundFinishedDTO roundFinished) {
         hidePlayerTurns();
         binding.communityCardLayout.reset();
+        binding.potContainer.removeAllViews();
         for (var posCardPairEntry : positionCardPairs.entrySet()) {
             var position = posCardPairEntry.getKey();
             var cardPairLayout = posCardPairEntry.getValue();
@@ -158,9 +209,9 @@ public class TableController {
             if (winnerAtPositionList.size() == 1) {
                 var winnerAtPosition = winnerAtPositionList.get(0);
                 cardPairLayout.updateDetails(winnerAtPosition.getPlayerSession());
+                cardPairLayout.showWinner();
             }
         }
-        binding.potSizeText.setText(binding.getRoot().getContext().getString(R.string.default_pot_size));
     }
 
     @NonNull

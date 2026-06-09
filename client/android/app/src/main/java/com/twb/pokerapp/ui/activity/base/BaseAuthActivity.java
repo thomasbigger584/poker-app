@@ -47,6 +47,7 @@ public abstract class BaseAuthActivity extends BaseNetworkActivity {
     public AuthStateManager authStateManager;
 
     private AuthorizationService authService;
+    private boolean isSigningOut = false;
 
     @Override
     @CallSuper
@@ -94,6 +95,9 @@ public abstract class BaseAuthActivity extends BaseNetworkActivity {
         var ex = AuthorizationException.fromIntent(getIntent());
 
         if (response != null || ex != null) {
+            // Consume the browser result so a re-entry (e.g. rotation while the exchange is still
+            // in flight) can't re-process the single-use authorization code and fail invalid_grant.
+            clearAuthIntent();
             authStateManager.updateAfterAuthorization(response, ex);
         }
 
@@ -190,8 +194,22 @@ public abstract class BaseAuthActivity extends BaseNetworkActivity {
         }
     }
 
+    /** Drops the consumed AppAuth browser result so it cannot be re-processed on activity re-entry. */
+    private void clearAuthIntent() {
+        var intent = getIntent();
+        if (intent != null) {
+            intent.removeExtra(AuthorizationResponse.EXTRA_RESPONSE);
+            intent.removeExtra(AuthorizationException.EXTRA_EXCEPTION);
+            setIntent(intent);
+        }
+    }
+
     @MainThread
     protected void signOut() {
+        if (isSigningOut) {
+            return;
+        }
+        isSigningOut = true;
         AuthEventBus.resetLogoutEvent();
         var currentState = authStateManager.getCurrent();
         var config = currentState.getAuthorizationServiceConfiguration();

@@ -14,6 +14,9 @@ import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -21,6 +24,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.auth.AuthService;
 import com.twb.pokerapp.data.model.dto.appuser.AppUserDTO;
+import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
 import com.twb.pokerapp.data.model.dto.table.TableDTO;
 import com.twb.pokerapp.data.model.enumeration.ActionType;
 import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
@@ -52,6 +56,8 @@ import com.twb.pokerapp.ui.dialog.DialogHelper;
 import com.twb.pokerapp.ui.dialog.FinishActivityOnClickListener;
 import com.twb.pokerapp.ui.dialog.game.BaseGameDialog;
 import com.twb.pokerapp.ui.dialog.game.BetRaiseGameDialog;
+import com.twb.pokerapp.ui.dialog.game.BotPickerDialog;
+import com.twb.pokerapp.ui.util.HapticUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -85,6 +91,9 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     private long lastRenderedTimestamp = 0L;
     private boolean hasEverConnected = false;
     private boolean connectionLostShown = false;
+    // Identifies the turn we last vibrated for, so re-rendering the same turn (onResume,
+    // reconnect snapshot) doesn't buzz the player repeatedly.
+    private String lastVibratedTurnKey = null;
 
     public static void startActivity(Activity activity, TableDTO table, String connectionType, Double buyInAmount) {
         startActivity(activity, table, connectionType, buyInAmount, false);
@@ -116,6 +125,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         if (!initIncomingData()) return;
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        enableImmersiveMode();
 
         loadingSpinner = DialogHelper.createLoadingSpinner(this);
         DialogHelper.show(loadingSpinner);
@@ -167,6 +177,30 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
                 handleErrorMessage(throwable.getMessage());
             }
         });
+    }
+
+    /**
+     * Hides the status and navigation bars for a fully immersive table. The bars stay hidden and
+     * only slide in transiently on an edge swipe (then auto-hide), so the back button / task
+     * switcher remain reachable without cluttering the table.
+     */
+    private void enableImmersiveMode() {
+        var window = getWindow();
+        WindowCompat.setDecorFitsSystemWindows(window, false);
+        var controller = new WindowInsetsControllerCompat(window, window.getDecorView());
+        controller.hide(WindowInsetsCompat.Type.systemBars());
+        controller.setSystemBarsBehavior(
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        // Re-hide the bars after losing focus (dialogs, notification shade, app switch) brings
+        // them back.
+        if (hasFocus) {
+            enableImmersiveMode();
+        }
     }
 
     @Override
@@ -335,9 +369,24 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         tableController.updatePlayerTurn(playerSession);
         if (authService.isCurrentUser(playerSession.getUser())) {
             controlsController.show(playerTurn, messageTimestamp);
+            buzzForOwnTurn(playerSession, messageTimestamp);
         } else {
             controlsController.hide();
         }
+    }
+
+    /**
+     * Vibrate to alert the player it's their turn — but only once per turn. The same turn can be
+     * re-delivered (onResume, reconnect snapshot), so we key on the session + timestamp and skip
+     * repeats.
+     */
+    private void buzzForOwnTurn(PlayerSessionDTO playerSession, long messageTimestamp) {
+        var turnKey = playerSession.getId() + "@" + messageTimestamp;
+        if (turnKey.equals(lastVibratedTurnKey)) {
+            return;
+        }
+        lastVibratedTurnKey = turnKey;
+        HapticUtil.yourTurn(this);
     }
 
     private void handlePlayerActioned(PlayerActionedDTO playerActioned) {
@@ -585,21 +634,14 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     }
 
     private void showBotPickerDialog(List<AppUserDTO> bots) {
-        var labels = new String[bots.size()];
-        for (var i = 0; i < bots.size(); i++) {
-            var bot = bots.get(i);
-            var displayName = bot.getPersona() != null ? bot.getPersona() : bot.getUsername();
-            labels[i] = getString(R.string.bot_picker_item_format, displayName, bot.getUsername());
+        if (getSupportFragmentManager().findFragmentByTag("bot_picker") != null) {
+            return;
         }
-        var builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.select_bot);
-        builder.setItems(labels, (dialog, which) -> {
-            var bot = bots.get(which);
+        var dialog = BotPickerDialog.newInstance(bots, bot -> {
             viewModel.sendBotConnection(bot.getId(), getBotBuyInAmount());
             chatBoxAdapter.add(getString(R.string.bot_added_format, bot.getUsername()));
         });
-        builder.setNegativeButton(R.string.cancel, (dialog, which) -> dialog.cancel());
-        builder.show();
+        dialog.show(getSupportFragmentManager(), "bot_picker");
     }
 
     // todo: this could potentially be moved to server as a default if provided null

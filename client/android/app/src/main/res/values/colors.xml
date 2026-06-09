@@ -10,11 +10,14 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="colorPrimaryTranslucent">#991BAAE4</color>
-    <color name="colorPrimaryLight">#FF4EBFEF</color>
-    <color name="colorPrimary">#FF1BAAE4</color>
-    <color name="colorPrimaryDark">#FF047EAC</color>
-    <color name="colorAccent">#FF1A2866</color>
+    <!-- App identity: poker-felt green chrome with a casino-gold accent. These semantic colors
+         drive every toolbar, nav header, primary/outline button, the login gradient and dialogs,
+         so the whole app reads as one piece with the TexasGameActivity table. -->
+    <color name="colorPrimaryTranslucent">#991E7D3A</color>
+    <color name="colorPrimaryLight">#FF3CA75A</color>
+    <color name="colorPrimary">#FF1E7D3A</color>
+    <color name="colorPrimaryDark">#FF0E4D22</color>
+    <color name="colorAccent">#FFC8961E</color>
 
     <color name="colorWhite">#FFFFFF</color>
 
@@ -41,4 +44,25 @@
     <color name="pokerGreen">#308014</color>
     <color name="transaction_positive_gain">#4CAF50</color>
     <color name="transaction_negative_cost">#F44336</color>
+
+    <!-- Poker table look & feel -->
+    <color name="feltGreenLight">#2E8B45</color>
+    <color name="feltGreenMid">#1E6B30</color>
+    <color name="feltGreenDark">#0E3D1B</color>
+    <color name="roomDark">#0A2412</color>
+    <color name="roomDarker">#04140A</color>
+    <color name="railBrownLight">#6D4C33</color>
+    <color name="railBrownDark">#2E1C10</color>
+    <color name="tableGold">#FFD24A</color>
+    <color name="tableGoldDeep">#C8961E</color>
+
+    <!-- Action buttons -->
+    <color name="actionGreenTop">#5CC265</color>
+    <color name="actionGreenBottom">#2E7D32</color>
+    <color name="actionBlueTop">#42A5F5</color>
+    <color name="actionBlueBottom">#1565C0</color>
+    <color name="actionRedTop">#EF5350</color>
+    <color name="actionRedBottom">#C62828</color>
+    <color name="actionPurpleTop">#AB47BC</color>
+    <color name="actionPurpleBottom">#6A1B9A</color>
 </resources>

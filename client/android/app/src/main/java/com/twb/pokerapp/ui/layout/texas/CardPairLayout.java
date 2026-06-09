@@ -3,6 +3,7 @@ package com.twb.pokerapp.ui.layout.texas;
 import static com.twb.pokerapp.ui.util.ViewUtil.applyScaleRecursive;
 import static com.twb.pokerapp.ui.util.ViewUtil.setInvisible;
 
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
@@ -22,6 +23,7 @@ import com.twb.pokerapp.ui.util.CardDrawableUtil;
 public class CardPairLayout extends ConstraintLayout {
     private CardPairBinding binding;
     private PlayerSessionDTO playerSession;
+    private ValueAnimator turnPulseAnimator;
 
     public CardPairLayout(Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, 0);
@@ -113,10 +115,48 @@ public class CardPairLayout extends ConstraintLayout {
     }
 
     public void updateTurnPlayer(boolean playerTurn) {
+        stopTurnPulse();
         if (playerTurn) {
             setBackgroundResource(R.drawable.player_turn_border);
+            startTurnPulse();
         } else {
+            setScaleX(1f);
+            setScaleY(1f);
             setBackground(null);
+        }
+    }
+
+    /**
+     * Pops a gold glow behind the winning seat at showdown. Cleared when the next deal begins
+     * (the table hides all turn highlights at deal time).
+     */
+    public void showWinner() {
+        stopTurnPulse();
+        setBackgroundResource(R.drawable.winner_glow);
+        animate().scaleX(1.1f).scaleY(1.1f).setDuration(220)
+                .withEndAction(() -> animate().scaleX(1f).scaleY(1f).setDuration(220).start())
+                .start();
+    }
+
+    /** Breathes the active player's gold border so the eye is drawn to whose turn it is. */
+    private void startTurnPulse() {
+        var background = getBackground();
+        if (background == null) {
+            return;
+        }
+        turnPulseAnimator = ValueAnimator.ofInt(255, 110);
+        turnPulseAnimator.setDuration(650);
+        turnPulseAnimator.setRepeatMode(ValueAnimator.REVERSE);
+        turnPulseAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        turnPulseAnimator.addUpdateListener(animation ->
+                background.setAlpha((int) animation.getAnimatedValue()));
+        turnPulseAnimator.start();
+    }
+
+    private void stopTurnPulse() {
+        if (turnPulseAnimator != null) {
+            turnPulseAnimator.cancel();
+            turnPulseAnimator = null;
         }
     }
 

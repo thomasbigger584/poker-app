@@ -11,6 +11,7 @@ import android.widget.Button;
 
 import androidx.gridlayout.widget.GridLayout;
 
+import com.twb.pokerapp.R;
 import com.twb.pokerapp.databinding.ActivityGameTexasBinding;
 import com.twb.pokerapp.data.model.enumeration.ActionType;
 import com.twb.pokerapp.data.websocket.message.server.payload.PlayerTurnDTO;
@@ -64,12 +65,14 @@ public class ControlsController {
                         setVisible(binding.betButton);
                         break;
                     case CALL:
+                        binding.callButton.setText(callLabel(playerTurn));
                         setVisible(binding.callButton);
                         break;
                     case RAISE:
                         setVisible(binding.raiseButton);
                         break;
                     case ALL_IN:
+                        binding.allInButton.setText(allInLabel(playerTurn));
                         setVisible(binding.allInButton);
                         break;
                     case FOLD:
@@ -80,6 +83,27 @@ public class ControlsController {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid action type: " + e.getMessage());
         }
+    }
+
+    /** "CALL ($20.00)" when the amount to call is known, otherwise just "CALL". */
+    private CharSequence callLabel(PlayerTurnDTO playerTurn) {
+        var context = binding.getRoot().getContext();
+        var amountToCall = playerTurn.getAmountToCall();
+        if (amountToCall == null) {
+            return context.getString(R.string.call);
+        }
+        return context.getString(R.string.call_with_amount_format, amountToCall);
+    }
+
+    /** "ALL IN ($150.00)" using the player's own remaining stack, otherwise just "ALL IN". */
+    private CharSequence allInLabel(PlayerTurnDTO playerTurn) {
+        var context = binding.getRoot().getContext();
+        var playerSession = playerTurn.getPlayerSession();
+        var funds = (playerSession == null) ? null : playerSession.getFunds();
+        if (funds == null) {
+            return context.getString(R.string.all_in);
+        }
+        return context.getString(R.string.all_in_with_amount_format, funds);
     }
 
     private void updateGridSpan() {
