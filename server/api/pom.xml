@@ -28,6 +28,9 @@
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
         <caffeine.version>3.2.4</caffeine.version>
         <guava.version>33.6.0-jre</guava.version>
+        <protobuf.version>4.31.1</protobuf.version>
+        <os-maven-plugin.version>1.7.1</os-maven-plugin.version>
+        <protobuf-maven-plugin.version>0.6.1</protobuf-maven-plugin.version>
 
         <!--  Test Properties  -->
         <build-helper-maven-plugin.version>3.6.1</build-helper-maven-plugin.version>
@@ -173,6 +176,19 @@
             <version>${org.mapstruct.version}</version>
         </dependency>
 
+        <!--  Protobuf — shared wire contract (REST + WebSocket).
+              protobuf-java-util provides JsonFormat for the JSON content-negotiation path. -->
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>${protobuf.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java-util</artifactId>
+            <version>${protobuf.version}</version>
+        </dependency>
+
         <!--  Test Dependencies   -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -220,10 +236,36 @@
     </dependencies>
     <build>
         <finalName>${project.artifactId}</finalName>
+        <extensions>
+            <!-- Resolves ${os.detected.classifier} for the protoc binary artifact -->
+            <extension>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+                <version>${os-maven-plugin.version}</version>
+            </extension>
+        </extensions>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+            <!-- Generates Java types from the shared top-level proto/ contract -->
+            <plugin>
+                <groupId>org.xolstice.maven.plugins</groupId>
+                <artifactId>protobuf-maven-plugin</artifactId>
+                <version>${protobuf-maven-plugin.version}</version>
+                <configuration>
+                    <protocArtifact>com.google.protobuf:protoc:${protobuf.version}:exe:${os.detected.classifier}</protocArtifact>
+                    <protoSourceRoot>${project.basedir}/../../proto</protoSourceRoot>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
             <!-- Maven Compiler Plugin used to compile the java for version and annotation processors -->
@@ -234,7 +276,8 @@
                     <encoding>UTF-8</encoding>
                     <compilerArgs>
                         <arg>-XDcompilePolicy=simple</arg>
-                        <arg>-Xplugin:ErrorProne</arg>
+                        <!-- Exclude generated sources (protobuf) from ErrorProne analysis -->
+                        <arg>-Xplugin:ErrorProne -XepExcludedPaths:.*/generated-sources/.*</arg>
                         <arg>--should-stop=ifError=FLOW</arg>
                         <arg>-XDaddTypeAnnotationsToSymbol=true</arg>
                     </compilerArgs>

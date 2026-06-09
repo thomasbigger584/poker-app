@@ -7,7 +7,7 @@ import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.domain.enumeration.ConnectionType;
 import com.twb.pokerapp.domain.enumeration.SessionState;
 import com.twb.pokerapp.domain.enumeration.TransactionHistoryType;
-import com.twb.pokerapp.dto.playersession.PlayerSessionDTO;
+import com.twb.pokerapp.proto.PlayerSessionDTO;
 import com.twb.pokerapp.mapper.PlayerSessionMapper;
 import com.twb.pokerapp.repository.HandRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;

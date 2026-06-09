@@ -3,21 +3,20 @@ package com.twb.pokerapp.ui.activity.game.texas;
 import android.util.Log;
 
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.twb.pokerapp.data.model.dto.appuser.AppUserDTO;
-import com.twb.pokerapp.data.model.enumeration.ActionType;
+import com.twb.pokerapp.proto.ActionType;
+import com.twb.pokerapp.proto.AppUserDTO;
+import com.twb.pokerapp.proto.CreateBotConnectionDTO;
+import com.twb.pokerapp.proto.CreateChatMessageDTO;
+import com.twb.pokerapp.proto.CreatePlayerActionDTO;
+import com.twb.pokerapp.proto.PlayerTurnDTO;
+import com.twb.pokerapp.proto.ServerMessageDTO;
 import com.twb.pokerapp.data.repository.AppUserRepository;
 import com.twb.pokerapp.data.repository.RepositoryCallback;
 import com.twb.pokerapp.data.repository.WebSocketRepository;
 import com.twb.pokerapp.data.websocket.WebSocketClient;
-import com.twb.pokerapp.data.websocket.message.client.SendBotConnectedDTO;
-import com.twb.pokerapp.data.websocket.message.client.SendChatMessageDTO;
-import com.twb.pokerapp.data.websocket.message.client.SendPlayerActionDTO;
-import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
-
-import com.twb.pokerapp.data.websocket.message.server.payload.PlayerTurnDTO;
+import com.twb.pokerapp.util.Protos;
 
 import java.util.List;
 import java.util.UUID;
@@ -34,7 +33,7 @@ public class TexasGameViewModel extends ViewModel implements WebSocketClient.Sen
     private final AppUserRepository appUserRepository;
     private final WebSocketClient webSocketClient;
 
-    public final LiveData<List<ServerMessageDTO<?>>> messages;
+    public final LiveData<List<ServerMessageDTO>> messages;
     public final LiveData<Throwable> errors;
     public final LiveData<Boolean> connected;
 
@@ -61,8 +60,9 @@ public class TexasGameViewModel extends ViewModel implements WebSocketClient.Sen
 
     public void sendChatMessage(String message) {
         if (tableId == null) return;
-        var dto = new SendChatMessageDTO();
-        dto.setMessage(message);
+        var dto = CreateChatMessageDTO.newBuilder()
+                .setMessage(message)
+                .build();
         webSocketClient.sendChatMessage(tableId, dto, this);
     }
 
@@ -70,10 +70,11 @@ public class TexasGameViewModel extends ViewModel implements WebSocketClient.Sen
         appUserRepository.getBots(callback);
     }
 
-    public void sendBotConnection(UUID botUserId, Double buyInAmount) {
-        var dto = new SendBotConnectedDTO();
-        dto.setBotUserId(botUserId);
-        dto.setBuyInAmount(buyInAmount);
+    public void sendBotConnection(String botUserId, Double buyInAmount) {
+        var dto = CreateBotConnectionDTO.newBuilder()
+                .setBotUserId(botUserId)
+                .setBuyInAmount(Protos.moneyStr(buyInAmount == null ? 0d : buyInAmount))
+                .build();
         webSocketClient.sendBotConnection(tableId, dto, this);
     }
 
@@ -83,9 +84,10 @@ public class TexasGameViewModel extends ViewModel implements WebSocketClient.Sen
 
     public void onPlayerAction(ActionType actionType, Double amount) {
         if (tableId == null) return;
-        var dto = new SendPlayerActionDTO();
-        dto.setAction(actionType.name());
-        dto.setAmount(amount);
+        var dto = CreatePlayerActionDTO.newBuilder()
+                .setAction(actionType)
+                .setAmount(amount == null ? "" : Protos.moneyStr(amount))
+                .build();
         webSocketClient.sendPlayerAction(tableId, dto, this);
     }
 

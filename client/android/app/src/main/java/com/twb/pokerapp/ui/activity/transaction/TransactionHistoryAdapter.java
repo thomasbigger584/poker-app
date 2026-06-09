@@ -10,9 +10,11 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.twb.pokerapp.R;
-import com.twb.pokerapp.data.model.dto.transactionhistory.TransactionHistoryDTO;
+import com.twb.pokerapp.proto.TransactionHistoryDTO;
 import com.twb.pokerapp.databinding.ItemTransactionHistoryBinding;
+import com.twb.pokerapp.util.Protos;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
@@ -59,11 +61,12 @@ public class TransactionHistoryAdapter extends ListAdapter<TransactionHistoryDTO
 
         public void bind(TransactionHistoryDTO transaction) {
             var context = binding.getRoot().getContext();
-            binding.transactionTitle.setText(transaction.getType());
-            binding.transactionTimestamp.setText(transaction.getCreatedDateTime().format(DATE_FORMAT));
-
-            var amount = transaction.getAmount();
             var type = transaction.getType();
+            binding.transactionTitle.setText(Protos.shortName(type));
+            binding.transactionTimestamp.setText(
+                    LocalDateTime.parse(transaction.getCreatedDateTime()).format(DATE_FORMAT));
+
+            var amount = Protos.money(transaction.getAmount());
 
             var sign = amount >= 0 ? "+" : "-";
             var amountText = String.format(Locale.getDefault(), "%s$%.2f", sign, Math.abs(amount));
@@ -73,23 +76,23 @@ public class TransactionHistoryAdapter extends ListAdapter<TransactionHistoryDTO
             int colorRes;
 
             switch (type) {
-                case "DEPOSIT":
+                case TRANSACTION_HISTORY_TYPE_DEPOSIT:
                     iconRes = R.drawable.ic_credit_card;
                     colorRes = R.color.transaction_positive_gain;
                     break;
-                case "WITHDRAW":
+                case TRANSACTION_HISTORY_TYPE_WITHDRAW:
                     iconRes = R.drawable.ic_credit_card;
                     colorRes = R.color.transaction_negative_cost;
                     break;
-                case "BUYIN":
+                case TRANSACTION_HISTORY_TYPE_BUYIN:
                     iconRes = R.drawable.ic_poker_chip;
                     colorRes = R.color.transaction_negative_cost;
                     break;
-                case "CASHOUT":
+                case TRANSACTION_HISTORY_TYPE_CASHOUT:
                     iconRes = R.drawable.ic_poker_chip;
                     colorRes = R.color.transaction_positive_gain;
                     break;
-                case "RESET":
+                case TRANSACTION_HISTORY_TYPE_RESET:
                     iconRes = R.drawable.ic_refresh;
                     colorRes = (amount >= 0) ? R.color.transaction_positive_gain : R.color.transaction_negative_cost;
                     break;

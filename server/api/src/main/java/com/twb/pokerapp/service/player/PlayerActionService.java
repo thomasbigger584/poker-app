@@ -8,7 +8,7 @@ import com.twb.pokerapp.mapper.PlayerActionMapper;
 import com.twb.pokerapp.repository.PlayerActionRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.service.game.thread.impl.texas.dto.NextActionsDTO;
-import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
+import com.twb.pokerapp.service.game.thread.dto.PlayerActionCommand;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -28,7 +28,7 @@ public class PlayerActionService {
     private final PlayerActionMapper mapper;
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public PlayerAction create(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createDto) {
+    public PlayerAction create(PlayerSession playerSession, BettingRound bettingRound, PlayerActionCommand createDto) {
         var amount = createDto.getAmount();
         if (amount != null && amount.compareTo(BigDecimal.ZERO) > 0) {
             playerSession.setFunds(playerSession.getFunds().subtract(amount));

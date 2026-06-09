@@ -6,7 +6,7 @@ import android.content.res.Resources;
 
 import androidx.annotation.DrawableRes;
 
-import com.twb.pokerapp.data.model.dto.card.CardDTO;
+import com.twb.pokerapp.proto.CardDTO;
 
 public class CardDrawableUtil {
     private static final String DEF_TYPE = "drawable";
@@ -21,9 +21,7 @@ public class CardDrawableUtil {
     }
 
     private static String getDrawable(CardDTO card) {
-        var suitChar = card.getSuitChar();
-        var rankChar = card.getRankChar();
-        var drawableName = String.valueOf(suitChar) + rankChar;
+        var drawableName = card.getSuitChar() + card.getRankChar();
         return drawableName.toLowerCase();
     }
 }

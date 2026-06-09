@@ -8,7 +8,7 @@ import com.twb.pokerapp.repository.BettingRoundRepository;
 import com.twb.pokerapp.repository.RoundRepository;
 import com.twb.pokerapp.service.game.exception.GamePlayerLogException;
 import com.twb.pokerapp.service.idempotency.IdempotencyService;
-import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
+import com.twb.pokerapp.service.game.thread.dto.PlayerActionCommand;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Propagation;
@@ -32,12 +32,12 @@ public abstract class GamePlayerActionService {
     private IdempotencyService idempotencyService;
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public void playerAction(PlayerSession playerSession, GameThread gameThread, CreatePlayerActionDTO createDto) {
+    public void playerAction(PlayerSession playerSession, GameThread gameThread, PlayerActionCommand createDto) {
         playerAction(playerSession, gameThread, createDto, true);
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public void playerAction(PlayerSession playerSession, GameThread gameThread, CreatePlayerActionDTO createDto, boolean enforceIdempotency) {
+    public void playerAction(PlayerSession playerSession, GameThread gameThread, PlayerActionCommand createDto, boolean enforceIdempotency) {
         if (gameThread.isStopping()) {
             log.warn("Game Thread is stopping so ignoring player action {} for user {}", createDto.getAction(), playerSession.getUser().getUsername());
             return;
@@ -54,7 +54,7 @@ public abstract class GamePlayerActionService {
         gameThread.onPostPlayerAction(playerAction);
     }
 
-    private void checkIdempotency(PlayerSession playerSession, Round round, CreatePlayerActionDTO createDto) {
+    private void checkIdempotency(PlayerSession playerSession, Round round, PlayerActionCommand createDto) {
         if (idempotencyService.isActionIdempotent(playerSession.getId(), round.getId(), createDto.getAction())) {
             throw new GamePlayerLogException(playerSession, "You already made action in this round recently");
         }
@@ -63,5 +63,5 @@ public abstract class GamePlayerActionService {
 
     public abstract void onExecuteAutoAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread);
 
-    protected abstract PlayerAction onPlayerAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread, CreatePlayerActionDTO createDto);
+    protected abstract PlayerAction onPlayerAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread, PlayerActionCommand createDto);
 }

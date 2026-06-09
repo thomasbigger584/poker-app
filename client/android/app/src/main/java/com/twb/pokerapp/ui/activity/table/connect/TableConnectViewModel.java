@@ -5,7 +5,9 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.twb.pokerapp.R;
-import com.twb.pokerapp.data.model.dto.table.TableDTO;
+import com.twb.pokerapp.proto.GameType;
+import com.twb.pokerapp.proto.TableDTO;
+import com.twb.pokerapp.util.Protos;
 
 import javax.inject.Inject;
 
@@ -38,7 +40,7 @@ public class TableConnectViewModel extends ViewModel {
             return;
         }
 
-        if (buyIn < table.getMinBuyin() || buyIn > table.getMaxBuyin()) {
+        if (buyIn < Protos.money(table.getMinBuyin()) || buyIn > Protos.money(table.getMaxBuyin())) {
             _errorResId.setValue(R.string.error_buy_in_range);
             return;
         }
@@ -59,7 +61,7 @@ public class TableConnectViewModel extends ViewModel {
             return;
         }
 
-        if (!"TEXAS_HOLDEM".equals(table.getGameType())) {
+        if (table.getGameType() != GameType.GAME_TYPE_TEXAS_HOLDEM) {
             _errorResId.setValue(R.string.error_unsupported_game_type);
             return;
         }

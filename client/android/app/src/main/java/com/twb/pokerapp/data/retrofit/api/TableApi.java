@@ -1,10 +1,9 @@
 package com.twb.pokerapp.data.retrofit.api;
 
-import com.twb.pokerapp.data.model.dto.table.AvailableTableDTO;
-import com.twb.pokerapp.data.model.dto.table.CreateTableDTO;
-import com.twb.pokerapp.data.model.dto.table.TableDTO;
+import com.twb.pokerapp.proto.AvailableTableListResponse;
+import com.twb.pokerapp.proto.CreateTableDTO;
+import com.twb.pokerapp.proto.TableDTO;
 
-import java.util.List;
 import java.util.Map;
 
 import retrofit2.Call;
@@ -16,7 +15,7 @@ import retrofit2.http.QueryMap;
 public interface TableApi {
 
     @GET("/api/poker-table")
-    Call<List<AvailableTableDTO>> getAvailableTables(
+    Call<AvailableTableListResponse> getAvailableTables(
             @QueryMap(encoded = true) Map<String, Integer> params);
 
     @POST("/api/poker-table")

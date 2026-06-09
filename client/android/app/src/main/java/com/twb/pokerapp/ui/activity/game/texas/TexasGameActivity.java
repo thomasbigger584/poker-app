@@ -21,30 +21,30 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.data.auth.AuthService;
-import com.twb.pokerapp.data.model.dto.appuser.AppUserDTO;
-import com.twb.pokerapp.data.model.dto.playersession.PlayerSessionDTO;
-import com.twb.pokerapp.data.model.dto.table.TableDTO;
-import com.twb.pokerapp.data.model.enumeration.ActionType;
-import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.BettingRoundUpdatedDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.ChatMessageDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.DealCommunityCardDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.DealPlayerCardDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.DealerDeterminedDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.ErrorMessageDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.GameFinishedDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.LogMessageDTO;
 import com.twb.pokerapp.data.repository.RepositoryCallback;
-import com.twb.pokerapp.data.websocket.message.server.payload.PlayerActionedDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.PlayerConnectedDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.PlayerDisconnectedDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.PlayerSubscribedDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.PlayerTurnDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.RoundFinishedDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.RoundStateDTO;
-import com.twb.pokerapp.data.websocket.message.server.payload.ValidationDTO;
+import com.twb.pokerapp.proto.ActionType;
+import com.twb.pokerapp.proto.AppUserDTO;
+import com.twb.pokerapp.proto.BettingRoundUpdatedDTO;
+import com.twb.pokerapp.proto.ChatMessageDTO;
+import com.twb.pokerapp.proto.DealCommunityCardDTO;
+import com.twb.pokerapp.proto.DealPlayerCardDTO;
+import com.twb.pokerapp.proto.DealerDeterminedDTO;
+import com.twb.pokerapp.proto.GameFinishedDTO;
+import com.twb.pokerapp.proto.LogMessageDTO;
+import com.twb.pokerapp.proto.PlayerActionedDTO;
+import com.twb.pokerapp.proto.PlayerConnectedDTO;
+import com.twb.pokerapp.proto.PlayerDisconnectedDTO;
+import com.twb.pokerapp.proto.PlayerSessionDTO;
+import com.twb.pokerapp.proto.PlayerSubscribedDTO;
+import com.twb.pokerapp.proto.PlayerTurnDTO;
+import com.twb.pokerapp.proto.RoundFinishedDTO;
+import com.twb.pokerapp.proto.RoundStateDTO;
+import com.twb.pokerapp.proto.ServerMessageDTO;
+import com.twb.pokerapp.proto.TableDTO;
+import com.twb.pokerapp.proto.ValidationDTO;
 import com.twb.pokerapp.databinding.ActivityGameTexasBinding;
 import com.twb.pokerapp.service.WebSocketService;
 import com.twb.pokerapp.ui.activity.base.BaseAuthActivity;
@@ -58,9 +58,11 @@ import com.twb.pokerapp.ui.dialog.game.BaseGameDialog;
 import com.twb.pokerapp.ui.dialog.game.BetRaiseGameDialog;
 import com.twb.pokerapp.ui.dialog.game.BotPickerDialog;
 import com.twb.pokerapp.ui.util.HapticUtil;
+import com.twb.pokerapp.util.Protos;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.inject.Inject;
 
@@ -69,6 +71,7 @@ import dagger.hilt.android.AndroidEntryPoint;
 @AndroidEntryPoint
 public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameDialog.BetRaiseClickListener {
     private static final String TAG = TexasGameActivity.class.getSimpleName();
+    private static final String KEY_TABLE = "TABLE";
     private static final String KEY_CONNECTION_TYPE = "CONNECTION_TYPE";
     private static final String KEY_BUY_IN_AMOUNT = "BUY_IN_AMOUNT";
     private static final String KEY_RECONNECT = "RECONNECT";
@@ -106,7 +109,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
      */
     public static void startActivity(Activity activity, TableDTO table, String connectionType, Double buyInAmount, boolean reconnect) {
         var intent = new Intent(activity, TexasGameActivity.class);
-        intent.putExtras(table.toBundle());
+        intent.putExtra(KEY_TABLE, table.toByteArray());
         intent.putExtra(KEY_CONNECTION_TYPE, connectionType);
         intent.putExtra(KEY_BUY_IN_AMOUNT, buyInAmount);
         intent.putExtra(KEY_RECONNECT, reconnect);
@@ -156,7 +159,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         });
 
         viewModel = new ViewModelProvider(this).get(TexasGameViewModel.class);
-        viewModel.setTableId(table.getId());
+        viewModel.setTableId(UUID.fromString(table.getId()));
         viewModel.messages.observe(this, this::onMessagesReceived);
         viewModel.connected.observe(this, connected -> {
             var isConnected = Boolean.TRUE.equals(connected);
@@ -213,7 +216,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         }
     }
 
-    private void onMessagesReceived(List<ServerMessageDTO<?>> messages) {
+    private void onMessagesReceived(List<ServerMessageDTO> messages) {
         if (messages == null) return;
         for (var message : messages) {
             if (message.getTimestamp() > lastRenderedTimestamp) {
@@ -223,52 +226,54 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         }
     }
 
-    private void dispatchMessage(ServerMessageDTO<?> message) {
-        switch (message.getType()) {
+    private void dispatchMessage(ServerMessageDTO message) {
+        switch (message.getPayloadCase()) {
             case PLAYER_SUBSCRIBED:
-                handlePlayerSubscribed((PlayerSubscribedDTO) message.getPayload());
+                handlePlayerSubscribed(message.getPlayerSubscribed());
                 break;
             case PLAYER_CONNECTED:
-                handlePlayerConnected((PlayerConnectedDTO) message.getPayload());
+                handlePlayerConnected(message.getPlayerConnected());
                 break;
             case DEALER_DETERMINED:
-                handleDealerDetermined((DealerDeterminedDTO) message.getPayload());
+                handleDealerDetermined(message.getDealerDetermined());
                 break;
             case DEAL_INIT:
-                handleDealPlayerCard((DealPlayerCardDTO) message.getPayload());
+                handleDealPlayerCard(message.getDealInit());
                 break;
             case DEAL_COMMUNITY:
-                handleDealCommunityCard((DealCommunityCardDTO) message.getPayload());
+                handleDealCommunityCard(message.getDealCommunity());
                 break;
             case PLAYER_TURN:
-                handlePlayerTurn((PlayerTurnDTO) message.getPayload(), message.getTimestamp());
+                handlePlayerTurn(message.getPlayerTurn(), message.getTimestamp());
                 break;
             case PLAYER_ACTIONED:
-                handlePlayerActioned((PlayerActionedDTO) message.getPayload());
+                handlePlayerActioned(message.getPlayerActioned());
                 break;
             case BETTING_ROUND_UPDATED:
-                handleBettingRoundUpdated((BettingRoundUpdatedDTO) message.getPayload());
+                handleBettingRoundUpdated(message.getBettingRoundUpdated());
                 break;
             case ROUND_FINISHED:
-                handleRoundFinished((RoundFinishedDTO) message.getPayload());
+                handleRoundFinished(message.getRoundFinished());
                 break;
             case GAME_FINISHED:
-                handleGameFinished((GameFinishedDTO) message.getPayload());
+                handleGameFinished(message.getGameFinished());
                 break;
             case CHAT:
-                handleChatMessage((ChatMessageDTO) message.getPayload());
+                handleChatMessage(message.getChat());
                 break;
             case LOG:
-                handleLogMessage((LogMessageDTO) message.getPayload());
+                handleLogMessage(message.getLog());
                 break;
             case ERROR:
-                handleErrorMessage(((ErrorMessageDTO) message.getPayload()).getMessage());
+                handleErrorMessage(message.getError().getMessage());
                 break;
             case VALIDATION:
-                handleValidationMessage((ValidationDTO) message.getPayload());
+                handleValidationMessage(message.getValidation());
                 break;
             case PLAYER_DISCONNECTED:
-                handlePlayerDisconnected((PlayerDisconnectedDTO) message.getPayload());
+                handlePlayerDisconnected(message.getPlayerDisconnected());
+                break;
+            default:
                 break;
         }
     }
@@ -276,9 +281,9 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     private void handlePlayerSubscribed(PlayerSubscribedDTO playerSubscribed) {
         clearCurrentPlayerTurn();
         var currentUsername = authService.getCurrentUser();
-        var currentPlayerSession = playerSubscribed.getCurrentPlayerSession(currentUsername);
+        var currentPlayerSession = Protos.currentPlayerSession(playerSubscribed, currentUsername);
         tableController.connectCurrentPlayer(currentPlayerSession);
-        for (var playerSession : playerSubscribed.getPlayerSessions()) {
+        for (var playerSession : playerSubscribed.getPlayerSessionsList()) {
             if (!playerSession.getUser().getUsername().equals(currentUsername)) {
                 tableController.connectOtherPlayer(playerSession);
             }
@@ -287,7 +292,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         dismissDialogs();
 
         // Resume an in-progress hand (reconnect / app restart mid-round) where it left off.
-        if (playerSubscribed.getRoundState() != null) {
+        if (playerSubscribed.hasRoundState()) {
             renderRoundState(playerSubscribed.getRoundState());
         }
     }
@@ -299,12 +304,12 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         tableController.hidePlayerTurns();
         controlsController.hide();
 
-        if (roundState.getDealer() != null) {
+        if (roundState.hasDealer()) {
             tableController.dealerDetermined(roundState.getDealer());
         }
 
         // Hole cards: own cards face-up, opponents' face-down (same rule as live dealing).
-        for (var dealtCard : roundState.getPlayerCards()) {
+        for (var dealtCard : roundState.getPlayerCardsList()) {
             var playerSession = dealtCard.getPlayerSession();
             if (authService.isCurrentUser(playerSession.getUser())) {
                 tableController.dealCurrentPlayerCard(dealtCard);
@@ -313,26 +318,28 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             }
         }
 
-        for (var communityCard : roundState.getCommunityCards()) {
-            var dealCommunityCard = new DealCommunityCardDTO();
-            dealCommunityCard.setCard(communityCard);
+        for (var communityCard : roundState.getCommunityCardsList()) {
+            var dealCommunityCard = DealCommunityCardDTO.newBuilder()
+                    .setCard(communityCard)
+                    .build();
             tableController.dealCommunityCard(dealCommunityCard);
         }
 
-        if (roundState.getBettingRound() != null || !roundState.getRoundPots().isEmpty()) {
-            var bettingRoundUpdated = new BettingRoundUpdatedDTO();
-            bettingRoundUpdated.setRound(roundState.getRound());
-            bettingRoundUpdated.setBettingRound(roundState.getBettingRound());
-            bettingRoundUpdated.setRoundPots(roundState.getRoundPots());
+        if (roundState.hasBettingRound() || !roundState.getRoundPotsList().isEmpty()) {
+            var bettingRoundUpdated = BettingRoundUpdatedDTO.newBuilder()
+                    .setRound(roundState.getRound())
+                    .setBettingRound(roundState.getBettingRound())
+                    .addAllRoundPots(roundState.getRoundPotsList())
+                    .build();
             tableController.updateBettingRound(bettingRoundUpdated);
         }
 
-        for (var foldedPlayer : roundState.getFoldedPlayers()) {
+        for (var foldedPlayer : roundState.getFoldedPlayersList()) {
             tableController.foldPlayer(foldedPlayer);
         }
 
         // Render the live turn last so action buttons / countdown sit on top of the restored table.
-        if (roundState.getCurrentTurn() != null) {
+        if (roundState.hasCurrentTurn()) {
             handlePlayerTurn(roundState.getCurrentTurn(), System.currentTimeMillis());
         }
     }
@@ -392,10 +399,10 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     private void handlePlayerActioned(PlayerActionedDTO playerActioned) {
         dismissDialogs();
         clearCurrentPlayerTurn();
-        var playerSession = playerActioned.getAction().getPlayerSession();
         var action = playerActioned.getAction();
+        var playerSession = action.getPlayerSession();
         tableController.updateDetails(playerSession);
-        if (ActionType.FOLD.name().equals(action.getActionType())) {
+        if (action.getActionType() == ActionType.ACTION_TYPE_FOLD) {
             tableController.foldPlayer(playerSession);
         }
         tableController.hidePlayerTurns();
@@ -443,7 +450,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     }
 
     private void handleValidationMessage(ValidationDTO validation) {
-        for (var field : validation.getFields()) {
+        for (var field : validation.getFieldsList()) {
             chatBoxAdapter.add(field.getMessage());
         }
     }
@@ -461,21 +468,21 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     private void initClickListeners() {
         binding.foldButton.setOnClickListener(v -> {
             dismissDialogs();
-            viewModel.onPlayerAction(ActionType.FOLD);
+            viewModel.onPlayerAction(ActionType.ACTION_TYPE_FOLD);
         });
         binding.checkButton.setOnClickListener(v -> {
             dismissDialogs();
-            viewModel.onPlayerAction(ActionType.CHECK);
+            viewModel.onPlayerAction(ActionType.ACTION_TYPE_CHECK);
         });
         binding.betButton.setOnClickListener(v -> onBetClick());
         binding.callButton.setOnClickListener(v -> {
             dismissDialogs();
-            viewModel.onPlayerAction(ActionType.CALL);
+            viewModel.onPlayerAction(ActionType.ACTION_TYPE_CALL);
         });
         binding.raiseButton.setOnClickListener(v -> onRaiseClick());
         binding.allInButton.setOnClickListener(v -> {
             dismissDialogs();
-            viewModel.onPlayerAction(ActionType.ALL_IN);
+            viewModel.onPlayerAction(ActionType.ACTION_TYPE_ALL_IN);
         });
         binding.chatBoxRecyclerView.setOnClickListener(v -> onChatClick());
         binding.chatButton.setOnClickListener(v -> onChatClick());
@@ -486,7 +493,7 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
     protected void onAuthorized() {
         var serviceIntent = new Intent(this, WebSocketService.class);
         serviceIntent.setAction(WebSocketService.ACTION_START);
-        serviceIntent.putExtra(WebSocketService.EXTRA_TABLE_ID, table.getId());
+        serviceIntent.putExtra(WebSocketService.EXTRA_TABLE_ID, UUID.fromString(table.getId()));
         serviceIntent.putExtra(WebSocketService.EXTRA_CONNECTION_TYPE, connectionType);
         serviceIntent.putExtra(WebSocketService.EXTRA_BUY_IN_AMOUNT, buyInAmount);
         serviceIntent.putExtra(WebSocketService.EXTRA_RECONNECT, reconnect);
@@ -523,9 +530,9 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
 
     private void onBetClick() {
         dismissDialogs();
-        var maximumBet = tableController.getPlayerCardPairLayout().getPlayerSession().getFunds();
+        var maximumBet = Protos.money(tableController.getPlayerCardPairLayout().getPlayerSession().getFunds());
         var minimumBet = Math.min(10d, maximumBet);
-        betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.BET, maximumBet, minimumBet, this);
+        betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.ACTION_TYPE_BET, maximumBet, minimumBet, this);
         var prev = getSupportFragmentManager().findFragmentByTag("bet_dialog");
         if (prev == null) {
             betRaisePokerGameDialog.show(getSupportFragmentManager(), "bet_dialog");
@@ -536,9 +543,9 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
 
     private void onRaiseClick() {
         dismissDialogs();
-        var maximumBet = tableController.getPlayerCardPairLayout().getPlayerSession().getFunds();
+        var maximumBet = Protos.money(tableController.getPlayerCardPairLayout().getPlayerSession().getFunds());
         var minimumBet = Math.min(getRaiseMinimumBet(), maximumBet);
-        betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.RAISE, maximumBet, minimumBet, this);
+        betRaisePokerGameDialog = BetRaiseGameDialog.newInstance(ActionType.ACTION_TYPE_RAISE, maximumBet, minimumBet, this);
         var prev = getSupportFragmentManager().findFragmentByTag("raise_dialog");
         if (prev == null) {
             betRaisePokerGameDialog.show(getSupportFragmentManager(), "raise_dialog");
@@ -646,13 +653,13 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
 
     // todo: this could potentially be moved to server as a default if provided null
     private double getBotBuyInAmount() {
-        var min = table.getMinBuyin();
-        var max = table.getMaxBuyin();
+        var min = Protos.money(table.getMinBuyin());
+        var max = Protos.money(table.getMaxBuyin());
         var amount = (buyInAmount != null) ? buyInAmount : 0d;
-        if (min != null && amount < min) {
+        if (amount < min) {
             amount = min;
         }
-        if (max != null && amount > max) {
+        if (amount > max) {
             amount = max;
         }
         return amount;
@@ -679,12 +686,17 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
             Toast.makeText(this, "Intent is null", Toast.LENGTH_SHORT).show();
             return false;
         }
-        var extras = intent.getExtras();
-        if (extras == null) {
-            Toast.makeText(this, "Bundle extras is null", Toast.LENGTH_SHORT).show();
+        var tableBytes = intent.getByteArrayExtra(KEY_TABLE);
+        if (tableBytes == null) {
+            Toast.makeText(this, "Table extra is null", Toast.LENGTH_SHORT).show();
             return false;
         }
-        table = TableDTO.fromBundle(extras);
+        try {
+            table = TableDTO.parseFrom(tableBytes);
+        } catch (InvalidProtocolBufferException e) {
+            Toast.makeText(this, "Failed to parse table", Toast.LENGTH_SHORT).show();
+            return false;
+        }
         connectionType = intent.getStringExtra(KEY_CONNECTION_TYPE);
         buyInAmount = intent.getDoubleExtra(KEY_BUY_IN_AMOUNT, 0d);
         reconnect = intent.getBooleanExtra(KEY_RECONNECT, false);
@@ -695,8 +707,8 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         var turn = viewModel.getCurrentPlayerTurn();
         if (turn != null) {
             var amountToCall = turn.getAmountToCall();
-            if (amountToCall != null) {
-                return amountToCall + 0.01;
+            if (!amountToCall.isEmpty()) {
+                return Protos.money(amountToCall) + 0.01;
             }
         }
         return 10d;
@@ -715,11 +727,11 @@ public class TexasGameActivity extends BaseAuthActivity implements BetRaiseGameD
         } else {
             stringBuilderList.add(user.getUsername());
         }
-        stringBuilderList.add(playerAction.getActionType().toLowerCase().replace("_", " "));
-        var amount = playerAction.getAmount();
-        if (amount != null && amount > 0d) {
+        stringBuilderList.add(Protos.shortName(playerAction.getActionType()).toLowerCase().replace("_", " "));
+        var amount = Protos.money(playerAction.getAmount());
+        if (amount > 0d) {
             stringBuilderList.add(getString(R.string.player_action_with));
-            stringBuilderList.add(getString(R.string.currency_format, playerAction.getAmount()));
+            stringBuilderList.add(getString(R.string.currency_format, amount));
         }
         return String.join(" ", stringBuilderList);
     }

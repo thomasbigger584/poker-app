@@ -6,7 +6,7 @@ RUN apk add --update g++ make git && \
 WORKDIR /app
 
 RUN git clone -b develop https://github.com/HenryRLee/PokerHandEvaluator.git /app/src/main/cpp/PokerHandEvaluator
-COPY ./src/main/cpp/ /app/src/main/cpp/
+COPY server/api/src/main/cpp/ /app/src/main/cpp/
 
 ENV EVALUATOR_SO_PATH=/app/src/main/cpp/evaluator.so
 RUN g++ -shared -fPIC -Wl,--no-undefined -O3 -o $EVALUATOR_SO_PATH \
@@ -21,12 +21,15 @@ RUN g++ -shared -fPIC -Wl,--no-undefined -O3 -o $EVALUATOR_SO_PATH \
     -I $JAVA_HOME/include \
     -I $JAVA_HOME/include/linux
 
-COPY mvnw .
-COPY .mvn .mvn
-COPY pom.xml .
+COPY server/api/mvnw .
+COPY server/api/.mvn .mvn
+COPY server/api/pom.xml .
 RUN sed -i 's/\r//g' ./mvnw && chmod +x ./mvnw
 
-COPY src ./src
+# The shared protobuf contract lives at the repo root (sibling to client/ + server/), so the build
+# context is the repo root. protoSourceRoot (${project.basedir}/../../proto) resolves to /proto here.
+COPY proto /proto
+COPY server/api/src ./src
 RUN --mount=type=cache,target=~/.m2 ./mvnw --no-transfer-progress package
 
 FROM bellsoft/liberica-runtime-container:jre-21-musl

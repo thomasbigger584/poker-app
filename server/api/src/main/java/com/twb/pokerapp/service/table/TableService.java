@@ -3,11 +3,13 @@ package com.twb.pokerapp.service.table;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.domain.enumeration.GameType;
-import com.twb.pokerapp.dto.table.AvailableTableDTO;
-import com.twb.pokerapp.dto.table.CreateTableDTO;
+import com.twb.pokerapp.mapper.ProtoConvert;
 import com.twb.pokerapp.mapper.TableMapper;
+import com.twb.pokerapp.proto.AvailableTableDTO;
+import com.twb.pokerapp.proto.CreateTableDTO;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.TableRepository;
+import com.twb.pokerapp.web.exception.ValidationException;
 import com.twb.pokerapp.web.websocket.session.DisconnectGraceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
@@ -17,7 +19,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.stream.Collectors;
 
 @Component
@@ -36,22 +37,26 @@ public class TableService {
     public void createTestTables() {
         var allTables = repository.findAll();
         if (allTables.isEmpty()) {
-            var createTableDto1 = new CreateTableDTO();
-            createTableDto1.setName("Poker Table 1");
-            createTableDto1.setGameType(GameType.TEXAS_HOLDEM);
-            createTableDto1.setSpeedMultiplier(1d);
-            createTableDto1.setTotalRounds(null);
-            createTableDto1.setMinPlayers(2);
-            createTableDto1.setMaxPlayers(6);
-            createTableDto1.setMinBuyin(BigDecimal.valueOf(100));
-            createTableDto1.setMaxBuyin(BigDecimal.valueOf(10_000));
+            var createTableDto1 = CreateTableDTO.newBuilder()
+                    .setName("Poker Table 1")
+                    .setGameType(ProtoConvert.toProto(GameType.TEXAS_HOLDEM))
+                    .setSpeedMultiplier(1d)
+                    .setMinPlayers(2)
+                    .setMaxPlayers(6)
+                    .setMinBuyin("100")
+                    .setMaxBuyin("10000")
+                    .build();
             create(createTableDto1);
         }
     }
 
     @Transactional
     public PokerTable create(CreateTableDTO dto) {
-        dto.getGameType().getValidationService(context).validate(dto);
+        var gameType = ProtoConvert.toModel(dto.getGameType());
+        if (gameType == null) {
+            throw new ValidationException("gameType", "Game Type is required");
+        }
+        gameType.getValidationService(context).validate(dto);
         var table = mapper.createDtoToModel(dto);
         table = repository.save(table);
         return table;
@@ -70,17 +75,17 @@ public class TableService {
 
         var page = repository.findAll(pageable);
         return page.map(table -> {
-            var availableTableDTO = new AvailableTableDTO();
-            availableTableDTO.setTable(mapper.modelToDto(table));
-            availableTableDTO.setPlayersConnected(playerSessionRepository.countConnectedPlayersByTableId(table.getId()));
+            var builder = AvailableTableDTO.newBuilder()
+                    .setTable(mapper.modelToDto(table))
+                    .setPlayersConnected(playerSessionRepository.countConnectedPlayersByTableId(table.getId()));
             var existingConnectionType = reconnectableTypes.get(table.getId());
-            availableTableDTO.setCurrentUserConnected(existingConnectionType != null);
-            availableTableDTO.setCurrentUserConnectionType(existingConnectionType);
+            builder.setCurrentUserConnected(existingConnectionType != null);
             if (existingConnectionType != null) {
+                builder.setCurrentUserConnectionType(ProtoConvert.toProto(existingConnectionType));
                 disconnectGraceService.getRemainingMillis(table.getId(), username)
-                        .ifPresent(availableTableDTO::setReconnectMillisRemaining);
+                        .ifPresent(builder::setReconnectMillisRemaining);
             }
-            return availableTableDTO;
+            return builder.build();
         });
     }
 }

@@ -15,7 +15,7 @@ import androidx.annotation.Nullable;
 import androidx.gridlayout.widget.GridLayout;
 
 import com.twb.pokerapp.R;
-import com.twb.pokerapp.data.model.enumeration.ActionType;
+import com.twb.pokerapp.proto.ActionType;
 import com.twb.pokerapp.databinding.FragmentBetRaiseDialogBinding;
 import com.twb.pokerapp.ui.util.SeekBarChangeListener;
 
@@ -80,7 +80,7 @@ public class BetRaiseGameDialog extends BaseGameDialog {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        var titleResId = (type == ActionType.BET) ? R.string.bet_title_bet : R.string.bet_title_raise;
+        var titleResId = (type == ActionType.ACTION_TYPE_BET) ? R.string.bet_title_bet : R.string.bet_title_raise;
         binding.titleTextView.setText(titleResId);
         binding.rangeTextView.setText(getString(R.string.bet_range_format, minimumBet, maximumBet));
 
@@ -207,7 +207,7 @@ public class BetRaiseGameDialog extends BaseGameDialog {
 
         binding.amountTextView.setText(getString(R.string.currency_format, amountSelected));
 
-        var confirmFormat = (type == ActionType.BET)
+        var confirmFormat = (type == ActionType.ACTION_TYPE_BET)
                 ? R.string.bet_confirm_format : R.string.raise_confirm_format;
         binding.successButton.setText(getString(confirmFormat, amountSelected));
 

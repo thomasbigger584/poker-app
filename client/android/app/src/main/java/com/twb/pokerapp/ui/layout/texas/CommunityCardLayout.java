@@ -10,14 +10,9 @@ import android.widget.LinearLayout;
 
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.databinding.CommunityCardsBinding;
-import com.twb.pokerapp.data.model.dto.card.CardDTO;
+import com.twb.pokerapp.proto.CardDTO;
 
 public class CommunityCardLayout extends LinearLayout {
-    private static final String FLOP_CARD_1 = "FLOP_CARD_1";
-    private static final String FLOP_CARD_2 = "FLOP_CARD_2";
-    private static final String FLOP_CARD_3 = "FLOP_CARD_3";
-    private static final String TURN_CARD = "TURN_CARD";
-    private static final String RIVER_CARD = "RIVER_CARD";
     private CommunityCardsBinding binding;
 
     public CommunityCardLayout(Context context, AttributeSet attrs) {
@@ -56,29 +51,31 @@ public class CommunityCardLayout extends LinearLayout {
 
     public void dealCard(CardDTO card) {
         switch (card.getCardType()) {
-            case FLOP_CARD_1: {
+            case CARD_TYPE_FLOP_CARD_1: {
                 setFlopVisibility();
                 binding.community1CardLayout.update(card);
                 break;
             }
-            case FLOP_CARD_2: {
+            case CARD_TYPE_FLOP_CARD_2: {
                 binding.community2CardLayout.update(card);
                 break;
             }
-            case FLOP_CARD_3: {
+            case CARD_TYPE_FLOP_CARD_3: {
                 binding.community3CardLayout.update(card);
                 break;
             }
-            case TURN_CARD: {
+            case CARD_TYPE_TURN_CARD: {
                 setTurnVisibility();
                 binding.community4CardLayout.update(card);
                 break;
             }
-            case RIVER_CARD: {
+            case CARD_TYPE_RIVER_CARD: {
                 setRiverVisibility();
                 binding.community5CardLayout.update(card);
                 break;
             }
+            default:
+                break;
         }
     }
 

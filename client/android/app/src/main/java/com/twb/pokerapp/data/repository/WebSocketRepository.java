@@ -1,15 +1,16 @@
 package com.twb.pokerapp.data.repository;
 
+import android.util.Log;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.twb.pokerapp.data.database.dao.ServerMessageDAO;
 import com.twb.pokerapp.data.database.entities.ServerMessageEntity;
-import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
-import com.twb.pokerapp.data.websocket.message.server.enumeration.ServerMessageType;
-import com.twb.pokerapp.data.websocket.message.server.payload.PlayerTurnDTO;
+import com.twb.pokerapp.proto.PlayerTurnDTO;
+import com.twb.pokerapp.proto.ServerMessageDTO;
+import com.twb.pokerapp.util.Protos;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,12 +29,13 @@ import io.reactivex.schedulers.Schedulers;
  * persistence and mirrored into an in-memory list that drives the UI through LiveData.
  *
  * <p>The service feeds every inbound STOMP message in via {@link #handleNewMessage}; the
- * activity observes {@link #messages} and renders incrementally.
+ * activity observes {@link #messages} and renders incrementally. Each message is the binary-protobuf
+ * {@link ServerMessageDTO} envelope; Room stores its raw bytes.
  */
 @Singleton
 public class WebSocketRepository {
+    private static final String TAG = WebSocketRepository.class.getSimpleName();
     private final ServerMessageDAO serverMessageDAO;
-    private final Gson gson;
 
     /*
      * All Room mutations (insert + delete) run on a single thread so a delete issued on a
@@ -42,10 +44,10 @@ public class WebSocketRepository {
      */
     private final Scheduler dbScheduler = Schedulers.from(Executors.newSingleThreadExecutor());
 
-    private final List<ServerMessageDTO<?>> internalList =
+    private final List<ServerMessageDTO> internalList =
             Collections.synchronizedList(new ArrayList<>());
-    private final MutableLiveData<List<ServerMessageDTO<?>>> _messages = new MutableLiveData<>(new ArrayList<>());
-    public final LiveData<List<ServerMessageDTO<?>>> messages = _messages;
+    private final MutableLiveData<List<ServerMessageDTO>> _messages = new MutableLiveData<>(new ArrayList<>());
+    public final LiveData<List<ServerMessageDTO>> messages = _messages;
 
     private final MutableLiveData<Throwable> _errors = new MutableLiveData<>();
     public final LiveData<Throwable> errors = _errors;
@@ -78,9 +80,8 @@ public class WebSocketRepository {
     private long currentPlayerTurnTimestamp;
 
     @Inject
-    public WebSocketRepository(ServerMessageDAO serverMessageDAO, Gson gson) {
+    public WebSocketRepository(ServerMessageDAO serverMessageDAO) {
         this.serverMessageDAO = serverMessageDAO;
-        this.gson = gson;
     }
 
     /**
@@ -110,7 +111,11 @@ public class WebSocketRepository {
                         internalList.clear();
                         long maxTs = 0L;
                         for (var entity : entities) {
-                            internalList.add(convertToDto(entity));
+                            var message = parseEntity(entity);
+                            if (message == null) {
+                                continue;
+                            }
+                            internalList.add(message);
                             maxTs = Math.max(maxTs, entity.getTimestamp());
                         }
                         lastTimestamp = Math.max(lastTimestamp, maxTs);
@@ -163,9 +168,10 @@ public class WebSocketRepository {
         dbScheduler.scheduleDirect(() -> serverMessageDAO.deleteByTableId(tableId));
     }
 
-    public void handleNewMessage(ServerMessageDTO<?> message) {
+    public void handleNewMessage(ServerMessageDTO message) {
         final UUID tableId;
         final long timestamp;
+        final ServerMessageDTO stored;
         synchronized (internalList) {
             if (currentTableId == null) {
                 return;
@@ -176,27 +182,22 @@ public class WebSocketRepository {
             timestamp = Math.max(message.getTimestamp(), lastTimestamp + 1);
             lastTimestamp = timestamp;
 
-            if (message.getType() == ServerMessageType.PLAYER_TURN) {
-                currentPlayerTurn = (PlayerTurnDTO) message.getPayload();
+            stored = message.toBuilder().setTimestamp(timestamp).build();
+
+            if (message.getPayloadCase() == ServerMessageDTO.PayloadCase.PLAYER_TURN) {
+                currentPlayerTurn = message.getPlayerTurn();
                 currentPlayerTurnTimestamp = timestamp;
-            } else if (message.getType().isTurnEndingMessage()) {
+            } else if (Protos.isTurnEnding(message.getPayloadCase())) {
                 currentPlayerTurn = null;
                 currentPlayerTurnTimestamp = 0L;
             }
 
-            var stored = new ServerMessageDTO<>(message.getType(), message.getRawPayload(), timestamp);
-            stored.setPayload(message.getPayload());
             internalList.add(stored);
             publish();
         }
 
         // Persist on the serial DB thread.
-        var entity = new ServerMessageEntity(
-                tableId,
-                timestamp,
-                message.getType().name(),
-                gson.toJson(message.getRawPayload())
-        );
+        var entity = new ServerMessageEntity(tableId, timestamp, stored.toByteArray());
         dbScheduler.scheduleDirect(() -> serverMessageDAO.insert(entity));
     }
 
@@ -221,15 +222,12 @@ public class WebSocketRepository {
         _messages.postValue(new ArrayList<>(internalList));
     }
 
-    private ServerMessageDTO<?> convertToDto(ServerMessageEntity entity) {
-        var type = ServerMessageType.valueOf(entity.getMessageType());
-        var rawPayload = gson.fromJson(entity.getPayload(), JsonObject.class);
-        var dto = new ServerMessageDTO<>(type, rawPayload, entity.getTimestamp());
-
-        var payloadClass = type.getPayloadClass();
-        if (payloadClass != null && rawPayload != null) {
-            dto.setPayload(gson.fromJson(rawPayload, payloadClass));
+    private ServerMessageDTO parseEntity(ServerMessageEntity entity) {
+        try {
+            return ServerMessageDTO.parseFrom(entity.getPayload());
+        } catch (InvalidProtocolBufferException e) {
+            Log.e(TAG, "Dropping unparseable persisted message", e);
+            return null;
         }
-        return dto;
     }
 }

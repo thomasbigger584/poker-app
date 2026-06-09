@@ -13,9 +13,9 @@ import com.twb.pokerapp.service.game.exception.GamePlayerLogException;
 import com.twb.pokerapp.service.game.thread.GameLogService;
 import com.twb.pokerapp.service.game.thread.GameThreadManager;
 import com.twb.pokerapp.service.player.PlayerSessionService;
+import com.twb.pokerapp.proto.ServerMessageDTO;
+import com.twb.pokerapp.service.game.thread.dto.PlayerActionCommand;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
-import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
-import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -118,7 +118,7 @@ public class TableGameService {
         }));
     }
 
-    public void onPlayerAction(UUID tableId, String username, CreatePlayerActionDTO action) {
+    public void onPlayerAction(UUID tableId, String username, PlayerActionCommand action) {
         mutex.execute(tableId, () -> {
             try {
                 writeTx.executeWithoutResult(status -> {
