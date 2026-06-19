@@ -9,7 +9,7 @@ Two independent modules under one repo:
 - `server/` — Spring Boot backend (`server/api`, Java 21, Maven) plus one Docker Compose file per piece of infrastructure (`keycloak`, `postgres`, `rabbitmq`, `nginx`, `tailscale`). The root `server/docker-compose.yml` wires them all together; every service shares the Tailscale container's network namespace (`network_mode: service:tailscale`).
 - `client/android/` — native Android app (Java/Kotlin, Gradle), package `com.twb.pokerapp`, minSdk 24 / targetSdk 35.
 
-Backend and Android share DTO shapes and the WebSocket message protocol by hand (not generated) — when you change a server DTO or `ServerMessageType`, update the mirror under `client/android/.../data/model` and `data/websocket`.
+Backend and Android share their DTOs and the WebSocket message protocol through a single **protobuf** contract under `proto/poker/` (see *Wire contract — protobuf* below). Both modules generate code from the same `.proto` files, so changing a message or enum updates both sides at once — there is no hand-written mirror to keep in sync.
 
 ## Common commands
 
@@ -45,11 +45,21 @@ Android (from `client/android`):
 
 Each active poker table runs on its own dedicated `GameThread` (`service/game/thread`). `GameThreadManager` keeps a `ConcurrentHashMap<tableId, GameThread>` and serializes create/delete per table with an `XSync<UUID>` mutex. `GameThread` extends `BaseGameThread` (which holds all the `@Autowired` service/repository dependencies) and runs the round lifecycle loop in `run()`: wait for players → create round → init → run round → finish round, checking interrupt flags (`AtomicBoolean`) between every step.
 
-`GameType` (enum in `domain/enumeration`) is the strategy factory: `TEXAS_HOLDEM` and `BLACKJACK` each resolve their own `GameThread`, `GamePlayerActionService`, `GamePlayerTurnService`, and `TableValidationService` beans from the `ApplicationContext`. To add a game variant, add an enum constant and implement those four beans under `service/game/thread/impl/<variant>`.
+`GameType` is a generated **protobuf** enum (`com.twb.pokerapp.proto`); the strategy factory is the static `GameStrategies` (`service/game`). It maps each `GAME_TYPE_*` (`TEXAS_HOLDEM`, `BLACKJACK`) to its `GameThread`, `GamePlayerActionService`, `GamePlayerTurnService`, and `TableValidationService` beans (resolved from the `ApplicationContext`) plus its min/max player counts. To add a game variant, add a `GameType` value in `enums.proto`, add a branch to each `GameStrategies` switch, and implement those four beans under `service/game/thread/impl/<variant>`.
 
 Player turns are coordinated with a `CountDownLatch` wrapped in `PlayerTurnLatchDTO`: the game thread blocks waiting for a turn; an inbound player action (on a different "caller" thread, marked `@CallerThread`) calls `onPostPlayerAction`, which counts the latch down. Server-pushed messages are sent **after** the DB transaction commits via `TransactionUtil.afterCommit(...)`.
 
 There are two transaction templates: `writeTx` and `readTx` (the latter `@Qualifier("readTx")`). Use the matching one for reads vs. writes inside game logic.
+
+### Wire contract — protobuf (DTOs + enums)
+
+All DTOs and enums are generated from a single protobuf contract in `proto/poker/`, split by concern: `enums.proto`, `domain.proto` (core domain messages), `validation.proto`, `rest.proto` (REST request/response bodies), and `websocket.proto` (the STOMP message protocol). Every file uses `package poker`, `java_package = com.twb.pokerapp.proto`, and `java_multiple_files = true`, so each message/enum generates as `com.twb.pokerapp.proto.<Name>`. The server generates full `protobuf-java` (`protobuf-maven-plugin`, `protoSourceRoot ../../proto`); Android generates `protobuf-javalite` (Gradle protobuf plugin, `srcDir ../../../proto`).
+
+The proto **enums are the single source of truth** — the former hand-written `domain.enumeration` enums are gone (the only survivor is the `Persona` enum, used by bots). Behavior that used to live on those enums now sits in small companion classes under `mapper/enumeration`: `Ranks`, `Suits`, `CardGroups`, `HandTypeNames`, `ActionFlow`, `RoundProgression`, `ConnectionTypes`. Note a proto enum's `values()` includes the synthetic `*_UNSPECIFIED` (0) and `UNRECOGNIZED` (-1) members — iterate the companion `VALUES` arrays (e.g. `Ranks.VALUES`) when you want only the real values, and never call `getNumber()` on `UNRECOGNIZED`.
+
+Entities persist proto enums via JPA `AttributeConverter`s under `domain/converter` (base class `ProtoEnumStringConverter`), applied with `@Convert` (not `@Enumerated`). The converter stores the **legacy short name** (e.g. `CHECK`, `IN_PROGRESS`) — not the prefixed proto name or the int tag — so the DB schema is unchanged; `*_UNSPECIFIED`/`UNRECOGNIZED` map to `null` with a WARN. `@Query` JPQL that compares an enum column references the proto FQN (e.g. `com.twb.pokerapp.proto.RoundState.ROUND_STATE_FINISHED`) and Hibernate applies the converter.
+
+DTO↔entity conversion is done by hand-written `@Component` mappers under `mapper/`; `ProtoConvert` holds the scalar encodings (UUID / BigDecimal / char / LocalDateTime ↔ string). A nullable enum field is left unset (its proto `*_UNSPECIFIED` default) rather than set to null.
 
 ### Hand evaluation — native JNI
 
@@ -59,16 +69,15 @@ There are two transaction templates: `writeTx` and `readTx` (the latter `@Qualif
 
 - Clients subscribe to `/app/loops.{tableId}` — `TableWebSocketController.userSubscribed` returns initial game state.
 - Broadcasts go out on `/topic/loops.{tableId}`, relayed through RabbitMQ (STOMP relay).
-- Inbound client messages target `/app/pokerTable.{tableId}.<action>`: `sendPlayerAction`, `sendChatMessage`, `sendDisconnectPlayer` (see `TableWebSocketController`). The `sendBotConnected` action exists only on the `create-bot-functionality` branch.
-- Server→client messages are `ServerMessageDTO` tagged by `ServerMessageType`, with payload DTOs under `web/websocket/message/server/payload`. `ServerMessageFactory` builds them; `MessageDispatcher` sends them.
+- Inbound client messages target `/app/pokerTable.{tableId}.<action>`: `sendPlayerAction`, `sendChatMessage`, `sendDisconnectPlayer`, `sendBotConnected` (see `TableWebSocketController`).
+- Server→client messages are the generated `ServerMessageDTO` proto, whose `oneof payload` replaces the old `ServerMessageType` enum and hand-written payload DTOs (`getPayloadCase()` discriminates). `ServerMessageFactory` builds them; `MessageDispatcher` sends them as binary protobuf STOMP frames.
+- The STOMP handshake `X-Connection-Type` header carries the **short** token (`PLAYER` / `LISTENER`); `ConnectionTypes` (`mapper/enumeration`) translates to/from the proto `ConnectionType` on both server and test client.
 
 ### Auth & users
 
 Keycloak owns identity (OAuth2 resource server; the API validates JWTs). Keycloak user events arrive over RabbitMQ and are handled by `KeycloakRabbitMqConsumer` / `UserRabbitMqConsumer` to sync the local `AppUser` table.
 
-`AppUser` is a single concrete `@Entity` (table `app_user`) holding the Keycloak-synced profile plus `groups` (jsonb) and `totalFunds`. There is one user type on `master`.
-
-> **Branch note:** bot players are a work-in-progress on the `create-bot-functionality` branch, where `AppUser` becomes abstract (`InheritanceType.JOINED`) with `PhysicalUser`/`BotUser` subclasses, a `Persona` entity (name + free-text `instructions` play style) seeded by `PersonaService`, and a `sendBotConnected` WebSocket action (`CreateBotConnectionDTO`). None of that exists on `master` — don't assume those types are present unless you're on that branch.
+`AppUser` is an abstract `@Entity` (`@Inheritance(InheritanceType.JOINED)`, table `app_user`) holding the Keycloak-synced profile plus `groups` (jsonb) and `totalFunds`. It has two subclasses: `PhysicalUser` (real Keycloak-backed players) and `BotUser`. A `BotUser` carries a `Persona` — the one remaining hand-written enum (`domain.enumeration`, persisted with `@Enumerated(EnumType.STRING)`), whose constants pair a display name with a free-text play-style `instructions` string. Bots are added via the `sendBotConnected` WebSocket action (`CreateBotConnectionDTO`).
 
 ### Persistence
 
@@ -81,6 +90,6 @@ PostgreSQL with **Liquibase** migrations (`src/main/resources/liquibase/master.x
 ## Conventions
 
 - **ErrorProne** runs during compilation (`-Xplugin:ErrorProne`) — compile failures may originate from it, not just javac.
-- Lombok + MapStruct (annotation processors). DTO↔entity conversion lives in `mapper/`.
+- Lombok is the codegen annotation processor (ErrorProne, above, is the other). DTO↔entity conversion lives in hand-written `@Component` mappers under `mapper/`.
 - Spring profiles: `local` (default, DEBUG logging) and `cloud` (INFO). Config in `application.yml`.
 - Spring beans configured for game logic are often **prototype/parameterized** beans fetched via `context.getBean(Type.class, args)` (e.g. `TexasGameThread`, turn services) — they are not singletons.
