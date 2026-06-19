@@ -1,4 +1,4 @@
-package com.twb.pokerapp.domain.poker;
+package com.twb.pokerapp.mapper.enumeration;
 
 import com.twb.pokerapp.proto.ConnectionType;
 
@@ -15,12 +15,16 @@ public final class ConnectionTypes {
     private ConnectionTypes() {
     }
 
-    /** Parse the short header token into a proto connection type. */
+    /**
+     * Parse the short header token into a proto connection type.
+     */
     public static ConnectionType fromWire(String token) {
         return ConnectionType.valueOf(PREFIX + token);
     }
 
-    /** The short header token for a connection type (inverse of {@link #fromWire}). */
+    /**
+     * The short header token for a connection type (inverse of {@link #fromWire}).
+     */
     public static String toWire(ConnectionType connectionType) {
         return connectionType.getValueDescriptor().getName().substring(PREFIX.length());
     }

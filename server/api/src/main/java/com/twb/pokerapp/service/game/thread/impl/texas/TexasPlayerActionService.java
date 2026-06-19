@@ -8,8 +8,8 @@ import com.twb.pokerapp.repository.PlayerActionRepository;
 import com.twb.pokerapp.service.game.exception.GamePlayerLogException;
 import com.twb.pokerapp.service.game.thread.GamePlayerActionService;
 import com.twb.pokerapp.service.game.thread.GameThread;
-import com.twb.pokerapp.service.player.PlayerActionService;
 import com.twb.pokerapp.service.game.thread.dto.PlayerActionCommand;
+import com.twb.pokerapp.service.player.PlayerActionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -31,15 +31,15 @@ public class TexasPlayerActionService extends GamePlayerActionService {
 
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
-    public PlayerAction onPlayerAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread, PlayerActionCommand createDto) {
-        return switch (createDto.getAction()) {
-            case ACTION_TYPE_FOLD -> foldAction(playerSession, bettingRound, createDto);
-            case ACTION_TYPE_CHECK -> checkAction(playerSession, bettingRound, createDto);
-            case ACTION_TYPE_BET -> betAction(playerSession, bettingRound, createDto);
-            case ACTION_TYPE_CALL -> callAction(playerSession, bettingRound, createDto);
-            case ACTION_TYPE_RAISE -> raiseAction(playerSession, bettingRound, createDto);
-            case ACTION_TYPE_ALL_IN -> allInAction(playerSession, bettingRound, createDto);
-            default -> throw new GamePlayerLogException(playerSession, "Unsupported action: " + createDto.getAction());
+    public PlayerAction onPlayerAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread, PlayerActionCommand command) {
+        return switch (command.getAction()) {
+            case ACTION_TYPE_FOLD -> foldAction(playerSession, bettingRound, command);
+            case ACTION_TYPE_CHECK -> checkAction(playerSession, bettingRound, command);
+            case ACTION_TYPE_BET -> betAction(playerSession, bettingRound, command);
+            case ACTION_TYPE_CALL -> callAction(playerSession, bettingRound, command);
+            case ACTION_TYPE_RAISE -> raiseAction(playerSession, bettingRound, command);
+            case ACTION_TYPE_ALL_IN -> allInAction(playerSession, bettingRound, command);
+            default -> throw new GamePlayerLogException(playerSession, "Unsupported action: " + command.getAction());
         };
     }
 

@@ -2,8 +2,8 @@ package com.twb.pokerapp.service.game.bot;
 
 import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.service.game.thread.impl.texas.dto.NextActionsDTO;
 import com.twb.pokerapp.service.game.thread.dto.PlayerActionCommand;
+import com.twb.pokerapp.service.game.thread.impl.texas.dto.NextActionsDTO;
 
 /**
  * Decides which action a bot player should take on its turn, in place of waiting

@@ -1,7 +1,7 @@
 package com.twb.pokerapp.service.game.eval;
 
 import com.twb.pokerapp.domain.Card;
-import com.twb.pokerapp.domain.poker.Ranks;
+import com.twb.pokerapp.mapper.enumeration.Ranks;
 import com.twb.pokerapp.proto.HandType;
 import com.twb.pokerapp.proto.RankType;
 import com.twb.pokerapp.proto.SuitType;

@@ -1,7 +1,7 @@
 package com.twb.pokerapp.service.game.thread.impl.texas;
 
 import com.twb.pokerapp.domain.*;
-import com.twb.pokerapp.domain.poker.HandTypeNames;
+import com.twb.pokerapp.mapper.enumeration.HandTypeNames;
 import com.twb.pokerapp.proto.HandType;
 import com.twb.pokerapp.repository.*;
 import com.twb.pokerapp.service.game.eval.HandEvaluator;

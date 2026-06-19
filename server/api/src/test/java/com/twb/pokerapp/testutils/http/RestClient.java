@@ -103,7 +103,9 @@ public class RestClient {
         return new ApiHttpResponse<>(response, result);
     }
 
-    /** Parse a binary protobuf body into the generated message type via its static {@code parseFrom(byte[])}. */
+    /**
+     * Parse a binary protobuf body into the generated message type via its static {@code parseFrom(byte[])}.
+     */
     @SuppressWarnings("unchecked")
     private <ResultBody> ResultBody parse(Class<ResultBody> resultClass, byte[] body) throws Exception {
         var parseFrom = resultClass.getMethod("parseFrom", byte[].class);

@@ -11,8 +11,8 @@ import com.twb.pokerapp.repository.PlayerActionRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.service.game.deck.DeckFactory;
 import com.twb.pokerapp.service.game.eval.RankEvaluator;
-import com.twb.pokerapp.service.game.thread.impl.texas.dto.NextActionsDTO;
 import com.twb.pokerapp.service.game.thread.dto.PlayerActionCommand;
+import com.twb.pokerapp.service.game.thread.impl.texas.dto.NextActionsDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -131,7 +131,7 @@ public class StubBotActionService implements BotActionService {
      * the pot odds, raising more often as equity climbs; fold otherwise (with the odd bluff-raise).
      */
     private PlayerActionCommand actWhenFacingBet(double equity, BigDecimal pot, BigDecimal callCost,
-                                                   BigDecimal funds, ActionType[] availableActions, Random random) {
+                                                 BigDecimal funds, ActionType[] availableActions, Random random) {
         var canCall = contains(availableActions, ActionType.ACTION_TYPE_CALL);
         var canRaise = contains(availableActions, ActionType.ACTION_TYPE_RAISE);
         var potOdds = potOdds(callCost, pot);

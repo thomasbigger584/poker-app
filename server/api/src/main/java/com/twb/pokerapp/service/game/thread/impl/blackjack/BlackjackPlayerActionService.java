@@ -24,7 +24,7 @@ public class BlackjackPlayerActionService extends GamePlayerActionService {
     // *****************************************************************************************
 
     @Override
-    public PlayerAction onPlayerAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread, PlayerActionCommand createDto) {
+    public PlayerAction onPlayerAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread, PlayerActionCommand command) {
         throw new NotImplementedException("Blackjack player actions not implemented yet");
     }
 

@@ -2,8 +2,8 @@ package com.twb.pokerapp.service.keycloak;
 
 import com.twb.pokerapp.configuration.Constants;
 import com.twb.pokerapp.domain.PhysicalUser;
-import com.twb.pokerapp.proto.TransactionHistoryType;
 import com.twb.pokerapp.mapper.UserMapper;
+import com.twb.pokerapp.proto.TransactionHistoryType;
 import com.twb.pokerapp.repository.UserRepository;
 import com.twb.pokerapp.service.TransactionHistoryService;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.UUID;
-import java.util.function.Predicate;
 
 @Slf4j
 @Component

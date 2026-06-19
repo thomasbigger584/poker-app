@@ -1,18 +1,8 @@
 package com.twb.pokerapp.testutils.validator;
 
 import com.twb.pokerapp.domain.*;
-import com.twb.pokerapp.proto.CardType;
-import com.twb.pokerapp.proto.ConnectionType;
-import com.twb.pokerapp.proto.SessionState;
 import com.twb.pokerapp.mapper.ProtoConvert;
-import com.twb.pokerapp.proto.AppUserDTO;
-import com.twb.pokerapp.proto.BettingRoundDTO;
-import com.twb.pokerapp.proto.CardDTO;
-import com.twb.pokerapp.proto.PlayerActionDTO;
-import com.twb.pokerapp.proto.PlayerSessionDTO;
-import com.twb.pokerapp.proto.RoundDTO;
-import com.twb.pokerapp.proto.ServerMessageDTO;
-import com.twb.pokerapp.proto.TableDTO;
+import com.twb.pokerapp.proto.*;
 import com.twb.pokerapp.testutils.game.params.scenario.ScenarioParams;
 import com.twb.pokerapp.testutils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.testutils.sql.SqlClient;

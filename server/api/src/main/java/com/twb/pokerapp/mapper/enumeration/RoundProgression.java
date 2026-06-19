@@ -1,4 +1,4 @@
-package com.twb.pokerapp.domain.poker;
+package com.twb.pokerapp.mapper.enumeration;
 
 import com.twb.pokerapp.proto.BettingRoundType;
 import com.twb.pokerapp.proto.RoundState;
@@ -19,7 +19,9 @@ public final class RoundProgression {
     private RoundProgression() {
     }
 
-    /** The next round state, or {@code null} for terminal states (FINISHED / FAILED). */
+    /**
+     * The next round state, or {@code null} for terminal states (FINISHED / FAILED).
+     */
     public static RoundState next(RoundState roundState) {
         return switch (roundState) {
             case ROUND_STATE_WAITING_FOR_PLAYERS -> ROUND_STATE_INIT_DEAL;
@@ -36,7 +38,9 @@ public final class RoundProgression {
         };
     }
 
-    /** The betting round type dealt for a state's betting phase, or empty for non-betting states. */
+    /**
+     * The betting round type dealt for a state's betting phase, or empty for non-betting states.
+     */
     public static Optional<BettingRoundType> bettingRoundType(RoundState roundState) {
         return switch (roundState) {
             case ROUND_STATE_INIT_DEAL_BET -> Optional.of(BETTING_ROUND_TYPE_DEAL);

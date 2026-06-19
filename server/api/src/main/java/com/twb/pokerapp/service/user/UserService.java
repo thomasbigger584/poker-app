@@ -3,10 +3,10 @@ package com.twb.pokerapp.service.user;
 import com.twb.pokerapp.configuration.Constants;
 import com.twb.pokerapp.domain.AppUser;
 import com.twb.pokerapp.domain.PhysicalUser;
-import com.twb.pokerapp.proto.TransactionHistoryType;
 import com.twb.pokerapp.mapper.ProtoConvert;
 import com.twb.pokerapp.mapper.UserMapper;
 import com.twb.pokerapp.proto.AppUserDTO;
+import com.twb.pokerapp.proto.TransactionHistoryType;
 import com.twb.pokerapp.proto.UserAmountDTO;
 import com.twb.pokerapp.repository.UserRepository;
 import com.twb.pokerapp.service.TransactionHistoryService;
@@ -94,7 +94,9 @@ public class UserService {
                 });
     }
 
-    /** Replaces the old {@code @NotNull @Positive} bean validation on the proto request body. */
+    /**
+     * Replaces the old {@code @NotNull @Positive} bean validation on the proto request body.
+     */
     private BigDecimal requirePositiveAmount(UserAmountDTO amountDto) {
         var amount = ProtoConvert.bigDecimal(amountDto.getAmount());
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {

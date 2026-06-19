@@ -1,7 +1,7 @@
 package com.twb.pokerapp.service.game.thread;
 
 import com.twb.pokerapp.domain.*;
-import com.twb.pokerapp.domain.poker.RoundProgression;
+import com.twb.pokerapp.mapper.enumeration.RoundProgression;
 import com.twb.pokerapp.proto.BettingRoundState;
 import com.twb.pokerapp.proto.ConnectionType;
 import com.twb.pokerapp.proto.RoundState;

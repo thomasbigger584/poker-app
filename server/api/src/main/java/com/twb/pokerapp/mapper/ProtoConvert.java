@@ -37,7 +37,9 @@ public final class ProtoConvert {
         return String.valueOf(value);
     }
 
-    /** Null-safe text: protobuf string setters reject null, so coalesce to the proto3 default "". */
+    /**
+     * Null-safe text: protobuf string setters reject null, so coalesce to the proto3 default "".
+     */
     public static String text(String value) {
         return value == null ? "" : value;
     }

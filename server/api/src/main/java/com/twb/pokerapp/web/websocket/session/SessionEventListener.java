@@ -1,6 +1,6 @@
 package com.twb.pokerapp.web.websocket.session;
 
-import com.twb.pokerapp.domain.poker.ConnectionTypes;
+import com.twb.pokerapp.mapper.enumeration.ConnectionTypes;
 import com.twb.pokerapp.proto.ConnectionType;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import lombok.RequiredArgsConstructor;

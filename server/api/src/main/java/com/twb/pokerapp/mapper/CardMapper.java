@@ -1,8 +1,8 @@
 package com.twb.pokerapp.mapper;
 
 import com.twb.pokerapp.domain.Card;
-import com.twb.pokerapp.domain.poker.Ranks;
-import com.twb.pokerapp.domain.poker.Suits;
+import com.twb.pokerapp.mapper.enumeration.Ranks;
+import com.twb.pokerapp.mapper.enumeration.Suits;
 import com.twb.pokerapp.proto.CardDTO;
 import org.springframework.stereotype.Component;
 

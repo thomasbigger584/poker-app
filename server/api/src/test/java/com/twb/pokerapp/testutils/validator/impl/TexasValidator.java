@@ -1,9 +1,8 @@
 package com.twb.pokerapp.testutils.validator.impl;
 
-import com.twb.pokerapp.domain.poker.CardGroups;
+import com.twb.pokerapp.mapper.enumeration.CardGroups;
 import com.twb.pokerapp.proto.CardType;
 import com.twb.pokerapp.proto.ConnectionType;
-import com.twb.pokerapp.mapper.ProtoConvert;
 import com.twb.pokerapp.proto.ServerMessageDTO;
 import com.twb.pokerapp.testutils.game.params.scenario.ScenarioParams;
 import com.twb.pokerapp.testutils.game.params.scenario.ScenarioPlayer;
@@ -18,7 +17,8 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Slf4j
 public class TexasValidator extends Validator {

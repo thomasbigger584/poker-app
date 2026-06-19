@@ -2,11 +2,7 @@ package com.twb.pokerapp.service.game.thread.impl;
 
 import com.twb.pokerapp.domain.AppUser;
 import com.twb.pokerapp.domain.Card;
-import com.twb.pokerapp.proto.CardType;
-import com.twb.pokerapp.proto.RoundState;
-import com.twb.pokerapp.proto.CreateTableDTO;
-import com.twb.pokerapp.proto.GameType;
-import com.twb.pokerapp.proto.TableDTO;
+import com.twb.pokerapp.proto.*;
 import com.twb.pokerapp.testutils.TestEnvironment;
 import com.twb.pokerapp.testutils.game.GameLatches;
 import com.twb.pokerapp.testutils.game.player.TestUserParams;

@@ -1,4 +1,4 @@
-package com.twb.pokerapp.domain.poker;
+package com.twb.pokerapp.mapper.enumeration;
 
 import com.twb.pokerapp.proto.RankType;
 
@@ -14,7 +14,9 @@ import static com.twb.pokerapp.proto.RankType.*;
  */
 public final class Ranks {
 
-    /** The 13 real ranks, low to high, excluding the proto {@code UNSPECIFIED} / {@code UNRECOGNIZED}. */
+    /**
+     * The 13 real ranks, low to high, excluding the proto {@code UNSPECIFIED} / {@code UNRECOGNIZED}.
+     */
     public static final RankType[] VALUES = {
             RANK_TYPE_DEUCE, RANK_TYPE_TREY, RANK_TYPE_FOUR, RANK_TYPE_FIVE, RANK_TYPE_SIX,
             RANK_TYPE_SEVEN, RANK_TYPE_EIGHT, RANK_TYPE_NINE, RANK_TYPE_TEN, RANK_TYPE_JACK,
@@ -42,7 +44,9 @@ public final class Ranks {
     private Ranks() {
     }
 
-    /** Zero-based rank index (DEUCE=0 .. ACE=12). The proto number is 1-based, so subtract one. */
+    /**
+     * Zero-based rank index (DEUCE=0 .. ACE=12). The proto number is 1-based, so subtract one.
+     */
     public static int position(RankType rank) {
         return rank.getNumber() - 1;
     }

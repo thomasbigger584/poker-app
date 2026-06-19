@@ -1,4 +1,4 @@
-package com.twb.pokerapp.domain.poker;
+package com.twb.pokerapp.mapper.enumeration;
 
 import com.twb.pokerapp.proto.SuitType;
 
@@ -14,7 +14,9 @@ import static com.twb.pokerapp.proto.SuitType.*;
  */
 public final class Suits {
 
-    /** The four real suits, excluding the proto {@code UNSPECIFIED} / {@code UNRECOGNIZED}. */
+    /**
+     * The four real suits, excluding the proto {@code UNSPECIFIED} / {@code UNRECOGNIZED}.
+     */
     public static final SuitType[] VALUES = {
             SUIT_TYPE_CLUBS, SUIT_TYPE_DIAMONDS, SUIT_TYPE_HEARTS, SUIT_TYPE_SPADES
     };
@@ -31,7 +33,9 @@ public final class Suits {
     private Suits() {
     }
 
-    /** Zero-based suit value (CLUBS=0 .. SPADES=3). The proto number is 1-based, so subtract one. */
+    /**
+     * Zero-based suit value (CLUBS=0 .. SPADES=3). The proto number is 1-based, so subtract one.
+     */
     public static int value(SuitType suit) {
         return suit.getNumber() - 1;
     }

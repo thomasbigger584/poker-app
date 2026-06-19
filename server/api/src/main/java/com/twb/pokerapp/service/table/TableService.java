@@ -2,14 +2,13 @@ package com.twb.pokerapp.service.table;
 
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.PokerTable;
-import com.twb.pokerapp.proto.GameType;
-import com.twb.pokerapp.mapper.ProtoConvert;
-import com.twb.pokerapp.service.game.GameStrategies;
 import com.twb.pokerapp.mapper.TableMapper;
 import com.twb.pokerapp.proto.AvailableTableDTO;
 import com.twb.pokerapp.proto.CreateTableDTO;
+import com.twb.pokerapp.proto.GameType;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.TableRepository;
+import com.twb.pokerapp.service.game.GameStrategies;
 import com.twb.pokerapp.web.exception.ValidationException;
 import com.twb.pokerapp.web.websocket.session.DisconnectGraceService;
 import lombok.RequiredArgsConstructor;

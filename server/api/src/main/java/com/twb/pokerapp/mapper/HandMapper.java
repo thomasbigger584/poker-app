@@ -1,7 +1,7 @@
 package com.twb.pokerapp.mapper;
 
 import com.twb.pokerapp.domain.Hand;
-import com.twb.pokerapp.domain.poker.HandTypeNames;
+import com.twb.pokerapp.mapper.enumeration.HandTypeNames;
 import com.twb.pokerapp.proto.HandDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

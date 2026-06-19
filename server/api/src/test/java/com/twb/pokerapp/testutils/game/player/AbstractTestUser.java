@@ -1,6 +1,6 @@
 package com.twb.pokerapp.testutils.game.player;
 
-import com.twb.pokerapp.domain.poker.ConnectionTypes;
+import com.twb.pokerapp.mapper.enumeration.ConnectionTypes;
 import com.twb.pokerapp.proto.ConnectionType;
 import com.twb.pokerapp.proto.CreateBotConnectionDTO;
 import com.twb.pokerapp.proto.CreatePlayerActionDTO;

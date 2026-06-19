@@ -1,8 +1,8 @@
 package com.twb.pokerapp.service.game.thread.impl.texas;
 
 import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.domain.poker.CardGroups;
-import com.twb.pokerapp.domain.poker.RoundProgression;
+import com.twb.pokerapp.mapper.enumeration.CardGroups;
+import com.twb.pokerapp.mapper.enumeration.RoundProgression;
 import com.twb.pokerapp.proto.CardType;
 import com.twb.pokerapp.proto.RoundState;
 import com.twb.pokerapp.service.game.thread.GameThread;
@@ -44,8 +44,8 @@ public class TexasGameThread extends GameThread {
     protected void onRunRound(RoundState roundState) {
         switch (roundState) {
             case ROUND_STATE_INIT_DEAL -> initDeal();
-            case ROUND_STATE_INIT_DEAL_BET, ROUND_STATE_FLOP_DEAL_BET, ROUND_STATE_TURN_DEAL_BET, ROUND_STATE_RIVER_DEAL_BET ->
-                    texasBettingRoundService.runBettingRound(this);
+            case ROUND_STATE_INIT_DEAL_BET, ROUND_STATE_FLOP_DEAL_BET, ROUND_STATE_TURN_DEAL_BET,
+                 ROUND_STATE_RIVER_DEAL_BET -> texasBettingRoundService.runBettingRound(this);
             case ROUND_STATE_FLOP_DEAL -> dealFlop();
             case ROUND_STATE_TURN_DEAL -> dealCommunityCard(CardType.CARD_TYPE_TURN_CARD);
             case ROUND_STATE_RIVER_DEAL -> dealCommunityCard(CardType.CARD_TYPE_RIVER_CARD);

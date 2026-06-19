@@ -1,11 +1,7 @@
 package com.twb.pokerapp.web.websocket;
 
-import com.twb.pokerapp.proto.ConnectionType;
 import com.twb.pokerapp.mapper.ProtoConvert;
-import com.twb.pokerapp.proto.CreateBotConnectionDTO;
-import com.twb.pokerapp.proto.CreateChatMessageDTO;
-import com.twb.pokerapp.proto.CreatePlayerActionDTO;
-import com.twb.pokerapp.proto.ServerMessageDTO;
+import com.twb.pokerapp.proto.*;
 import com.twb.pokerapp.service.game.TableGameService;
 import com.twb.pokerapp.service.game.thread.dto.PlayerActionCommand;
 import com.twb.pokerapp.web.exception.ValidationException;

@@ -1,7 +1,7 @@
 package com.twb.pokerapp.testutils.game.turn.impl;
 
-import com.twb.pokerapp.proto.BettingRoundType;
 import com.twb.pokerapp.proto.ActionType;
+import com.twb.pokerapp.proto.BettingRoundType;
 import com.twb.pokerapp.proto.CreatePlayerActionDTO;
 import com.twb.pokerapp.proto.PlayerTurnDTO;
 import com.twb.pokerapp.testutils.game.player.AbstractTestUser;

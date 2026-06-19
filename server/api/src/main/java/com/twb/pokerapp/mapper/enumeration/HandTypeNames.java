@@ -1,4 +1,4 @@
-package com.twb.pokerapp.domain.poker;
+package com.twb.pokerapp.mapper.enumeration;
 
 import com.twb.pokerapp.proto.HandType;
 
@@ -32,7 +32,9 @@ public final class HandTypeNames {
     private HandTypeNames() {
     }
 
-    /** The display name for a hand type, or {@code ""} for an unspecified/unknown value. */
+    /**
+     * The display name for a hand type, or {@code ""} for an unspecified/unknown value.
+     */
     public static String displayName(HandType handType) {
         return handType == null ? "" : NAMES.getOrDefault(handType, "");
     }

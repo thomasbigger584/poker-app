@@ -2,8 +2,8 @@ package com.twb.pokerapp.service.game.deck.shuffler.impl;
 
 import com.twb.pokerapp.domain.Card;
 import com.twb.pokerapp.domain.FixedScenario;
-import com.twb.pokerapp.domain.poker.Ranks;
-import com.twb.pokerapp.domain.poker.Suits;
+import com.twb.pokerapp.mapper.enumeration.Ranks;
+import com.twb.pokerapp.mapper.enumeration.Suits;
 import com.twb.pokerapp.proto.RankType;
 import com.twb.pokerapp.proto.SuitType;
 import com.twb.pokerapp.repository.FixedScenarioRepository;
