@@ -17,6 +17,7 @@ import com.twb.pokerapp.testutils.game.params.scenario.ScenarioParams;
 import com.twb.pokerapp.testutils.http.message.PlayersServerMessages;
 import com.twb.pokerapp.testutils.sql.SqlClient;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Comparator;
 import java.util.List;
@@ -212,12 +213,14 @@ public abstract class Validator {
         var appUser = appUserOpt.get();
         assertEquals(appUserId, appUser.getId().toString());
         assertEquals(appUserDto.getUsername(), appUser.getUsername());
-        assertEquals(appUserDto.getFirstName(), appUser.getFirstName());
-        assertEquals(appUserDto.getLastName(), appUser.getLastName());
+        // proto3 plain strings cannot be null: an absent name/email round-trips as "", so normalise
+        // the nullable entity values before comparing against the proto canonical empty string.
+        assertEquals(appUserDto.getFirstName(), StringUtils.defaultString(appUser.getFirstName()));
+        assertEquals(appUserDto.getLastName(), StringUtils.defaultString(appUser.getLastName()));
         assertEquals(appUserDto.getEnabled(), appUser.isEnabled());
         assertTrue(appUser.isEnabled());
         if (appUser instanceof PhysicalUser physicalUser) {
-            assertEquals(appUserDto.getEmail(), physicalUser.getEmail());
+            assertEquals(appUserDto.getEmail(), StringUtils.defaultString(physicalUser.getEmail()));
             assertEquals(appUserDto.getEmailVerified(), physicalUser.isEmailVerified());
         }
         return appUser;

@@ -160,13 +160,15 @@ public class StompClient {
 
     /**
      * Send a binary body (e.g. protobuf). Adds {@code content-length} so the server reads the exact
-     * bytes (binary bodies may contain NUL/newline) and tags the {@code content-type}.
+     * bytes (binary bodies may contain NUL/newline) and tags {@code content-type} as
+     * {@code application/octet-stream} — the single binary content type used across the wire (the
+     * server emits it outbound and the Spring test client requires it for binary framing).
      */
     public Completable send(String destination, byte[] data) {
         var headers = new ArrayList<StompHeader>();
         headers.add(new StompHeader(StompHeader.DESTINATION, destination));
         if (data != null) {
-            headers.add(new StompHeader(StompHeader.CONTENT_TYPE, "application/x-protobuf"));
+            headers.add(new StompHeader(StompHeader.CONTENT_TYPE, "application/octet-stream"));
             headers.add(new StompHeader(StompHeader.CONTENT_LENGTH, String.valueOf(data.length)));
         }
         return send(new StompMessage(StompCommand.SEND, headers, data));

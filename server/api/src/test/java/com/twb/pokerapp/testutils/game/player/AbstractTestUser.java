@@ -13,6 +13,7 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpHeaders;
 import org.springframework.messaging.simp.stomp.*;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
@@ -79,11 +80,17 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     public void connect(BigDecimal buyInAmount) throws InterruptedException {
         log.debug("Connecting {} to {}", params.getUsername(), params.getTable().getId());
         var url = URI.create(CONNECTION_URL);
+        var bearerToken = BEARER_PREFIX + getAccessToken();
+
+        // Authenticate the native WebSocket handshake itself (Spring Security gates /looping on the
+        // USER role), then repeat the token on the STOMP CONNECT frame for WebSocketAuthChannelInterceptor.
         var headers = new WebSocketHttpHeaders();
+        headers.add(HttpHeaders.AUTHORIZATION, bearerToken);
+
         var stompHeaders = new StompHeaders();
         stompHeaders.setHost("/");
 
-        stompHeaders.add(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken());
+        stompHeaders.add(HttpHeaders.AUTHORIZATION, bearerToken);
         stompHeaders.put(HEADER_CONNECTION_TYPE, Collections.singletonList(getConnectionType().toString()));
         if (getConnectionType() == ConnectionType.PLAYER && buyInAmount != null) {
             stompHeaders.put(HEADER_BUYIN_AMOUNT, Collections.singletonList(buyInAmount.toString()));
@@ -272,6 +279,9 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         var headers = new StompHeaders();
         headers.setDestination(destination);
         headers.setReceipt("receipt-" + params.getUsername() + "-send-" + UUID.randomUUID());
+        // octet-stream forces a binary WebSocket frame (see ProtobufMessageConverter) so the binary
+        // protobuf body is not UTF-8-mangled by text framing.
+        headers.setContentType(MimeTypeUtils.APPLICATION_OCTET_STREAM);
 
         var receiptable = session.send(headers, dto);
         receiptable.addReceiptTask(() -> log.debug("Receipt received for user {} destination {}", params.getUsername(), destination));
