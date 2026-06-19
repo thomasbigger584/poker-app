@@ -1,4 +1,4 @@
-package com.twb.pokerapp.mapper.enumeration;
+package com.twb.pokerapp.service.game.round;
 
 import com.twb.pokerapp.proto.BettingRoundType;
 import com.twb.pokerapp.proto.RoundState;

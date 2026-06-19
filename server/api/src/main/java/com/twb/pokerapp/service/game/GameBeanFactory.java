@@ -24,9 +24,9 @@ import org.springframework.context.ApplicationContext;
  *
  * <p>To add a game variant, add a proto {@code GameType} value and a branch in each switch.
  */
-public final class GameStrategies {
+public final class GameBeanFactory {
 
-    private GameStrategies() {
+    private GameBeanFactory() {
     }
 
     public static int minPlayers(GameType gameType) {

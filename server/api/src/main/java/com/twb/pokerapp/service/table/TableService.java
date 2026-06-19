@@ -8,7 +8,7 @@ import com.twb.pokerapp.proto.CreateTableDTO;
 import com.twb.pokerapp.proto.GameType;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.TableRepository;
-import com.twb.pokerapp.service.game.GameStrategies;
+import com.twb.pokerapp.service.game.GameBeanFactory;
 import com.twb.pokerapp.web.exception.ValidationException;
 import com.twb.pokerapp.web.websocket.session.DisconnectGraceService;
 import lombok.RequiredArgsConstructor;
@@ -56,7 +56,7 @@ public class TableService {
         if (dto.getGameTypeValue() <= 0) {
             throw new ValidationException("gameType", "Game Type is required");
         }
-        GameStrategies.validationService(gameType, context).validate(dto);
+        GameBeanFactory.validationService(gameType, context).validate(dto);
         var table = mapper.createDtoToModel(dto);
         table = repository.save(table);
         return table;

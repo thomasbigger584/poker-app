@@ -1,4 +1,4 @@
-package com.twb.pokerapp.service.game;
+package com.twb.pokerapp.service.game.round;
 
 import com.twb.pokerapp.mapper.*;
 import com.twb.pokerapp.proto.DealPlayerCardDTO;

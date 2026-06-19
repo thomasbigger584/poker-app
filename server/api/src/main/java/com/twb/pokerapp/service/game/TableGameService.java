@@ -11,6 +11,7 @@ import com.twb.pokerapp.repository.TableRepository;
 import com.twb.pokerapp.repository.UserRepository;
 import com.twb.pokerapp.service.game.exception.GamePlayerErrorLogException;
 import com.twb.pokerapp.service.game.exception.GamePlayerLogException;
+import com.twb.pokerapp.service.game.round.RoundStateService;
 import com.twb.pokerapp.service.game.thread.GameLogService;
 import com.twb.pokerapp.service.game.thread.GameThreadManager;
 import com.twb.pokerapp.service.game.thread.dto.PlayerActionCommand;
@@ -132,7 +133,7 @@ public class TableGameService {
                     if (playerTurnLatch == null || !username.equals(playerTurnLatch.playerSession().getUser().getUsername())) {
                         throw new GamePlayerLogException(playerSession, "Not waiting for you to play on table");
                     }
-                    var playerActionService = GameStrategies.playerActionService(table.getGameType(), context);
+                    var playerActionService = GameBeanFactory.playerActionService(table.getGameType(), context);
                     playerActionService.playerAction(playerSession, gameThread, action);
                 });
             } catch (GamePlayerLogException e) {
@@ -179,7 +180,7 @@ public class TableGameService {
                         var playerTurnLatch = gameThread.getPlayerTurnLatch();
                         if (playerTurnLatch != null && username.equals(playerTurnLatch.playerSession().getUser().getUsername())) {
                             bettingRoundRepository.findCurrentByTableId(tableId).ifPresent(bettingRound ->
-                                    GameStrategies.playerActionService(table.getGameType(), context)
+                                    GameBeanFactory.playerActionService(table.getGameType(), context)
                                             .onExecuteAutoAction(playerSession, bettingRound, gameThread));
                         }
                     });

@@ -2,7 +2,7 @@ package com.twb.pokerapp.service.game.thread.impl.texas;
 
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.mapper.enumeration.CardGroups;
-import com.twb.pokerapp.mapper.enumeration.RoundProgression;
+import com.twb.pokerapp.service.game.round.RoundProgression;
 import com.twb.pokerapp.proto.CardType;
 import com.twb.pokerapp.proto.RoundState;
 import com.twb.pokerapp.service.game.thread.GameThread;
