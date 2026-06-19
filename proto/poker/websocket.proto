@@ -2,7 +2,9 @@ syntax = "proto3";
 
 package poker;
 
-import "poker/common.proto";
+import "poker/enums.proto";
+import "poker/domain.proto";
+import "poker/validation.proto";
 
 option java_package = "com.twb.pokerapp.proto";
 option java_multiple_files = true;
