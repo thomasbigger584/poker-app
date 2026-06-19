@@ -2,8 +2,8 @@ package com.twb.pokerapp.service.game;
 
 import com.antkorwin.xsync.XSync;
 import com.twb.pokerapp.domain.PhysicalUser;
-import com.twb.pokerapp.domain.enumeration.ConnectionType;
-import com.twb.pokerapp.domain.enumeration.SessionState;
+import com.twb.pokerapp.proto.ConnectionType;
+import com.twb.pokerapp.proto.SessionState;
 import com.twb.pokerapp.repository.BettingRoundRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.TableRepository;
@@ -58,7 +58,7 @@ public class TableGameService {
                 // buy-in/funds validation (the reconnecting client may not even send a buy-in).
                 var playerSessionOpt = playerSessionRepository.findByTableIdAndUsername(tableId, username);
                 var alreadyConnected = playerSessionOpt.isPresent()
-                        && playerSessionOpt.get().getSessionState() == SessionState.CONNECTED;
+                        && playerSessionOpt.get().getSessionState() == SessionState.SESSION_STATE_CONNECTED;
                 if (!alreadyConnected) {
                     // A reconnect that finds no live session lost its seat (grace window expired) —
                     // reject it rather than silently buying the player back in. The client surfaces
@@ -67,20 +67,20 @@ public class TableGameService {
                         throw new GamePlayerErrorLogException(
                                 "Your seat is no longer available — the reconnect window expired. Please connect again.");
                     }
-                    if (connectionType == ConnectionType.PLAYER) {
+                    if (connectionType == ConnectionType.CONNECTION_TYPE_PLAYER) {
                         if (buyInAmount.compareTo(table.getMinBuyin()) < 0 || buyInAmount.compareTo(table.getMaxBuyin()) > 0) {
                             var message = "Buy-In amount must be between $%.2f and $%.2f for table %s".formatted(table.getMinBuyin(), table.getMaxBuyin(), tableId);
                             throw new GamePlayerErrorLogException(message);
                         }
                     }
                     var user = getThrowPlayerErrorLog(userRepository.findByUsername(username), "Failed to connect user %s to table %s as user not found".formatted(username, tableId));
-                    if (connectionType == ConnectionType.PLAYER && user instanceof PhysicalUser physicalUser) {
+                    if (connectionType == ConnectionType.CONNECTION_TYPE_PLAYER && user instanceof PhysicalUser physicalUser) {
                         if (buyInAmount.compareTo(physicalUser.getTotalFunds()) > 0) {
                             var message = "User %s does not have enough total funds for Buy-In $%.2f, has $%.2f".formatted(username, buyInAmount, physicalUser.getTotalFunds());
                             throw new GamePlayerErrorLogException(message);
                         }
                     }
-                    if (connectionType == ConnectionType.PLAYER) {
+                    if (connectionType == ConnectionType.CONNECTION_TYPE_PLAYER) {
                         threadManager.createIfNotExist(table);
                     }
                     var playerSession = playerSessionService.connectUserToRound(table, user, connectionType, buyInAmount);
@@ -110,7 +110,7 @@ public class TableGameService {
             if (playerSessionOpt.isEmpty()) {
                 // Check if a game thread exists before connecting the bot
                 var ignored = getThrowPlayerErrorLog(threadManager.getIfExists(tableId), "No game thread exists for table %s. Cannot connect bot.".formatted(tableId));
-                var playerSession = playerSessionService.connectUserToRound(table, botUser, ConnectionType.PLAYER, buyInAmount);
+                var playerSession = playerSessionService.connectUserToRound(table, botUser, ConnectionType.CONNECTION_TYPE_PLAYER, buyInAmount);
                 afterCommit(() -> dispatcher.send(tableId, messageFactory.playerConnected(playerSession)));
             } else {
                 log.debug("Bot user {} already connected to table {}", botUserId, tableId);
@@ -124,7 +124,7 @@ public class TableGameService {
                 writeTx.executeWithoutResult(status -> {
                     var table = getThrowPlayerErrorLog(tableRepository.findById(tableId), "No table found for Table ID: " + tableId);
                     var playerSession = getThrowPlayerErrorLog(playerSessionRepository.findByTableIdAndUsername(tableId, username), "Your session is not found on table %s".formatted(tableId));
-                    if (playerSession.getConnectionType() == ConnectionType.LISTENER) {
+                    if (playerSession.getConnectionType() == ConnectionType.CONNECTION_TYPE_LISTENER) {
                         throw new GamePlayerLogException(playerSession, "You are a listener on table, cannot perform actions");
                     }
                     var gameThread = getThrowPlayerErrorLog(threadManager.getIfExists(tableId), playerSession, "No game thread exists for table %s".formatted(tableId));
@@ -132,7 +132,7 @@ public class TableGameService {
                     if (playerTurnLatch == null || !username.equals(playerTurnLatch.playerSession().getUser().getUsername())) {
                         throw new GamePlayerLogException(playerSession, "Not waiting for you to play on table");
                     }
-                    var playerActionService = table.getGameType().getPlayerActionService(context);
+                    var playerActionService = GameStrategies.playerActionService(table.getGameType(), context);
                     playerActionService.playerAction(playerSession, gameThread, action);
                 });
             } catch (GamePlayerLogException e) {
@@ -165,7 +165,7 @@ public class TableGameService {
                     return false;
                 }
                 var playerSession = playerSessionOpt.get();
-                var wasPlayer = playerSession.getConnectionType() == ConnectionType.PLAYER;
+                var wasPlayer = playerSession.getConnectionType() == ConnectionType.CONNECTION_TYPE_PLAYER;
 
                 playerSessionService.disconnectUser(playerSession);
 
@@ -179,7 +179,7 @@ public class TableGameService {
                         var playerTurnLatch = gameThread.getPlayerTurnLatch();
                         if (playerTurnLatch != null && username.equals(playerTurnLatch.playerSession().getUser().getUsername())) {
                             bettingRoundRepository.findCurrentByTableId(tableId).ifPresent(bettingRound ->
-                                    table.getGameType().getPlayerActionService(context)
+                                    GameStrategies.playerActionService(table.getGameType(), context)
                                             .onExecuteAutoAction(playerSession, bettingRound, gameThread));
                         }
                     });

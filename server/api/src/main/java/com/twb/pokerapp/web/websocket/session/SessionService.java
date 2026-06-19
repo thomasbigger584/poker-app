@@ -1,6 +1,6 @@
 package com.twb.pokerapp.web.websocket.session;
 
-import com.twb.pokerapp.domain.enumeration.ConnectionType;
+import com.twb.pokerapp.proto.ConnectionType;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 

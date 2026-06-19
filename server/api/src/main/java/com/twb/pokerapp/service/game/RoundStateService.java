@@ -82,7 +82,7 @@ public class RoundStateService {
         }
 
         cardRepository.findCommunityCardsForRound(round.getId()).stream()
-                .sorted(Comparator.comparingInt(card -> card.getCardType().ordinal()))
+                .sorted(Comparator.comparingInt(card -> card.getCardType().getNumber()))
                 .forEach(card -> builder.addCommunityCards(cardMapper.modelToDto(card)));
 
         bettingRoundRepository.findCurrentByRoundId(round.getId())

@@ -1,7 +1,6 @@
 package com.twb.pokerapp.testutils.game.turn.impl;
 
-import com.twb.pokerapp.domain.enumeration.BettingRoundType;
-import com.twb.pokerapp.mapper.ProtoConvert;
+import com.twb.pokerapp.proto.BettingRoundType;
 import com.twb.pokerapp.proto.ActionType;
 import com.twb.pokerapp.proto.CreatePlayerActionDTO;
 import com.twb.pokerapp.proto.PlayerTurnDTO;
@@ -27,10 +26,10 @@ public class FixedScenarioTurnHandler implements TurnHandler {
                                     String riverActionsStr
     ) {
         this.bettingRoundActions = new EnumMap<>(BettingRoundType.class);
-        parseRound(username, preFlopActionsStr, BettingRoundType.DEAL);
-        parseRound(username, flopActionsStr, BettingRoundType.FLOP);
-        parseRound(username, turnActionsStr, BettingRoundType.TURN);
-        parseRound(username, riverActionsStr, BettingRoundType.RIVER);
+        parseRound(username, preFlopActionsStr, BettingRoundType.BETTING_ROUND_TYPE_DEAL);
+        parseRound(username, flopActionsStr, BettingRoundType.BETTING_ROUND_TYPE_FLOP);
+        parseRound(username, turnActionsStr, BettingRoundType.BETTING_ROUND_TYPE_TURN);
+        parseRound(username, riverActionsStr, BettingRoundType.BETTING_ROUND_TYPE_RIVER);
     }
 
     private void parseRound(String username, String playerActionStr, BettingRoundType bettingRoundType) {
@@ -60,7 +59,7 @@ public class FixedScenarioTurnHandler implements TurnHandler {
 
     @Override
     public void handle(AbstractTestUser user, StompHeaders headers, PlayerTurnDTO playerTurn) {
-        var bettingRoundType = ProtoConvert.toModel(playerTurn.getBettingRound().getType());
+        var bettingRoundType = playerTurn.getBettingRound().getType();
         var actions = bettingRoundActions.get(bettingRoundType);
         if (actions == null || actions.isEmpty()) {
             throw new IllegalStateException("No action defined for " + bettingRoundType + " for user " + user.getUsername());

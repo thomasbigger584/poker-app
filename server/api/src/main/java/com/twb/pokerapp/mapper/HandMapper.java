@@ -1,6 +1,7 @@
 package com.twb.pokerapp.mapper;
 
 import com.twb.pokerapp.domain.Hand;
+import com.twb.pokerapp.domain.poker.HandTypeNames;
 import com.twb.pokerapp.proto.HandDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -15,10 +16,10 @@ public class HandMapper {
             return null;
         }
         var builder = HandDTO.newBuilder()
-                .setId(ProtoConvert.uuidStr(model.getId()))
-                .setHandType(ProtoConvert.toProto(model.getHandType()));
+                .setId(ProtoConvert.uuidStr(model.getId()));
         if (model.getHandType() != null) {
-            builder.setHandTypeStr(ProtoConvert.text(model.getHandType().getValue()));
+            builder.setHandType(model.getHandType());
+            builder.setHandTypeStr(ProtoConvert.text(HandTypeNames.displayName(model.getHandType())));
         }
         if (model.getCards() != null) {
             model.getCards().forEach(card -> builder.addCards(cardMapper.modelToDto(card)));

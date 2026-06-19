@@ -1,6 +1,7 @@
 package com.twb.pokerapp.web.websocket.session;
 
-import com.twb.pokerapp.domain.enumeration.ConnectionType;
+import com.twb.pokerapp.domain.poker.ConnectionTypes;
+import com.twb.pokerapp.proto.ConnectionType;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,17 +45,17 @@ public class SessionEventListener {
         sessionService.putReconnect(headerAccessor, reconnect);
 
         if (CollectionUtils.isNotEmpty(connectionTypeHeader)) {
-            var connectionType = ConnectionType.valueOf(connectionTypeHeader.getFirst());
+            var connectionType = ConnectionTypes.fromWire(connectionTypeHeader.getFirst());
             sessionService.putConnectionType(headerAccessor, connectionType);
 
-            if (connectionType == ConnectionType.PLAYER) {
+            if (connectionType == ConnectionType.CONNECTION_TYPE_PLAYER) {
                 if (buyInAmountHeader != null && !buyInAmountHeader.isEmpty()) {
                     var buyInAmount = new BigDecimal(buyInAmountHeader.getFirst());
                     sessionService.putBuyInAmount(headerAccessor, buyInAmount);
                 }
             }
         } else {
-            sessionService.putConnectionType(headerAccessor, ConnectionType.LISTENER);
+            sessionService.putConnectionType(headerAccessor, ConnectionType.CONNECTION_TYPE_LISTENER);
         }
     }
 

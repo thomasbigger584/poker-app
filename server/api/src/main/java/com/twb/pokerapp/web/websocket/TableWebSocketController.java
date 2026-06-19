@@ -1,6 +1,6 @@
 package com.twb.pokerapp.web.websocket;
 
-import com.twb.pokerapp.domain.enumeration.ConnectionType;
+import com.twb.pokerapp.proto.ConnectionType;
 import com.twb.pokerapp.mapper.ProtoConvert;
 import com.twb.pokerapp.proto.CreateBotConnectionDTO;
 import com.twb.pokerapp.proto.CreateChatMessageDTO;
@@ -133,8 +133,8 @@ public class TableWebSocketController {
                                  StompHeaderAccessor headerAccessor,
                                  @DestinationVariable(TABLE_ID) UUID tableId,
                                  @Payload CreatePlayerActionDTO action) {
-        var actionType = ProtoConvert.toModel(action.getAction());
-        if (actionType == null) {
+        var actionType = action.getAction();
+        if (action.getActionValue() <= 0) {
             throw new ValidationException("action", "Action cannot be null");
         }
         var amount = ProtoConvert.bigDecimal(action.getAmount());
@@ -164,7 +164,7 @@ public class TableWebSocketController {
     // *****************************************************************************************
 
     private ConnectionType getConnectionType(StompHeaderAccessor headerAccessor) {
-        return sessionService.getConnectionType(headerAccessor).orElse(ConnectionType.LISTENER);
+        return sessionService.getConnectionType(headerAccessor).orElse(ConnectionType.CONNECTION_TYPE_LISTENER);
     }
 
     private BigDecimal getBuyInAmount(StompHeaderAccessor headerAccessor) {

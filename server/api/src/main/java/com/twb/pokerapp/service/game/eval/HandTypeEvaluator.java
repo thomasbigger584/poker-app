@@ -1,9 +1,10 @@
 package com.twb.pokerapp.service.game.eval;
 
 import com.twb.pokerapp.domain.Card;
-import com.twb.pokerapp.domain.enumeration.HandType;
-import com.twb.pokerapp.domain.enumeration.RankType;
-import com.twb.pokerapp.domain.enumeration.SuitType;
+import com.twb.pokerapp.domain.poker.Ranks;
+import com.twb.pokerapp.proto.HandType;
+import com.twb.pokerapp.proto.RankType;
+import com.twb.pokerapp.proto.SuitType;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
 
@@ -31,31 +32,31 @@ public class HandTypeEvaluator {
      */
     public HandType evaluate(List<Card> cards) {
         if (cards == null || cards.isEmpty()) {
-            return HandType.EMPTY_HAND;
+            return HandType.HAND_TYPE_EMPTY_HAND;
         }
 
         var analysis = new HandAnalysis(cards);
 
         if (isRoyalFlush(analysis)) {
-            return HandType.ROYAL_FLUSH;
+            return HandType.HAND_TYPE_ROYAL_FLUSH;
         } else if (isStraightFlush(analysis)) {
-            return HandType.STRAIGHT_FLUSH;
+            return HandType.HAND_TYPE_STRAIGHT_FLUSH;
         } else if (isFourOfAKind(analysis)) {
-            return HandType.FOUR_OF_A_KIND;
+            return HandType.HAND_TYPE_FOUR_OF_A_KIND;
         } else if (isFullHouse(analysis)) {
-            return HandType.FULL_HOUSE;
+            return HandType.HAND_TYPE_FULL_HOUSE;
         } else if (isFlush(analysis)) {
-            return HandType.FLUSH;
+            return HandType.HAND_TYPE_FLUSH;
         } else if (isStraight(analysis)) {
-            return HandType.STRAIGHT;
+            return HandType.HAND_TYPE_STRAIGHT;
         } else if (isThreeOfAKind(analysis)) {
-            return HandType.THREE_OF_A_KIND;
+            return HandType.HAND_TYPE_THREE_OF_A_KIND;
         } else if (isTwoPair(analysis)) {
-            return HandType.TWO_PAIR;
+            return HandType.HAND_TYPE_TWO_PAIR;
         } else if (isPair(analysis)) {
-            return HandType.PAIR;
+            return HandType.HAND_TYPE_PAIR;
         } else {
-            return HandType.HIGH_CARD;
+            return HandType.HAND_TYPE_HIGH_CARD;
         }
     }
 
@@ -197,7 +198,7 @@ public class HandTypeEvaluator {
         var uniqueRanks = analysis.getRankCounts().keySet();
 
         var sortedRanks = new ArrayList<>(uniqueRanks);
-        sortedRanks.sort(Comparator.comparingInt(RankType::getPosition));
+        sortedRanks.sort(Comparator.comparingInt(Ranks::position));
 
         for (var index = 0; index <= sortedRanks.size() - FIVE_CARDS_NEEDED; index++) {
             var potentialStraight = sortedRanks.subList(index, index + FIVE_CARDS_NEEDED);
@@ -207,9 +208,9 @@ public class HandTypeEvaluator {
         }
 
         // Check for Ace-low straight (A, 2, 3, 4, 5)
-        if (uniqueRanks.containsAll(HandAnalysis.PARTIAL_LOWER_STRAIGHT) && uniqueRanks.contains(RankType.ACE)) {
+        if (uniqueRanks.containsAll(HandAnalysis.PARTIAL_LOWER_STRAIGHT) && uniqueRanks.contains(RankType.RANK_TYPE_ACE)) {
             var lowAceStraight = new ArrayList<>(HandAnalysis.PARTIAL_LOWER_STRAIGHT);
-            lowAceStraight.add(RankType.ACE);
+            lowAceStraight.add(RankType.RANK_TYPE_ACE);
             return Optional.of(lowAceStraight);
         }
 
@@ -226,8 +227,8 @@ public class HandTypeEvaluator {
      */
     private boolean isConsecutive(List<RankType> ranks) {
         for (var index = 1; index < ranks.size(); index++) {
-            var position = ranks.get(index).getPosition();
-            var prevPosition = ranks.get(index - 1).getPosition();
+            var position = Ranks.position(ranks.get(index));
+            var prevPosition = Ranks.position(ranks.get(index - 1));
             if (position != prevPosition + 1) {
                 return false;
             }
@@ -292,9 +293,9 @@ public class HandTypeEvaluator {
     @Getter
     private static class HandAnalysis {
         private static final List<RankType> PARTIAL_LOWER_STRAIGHT =
-                List.of(RankType.DEUCE, RankType.TREY, RankType.FOUR, RankType.FIVE);
+                List.of(RankType.RANK_TYPE_DEUCE, RankType.RANK_TYPE_TREY, RankType.RANK_TYPE_FOUR, RankType.RANK_TYPE_FIVE);
         private static final List<RankType> ROYAL_FLUSH_RANKS =
-                List.of(RankType.TEN, RankType.JACK, RankType.QUEEN, RankType.KING, RankType.ACE);
+                List.of(RankType.RANK_TYPE_TEN, RankType.RANK_TYPE_JACK, RankType.RANK_TYPE_QUEEN, RankType.RANK_TYPE_KING, RankType.RANK_TYPE_ACE);
 
 
         private final List<Card> originalCards;

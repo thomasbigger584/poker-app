@@ -1,6 +1,7 @@
 package com.twb.pokerapp.service.game.thread.impl.texas.bettinground;
 
-import com.twb.pokerapp.domain.enumeration.GameType;
+import com.twb.pokerapp.proto.GameType;
+import com.twb.pokerapp.service.game.GameStrategies;
 import com.twb.pokerapp.service.game.thread.GameThread;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,8 +15,7 @@ public class TexasBettingRoundService {
     private final ApplicationContext context;
 
     public void runBettingRound(GameThread gameThread) {
-        var service = GameType.TEXAS_HOLDEM
-                .getPlayerTurnService(context, gameThread);
+        var service = GameStrategies.playerTurnService(GameType.GAME_TYPE_TEXAS_HOLDEM, context, gameThread);
         try {
             boolean shouldContinue;
             do {

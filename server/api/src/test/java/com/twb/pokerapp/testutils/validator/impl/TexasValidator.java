@@ -1,7 +1,8 @@
 package com.twb.pokerapp.testutils.validator.impl;
 
-import com.twb.pokerapp.domain.enumeration.CardType;
-import com.twb.pokerapp.domain.enumeration.ConnectionType;
+import com.twb.pokerapp.domain.poker.CardGroups;
+import com.twb.pokerapp.proto.CardType;
+import com.twb.pokerapp.proto.ConnectionType;
 import com.twb.pokerapp.mapper.ProtoConvert;
 import com.twb.pokerapp.proto.ServerMessageDTO;
 import com.twb.pokerapp.testutils.game.params.scenario.ScenarioParams;
@@ -70,7 +71,7 @@ public class TexasValidator extends Validator {
 
             var playerSessionDto = payload.getPlayerSession();
             assertTrue(playerSessionDto.getDealer());
-            assertEquals(ConnectionType.PLAYER, ProtoConvert.toModel(playerSessionDto.getConnectionType()));
+            assertEquals(ConnectionType.CONNECTION_TYPE_PLAYER, playerSessionDto.getConnectionType());
             assertPlayerSession(playerSessionDto);
         });
     }
@@ -89,7 +90,7 @@ public class TexasValidator extends Validator {
             assertPlayerSession(payload.getPlayerSession());
 
             var cardDto = payload.getCard();
-            var cardType = index <= (noCardsDealt / 2) ? CardType.PLAYER_CARD_1 : CardType.PLAYER_CARD_2;
+            var cardType = index <= (noCardsDealt / 2) ? CardType.CARD_TYPE_PLAYER_CARD_1 : CardType.CARD_TYPE_PLAYER_CARD_2;
             assertCard(cardDto, cardType);
         }
     }
@@ -97,9 +98,9 @@ public class TexasValidator extends Validator {
     private void assertDealCommunity(List<ServerMessageDTO> listenerMessages) {
         var messages = get(listenerMessages, ServerMessageDTO.PayloadCase.DEAL_COMMUNITY);
 
-        var expectedCommunityCards = new ArrayList<>(Arrays.stream(CardType.FLOP_CARDS).toList());
-        expectedCommunityCards.add(CardType.TURN_CARD);
-        expectedCommunityCards.add(CardType.RIVER_CARD);
+        var expectedCommunityCards = new ArrayList<>(Arrays.stream(CardGroups.FLOP_CARDS).toList());
+        expectedCommunityCards.add(CardType.CARD_TYPE_TURN_CARD);
+        expectedCommunityCards.add(CardType.CARD_TYPE_RIVER_CARD);
 
         var noCardsDealt = expectedCommunityCards.size();
 

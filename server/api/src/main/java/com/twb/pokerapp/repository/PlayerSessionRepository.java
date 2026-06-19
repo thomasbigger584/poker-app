@@ -1,7 +1,7 @@
 package com.twb.pokerapp.repository;
 
 import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.domain.enumeration.ConnectionType;
+import com.twb.pokerapp.proto.ConnectionType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -36,7 +36,7 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             SELECT s
             FROM PlayerSession s
             WHERE s.pokerTable.id = :tableId
-            AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
+            AND s.sessionState = com.twb.pokerapp.proto.SessionState.SESSION_STATE_CONNECTED
             ORDER BY s.position ASC
             """)
     List<PlayerSession> findConnectedByTableId(@Param("tableId") UUID tableId);
@@ -45,7 +45,7 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             SELECT s
             FROM PlayerSession s
             WHERE s.user.username = :username
-            AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
+            AND s.sessionState = com.twb.pokerapp.proto.SessionState.SESSION_STATE_CONNECTED
             """)
     List<PlayerSession> findConnectedByUsername(@Param("username") String username);
 
@@ -53,8 +53,8 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             SELECT s
             FROM PlayerSession s
             WHERE s.pokerTable.id = :tableId
-            AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
-            AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
+            AND s.sessionState = com.twb.pokerapp.proto.SessionState.SESSION_STATE_CONNECTED
+            AND s.connectionType = com.twb.pokerapp.proto.ConnectionType.CONNECTION_TYPE_PLAYER
             AND s.funds IS NOT NULL AND s.funds > 0
             ORDER BY s.position ASC
             """)
@@ -64,8 +64,8 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             SELECT count(s)
             FROM PlayerSession s
             WHERE s.pokerTable.id = :tableId
-            AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
-            AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
+            AND s.sessionState = com.twb.pokerapp.proto.SessionState.SESSION_STATE_CONNECTED
+            AND s.connectionType = com.twb.pokerapp.proto.ConnectionType.CONNECTION_TYPE_PLAYER
             AND s.funds IS NOT NULL AND s.funds > 0
             """)
     int countConnectedPlayersByTableId(@Param("tableId") UUID tableId);
@@ -73,7 +73,7 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
     @Query("""
             SELECT count(s)
             FROM PlayerSession s
-            WHERE s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
+            WHERE s.sessionState = com.twb.pokerapp.proto.SessionState.SESSION_STATE_CONNECTED
             AND s.connectionType = :connectionType
             """)
     int countConnected(@Param("connectionType") ConnectionType connectionType);
@@ -82,8 +82,8 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             SELECT count(s)
             FROM PlayerSession s
             WHERE s.pokerTable.id = :tableId
-            AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
-            AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
+            AND s.sessionState = com.twb.pokerapp.proto.SessionState.SESSION_STATE_CONNECTED
+            AND s.connectionType = com.twb.pokerapp.proto.ConnectionType.CONNECTION_TYPE_PLAYER
             AND TYPE(s.user) = com.twb.pokerapp.domain.PhysicalUser
             """)
     int countConnectedPhysicalPlayersByTableId(@Param("tableId") UUID tableId);
@@ -92,8 +92,8 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
             SELECT s
             FROM PlayerSession s
             WHERE s.pokerTable.id = :tableId
-            AND s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
-            AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
+            AND s.sessionState = com.twb.pokerapp.proto.SessionState.SESSION_STATE_CONNECTED
+            AND s.connectionType = com.twb.pokerapp.proto.ConnectionType.CONNECTION_TYPE_PLAYER
             AND s.round.id = :roundId
             AND s.active = true
             ORDER BY s.position ASC
@@ -104,8 +104,8 @@ public interface PlayerSessionRepository extends JpaRepository<PlayerSession, UU
     @Query("""
             SELECT s
             FROM PlayerSession s
-            WHERE s.sessionState = com.twb.pokerapp.domain.enumeration.SessionState.CONNECTED
-            AND s.connectionType = com.twb.pokerapp.domain.enumeration.ConnectionType.PLAYER
+            WHERE s.sessionState = com.twb.pokerapp.proto.SessionState.SESSION_STATE_CONNECTED
+            AND s.connectionType = com.twb.pokerapp.proto.ConnectionType.CONNECTION_TYPE_PLAYER
             AND s.round.id = :roundId
             ORDER BY s.position ASC
             """)

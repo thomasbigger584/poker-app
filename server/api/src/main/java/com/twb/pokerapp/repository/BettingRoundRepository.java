@@ -16,7 +16,7 @@ public interface BettingRoundRepository extends JpaRepository<BettingRound, UUID
     @Query("""
             SELECT b
             FROM BettingRound b
-            WHERE b.state = com.twb.pokerapp.domain.enumeration.BettingRoundState.IN_PROGRESS
+            WHERE b.state = com.twb.pokerapp.proto.BettingRoundState.BETTING_ROUND_STATE_IN_PROGRESS
             """)
     List<BettingRound> findAllCurrent();
 
@@ -24,7 +24,7 @@ public interface BettingRoundRepository extends JpaRepository<BettingRound, UUID
             SELECT b
             FROM BettingRound b
             WHERE b.round.pokerTable.id = :tableId
-            AND b.state = com.twb.pokerapp.domain.enumeration.BettingRoundState.IN_PROGRESS
+            AND b.state = com.twb.pokerapp.proto.BettingRoundState.BETTING_ROUND_STATE_IN_PROGRESS
             """)
     Optional<BettingRound> findCurrentByTableId(@Param("tableId") UUID tableId);
 
@@ -32,7 +32,7 @@ public interface BettingRoundRepository extends JpaRepository<BettingRound, UUID
             SELECT b
             FROM BettingRound b
             WHERE b.round.id = :roundId
-            AND b.state = com.twb.pokerapp.domain.enumeration.BettingRoundState.IN_PROGRESS
+            AND b.state = com.twb.pokerapp.proto.BettingRoundState.BETTING_ROUND_STATE_IN_PROGRESS
             """)
     Optional<BettingRound> findCurrentByRoundId(@Param("roundId") UUID roundId);
 }

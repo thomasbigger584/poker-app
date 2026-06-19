@@ -1,6 +1,7 @@
 package com.twb.pokerapp.domain;
 
-import com.twb.pokerapp.domain.enumeration.RoundState;
+import com.twb.pokerapp.domain.converter.RoundStateConverter;
+import com.twb.pokerapp.proto.RoundState;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -25,7 +26,7 @@ public class Round extends Auditable {
     private UUID id;
 
     @NotNull
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = RoundStateConverter.class)
     @Column(name = "round_state")
     private RoundState roundState;
 

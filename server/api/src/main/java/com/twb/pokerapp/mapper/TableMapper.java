@@ -15,9 +15,11 @@ public class TableMapper {
         var builder = TableDTO.newBuilder()
                 .setId(ProtoConvert.uuidStr(model.getId()))
                 .setName(ProtoConvert.text(model.getName()))
-                .setGameType(ProtoConvert.toProto(model.getGameType()))
                 .setMinBuyin(ProtoConvert.money(model.getMinBuyin()))
                 .setMaxBuyin(ProtoConvert.money(model.getMaxBuyin()));
+        if (model.getGameType() != null) {
+            builder.setGameType(model.getGameType());
+        }
         if (model.getSpeedMultiplier() != null) {
             builder.setSpeedMultiplier(model.getSpeedMultiplier());
         }
@@ -39,7 +41,7 @@ public class TableMapper {
         }
         var table = new PokerTable();
         table.setName(dto.getName());
-        table.setGameType(ProtoConvert.toModel(dto.getGameType()));
+        table.setGameType(dto.getGameType());
         if (dto.hasSpeedMultiplier()) {
             table.setSpeedMultiplier(dto.getSpeedMultiplier());
         }

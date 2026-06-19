@@ -15,9 +15,13 @@ public class BettingRoundMapper {
             return null;
         }
         var builder = BettingRoundDTO.newBuilder()
-                .setId(ProtoConvert.uuidStr(model.getId()))
-                .setType(ProtoConvert.toProto(model.getType()))
-                .setState(ProtoConvert.toProto(model.getState()));
+                .setId(ProtoConvert.uuidStr(model.getId()));
+        if (model.getType() != null) {
+            builder.setType(model.getType());
+        }
+        if (model.getState() != null) {
+            builder.setState(model.getState());
+        }
         if (model.getBettingRoundRefunds() != null) {
             model.getBettingRoundRefunds()
                     .forEach(refund -> builder.addBettingRoundRefunds(bettingRoundRefundMapper.modelToDto(refund)));

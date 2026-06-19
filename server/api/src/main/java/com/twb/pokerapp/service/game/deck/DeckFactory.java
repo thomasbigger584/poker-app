@@ -2,8 +2,8 @@ package com.twb.pokerapp.service.game.deck;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.twb.pokerapp.domain.Card;
-import com.twb.pokerapp.domain.enumeration.RankType;
-import com.twb.pokerapp.domain.enumeration.SuitType;
+import com.twb.pokerapp.domain.poker.Ranks;
+import com.twb.pokerapp.domain.poker.Suits;
 import com.twb.pokerapp.service.game.deck.shuffler.Shuffler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -23,8 +23,8 @@ public class DeckFactory {
     public static final List<Card> CARDS = new ArrayList<>();
 
     static {
-        for (var suit : SuitType.values()) {
-            for (var rank : RankType.values()) {
+        for (var suit : Suits.VALUES) {
+            for (var rank : Ranks.VALUES) {
                 CARDS.add(new Card(rank, suit));
             }
         }

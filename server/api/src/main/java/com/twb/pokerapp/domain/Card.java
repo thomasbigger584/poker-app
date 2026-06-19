@@ -1,8 +1,11 @@
 package com.twb.pokerapp.domain;
 
-import com.twb.pokerapp.domain.enumeration.CardType;
-import com.twb.pokerapp.domain.enumeration.RankType;
-import com.twb.pokerapp.domain.enumeration.SuitType;
+import com.twb.pokerapp.domain.converter.CardTypeConverter;
+import com.twb.pokerapp.domain.converter.RankTypeConverter;
+import com.twb.pokerapp.domain.converter.SuitTypeConverter;
+import com.twb.pokerapp.proto.CardType;
+import com.twb.pokerapp.proto.RankType;
+import com.twb.pokerapp.proto.SuitType;
 import com.twb.pokerapp.service.game.deck.CardLibraryMapper;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
@@ -27,7 +30,7 @@ public class Card extends Auditable {
     private UUID id;
 
     @NotNull
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = RankTypeConverter.class)
     @Column(name = "rank_type")
     private RankType rankType;
 
@@ -35,12 +38,12 @@ public class Card extends Auditable {
     private int rankValue;
 
     @NotNull
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = SuitTypeConverter.class)
     @Column(name = "suit_type")
     private SuitType suitType;
 
     @NotNull
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = CardTypeConverter.class)
     @Column(name = "card_type")
     private CardType cardType;
 

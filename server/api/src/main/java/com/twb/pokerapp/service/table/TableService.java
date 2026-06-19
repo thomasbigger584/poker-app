@@ -2,8 +2,9 @@ package com.twb.pokerapp.service.table;
 
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.PokerTable;
-import com.twb.pokerapp.domain.enumeration.GameType;
+import com.twb.pokerapp.proto.GameType;
 import com.twb.pokerapp.mapper.ProtoConvert;
+import com.twb.pokerapp.service.game.GameStrategies;
 import com.twb.pokerapp.mapper.TableMapper;
 import com.twb.pokerapp.proto.AvailableTableDTO;
 import com.twb.pokerapp.proto.CreateTableDTO;
@@ -39,7 +40,7 @@ public class TableService {
         if (allTables.isEmpty()) {
             var createTableDto1 = CreateTableDTO.newBuilder()
                     .setName("Poker Table 1")
-                    .setGameType(ProtoConvert.toProto(GameType.TEXAS_HOLDEM))
+                    .setGameType(GameType.GAME_TYPE_TEXAS_HOLDEM)
                     .setSpeedMultiplier(1d)
                     .setMinPlayers(2)
                     .setMaxPlayers(6)
@@ -52,11 +53,11 @@ public class TableService {
 
     @Transactional
     public PokerTable create(CreateTableDTO dto) {
-        var gameType = ProtoConvert.toModel(dto.getGameType());
-        if (gameType == null) {
+        var gameType = dto.getGameType();
+        if (dto.getGameTypeValue() <= 0) {
             throw new ValidationException("gameType", "Game Type is required");
         }
-        gameType.getValidationService(context).validate(dto);
+        GameStrategies.validationService(gameType, context).validate(dto);
         var table = mapper.createDtoToModel(dto);
         table = repository.save(table);
         return table;
@@ -81,7 +82,7 @@ public class TableService {
             var existingConnectionType = reconnectableTypes.get(table.getId());
             builder.setCurrentUserConnected(existingConnectionType != null);
             if (existingConnectionType != null) {
-                builder.setCurrentUserConnectionType(ProtoConvert.toProto(existingConnectionType));
+                builder.setCurrentUserConnectionType(existingConnectionType);
                 disconnectGraceService.getRemainingMillis(table.getId(), username)
                         .ifPresent(builder::setReconnectMillisRemaining);
             }

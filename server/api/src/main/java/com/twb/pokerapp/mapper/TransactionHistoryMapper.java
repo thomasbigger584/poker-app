@@ -11,11 +11,13 @@ public class TransactionHistoryMapper {
         if (model == null) {
             return null;
         }
-        return TransactionHistoryDTO.newBuilder()
+        var builder = TransactionHistoryDTO.newBuilder()
                 .setId(ProtoConvert.uuidStr(model.getId()))
                 .setAmount(ProtoConvert.money(model.getAmount()))
-                .setType(ProtoConvert.toProto(model.getType()))
-                .setCreatedDateTime(ProtoConvert.dateTime(model.getCreatedDateTime()))
-                .build();
+                .setCreatedDateTime(ProtoConvert.dateTime(model.getCreatedDateTime()));
+        if (model.getType() != null) {
+            builder.setType(model.getType());
+        }
+        return builder.build();
     }
 }

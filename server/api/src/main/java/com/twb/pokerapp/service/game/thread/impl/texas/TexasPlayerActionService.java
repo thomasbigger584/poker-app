@@ -3,7 +3,7 @@ package com.twb.pokerapp.service.game.thread.impl.texas;
 import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.domain.enumeration.ActionType;
+import com.twb.pokerapp.proto.ActionType;
 import com.twb.pokerapp.repository.PlayerActionRepository;
 import com.twb.pokerapp.service.game.exception.GamePlayerLogException;
 import com.twb.pokerapp.service.game.thread.GamePlayerActionService;
@@ -33,12 +33,13 @@ public class TexasPlayerActionService extends GamePlayerActionService {
     @Transactional(propagation = Propagation.MANDATORY)
     public PlayerAction onPlayerAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread, PlayerActionCommand createDto) {
         return switch (createDto.getAction()) {
-            case FOLD -> foldAction(playerSession, bettingRound, createDto);
-            case CHECK -> checkAction(playerSession, bettingRound, createDto);
-            case BET -> betAction(playerSession, bettingRound, createDto);
-            case CALL -> callAction(playerSession, bettingRound, createDto);
-            case RAISE -> raiseAction(playerSession, bettingRound, createDto);
-            case ALL_IN -> allInAction(playerSession, bettingRound, createDto);
+            case ACTION_TYPE_FOLD -> foldAction(playerSession, bettingRound, createDto);
+            case ACTION_TYPE_CHECK -> checkAction(playerSession, bettingRound, createDto);
+            case ACTION_TYPE_BET -> betAction(playerSession, bettingRound, createDto);
+            case ACTION_TYPE_CALL -> callAction(playerSession, bettingRound, createDto);
+            case ACTION_TYPE_RAISE -> raiseAction(playerSession, bettingRound, createDto);
+            case ACTION_TYPE_ALL_IN -> allInAction(playerSession, bettingRound, createDto);
+            default -> throw new GamePlayerLogException(playerSession, "Unsupported action: " + createDto.getAction());
         };
     }
 
@@ -48,7 +49,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
         var amountToCall = playerActionService.getAmountToCall(playerSession, playersNotFolded);
 
         var createActionDto = new PlayerActionCommand();
-        createActionDto.setAction((amountToCall.compareTo(BigDecimal.ZERO) > 0) ? ActionType.FOLD : ActionType.CHECK);
+        createActionDto.setAction((amountToCall.compareTo(BigDecimal.ZERO) > 0) ? ActionType.ACTION_TYPE_FOLD : ActionType.ACTION_TYPE_CHECK);
         super.playerAction(playerSession, gameThread, createActionDto);
     }
 
@@ -59,7 +60,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
 
     private PlayerAction checkAction(PlayerSession playerSession, BettingRound bettingRound, PlayerActionCommand createActionDto) {
         var canPerformCheck = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId())
-                .stream().allMatch(action -> action.getActionType() == ActionType.CHECK);
+                .stream().allMatch(action -> action.getActionType() == ActionType.ACTION_TYPE_CHECK);
         if (!canPerformCheck) {
             throw new GamePlayerLogException(playerSession, "Cannot check as previous actions was not a check");
         }
@@ -77,7 +78,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
         var lastPlayerActions = playerActionRepository.findPlayerActionsNotFolded(bettingRound.getId());
         if (!lastPlayerActions.isEmpty()) {
             var lastPlayerAction = lastPlayerActions.getFirst();
-            if (List.of(ActionType.BET, ActionType.CALL, ActionType.RAISE, ActionType.ALL_IN).contains(lastPlayerAction.getActionType())) {
+            if (List.of(ActionType.ACTION_TYPE_BET, ActionType.ACTION_TYPE_CALL, ActionType.ACTION_TYPE_RAISE, ActionType.ACTION_TYPE_ALL_IN).contains(lastPlayerAction.getActionType())) {
                 throw new GamePlayerLogException(playerSession, "Cannot bet as previous action was not a check");
             }
         }
@@ -91,7 +92,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
         }
         var lastPlayerAction = lastPlayerActions.getFirst();
         var lastPlayerActionType = lastPlayerAction.getActionType();
-        if (lastPlayerActionType == ActionType.CHECK) {
+        if (lastPlayerActionType == ActionType.ACTION_TYPE_CHECK) {
             throw new GamePlayerLogException(playerSession, "Cannot call as previous action was a check");
         }
         if (createActionDto.getAmount() == null) {
@@ -116,7 +117,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
         }
         var lastPlayerAction = lastPlayerActions.getFirst();
         var lastPlayerActionType = lastPlayerAction.getActionType();
-        if (lastPlayerActionType == ActionType.CHECK) {
+        if (lastPlayerActionType == ActionType.ACTION_TYPE_CHECK) {
             throw new GamePlayerLogException(playerSession, "Cannot raise as previous action was a check");
         }
         var amountToCall = playerActionService.getAmountToCall(playerSession, lastPlayerActions);
@@ -136,7 +137,7 @@ public class TexasPlayerActionService extends GamePlayerActionService {
             log.warn("All-In amount sent $%.2f not equalled to actual amount to All-In $%.2f so setting it".formatted(createActionDto.getAmount(), playerSessionFunds));
             createActionDto.setAmount(playerSession.getFunds());
         }
-        createActionDto.setAction(ActionType.ALL_IN);
+        createActionDto.setAction(ActionType.ACTION_TYPE_ALL_IN);
         return playerActionService.create(playerSession, bettingRound, createActionDto);
     }
 }

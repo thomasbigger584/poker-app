@@ -1,7 +1,7 @@
 package com.twb.pokerapp.testutils;
 
 import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.domain.enumeration.SessionState;
+import com.twb.pokerapp.proto.SessionState;
 import com.twb.pokerapp.testutils.game.GameLatches;
 import com.twb.pokerapp.testutils.game.GameRunner;
 import com.twb.pokerapp.testutils.game.params.GameRunnerParams;
@@ -123,6 +123,6 @@ public class TestScenario {
 
     private boolean isAllDisconnected(List<PlayerSession> sessions) {
         return sessions.stream()
-                .allMatch(playerSession -> SessionState.CONNECTED != playerSession.getSessionState());
+                .allMatch(playerSession -> SessionState.SESSION_STATE_CONNECTED != playerSession.getSessionState());
     }
 }

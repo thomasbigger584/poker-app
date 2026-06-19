@@ -1,6 +1,7 @@
 package com.twb.pokerapp.testutils.game.player;
 
-import com.twb.pokerapp.domain.enumeration.ConnectionType;
+import com.twb.pokerapp.domain.poker.ConnectionTypes;
+import com.twb.pokerapp.proto.ConnectionType;
 import com.twb.pokerapp.proto.CreateBotConnectionDTO;
 import com.twb.pokerapp.proto.CreatePlayerActionDTO;
 import com.twb.pokerapp.proto.ServerMessageDTO;
@@ -91,8 +92,8 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         stompHeaders.setHost("/");
 
         stompHeaders.add(HttpHeaders.AUTHORIZATION, bearerToken);
-        stompHeaders.put(HEADER_CONNECTION_TYPE, Collections.singletonList(getConnectionType().toString()));
-        if (getConnectionType() == ConnectionType.PLAYER && buyInAmount != null) {
+        stompHeaders.put(HEADER_CONNECTION_TYPE, Collections.singletonList(ConnectionTypes.toWire(getConnectionType())));
+        if (getConnectionType() == ConnectionType.CONNECTION_TYPE_PLAYER && buyInAmount != null) {
             stompHeaders.put(HEADER_BUYIN_AMOUNT, Collections.singletonList(buyInAmount.toString()));
         }
 

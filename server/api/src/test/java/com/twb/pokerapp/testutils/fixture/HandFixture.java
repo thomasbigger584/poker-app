@@ -1,8 +1,8 @@
 package com.twb.pokerapp.testutils.fixture;
 
 import com.twb.pokerapp.domain.Card;
-import com.twb.pokerapp.domain.enumeration.RankType;
-import com.twb.pokerapp.domain.enumeration.SuitType;
+import com.twb.pokerapp.proto.RankType;
+import com.twb.pokerapp.proto.SuitType;
 import com.twb.pokerapp.service.game.deck.DeckFactory;
 import com.twb.pokerapp.web.exception.NotFoundException;
 
@@ -17,261 +17,261 @@ public class HandFixture {
             .collect(Collectors.toUnmodifiableMap(card -> card.getRankType().toString() + card.getSuitType().toString(), Function.identity()));
 
     public static List<Card> createRoyalFlush() {
-        var suit = SuitType.HEARTS;
+        var suit = SuitType.SUIT_TYPE_HEARTS;
         return List.of(
-                findCard(RankType.TEN, suit),
-                findCard(RankType.JACK, suit),
-                findCard(RankType.QUEEN, suit),
-                findCard(RankType.KING, suit),
-                findCard(RankType.ACE, suit),
-                findCard(RankType.EIGHT, SuitType.SPADES),
-                findCard(RankType.TEN, SuitType.DIAMONDS)
+                findCard(RankType.RANK_TYPE_TEN, suit),
+                findCard(RankType.RANK_TYPE_JACK, suit),
+                findCard(RankType.RANK_TYPE_QUEEN, suit),
+                findCard(RankType.RANK_TYPE_KING, suit),
+                findCard(RankType.RANK_TYPE_ACE, suit),
+                findCard(RankType.RANK_TYPE_EIGHT, SuitType.SUIT_TYPE_SPADES),
+                findCard(RankType.RANK_TYPE_TEN, SuitType.SUIT_TYPE_DIAMONDS)
         );
     }
 
     public static List<Card> createUpperStraightFlush() {
-        var suit = SuitType.CLUBS;
+        var suit = SuitType.SUIT_TYPE_CLUBS;
         return List.of(
-                findCard(RankType.NINE, suit),
-                findCard(RankType.TEN, suit),
-                findCard(RankType.JACK, suit),
-                findCard(RankType.QUEEN, suit),
-                findCard(RankType.KING, suit),
-                findCard(RankType.DEUCE, SuitType.DIAMONDS),
-                findCard(RankType.TREY, SuitType.SPADES)
+                findCard(RankType.RANK_TYPE_NINE, suit),
+                findCard(RankType.RANK_TYPE_TEN, suit),
+                findCard(RankType.RANK_TYPE_JACK, suit),
+                findCard(RankType.RANK_TYPE_QUEEN, suit),
+                findCard(RankType.RANK_TYPE_KING, suit),
+                findCard(RankType.RANK_TYPE_DEUCE, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_TREY, SuitType.SUIT_TYPE_SPADES)
         );
     }
 
     public static List<Card> createStraightFlush() {
-        var suit = SuitType.CLUBS;
+        var suit = SuitType.SUIT_TYPE_CLUBS;
         return List.of(
-                findCard(RankType.FIVE, suit),
-                findCard(RankType.SIX, suit),
-                findCard(RankType.SEVEN, suit),
-                findCard(RankType.EIGHT, suit),
-                findCard(RankType.NINE, suit),
-                findCard(RankType.DEUCE, SuitType.DIAMONDS),
-                findCard(RankType.TREY, SuitType.SPADES)
+                findCard(RankType.RANK_TYPE_FIVE, suit),
+                findCard(RankType.RANK_TYPE_SIX, suit),
+                findCard(RankType.RANK_TYPE_SEVEN, suit),
+                findCard(RankType.RANK_TYPE_EIGHT, suit),
+                findCard(RankType.RANK_TYPE_NINE, suit),
+                findCard(RankType.RANK_TYPE_DEUCE, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_TREY, SuitType.SUIT_TYPE_SPADES)
         );
     }
 
     public static List<Card> createLowerStraightFlush() {
-        var suit = SuitType.CLUBS;
+        var suit = SuitType.SUIT_TYPE_CLUBS;
         return List.of(
-                findCard(RankType.ACE, suit),
-                findCard(RankType.DEUCE, suit),
-                findCard(RankType.TREY, suit),
-                findCard(RankType.FOUR, suit),
-                findCard(RankType.FIVE, suit),
-                findCard(RankType.JACK, SuitType.DIAMONDS),
-                findCard(RankType.TEN, SuitType.SPADES)
+                findCard(RankType.RANK_TYPE_ACE, suit),
+                findCard(RankType.RANK_TYPE_DEUCE, suit),
+                findCard(RankType.RANK_TYPE_TREY, suit),
+                findCard(RankType.RANK_TYPE_FOUR, suit),
+                findCard(RankType.RANK_TYPE_FIVE, suit),
+                findCard(RankType.RANK_TYPE_JACK, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_TEN, SuitType.SUIT_TYPE_SPADES)
         );
     }
 
     public static List<Card> createBothStraightAndFlush() {
-        var suit = SuitType.CLUBS;
+        var suit = SuitType.SUIT_TYPE_CLUBS;
         return List.of(
-                findCard(RankType.ACE, suit),
-                findCard(RankType.DEUCE, suit),
-                findCard(RankType.TREY, suit),
-                findCard(RankType.TEN, suit),
-                findCard(RankType.QUEEN, suit),
-                findCard(RankType.FOUR, SuitType.DIAMONDS),
-                findCard(RankType.FIVE, SuitType.SPADES)
+                findCard(RankType.RANK_TYPE_ACE, suit),
+                findCard(RankType.RANK_TYPE_DEUCE, suit),
+                findCard(RankType.RANK_TYPE_TREY, suit),
+                findCard(RankType.RANK_TYPE_TEN, suit),
+                findCard(RankType.RANK_TYPE_QUEEN, suit),
+                findCard(RankType.RANK_TYPE_FOUR, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_FIVE, SuitType.SUIT_TYPE_SPADES)
         );
     }
 
     public static List<Card> createFourOfAKind() {
         return List.of(
-                findCard(RankType.NINE, SuitType.HEARTS),
-                findCard(RankType.NINE, SuitType.CLUBS),
-                findCard(RankType.NINE, SuitType.DIAMONDS),
-                findCard(RankType.NINE, SuitType.SPADES),
-                findCard(RankType.KING, SuitType.HEARTS),
-                findCard(RankType.DEUCE, SuitType.DIAMONDS),
-                findCard(RankType.TREY, SuitType.SPADES)
+                findCard(RankType.RANK_TYPE_NINE, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_NINE, SuitType.SUIT_TYPE_CLUBS),
+                findCard(RankType.RANK_TYPE_NINE, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_NINE, SuitType.SUIT_TYPE_SPADES),
+                findCard(RankType.RANK_TYPE_KING, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_DEUCE, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_TREY, SuitType.SUIT_TYPE_SPADES)
         );
     }
 
     public static List<Card> createFullHouse() {
         return List.of(
-                findCard(RankType.TEN, SuitType.HEARTS),
-                findCard(RankType.TEN, SuitType.CLUBS),
-                findCard(RankType.TEN, SuitType.DIAMONDS),
-                findCard(RankType.KING, SuitType.SPADES),
-                findCard(RankType.KING, SuitType.HEARTS),
-                findCard(RankType.DEUCE, SuitType.DIAMONDS),
-                findCard(RankType.TREY, SuitType.SPADES)
+                findCard(RankType.RANK_TYPE_TEN, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_TEN, SuitType.SUIT_TYPE_CLUBS),
+                findCard(RankType.RANK_TYPE_TEN, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_KING, SuitType.SUIT_TYPE_SPADES),
+                findCard(RankType.RANK_TYPE_KING, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_DEUCE, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_TREY, SuitType.SUIT_TYPE_SPADES)
         );
     }
 
     public static List<Card> createFlush() {
         return List.of(
-                findCard(RankType.DEUCE, SuitType.HEARTS),
-                findCard(RankType.FOUR, SuitType.HEARTS),
-                findCard(RankType.SIX, SuitType.HEARTS),
-                findCard(RankType.EIGHT, SuitType.HEARTS),
-                findCard(RankType.KING, SuitType.HEARTS),
-                findCard(RankType.ACE, SuitType.SPADES),
-                findCard(RankType.JACK, SuitType.CLUBS)
+                findCard(RankType.RANK_TYPE_DEUCE, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_FOUR, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_SIX, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_EIGHT, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_KING, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_ACE, SuitType.SUIT_TYPE_SPADES),
+                findCard(RankType.RANK_TYPE_JACK, SuitType.SUIT_TYPE_CLUBS)
         );
     }
 
     public static List<Card> createUpperStraight() {
         return List.of(
-                findCard(RankType.TEN, SuitType.HEARTS),
-                findCard(RankType.JACK, SuitType.CLUBS),
-                findCard(RankType.QUEEN, SuitType.DIAMONDS),
-                findCard(RankType.KING, SuitType.SPADES),
-                findCard(RankType.ACE, SuitType.HEARTS),
-                findCard(RankType.DEUCE, SuitType.DIAMONDS),
-                findCard(RankType.TREY, SuitType.SPADES)
+                findCard(RankType.RANK_TYPE_TEN, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_JACK, SuitType.SUIT_TYPE_CLUBS),
+                findCard(RankType.RANK_TYPE_QUEEN, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_KING, SuitType.SUIT_TYPE_SPADES),
+                findCard(RankType.RANK_TYPE_ACE, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_DEUCE, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_TREY, SuitType.SUIT_TYPE_SPADES)
         );
     }
 
     public static List<Card> createStraight() {
         return List.of(
-                findCard(RankType.FIVE, SuitType.HEARTS),
-                findCard(RankType.SIX, SuitType.CLUBS),
-                findCard(RankType.SEVEN, SuitType.DIAMONDS),
-                findCard(RankType.EIGHT, SuitType.SPADES),
-                findCard(RankType.NINE, SuitType.HEARTS),
-                findCard(RankType.DEUCE, SuitType.DIAMONDS),
-                findCard(RankType.TREY, SuitType.SPADES)
+                findCard(RankType.RANK_TYPE_FIVE, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_SIX, SuitType.SUIT_TYPE_CLUBS),
+                findCard(RankType.RANK_TYPE_SEVEN, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_EIGHT, SuitType.SUIT_TYPE_SPADES),
+                findCard(RankType.RANK_TYPE_NINE, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_DEUCE, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_TREY, SuitType.SUIT_TYPE_SPADES)
         );
     }
 
     public static List<Card> createLowerStraight() {
         return List.of(
-                findCard(RankType.ACE, SuitType.HEARTS),
-                findCard(RankType.DEUCE, SuitType.CLUBS),
-                findCard(RankType.TREY, SuitType.DIAMONDS),
-                findCard(RankType.FOUR, SuitType.SPADES),
-                findCard(RankType.FIVE, SuitType.HEARTS),
-                findCard(RankType.SEVEN, SuitType.DIAMONDS),
-                findCard(RankType.NINE, SuitType.SPADES)
+                findCard(RankType.RANK_TYPE_ACE, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_DEUCE, SuitType.SUIT_TYPE_CLUBS),
+                findCard(RankType.RANK_TYPE_TREY, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_FOUR, SuitType.SUIT_TYPE_SPADES),
+                findCard(RankType.RANK_TYPE_FIVE, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_SEVEN, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_NINE, SuitType.SUIT_TYPE_SPADES)
         );
     }
 
 
     public static List<Card> createThreeOfAKind() {
         return List.of(
-                findCard(RankType.SEVEN, SuitType.HEARTS),
-                findCard(RankType.SEVEN, SuitType.CLUBS),
-                findCard(RankType.SEVEN, SuitType.DIAMONDS),
-                findCard(RankType.KING, SuitType.SPADES),
-                findCard(RankType.DEUCE, SuitType.HEARTS),
-                findCard(RankType.TREY, SuitType.DIAMONDS),
-                findCard(RankType.FOUR, SuitType.SPADES)
+                findCard(RankType.RANK_TYPE_SEVEN, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_SEVEN, SuitType.SUIT_TYPE_CLUBS),
+                findCard(RankType.RANK_TYPE_SEVEN, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_KING, SuitType.SUIT_TYPE_SPADES),
+                findCard(RankType.RANK_TYPE_DEUCE, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_TREY, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_FOUR, SuitType.SUIT_TYPE_SPADES)
         );
     }
 
     public static List<Card> createTwoPair() {
         return List.of(
-                findCard(RankType.FIVE, SuitType.HEARTS),
-                findCard(RankType.FIVE, SuitType.CLUBS),
-                findCard(RankType.KING, SuitType.DIAMONDS),
-                findCard(RankType.KING, SuitType.SPADES),
-                findCard(RankType.DEUCE, SuitType.HEARTS),
-                findCard(RankType.TREY, SuitType.DIAMONDS),
-                findCard(RankType.FOUR, SuitType.SPADES)
+                findCard(RankType.RANK_TYPE_FIVE, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_FIVE, SuitType.SUIT_TYPE_CLUBS),
+                findCard(RankType.RANK_TYPE_KING, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_KING, SuitType.SUIT_TYPE_SPADES),
+                findCard(RankType.RANK_TYPE_DEUCE, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_TREY, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_FOUR, SuitType.SUIT_TYPE_SPADES)
         );
     }
 
     public static List<Card> createOnePair() {
         return List.of(
-                findCard(RankType.TEN, SuitType.HEARTS),
-                findCard(RankType.TEN, SuitType.CLUBS),
-                findCard(RankType.KING, SuitType.DIAMONDS),
-                findCard(RankType.DEUCE, SuitType.SPADES),
-                findCard(RankType.TREY, SuitType.HEARTS),
-                findCard(RankType.FOUR, SuitType.DIAMONDS),
-                findCard(RankType.FIVE, SuitType.SPADES)
+                findCard(RankType.RANK_TYPE_TEN, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_TEN, SuitType.SUIT_TYPE_CLUBS),
+                findCard(RankType.RANK_TYPE_KING, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_DEUCE, SuitType.SUIT_TYPE_SPADES),
+                findCard(RankType.RANK_TYPE_TREY, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_FOUR, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_FIVE, SuitType.SUIT_TYPE_SPADES)
         );
     }
 
     public static List<Card> createHighCard() {
         return List.of(
-                findCard(RankType.DEUCE, SuitType.HEARTS),
-                findCard(RankType.FOUR, SuitType.CLUBS),
-                findCard(RankType.SEVEN, SuitType.DIAMONDS),
-                findCard(RankType.NINE, SuitType.SPADES),
-                findCard(RankType.JACK, SuitType.HEARTS),
-                findCard(RankType.QUEEN, SuitType.DIAMONDS),
-                findCard(RankType.KING, SuitType.SPADES)
+                findCard(RankType.RANK_TYPE_DEUCE, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_FOUR, SuitType.SUIT_TYPE_CLUBS),
+                findCard(RankType.RANK_TYPE_SEVEN, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_NINE, SuitType.SUIT_TYPE_SPADES),
+                findCard(RankType.RANK_TYPE_JACK, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_QUEEN, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_KING, SuitType.SUIT_TYPE_SPADES)
         );
     }
 
     public static List<Card> createHandWithThreePairs() {
         return List.of(
-                findCard(RankType.KING, SuitType.HEARTS),
-                findCard(RankType.KING, SuitType.CLUBS),
-                findCard(RankType.QUEEN, SuitType.DIAMONDS),
-                findCard(RankType.QUEEN, SuitType.SPADES),
-                findCard(RankType.JACK, SuitType.HEARTS),
-                findCard(RankType.JACK, SuitType.DIAMONDS),
-                findCard(RankType.DEUCE, SuitType.SPADES)
+                findCard(RankType.RANK_TYPE_KING, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_KING, SuitType.SUIT_TYPE_CLUBS),
+                findCard(RankType.RANK_TYPE_QUEEN, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_QUEEN, SuitType.SUIT_TYPE_SPADES),
+                findCard(RankType.RANK_TYPE_JACK, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_JACK, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_DEUCE, SuitType.SUIT_TYPE_SPADES)
         );
     }
 
     public static List<Card> createFullHouseFromThreeOfAKindAndPair() {
         return List.of(
-                findCard(RankType.SEVEN, SuitType.HEARTS),
-                findCard(RankType.SEVEN, SuitType.CLUBS),
-                findCard(RankType.SEVEN, SuitType.DIAMONDS),
-                findCard(RankType.DEUCE, SuitType.SPADES),
-                findCard(RankType.DEUCE, SuitType.HEARTS),
-                findCard(RankType.KING, SuitType.DIAMONDS),
-                findCard(RankType.QUEEN, SuitType.SPADES)
+                findCard(RankType.RANK_TYPE_SEVEN, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_SEVEN, SuitType.SUIT_TYPE_CLUBS),
+                findCard(RankType.RANK_TYPE_SEVEN, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_DEUCE, SuitType.SUIT_TYPE_SPADES),
+                findCard(RankType.RANK_TYPE_DEUCE, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_KING, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_QUEEN, SuitType.SUIT_TYPE_SPADES)
         );
     }
 
     public static List<Card> createStraightWithAPair() {
         return List.of(
-                findCard(RankType.FIVE, SuitType.HEARTS),
-                findCard(RankType.SIX, SuitType.CLUBS),
-                findCard(RankType.SEVEN, SuitType.DIAMONDS),
-                findCard(RankType.EIGHT, SuitType.SPADES),
-                findCard(RankType.NINE, SuitType.HEARTS),
-                findCard(RankType.NINE, SuitType.DIAMONDS),
-                findCard(RankType.DEUCE, SuitType.SPADES)
+                findCard(RankType.RANK_TYPE_FIVE, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_SIX, SuitType.SUIT_TYPE_CLUBS),
+                findCard(RankType.RANK_TYPE_SEVEN, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_EIGHT, SuitType.SUIT_TYPE_SPADES),
+                findCard(RankType.RANK_TYPE_NINE, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_NINE, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_DEUCE, SuitType.SUIT_TYPE_SPADES)
         );
     }
 
     public static List<Card> createFlushWithLowerCards() {
-        SuitType suit = SuitType.HEARTS;
+        SuitType suit = SuitType.SUIT_TYPE_HEARTS;
         return List.of(
-                findCard(RankType.DEUCE, suit),
-                findCard(RankType.FOUR, suit),
-                findCard(RankType.FIVE, suit),
-                findCard(RankType.SIX, suit),
-                findCard(RankType.SEVEN, suit),
-                findCard(RankType.KING, SuitType.SPADES),
-                findCard(RankType.QUEEN, SuitType.CLUBS)
+                findCard(RankType.RANK_TYPE_DEUCE, suit),
+                findCard(RankType.RANK_TYPE_FOUR, suit),
+                findCard(RankType.RANK_TYPE_FIVE, suit),
+                findCard(RankType.RANK_TYPE_SIX, suit),
+                findCard(RankType.RANK_TYPE_SEVEN, suit),
+                findCard(RankType.RANK_TYPE_KING, SuitType.SUIT_TYPE_SPADES),
+                findCard(RankType.RANK_TYPE_QUEEN, SuitType.SUIT_TYPE_CLUBS)
         );
     }
 
     public static List<Card> createHighCardAceKicker() {
         return List.of(
-                findCard(RankType.ACE, SuitType.HEARTS),
-                findCard(RankType.KING, SuitType.CLUBS),
-                findCard(RankType.QUEEN, SuitType.DIAMONDS),
-                findCard(RankType.JACK, SuitType.SPADES),
-                findCard(RankType.NINE, SuitType.HEARTS),
-                findCard(RankType.DEUCE, SuitType.DIAMONDS),
-                findCard(RankType.TREY, SuitType.SPADES)
+                findCard(RankType.RANK_TYPE_ACE, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_KING, SuitType.SUIT_TYPE_CLUBS),
+                findCard(RankType.RANK_TYPE_QUEEN, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_JACK, SuitType.SUIT_TYPE_SPADES),
+                findCard(RankType.RANK_TYPE_NINE, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_DEUCE, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_TREY, SuitType.SUIT_TYPE_SPADES)
         );
     }
 
     public static List<Card> create2ThreeOfAKing() {
         return List.of(
-                findCard(RankType.ACE, SuitType.HEARTS),
-                findCard(RankType.ACE, SuitType.CLUBS),
-                findCard(RankType.ACE, SuitType.DIAMONDS),
-                findCard(RankType.DEUCE, SuitType.SPADES),
-                findCard(RankType.DEUCE, SuitType.HEARTS),
-                findCard(RankType.DEUCE, SuitType.DIAMONDS),
-                findCard(RankType.SEVEN, SuitType.SPADES)
+                findCard(RankType.RANK_TYPE_ACE, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_ACE, SuitType.SUIT_TYPE_CLUBS),
+                findCard(RankType.RANK_TYPE_ACE, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_DEUCE, SuitType.SUIT_TYPE_SPADES),
+                findCard(RankType.RANK_TYPE_DEUCE, SuitType.SUIT_TYPE_HEARTS),
+                findCard(RankType.RANK_TYPE_DEUCE, SuitType.SUIT_TYPE_DIAMONDS),
+                findCard(RankType.RANK_TYPE_SEVEN, SuitType.SUIT_TYPE_SPADES)
         );
     }
 

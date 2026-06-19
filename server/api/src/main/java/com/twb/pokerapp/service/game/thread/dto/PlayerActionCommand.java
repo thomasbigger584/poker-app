@@ -1,6 +1,6 @@
 package com.twb.pokerapp.service.game.thread.dto;
 
-import com.twb.pokerapp.domain.enumeration.ActionType;
+import com.twb.pokerapp.proto.ActionType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

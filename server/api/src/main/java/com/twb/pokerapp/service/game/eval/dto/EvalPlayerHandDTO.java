@@ -3,7 +3,7 @@ package com.twb.pokerapp.service.game.eval.dto;
 import com.twb.pokerapp.domain.Card;
 import com.twb.pokerapp.domain.Hand;
 import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.domain.enumeration.HandType;
+import com.twb.pokerapp.proto.HandType;
 import lombok.Getter;
 import lombok.Setter;
 import org.jspecify.annotations.NonNull;

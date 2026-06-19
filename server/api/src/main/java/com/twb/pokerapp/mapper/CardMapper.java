@@ -1,6 +1,8 @@
 package com.twb.pokerapp.mapper;
 
 import com.twb.pokerapp.domain.Card;
+import com.twb.pokerapp.domain.poker.Ranks;
+import com.twb.pokerapp.domain.poker.Suits;
 import com.twb.pokerapp.proto.CardDTO;
 import org.springframework.stereotype.Component;
 
@@ -13,15 +15,17 @@ public class CardMapper {
         }
         var builder = CardDTO.newBuilder()
                 .setId(ProtoConvert.uuidStr(model.getId()))
-                .setRankType(ProtoConvert.toProto(model.getRankType()))
-                .setRankValue(model.getRankValue())
-                .setSuitType(ProtoConvert.toProto(model.getSuitType()))
-                .setCardType(ProtoConvert.toProto(model.getCardType()));
+                .setRankValue(model.getRankValue());
         if (model.getRankType() != null) {
-            builder.setRankChar(ProtoConvert.ch(model.getRankType().getRankChar()));
+            builder.setRankType(model.getRankType());
+            builder.setRankChar(ProtoConvert.ch(Ranks.charOf(model.getRankType())));
         }
         if (model.getSuitType() != null) {
-            builder.setSuitChar(ProtoConvert.ch(model.getSuitType().getSuitChar()));
+            builder.setSuitType(model.getSuitType());
+            builder.setSuitChar(ProtoConvert.ch(Suits.charOf(model.getSuitType())));
+        }
+        if (model.getCardType() != null) {
+            builder.setCardType(model.getCardType());
         }
         return builder.build();
     }

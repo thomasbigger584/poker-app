@@ -2,8 +2,8 @@ package com.twb.pokerapp.service.game.thread.impl;
 
 import com.twb.pokerapp.domain.AppUser;
 import com.twb.pokerapp.domain.Card;
-import com.twb.pokerapp.domain.enumeration.CardType;
-import com.twb.pokerapp.domain.enumeration.RoundState;
+import com.twb.pokerapp.proto.CardType;
+import com.twb.pokerapp.proto.RoundState;
 import com.twb.pokerapp.proto.CreateTableDTO;
 import com.twb.pokerapp.proto.GameType;
 import com.twb.pokerapp.proto.TableDTO;
@@ -121,7 +121,7 @@ class TexasBotGameIT {
 
         var rounds = sqlClient.getRounds();
         assertFalse(rounds.isEmpty(), "Expected at least one round to be played");
-        assertTrue(rounds.stream().anyMatch(round -> round.getRoundState() == RoundState.FINISHED),
+        assertTrue(rounds.stream().anyMatch(round -> round.getRoundState() == RoundState.ROUND_STATE_FINISHED),
                 "Expected a round to reach the FINISHED state");
 
         // The round can only progress if the bots took their turns, so actions must have been recorded.
@@ -148,7 +148,7 @@ class TexasBotGameIT {
                 var holeCardTypes = hand.getCards().stream()
                         .map(Card::getCardType)
                         .collect(Collectors.toSet());
-                assertEquals(Set.of(CardType.PLAYER_CARD_1, CardType.PLAYER_CARD_2), holeCardTypes,
+                assertEquals(Set.of(CardType.CARD_TYPE_PLAYER_CARD_1, CardType.CARD_TYPE_PLAYER_CARD_2), holeCardTypes,
                         "Expected bot " + botUsername + " to be dealt exactly two hole cards");
             }
         }

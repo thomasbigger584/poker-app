@@ -2,6 +2,7 @@ package com.twb.pokerapp.service.game.thread;
 
 import com.antkorwin.xsync.XSync;
 import com.twb.pokerapp.domain.PokerTable;
+import com.twb.pokerapp.service.game.GameStrategies;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -116,8 +117,7 @@ public class GameThreadManager {
      * @return the created game thread
      */
     private GameThread create(GameThreadParams params) {
-        return params.getTable().getGameType()
-                .getGameThread(context, params);
+        return GameStrategies.gameThread(params.getTable().getGameType(), context, params);
     }
 
     /**

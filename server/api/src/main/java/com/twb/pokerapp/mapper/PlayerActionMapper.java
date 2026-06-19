@@ -17,8 +17,10 @@ public class PlayerActionMapper {
         }
         var builder = PlayerActionDTO.newBuilder()
                 .setId(ProtoConvert.uuidStr(model.getId()))
-                .setActionType(ProtoConvert.toProto(model.getActionType()))
                 .setAmount(ProtoConvert.money(model.getAmount()));
+        if (model.getActionType() != null) {
+            builder.setActionType(model.getActionType());
+        }
         if (model.getPlayerSession() != null) {
             builder.setPlayerSession(playerSessionMapper.modelToDto(model.getPlayerSession()));
         }

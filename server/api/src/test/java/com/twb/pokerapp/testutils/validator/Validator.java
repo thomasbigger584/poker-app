@@ -1,9 +1,9 @@
 package com.twb.pokerapp.testutils.validator;
 
 import com.twb.pokerapp.domain.*;
-import com.twb.pokerapp.domain.enumeration.CardType;
-import com.twb.pokerapp.domain.enumeration.ConnectionType;
-import com.twb.pokerapp.domain.enumeration.SessionState;
+import com.twb.pokerapp.proto.CardType;
+import com.twb.pokerapp.proto.ConnectionType;
+import com.twb.pokerapp.proto.SessionState;
 import com.twb.pokerapp.mapper.ProtoConvert;
 import com.twb.pokerapp.proto.AppUserDTO;
 import com.twb.pokerapp.proto.BettingRoundDTO;
@@ -120,7 +120,7 @@ public abstract class Validator {
         assertNull(playerSession.getFunds(), "Funds should be null for user " + username);
         assertNull(playerSession.getPokerTable(), "Table should be null for user " + username);
         assertNull(playerSession.getConnectionType(), "ConnectionType should be null for user " + username);
-        assertEquals(SessionState.DISCONNECTED, playerSession.getSessionState(), "SessionState should be DISCONNECTED for user " + username);
+        assertEquals(SessionState.SESSION_STATE_DISCONNECTED, playerSession.getSessionState(), "SessionState should be DISCONNECTED for user " + username);
     }
 
     // ***************************************************************
@@ -133,7 +133,7 @@ public abstract class Validator {
         assertTrue(playerActionOpt.isPresent());
         var playerAction = playerActionOpt.get();
         assertEquals(playerActionId, playerAction.getId().toString());
-        assertEquals(ProtoConvert.toModel(playerActionDto.getActionType()), playerAction.getActionType());
+        assertEquals(playerActionDto.getActionType(), playerAction.getActionType());
         var dtoAmount = ProtoConvert.bigDecimal(playerActionDto.getAmount());
         if (dtoAmount == null) {
             assertNull(playerAction.getAmount());
@@ -152,18 +152,18 @@ public abstract class Validator {
         assertTrue(bettingRoundOpt.isPresent());
         var bettingRound = bettingRoundOpt.get();
         assertEquals(bettingRoundId, bettingRound.getId().toString());
-        assertEquals(ProtoConvert.toModel(bettingRoundDto.getType()), bettingRound.getType());
+        assertEquals(bettingRoundDto.getType(), bettingRound.getType());
         return bettingRound;
     }
 
     protected Card assertCard(CardDTO cardDto, CardType cardType) {
-        var rankType = ProtoConvert.toModel(cardDto.getRankType());
-        var suitType = ProtoConvert.toModel(cardDto.getSuitType());
+        var rankType = cardDto.getRankType();
+        var suitType = cardDto.getSuitType();
         var foundCardFromDeck = findCard(rankType, suitType);
         assertEquals(rankType, foundCardFromDeck.getRankType());
         assertEquals(cardDto.getRankValue(), foundCardFromDeck.getRankValue());
         assertEquals(suitType, foundCardFromDeck.getSuitType());
-        assertEquals(ProtoConvert.toModel(cardDto.getCardType()), cardType);
+        assertEquals(cardDto.getCardType(), cardType);
 
         var cardOpt = sqlClient.getCard(UUID.fromString(cardDto.getId()));
         assertTrue(cardOpt.isPresent());
@@ -173,7 +173,7 @@ public abstract class Validator {
         assertEquals(rankType, card.getRankType());
         assertEquals(cardDto.getRankValue(), card.getRankValue());
         assertEquals(suitType, card.getSuitType());
-        assertEquals(ProtoConvert.toModel(cardDto.getCardType()), card.getCardType());
+        assertEquals(cardDto.getCardType(), card.getCardType());
         return card;
     }
 
@@ -187,14 +187,14 @@ public abstract class Validator {
     }
 
     protected PlayerSession assertPlayerSession(PlayerSessionDTO playerSessionDto) {
-        assertEquals(SessionState.CONNECTED, ProtoConvert.toModel(playerSessionDto.getSessionState()));
+        assertEquals(SessionState.SESSION_STATE_CONNECTED, playerSessionDto.getSessionState());
 
         var playerSessionId = playerSessionDto.getId();
         var playerSessionOpt = sqlClient.getPlayerSession(UUID.fromString(playerSessionId));
         assertTrue(playerSessionOpt.isPresent());
         var playerSession = playerSessionOpt.get();
         assertEquals(playerSessionId, playerSession.getId().toString());
-        if (ProtoConvert.toModel(playerSessionDto.getConnectionType()) == ConnectionType.PLAYER) {
+        if (playerSessionDto.getConnectionType() == ConnectionType.CONNECTION_TYPE_PLAYER) {
             assertTrue(playerSessionDto.getPosition() > 0);
             assertEquals(Integer.valueOf(playerSessionDto.getPosition()), playerSession.getPosition());
         } else {
@@ -233,7 +233,7 @@ public abstract class Validator {
         var table = tableOpt.get();
         assertEquals(tableId, table.getId().toString());
         assertEquals(tableDto.getName(), table.getName());
-        assertEquals(ProtoConvert.toModel(tableDto.getGameType()), table.getGameType());
+        assertEquals(tableDto.getGameType(), table.getGameType());
         return table;
     }
 

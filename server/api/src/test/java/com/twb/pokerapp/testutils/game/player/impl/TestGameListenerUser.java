@@ -1,6 +1,6 @@
 package com.twb.pokerapp.testutils.game.player.impl;
 
-import com.twb.pokerapp.domain.enumeration.ConnectionType;
+import com.twb.pokerapp.proto.ConnectionType;
 import com.twb.pokerapp.proto.ServerMessageDTO;
 import com.twb.pokerapp.testutils.game.player.AbstractTestUser;
 import com.twb.pokerapp.testutils.game.player.TestUserParams;
@@ -38,6 +38,6 @@ public class TestGameListenerUser extends AbstractTestUser {
 
     @Override
     protected ConnectionType getConnectionType() {
-        return ConnectionType.LISTENER;
+        return ConnectionType.CONNECTION_TYPE_LISTENER;
     }
 }

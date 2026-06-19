@@ -78,7 +78,7 @@ public class ServerMessageFactory {
                 .setAmountToCall(ProtoConvert.money(nextActionsDto.amountToCall()))
                 .setPlayerTurnWaitMs(gameSpeedService.getPlayerTurnWait(bettingRound, playerTurnWaitMs));
         for (var action : nextActionsDto.nextActions()) {
-            payload.addNextActions(ProtoConvert.toProto(action));
+            payload.addNextActions(action);
         }
         return envelope().setPlayerTurn(payload).build();
     }

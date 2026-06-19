@@ -2,8 +2,10 @@ package com.twb.pokerapp.service.game.deck.shuffler.impl;
 
 import com.twb.pokerapp.domain.Card;
 import com.twb.pokerapp.domain.FixedScenario;
-import com.twb.pokerapp.domain.enumeration.RankType;
-import com.twb.pokerapp.domain.enumeration.SuitType;
+import com.twb.pokerapp.domain.poker.Ranks;
+import com.twb.pokerapp.domain.poker.Suits;
+import com.twb.pokerapp.proto.RankType;
+import com.twb.pokerapp.proto.SuitType;
 import com.twb.pokerapp.repository.FixedScenarioRepository;
 import com.twb.pokerapp.service.game.deck.shuffler.Shuffler;
 import lombok.RequiredArgsConstructor;
@@ -67,8 +69,8 @@ public class FixedScenarioShuffler extends Shuffler {
         var cardsSplit = cardsStr.split(";");
         var cardsFound = new ArrayList<Card>();
         for (var cardStr : cardsSplit) {
-            var rankType = RankType.fromRankChar(cardStr.charAt(0));
-            var suitType = SuitType.fromSuitChar(cardStr.charAt(1));
+            var rankType = Ranks.fromChar(cardStr.charAt(0));
+            var suitType = Suits.fromChar(cardStr.charAt(1));
             var foundCard = cards.stream()
                     .filter(card -> rankAndSuitCardEquals(card, rankType, suitType))
                     .findFirst()

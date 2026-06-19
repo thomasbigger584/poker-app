@@ -11,9 +11,11 @@ public class RoundMapper {
         if (model == null) {
             return null;
         }
-        return RoundDTO.newBuilder()
-                .setId(ProtoConvert.uuidStr(model.getId()))
-                .setRoundState(ProtoConvert.toProto(model.getRoundState()))
-                .build();
+        var builder = RoundDTO.newBuilder()
+                .setId(ProtoConvert.uuidStr(model.getId()));
+        if (model.getRoundState() != null) {
+            builder.setRoundState(model.getRoundState());
+        }
+        return builder.build();
     }
 }

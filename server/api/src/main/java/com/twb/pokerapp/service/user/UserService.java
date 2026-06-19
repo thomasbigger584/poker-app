@@ -3,7 +3,7 @@ package com.twb.pokerapp.service.user;
 import com.twb.pokerapp.configuration.Constants;
 import com.twb.pokerapp.domain.AppUser;
 import com.twb.pokerapp.domain.PhysicalUser;
-import com.twb.pokerapp.domain.enumeration.TransactionHistoryType;
+import com.twb.pokerapp.proto.TransactionHistoryType;
 import com.twb.pokerapp.mapper.ProtoConvert;
 import com.twb.pokerapp.mapper.UserMapper;
 import com.twb.pokerapp.proto.AppUserDTO;
@@ -52,7 +52,7 @@ public class UserService {
                 .map(user -> {
                     var resetFunds = Constants.INITIAL_USER_FUNDS;
                     var difference = resetFunds.subtract(user.getTotalFunds());
-                    transactionHistoryService.create(user, difference, TransactionHistoryType.RESET);
+                    transactionHistoryService.create(user, difference, TransactionHistoryType.TRANSACTION_HISTORY_TYPE_RESET);
                     user.setTotalFunds(resetFunds);
                     var savedUser = repository.save(user);
                     return mapper.modelToDto(savedUser);
@@ -70,7 +70,7 @@ public class UserService {
                 .map(user -> {
                     user.setTotalFunds(user.getTotalFunds().add(amount));
                     var savedUser = repository.save(user);
-                    transactionHistoryService.create(savedUser, amount, TransactionHistoryType.DEPOSIT);
+                    transactionHistoryService.create(savedUser, amount, TransactionHistoryType.TRANSACTION_HISTORY_TYPE_DEPOSIT);
                     return mapper.modelToDto(savedUser);
                 });
     }
@@ -89,7 +89,7 @@ public class UserService {
                     }
                     user.setTotalFunds(user.getTotalFunds().subtract(amount));
                     var savedUser = repository.save(user);
-                    transactionHistoryService.create(savedUser, amount.negate(), TransactionHistoryType.WITHDRAW);
+                    transactionHistoryService.create(savedUser, amount.negate(), TransactionHistoryType.TRANSACTION_HISTORY_TYPE_WITHDRAW);
                     return mapper.modelToDto(savedUser);
                 });
     }

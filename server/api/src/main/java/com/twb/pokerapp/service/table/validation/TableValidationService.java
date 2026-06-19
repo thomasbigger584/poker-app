@@ -2,6 +2,7 @@ package com.twb.pokerapp.service.table.validation;
 
 import com.twb.pokerapp.mapper.ProtoConvert;
 import com.twb.pokerapp.proto.CreateTableDTO;
+import com.twb.pokerapp.service.game.GameStrategies;
 import com.twb.pokerapp.web.exception.ValidationException;
 
 import java.math.BigDecimal;
@@ -24,7 +25,7 @@ public abstract class TableValidationService {
         if (dto.getName().isBlank()) {
             throw new ValidationException("name", "Table Name is required");
         }
-        if (ProtoConvert.toModel(dto.getGameType()) == null) {
+        if (dto.getGameTypeValue() <= 0) {
             throw new ValidationException("gameType", "Game Type is required");
         }
         if (dto.getMinPlayers() <= 0) {
@@ -38,12 +39,12 @@ public abstract class TableValidationService {
     }
 
     private void validatePlayerCounts(CreateTableDTO dto) {
-        var gameType = ProtoConvert.toModel(dto.getGameType());
-        var minPlayers = gameType.getMinPlayerCount();
+        var gameType = dto.getGameType();
+        var minPlayers = GameStrategies.minPlayers(gameType);
         if (dto.getMinPlayers() < minPlayers) {
             throw new ValidationException("minPlayers", "Min Players should be at least " + minPlayers);
         }
-        var maxPlayers = gameType.getMaxPlayerCount();
+        var maxPlayers = GameStrategies.maxPlayers(gameType);
         if (dto.getMaxPlayers() > maxPlayers) {
             throw new ValidationException("maxPlayers", "Max Players should be at least " + maxPlayers);
         }

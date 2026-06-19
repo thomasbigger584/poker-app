@@ -4,9 +4,9 @@ import com.twb.pokerapp.domain.AppUser;
 import com.twb.pokerapp.domain.PhysicalUser;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.PokerTable;
-import com.twb.pokerapp.domain.enumeration.ConnectionType;
-import com.twb.pokerapp.domain.enumeration.SessionState;
-import com.twb.pokerapp.domain.enumeration.TransactionHistoryType;
+import com.twb.pokerapp.proto.ConnectionType;
+import com.twb.pokerapp.proto.SessionState;
+import com.twb.pokerapp.proto.TransactionHistoryType;
 import com.twb.pokerapp.proto.PlayerSessionDTO;
 import com.twb.pokerapp.mapper.PlayerSessionMapper;
 import com.twb.pokerapp.repository.HandRepository;
@@ -41,7 +41,7 @@ public class PlayerSessionService {
     public PlayerSessionDTO connectUserToRound(PokerTable table, AppUser user, ConnectionType connectionType, BigDecimal buyInAmount) {
         var sessionOpt = repository.findByTableIdAndUsername(table.getId(), user.getUsername());
 
-        if (sessionOpt.isPresent() && sessionOpt.get().getSessionState() == SessionState.CONNECTED) {
+        if (sessionOpt.isPresent() && sessionOpt.get().getSessionState() == SessionState.SESSION_STATE_CONNECTED) {
             var message = String.format("User %s is already connected to table %s", user.getUsername(), table.getId());
             log.warn(message);
             throw new GamePlayerErrorLogException(sessionOpt.get(), message);
@@ -52,9 +52,9 @@ public class PlayerSessionService {
         session.setUser(user);
         session.setConnectionType(connectionType);
         session.setActive(false);
-        session.setSessionState(SessionState.CONNECTED);
+        session.setSessionState(SessionState.SESSION_STATE_CONNECTED);
 
-        if (connectionType == ConnectionType.PLAYER) {
+        if (connectionType == ConnectionType.CONNECTION_TYPE_PLAYER) {
             var position = getNextAvailablePosition(table);
             session.setPosition(position);
             session.setFunds(buyInAmount);
@@ -62,7 +62,7 @@ public class PlayerSessionService {
             if (user instanceof PhysicalUser physicalUser) {
                 physicalUser.setTotalFunds(physicalUser.getTotalFunds().subtract(buyInAmount));
                 userRepository.save(physicalUser);
-                transactionHistoryService.create(physicalUser, buyInAmount.negate(), TransactionHistoryType.BUYIN);
+                transactionHistoryService.create(physicalUser, buyInAmount.negate(), TransactionHistoryType.TRANSACTION_HISTORY_TYPE_BUYIN);
             }
         }
 
@@ -72,23 +72,23 @@ public class PlayerSessionService {
 
     @Transactional(propagation = Propagation.MANDATORY)
     public void disconnectUser(PlayerSession session) {
-        if (session.getSessionState() == SessionState.DISCONNECTED) {
+        if (session.getSessionState() == SessionState.SESSION_STATE_DISCONNECTED) {
             return;
         }
         log.info("Disconnecting user {}", session.getUser().getUsername());
         var sessionFundsRemaining = session.getFunds();
-        if (session.getConnectionType() == ConnectionType.PLAYER
+        if (session.getConnectionType() == ConnectionType.CONNECTION_TYPE_PLAYER
                 && sessionFundsRemaining != null) {
             var user = session.getUser();
             if (user instanceof PhysicalUser physicalUser) {
                 var totalNewFunds = physicalUser.getTotalFunds().add(sessionFundsRemaining);
                 physicalUser.setTotalFunds(totalNewFunds);
                 userRepository.save(physicalUser);
-                transactionHistoryService.create(physicalUser, sessionFundsRemaining, TransactionHistoryType.CASHOUT);
+                transactionHistoryService.create(physicalUser, sessionFundsRemaining, TransactionHistoryType.TRANSACTION_HISTORY_TYPE_CASHOUT);
             }
         }
 
-        session.setSessionState(SessionState.DISCONNECTED);
+        session.setSessionState(SessionState.SESSION_STATE_DISCONNECTED);
         session.setPokerTable(null);
         session.setRound(null);
         session.setActive(null);

@@ -1,7 +1,8 @@
 package com.twb.pokerapp.service.game.thread.impl.texas;
 
 import com.twb.pokerapp.domain.*;
-import com.twb.pokerapp.domain.enumeration.HandType;
+import com.twb.pokerapp.domain.poker.HandTypeNames;
+import com.twb.pokerapp.proto.HandType;
 import com.twb.pokerapp.repository.*;
 import com.twb.pokerapp.service.game.eval.HandEvaluator;
 import com.twb.pokerapp.service.game.eval.dto.EvalPlayerHandDTO;
@@ -116,7 +117,7 @@ public class TexasEvaluationService {
 
         var bestHand = potHands.getFirst();
         var winners = potHands.stream()
-                .filter(hand -> hand.compareTo(bestHand) == 0 || hand.getHandType() == HandType.ROYAL_FLUSH)
+                .filter(hand -> hand.compareTo(bestHand) == 0 || hand.getHandType() == HandType.HAND_TYPE_ROYAL_FLUSH)
                 .toList();
 
         distributePotToWinners(params, round, pot, winners);
@@ -188,7 +189,7 @@ public class TexasEvaluationService {
 
         var handTypeStr = "Unknown";
         if (!winners.isEmpty() && winners.getFirst().getHandType() != null) {
-            handTypeStr = winners.getFirst().getHandType().getValue();
+            handTypeStr = HandTypeNames.displayName(winners.getFirst().getHandType());
         }
 
         String message;

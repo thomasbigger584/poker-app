@@ -2,7 +2,7 @@ package com.twb.pokerapp.service.keycloak;
 
 import com.twb.pokerapp.configuration.Constants;
 import com.twb.pokerapp.domain.PhysicalUser;
-import com.twb.pokerapp.domain.enumeration.TransactionHistoryType;
+import com.twb.pokerapp.proto.TransactionHistoryType;
 import com.twb.pokerapp.mapper.UserMapper;
 import com.twb.pokerapp.repository.UserRepository;
 import com.twb.pokerapp.service.TransactionHistoryService;
@@ -67,7 +67,7 @@ public class KeycloakUserService {
                 var totalFunds = Constants.INITIAL_USER_FUNDS;
                 appUser.setTotalFunds(totalFunds);
                 appUser = userRepository.save(appUser);
-                transactionHistoryService.create(appUser, totalFunds, TransactionHistoryType.DEPOSIT);
+                transactionHistoryService.create(appUser, totalFunds, TransactionHistoryType.TRANSACTION_HISTORY_TYPE_DEPOSIT);
                 createdUsers++;
             }
         }

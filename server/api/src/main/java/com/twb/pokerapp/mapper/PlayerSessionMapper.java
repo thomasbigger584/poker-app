@@ -17,9 +17,13 @@ public class PlayerSessionMapper {
         }
         var builder = PlayerSessionDTO.newBuilder()
                 .setId(ProtoConvert.uuidStr(model.getId()))
-                .setFunds(ProtoConvert.money(model.getFunds()))
-                .setSessionState(ProtoConvert.toProto(model.getSessionState()))
-                .setConnectionType(ProtoConvert.toProto(model.getConnectionType()));
+                .setFunds(ProtoConvert.money(model.getFunds()));
+        if (model.getSessionState() != null) {
+            builder.setSessionState(model.getSessionState());
+        }
+        if (model.getConnectionType() != null) {
+            builder.setConnectionType(model.getConnectionType());
+        }
         if (model.getUser() != null) {
             builder.setUser(userMapper.modelToDto(model.getUser()));
         }

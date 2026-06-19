@@ -4,7 +4,7 @@ import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.Card;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.Round;
-import com.twb.pokerapp.domain.enumeration.ActionType;
+import com.twb.pokerapp.proto.ActionType;
 import com.twb.pokerapp.repository.CardRepository;
 import com.twb.pokerapp.repository.HandRepository;
 import com.twb.pokerapp.repository.PlayerActionRepository;
@@ -86,7 +86,7 @@ public class StubBotActionService implements BotActionService {
             var pot = estimatePot(round.getId());
             var random = ThreadLocalRandom.current();
 
-            if (contains(availableActions, ActionType.CHECK)) {
+            if (contains(availableActions, ActionType.ACTION_TYPE_CHECK)) {
                 decision = actWhenChecked(equity, pot, funds, random);
             } else {
                 decision = actWhenFacingBet(equity, pot, callCost, funds, availableActions, random);
@@ -123,7 +123,7 @@ public class StubBotActionService implements BotActionService {
         if (bet) {
             return betOrAllIn(betSize(pot, funds, equity, random), funds);
         }
-        return action(ActionType.CHECK, null);
+        return action(ActionType.ACTION_TYPE_CHECK, null);
     }
 
     /**
@@ -132,17 +132,17 @@ public class StubBotActionService implements BotActionService {
      */
     private PlayerActionCommand actWhenFacingBet(double equity, BigDecimal pot, BigDecimal callCost,
                                                    BigDecimal funds, ActionType[] availableActions, Random random) {
-        var canCall = contains(availableActions, ActionType.CALL);
-        var canRaise = contains(availableActions, ActionType.RAISE);
+        var canCall = contains(availableActions, ActionType.ACTION_TYPE_CALL);
+        var canRaise = contains(availableActions, ActionType.ACTION_TYPE_RAISE);
         var potOdds = potOdds(callCost, pot);
         var continueThreshold = potOdds + CALL_MARGIN;
 
         // Can't afford a full call: the only live options are fold or shove.
         if (!canCall) {
             if (equity >= continueThreshold || random.nextDouble() < BLUFF_FREQUENCY) {
-                return action(ActionType.ALL_IN, funds);
+                return action(ActionType.ACTION_TYPE_ALL_IN, funds);
             }
-            return action(ActionType.FOLD, null);
+            return action(ActionType.ACTION_TYPE_FOLD, null);
         }
 
         // Pot odds say we're behind: usually fold, occasionally bluff-raise.
@@ -150,7 +150,7 @@ public class StubBotActionService implements BotActionService {
             if (canRaise && random.nextDouble() < BLUFF_FREQUENCY) {
                 return raiseOrAllIn(raiseSize(pot, callCost, funds, equity, random), callCost, funds);
             }
-            return action(ActionType.FOLD, null);
+            return action(ActionType.ACTION_TYPE_FOLD, null);
         }
 
         // Equity beats the price: continue. Decide whether to raise for value or just call.
@@ -165,7 +165,7 @@ public class StubBotActionService implements BotActionService {
         if (raise) {
             return raiseOrAllIn(raiseSize(pot, callCost, funds, equity, random), callCost, funds);
         }
-        return action(ActionType.CALL, callCost);
+        return action(ActionType.ACTION_TYPE_CALL, callCost);
     }
 
     /**
@@ -173,16 +173,16 @@ public class StubBotActionService implements BotActionService {
      * and shoves rather than folds when it can no longer cover a call (mirrors the old stub).
      */
     private PlayerActionCommand fallbackDecision(ActionType[] availableActions, BigDecimal callCost, BigDecimal funds) {
-        if (contains(availableActions, ActionType.CHECK)) {
-            return action(ActionType.CHECK, null);
+        if (contains(availableActions, ActionType.ACTION_TYPE_CHECK)) {
+            return action(ActionType.ACTION_TYPE_CHECK, null);
         }
-        if (contains(availableActions, ActionType.CALL)) {
-            return action(ActionType.CALL, callCost);
+        if (contains(availableActions, ActionType.ACTION_TYPE_CALL)) {
+            return action(ActionType.ACTION_TYPE_CALL, callCost);
         }
-        if (contains(availableActions, ActionType.ALL_IN)) {
-            return action(ActionType.ALL_IN, funds);
+        if (contains(availableActions, ActionType.ACTION_TYPE_ALL_IN)) {
+            return action(ActionType.ACTION_TYPE_ALL_IN, funds);
         }
-        return action(ActionType.FOLD, null);
+        return action(ActionType.ACTION_TYPE_FOLD, null);
     }
 
     // *****************************************************************************************
@@ -222,20 +222,20 @@ public class StubBotActionService implements BotActionService {
 
     private PlayerActionCommand betOrAllIn(BigDecimal size, BigDecimal funds) {
         if (size.compareTo(funds) >= 0) {
-            return action(ActionType.ALL_IN, funds);
+            return action(ActionType.ACTION_TYPE_ALL_IN, funds);
         }
-        return action(ActionType.BET, size);
+        return action(ActionType.ACTION_TYPE_BET, size);
     }
 
     private PlayerActionCommand raiseOrAllIn(BigDecimal incremental, BigDecimal callCost, BigDecimal funds) {
         if (incremental.compareTo(funds) >= 0) {
-            return action(ActionType.ALL_IN, funds);
+            return action(ActionType.ACTION_TYPE_ALL_IN, funds);
         }
         if (incremental.compareTo(callCost) <= 0) {
             // Sizing collapsed to a non-raise (tiny pot/stack) — just call instead.
-            return action(ActionType.CALL, callCost);
+            return action(ActionType.ACTION_TYPE_CALL, callCost);
         }
-        return action(ActionType.RAISE, incremental);
+        return action(ActionType.ACTION_TYPE_RAISE, incremental);
     }
 
     private BigDecimal clampAmount(BigDecimal amount, BigDecimal funds) {

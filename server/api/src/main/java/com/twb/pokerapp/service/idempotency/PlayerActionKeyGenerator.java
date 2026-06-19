@@ -1,6 +1,6 @@
 package com.twb.pokerapp.service.idempotency;
 
-import com.twb.pokerapp.domain.enumeration.ActionType;
+import com.twb.pokerapp.proto.ActionType;
 import jakarta.annotation.Nonnull;
 import org.springframework.cache.interceptor.KeyGenerator;
 import org.springframework.stereotype.Component;

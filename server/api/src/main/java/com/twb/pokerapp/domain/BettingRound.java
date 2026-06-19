@@ -1,7 +1,9 @@
 package com.twb.pokerapp.domain;
 
-import com.twb.pokerapp.domain.enumeration.BettingRoundState;
-import com.twb.pokerapp.domain.enumeration.BettingRoundType;
+import com.twb.pokerapp.domain.converter.BettingRoundStateConverter;
+import com.twb.pokerapp.domain.converter.BettingRoundTypeConverter;
+import com.twb.pokerapp.proto.BettingRoundState;
+import com.twb.pokerapp.proto.BettingRoundType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -27,12 +29,12 @@ public class BettingRound extends Auditable {
     private UUID id;
 
     @NotNull
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = BettingRoundTypeConverter.class)
     @Column(name = "type")
     private BettingRoundType type;
 
     @NotNull
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = BettingRoundStateConverter.class)
     @Column(name = "state")
     private BettingRoundState state;
 
