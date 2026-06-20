@@ -77,7 +77,8 @@ jobs:
           FILTER_PATH="client/android"
           END_SHA="HEAD"
           CURRENT_RELEASE_TAG="${{ steps.release_meta.outputs.release_tag }}"
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 --exclude="$CURRENT_RELEASE_TAG" ${END_SHA}^ 2>/dev/null || echo "not_found")
+          # Match only Android tags (`v<date>`) so Flutter's `flutter-<date>` tags are ignored.
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 --match 'v*' --exclude="$CURRENT_RELEASE_TAG" ${END_SHA}^ 2>/dev/null || echo "not_found")
           
           if [ "$PREVIOUS_TAG" = "not_found" ]; then
             LOG_RANGE="--root"
@@ -156,5 +157,8 @@ jobs:
         with:
           keep_latest: 3
           delete_tags: false
+          # Scope to Android tags (`v<date>`) so this never prunes the Flutter
+          # releases, whose tags are namespaced `flutter-<date>` (no "v").
+          delete_tag_pattern: v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
