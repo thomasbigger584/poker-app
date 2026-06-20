@@ -1,0 +1,46 @@
+name: 🛠️ Flutter CI
+
+# Fast feedback on pull requests touching the Flutter client: static analysis,
+# unit tests, and a debug build to catch compile errors. Single Linux runner —
+# the full multi-platform build only runs on the master pre-release pipeline
+# (see flutter-release.yml).
+
+on:
+  pull_request:
+    branches: [ "master" ]
+    paths:
+      - "client/flutter/**"
+      - ".github/workflows/flutter-ci.yml"
+
+env:
+  FLUTTER_VERSION: "3.44.2"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./client/flutter
+
+    steps:
+      - name: 📋 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐦 Set up Flutter ${{ env.FLUTTER_VERSION }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: 📦 Resolve dependencies
+        run: flutter pub get
+
+      - name: 🔍 Analyze
+        run: flutter analyze
+
+      - name: 🧪 Test
+        run: flutter test
+
+      - name: 🏗️ Build Debug APK
+        run: flutter build apk --debug
