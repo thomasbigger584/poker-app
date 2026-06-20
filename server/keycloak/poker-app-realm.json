@@ -954,9 +954,15 @@
       "alwaysDisplayInConsole": true,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "com.twb.pokerapp:/oauth2redirect"
+        "com.twb.pokerapp:/oauth2redirect",
+        "http://localhost:8484/oauth2redirect",
+        "http://localhost:*",
+        "http://127.0.0.1:*",
+        "https://poker-app.dinosaur-emperor.ts.net/*"
       ],
-      "webOrigins": [],
+      "webOrigins": [
+        "+"
+      ],
       "notBefore": 0,
       "bearerOnly": false,
       "consentRequired": false,
