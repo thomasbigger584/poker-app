@@ -50,9 +50,10 @@ class OidcRemoteDataSource {
   _Redirect _resolveRedirect() {
     if (PlatformInfo.isWeb) {
       // Redirect back to a static page on the app's own origin (see web/auth.html).
-      final origin = Uri.base.origin;
+      // Resolve against the document base so it works whether the app is served
+      // from the origin root or a sub-path (e.g. /app/ behind nginx).
       return _Redirect(
-        redirectUri: '$origin/auth.html',
+        redirectUri: Uri.base.resolve('auth.html').toString(),
         callbackUrlScheme: Uri.base.scheme,
       );
     }
