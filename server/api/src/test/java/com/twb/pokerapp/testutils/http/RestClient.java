@@ -1,12 +1,11 @@
 package com.twb.pokerapp.testutils.http;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.twb.pokerapp.domain.enumeration.GameType;
-import com.twb.pokerapp.dto.table.CreateTableDTO;
-import com.twb.pokerapp.dto.table.TableDTO;
+import com.google.protobuf.Message;
+import com.twb.pokerapp.proto.CreateTableDTO;
+import com.twb.pokerapp.proto.GameType;
+import com.twb.pokerapp.proto.TableDTO;
 import com.twb.pokerapp.testutils.game.params.scenario.ScenarioParams;
 import jakarta.ws.rs.core.HttpHeaders;
-import jakarta.ws.rs.core.MediaType;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.Keycloak;
 import org.springframework.http.HttpStatus;
@@ -28,7 +27,7 @@ public class RestClient {
     private static final int EXPOSED_PORT = 8081;
     private static final String API_BASE_URL = "http://localhost:%d".formatted(EXPOSED_PORT);
     private static final String BEARER_PREFIX = "Bearer ";
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final String PROTOBUF_MEDIA_TYPE = "application/x-protobuf";
     private static final Map<Keycloak, RestClient> INSTANCES = new HashMap<>();
     private final Keycloak keycloak;
 
@@ -42,37 +41,41 @@ public class RestClient {
     }
 
     public TableDTO createTable(ScenarioParams params) throws Exception {
-        var createDto = new CreateTableDTO();
-        createDto.setName(UUID.randomUUID().toString());
-        createDto.setGameType(GameType.TEXAS_HOLDEM);
-        createDto.setSpeedMultiplier(params.getSpeedMultiplier());
-        createDto.setTotalRounds(params.getTotalRounds());
-        createDto.setMinPlayers(params.getScenarioPlayers().size());
-        createDto.setMaxPlayers(6);
-        createDto.setMinBuyin(params.getMinBuyIn());
-        createDto.setMaxBuyin(BigDecimal.valueOf(10_000));
+        var createDto = CreateTableDTO.newBuilder()
+                .setName(UUID.randomUUID().toString())
+                .setGameType(GameType.GAME_TYPE_TEXAS_HOLDEM)
+                .setSpeedMultiplier(params.getSpeedMultiplier())
+                .setTotalRounds(params.getTotalRounds())
+                .setMinPlayers(params.getScenarioPlayers().size())
+                .setMaxPlayers(6)
+                .setMinBuyin(params.getMinBuyIn().toPlainString())
+                .setMaxBuyin(BigDecimal.valueOf(10_000).toPlainString())
+                .build();
 
         var createResponse = post(TableDTO.class, createDto, "/poker-table");
         assertEquals(HttpStatus.CREATED.value(), createResponse.httpResponse().statusCode());
         return createResponse.resultBody();
     }
 
-    public <ResultBody, RequestBody> ApiHttpResponse<ResultBody> post(Class<ResultBody> resultClass,
-                                                                      RequestBody requestBody, String endpoint) throws Exception {
-        var json = OBJECT_MAPPER.writeValueAsString(requestBody);
+    public <ResultBody> ApiHttpResponse<ResultBody> post(Class<ResultBody> resultClass,
+                                                         Message requestBody, String endpoint) throws Exception {
+        var bodyPublisher = (requestBody == null)
+                ? HttpRequest.BodyPublishers.noBody()
+                : HttpRequest.BodyPublishers.ofByteArray(requestBody.toByteArray());
         var request = HttpRequest.newBuilder()
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.CONTENT_TYPE, PROTOBUF_MEDIA_TYPE)
+                .header(HttpHeaders.ACCEPT, PROTOBUF_MEDIA_TYPE)
                 .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken())
                 .uri(URI.create(API_BASE_URL + endpoint))
-                .POST(HttpRequest.BodyPublishers.ofString(json))
+                .POST(bodyPublisher)
                 .build();
         return executeRequest(resultClass, request);
     }
 
     public <ResultBody> ApiHttpResponse<ResultBody> get(Class<ResultBody> resultClass, String endpoint) throws Exception {
-        var accessToken = getAccessToken();
         var request = HttpRequest.newBuilder()
-                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + accessToken)
+                .header(HttpHeaders.ACCEPT, PROTOBUF_MEDIA_TYPE)
+                .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken())
                 .uri(URI.create(API_BASE_URL + endpoint))
                 .GET().build();
         return executeRequest(resultClass, request);
@@ -83,7 +86,8 @@ public class RestClient {
                 .header(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken())
                 .uri(URI.create(API_BASE_URL + endpoint))
                 .DELETE().build();
-        return executeRequest(request);
+        var response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofByteArray());
+        return new ApiHttpResponse<>(response, null);
     }
 
     private String getAccessToken() {
@@ -93,17 +97,21 @@ public class RestClient {
     }
 
     private <ResultBody> ApiHttpResponse<ResultBody> executeRequest(Class<ResultBody> resultClass, HttpRequest request) throws Exception {
-        var response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+        var response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofByteArray());
         assert HttpStatus.valueOf(response.statusCode()).is2xxSuccessful() : "status code should be successful: " + response.statusCode();
-        var result = OBJECT_MAPPER.readValue(response.body(), resultClass);
+        var result = parse(resultClass, response.body());
         return new ApiHttpResponse<>(response, result);
     }
 
-    private ApiHttpResponse<?> executeRequest(HttpRequest request) throws Exception {
-        var response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
-        return new ApiHttpResponse<>(response, Void.class);
+    /**
+     * Parse a binary protobuf body into the generated message type via its static {@code parseFrom(byte[])}.
+     */
+    @SuppressWarnings("unchecked")
+    private <ResultBody> ResultBody parse(Class<ResultBody> resultClass, byte[] body) throws Exception {
+        var parseFrom = resultClass.getMethod("parseFrom", byte[].class);
+        return (ResultBody) parseFrom.invoke(null, (Object) body);
     }
 
-    public record ApiHttpResponse<ResultBody>(HttpResponse<String> httpResponse, ResultBody resultBody) {
+    public record ApiHttpResponse<ResultBody>(HttpResponse<byte[]> httpResponse, ResultBody resultBody) {
     }
 }

@@ -1,16 +1,15 @@
 package com.twb.pokerapp.web.rest;
 
-import com.twb.pokerapp.dto.appuser.AppUserDTO;
-import com.twb.pokerapp.dto.appuser.UserAmountDTO;
+import com.twb.pokerapp.proto.AppUserDTO;
+import com.twb.pokerapp.proto.AppUserListResponse;
+import com.twb.pokerapp.proto.UserAmountDTO;
 import com.twb.pokerapp.service.user.BotUserService;
 import com.twb.pokerapp.service.user.UserService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.List;
 
 @RestController
 @RequestMapping("/app-user")
@@ -27,8 +26,11 @@ public class AppUserResource {
     }
 
     @GetMapping("/bots")
-    public ResponseEntity<List<AppUserDTO>> getBots() {
-        return ResponseEntity.ok(botUserService.listBots());
+    public ResponseEntity<AppUserListResponse> getBots() {
+        var response = AppUserListResponse.newBuilder()
+                .addAllUsers(botUserService.listBots())
+                .build();
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/reset-funds")
@@ -39,14 +41,14 @@ public class AppUserResource {
     }
 
     @PostMapping("/deposit")
-    public ResponseEntity<AppUserDTO> deposit(Principal principal, @Valid @RequestBody UserAmountDTO amountDto) {
+    public ResponseEntity<AppUserDTO> deposit(Principal principal, @RequestBody UserAmountDTO amountDto) {
         return service.deposit(principal, amountDto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity<AppUserDTO> withdraw(Principal principal, @Valid @RequestBody UserAmountDTO amountDto) {
+    public ResponseEntity<AppUserDTO> withdraw(Principal principal, @RequestBody UserAmountDTO amountDto) {
         return service.withdraw(principal, amountDto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

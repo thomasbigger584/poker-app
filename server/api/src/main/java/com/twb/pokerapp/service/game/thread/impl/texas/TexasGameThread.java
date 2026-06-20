@@ -1,8 +1,10 @@
 package com.twb.pokerapp.service.game.thread.impl.texas;
 
 import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.domain.enumeration.CardType;
-import com.twb.pokerapp.domain.enumeration.RoundState;
+import com.twb.pokerapp.mapper.enumeration.CardGroups;
+import com.twb.pokerapp.service.game.round.RoundProgression;
+import com.twb.pokerapp.proto.CardType;
+import com.twb.pokerapp.proto.RoundState;
 import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
 import com.twb.pokerapp.service.game.thread.impl.texas.bettinground.TexasBettingRoundService;
@@ -41,13 +43,14 @@ public class TexasGameThread extends GameThread {
     @Override
     protected void onRunRound(RoundState roundState) {
         switch (roundState) {
-            case INIT_DEAL -> initDeal();
-            case INIT_DEAL_BET, FLOP_DEAL_BET, TURN_DEAL_BET, RIVER_DEAL_BET ->
-                    texasBettingRoundService.runBettingRound(this);
-            case FLOP_DEAL -> dealFlop();
-            case TURN_DEAL -> dealCommunityCard(CardType.TURN_CARD);
-            case RIVER_DEAL -> dealCommunityCard(CardType.RIVER_CARD);
-            case EVAL -> evaluationService.evaluate(params);
+            case ROUND_STATE_INIT_DEAL -> initDeal();
+            case ROUND_STATE_INIT_DEAL_BET, ROUND_STATE_FLOP_DEAL_BET, ROUND_STATE_TURN_DEAL_BET,
+                 ROUND_STATE_RIVER_DEAL_BET -> texasBettingRoundService.runBettingRound(this);
+            case ROUND_STATE_FLOP_DEAL -> dealFlop();
+            case ROUND_STATE_TURN_DEAL -> dealCommunityCard(CardType.CARD_TYPE_TURN_CARD);
+            case ROUND_STATE_RIVER_DEAL -> dealCommunityCard(CardType.CARD_TYPE_RIVER_CARD);
+            case ROUND_STATE_EVAL -> evaluationService.evaluate(params);
+            default -> { /* non-runnable states (waiting/finished/failed/unspecified) do nothing */ }
         }
     }
 
@@ -70,7 +73,7 @@ public class TexasGameThread extends GameThread {
             }
         }
 
-        for (var cardType : CardType.PLAYER_CARDS) {
+        for (var cardType : CardGroups.PLAYER_CARDS) {
             for (var playerSession : dealtPlayers) {
                 checkRoundInterrupted();
                 dealPlayerCard(cardType, playerSession);
@@ -98,7 +101,7 @@ public class TexasGameThread extends GameThread {
     }
 
     private void dealFlop() {
-        for (var cardType : CardType.FLOP_CARDS) {
+        for (var cardType : CardGroups.FLOP_CARDS) {
             checkRoundInterrupted();
             dealCommunityCard(cardType);
         }
@@ -117,6 +120,6 @@ public class TexasGameThread extends GameThread {
 
     @Override
     protected RoundState getNextRoundState(RoundState roundState) {
-        return roundState.nextTexasState();
+        return RoundProgression.next(roundState);
     }
 }

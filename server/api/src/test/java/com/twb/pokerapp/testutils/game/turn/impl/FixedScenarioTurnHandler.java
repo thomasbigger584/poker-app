@@ -1,11 +1,11 @@
 package com.twb.pokerapp.testutils.game.turn.impl;
 
-import com.twb.pokerapp.domain.enumeration.ActionType;
-import com.twb.pokerapp.domain.enumeration.BettingRoundType;
+import com.twb.pokerapp.proto.ActionType;
+import com.twb.pokerapp.proto.BettingRoundType;
+import com.twb.pokerapp.proto.CreatePlayerActionDTO;
+import com.twb.pokerapp.proto.PlayerTurnDTO;
 import com.twb.pokerapp.testutils.game.player.AbstractTestUser;
 import com.twb.pokerapp.testutils.game.turn.TurnHandler;
-import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
-import com.twb.pokerapp.web.websocket.message.server.payload.PlayerTurnDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 
@@ -26,10 +26,10 @@ public class FixedScenarioTurnHandler implements TurnHandler {
                                     String riverActionsStr
     ) {
         this.bettingRoundActions = new EnumMap<>(BettingRoundType.class);
-        parseRound(username, preFlopActionsStr, BettingRoundType.DEAL);
-        parseRound(username, flopActionsStr, BettingRoundType.FLOP);
-        parseRound(username, turnActionsStr, BettingRoundType.TURN);
-        parseRound(username, riverActionsStr, BettingRoundType.RIVER);
+        parseRound(username, preFlopActionsStr, BettingRoundType.BETTING_ROUND_TYPE_DEAL);
+        parseRound(username, flopActionsStr, BettingRoundType.BETTING_ROUND_TYPE_FLOP);
+        parseRound(username, turnActionsStr, BettingRoundType.BETTING_ROUND_TYPE_TURN);
+        parseRound(username, riverActionsStr, BettingRoundType.BETTING_ROUND_TYPE_RIVER);
     }
 
     private void parseRound(String username, String playerActionStr, BettingRoundType bettingRoundType) {
@@ -44,16 +44,16 @@ public class FixedScenarioTurnHandler implements TurnHandler {
                 continue;
             }
 
-            var bettingRoundActions = this.bettingRoundActions
+            var queue = this.bettingRoundActions
                     .computeIfAbsent(bettingRoundType, k -> new ArrayDeque<>());
 
-            var action = new CreatePlayerActionDTO();
-            action.setAction(ActionType.valueOf(parts[1].trim()));
+            var builder = CreatePlayerActionDTO.newBuilder()
+                    .setAction(ActionType.valueOf("ACTION_TYPE_" + parts[1].trim()));
 
             if (parts.length > 2) {
-                action.setAmount(new BigDecimal(parts[2].trim()));
+                builder.setAmount(new BigDecimal(parts[2].trim()).toPlainString());
             }
-            bettingRoundActions.add(action);
+            queue.add(builder.build());
         }
     }
 

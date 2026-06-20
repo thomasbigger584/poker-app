@@ -1,13 +1,13 @@
 package com.twb.pokerapp.testutils.game.turn.impl;
 
-import com.twb.pokerapp.domain.enumeration.ActionType;
+import com.twb.pokerapp.mapper.ProtoConvert;
+import com.twb.pokerapp.proto.ActionType;
+import com.twb.pokerapp.proto.PlayerTurnDTO;
 import com.twb.pokerapp.testutils.game.player.AbstractTestUser;
 import com.twb.pokerapp.testutils.game.turn.TurnHandler;
-import com.twb.pokerapp.web.websocket.message.server.payload.PlayerTurnDTO;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
 
 import static com.twb.pokerapp.testutils.game.turn.TurnHandler.sendPlayerAction;
 
@@ -17,12 +17,11 @@ public class OptimisticTurnHandler implements TurnHandler {
 
     @Override
     public void handle(AbstractTestUser user, StompHeaders headers, PlayerTurnDTO playerTurn) {
-        if (Arrays.stream(playerTurn.getNextActions())
-                .anyMatch(actionType -> actionType == ActionType.BET)) {
-            sendPlayerAction(user, ActionType.BET, DEFAULT_BET_AMOUNT);
-        } else if (Arrays.stream(playerTurn.getNextActions())
-                .anyMatch(actionType -> actionType == ActionType.CALL)) {
-            sendPlayerAction(user, ActionType.CALL, playerTurn.getAmountToCall());
+        var nextActions = playerTurn.getNextActionsList();
+        if (nextActions.contains(ActionType.ACTION_TYPE_BET)) {
+            sendPlayerAction(user, ActionType.ACTION_TYPE_BET, DEFAULT_BET_AMOUNT);
+        } else if (nextActions.contains(ActionType.ACTION_TYPE_CALL)) {
+            sendPlayerAction(user, ActionType.ACTION_TYPE_CALL, ProtoConvert.bigDecimal(playerTurn.getAmountToCall()));
         } else {
             throw new IllegalStateException("Failed to find bet or call action in player turn response");
         }

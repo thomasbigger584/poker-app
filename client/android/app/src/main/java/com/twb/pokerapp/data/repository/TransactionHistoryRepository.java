@@ -4,7 +4,8 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import com.twb.pokerapp.data.model.dto.transactionhistory.TransactionHistoryDTO;
+import com.twb.pokerapp.proto.TransactionHistoryDTO;
+import com.twb.pokerapp.proto.TransactionHistoryListResponse;
 import com.twb.pokerapp.data.retrofit.api.TransactionHistoryApi;
 
 import java.util.List;
@@ -32,16 +33,16 @@ public class TransactionHistoryRepository extends BaseRepository {
     public void refreshCurrent(String type) {
         api.getCurrent(type).enqueue(new Callback<>() {
             @Override
-            public void onResponse(@NonNull Call<List<TransactionHistoryDTO>> call, @NonNull Response<List<TransactionHistoryDTO>> response) {
-                if (response.isSuccessful()) {
-                    _transactionsLiveData.setValue(response.body());
+            public void onResponse(@NonNull Call<TransactionHistoryListResponse> call, @NonNull Response<TransactionHistoryListResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    _transactionsLiveData.setValue(response.body().getTransactionsList());
                 } else {
                     _errorLiveData.setValue(new RuntimeException("Failed to get transaction histories: " + response.code()));
                 }
             }
 
             @Override
-            public void onFailure(@NonNull Call<List<TransactionHistoryDTO>> call, @NonNull Throwable throwable) {
+            public void onFailure(@NonNull Call<TransactionHistoryListResponse> call, @NonNull Throwable throwable) {
                 _errorLiveData.setValue(throwable);
             }
         });

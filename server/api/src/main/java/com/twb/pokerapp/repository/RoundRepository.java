@@ -16,8 +16,8 @@ public interface RoundRepository extends JpaRepository<Round, UUID> {
     @Query("""
             SELECT r
             FROM Round r
-            WHERE r.roundState <> com.twb.pokerapp.domain.enumeration.RoundState.FINISHED
-            AND r.roundState <> com.twb.pokerapp.domain.enumeration.RoundState.FAILED
+            WHERE r.roundState <> com.twb.pokerapp.proto.RoundState.ROUND_STATE_FINISHED
+            AND r.roundState <> com.twb.pokerapp.proto.RoundState.ROUND_STATE_FAILED
             """)
     List<Round> findAllCurrent();
 
@@ -25,8 +25,8 @@ public interface RoundRepository extends JpaRepository<Round, UUID> {
             SELECT r
             FROM Round r
             WHERE r.pokerTable.id = :tableId
-            AND r.roundState <> com.twb.pokerapp.domain.enumeration.RoundState.FINISHED
-            AND r.roundState <> com.twb.pokerapp.domain.enumeration.RoundState.FAILED
+            AND r.roundState <> com.twb.pokerapp.proto.RoundState.ROUND_STATE_FINISHED
+            AND r.roundState <> com.twb.pokerapp.proto.RoundState.ROUND_STATE_FAILED
             """)
     Optional<Round> findCurrentByTableId(@Param("tableId") UUID tableId);
 }

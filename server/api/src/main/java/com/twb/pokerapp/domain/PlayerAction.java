@@ -1,7 +1,8 @@
 package com.twb.pokerapp.domain;
 
 
-import com.twb.pokerapp.domain.enumeration.ActionType;
+import com.twb.pokerapp.domain.converter.ActionTypeConverter;
+import com.twb.pokerapp.proto.ActionType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -33,7 +34,7 @@ public class PlayerAction extends Auditable {
     private BettingRound bettingRound;
 
     @NotNull
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = ActionTypeConverter.class)
     @Column(name = "action_type")
     private ActionType actionType;
 

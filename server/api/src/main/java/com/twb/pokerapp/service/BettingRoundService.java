@@ -3,9 +3,9 @@ package com.twb.pokerapp.service;
 import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.BettingRoundRefund;
 import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.domain.enumeration.BettingRoundState;
-import com.twb.pokerapp.domain.enumeration.BettingRoundType;
 import com.twb.pokerapp.mapper.BettingRoundMapper;
+import com.twb.pokerapp.proto.BettingRoundState;
+import com.twb.pokerapp.proto.BettingRoundType;
 import com.twb.pokerapp.repository.BettingRoundRefundRepository;
 import com.twb.pokerapp.repository.BettingRoundRepository;
 import com.twb.pokerapp.repository.RoundRepository;
@@ -18,8 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import static com.twb.pokerapp.domain.enumeration.BettingRoundState.FAILED;
-import static com.twb.pokerapp.domain.enumeration.BettingRoundState.IN_PROGRESS;
+import static com.twb.pokerapp.proto.BettingRoundState.BETTING_ROUND_STATE_FAILED;
+import static com.twb.pokerapp.proto.BettingRoundState.BETTING_ROUND_STATE_IN_PROGRESS;
 import static com.twb.pokerapp.repository.RepositoryUtil.getThrowGameInterrupted;
 
 @Slf4j
@@ -34,13 +34,13 @@ public class BettingRoundService {
     @Transactional(propagation = Propagation.MANDATORY)
     public void reset() {
         repository.findAllCurrent()
-                .forEach(bettingRound -> setState(bettingRound, FAILED));
+                .forEach(bettingRound -> setState(bettingRound, BETTING_ROUND_STATE_FAILED));
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
     public void reset(UUID tableId) {
         repository.findCurrentByTableId(tableId)
-                .ifPresent(bettingRound -> setState(bettingRound, FAILED));
+                .ifPresent(bettingRound -> setState(bettingRound, BETTING_ROUND_STATE_FAILED));
     }
 
     @Transactional
@@ -52,7 +52,7 @@ public class BettingRoundService {
         var bettingRound = new BettingRound();
         bettingRound.setRound(round);
         bettingRound.setType(state);
-        bettingRound.setState(IN_PROGRESS);
+        bettingRound.setState(BETTING_ROUND_STATE_IN_PROGRESS);
 
         bettingRound = repository.save(bettingRound);
 

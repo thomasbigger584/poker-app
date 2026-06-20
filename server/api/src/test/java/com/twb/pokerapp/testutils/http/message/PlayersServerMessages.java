@@ -1,8 +1,7 @@
 package com.twb.pokerapp.testutils.http.message;
 
+import com.twb.pokerapp.proto.ServerMessageDTO;
 import com.twb.pokerapp.testutils.game.player.AbstractTestUser;
-import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
-import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
 import org.apache.commons.compress.utils.Lists;
 
 import java.util.ArrayList;
@@ -50,7 +49,7 @@ public class PlayersServerMessages extends HashMap<String, List<ServerMessageDTO
         var roundEncountered = 0;
         for (var message : receivedMessages) {
             filteredMessages.add(message);
-            if (message.getType().equals(ServerMessageType.ROUND_FINISHED)) {
+            if (message.getPayloadCase() == ServerMessageDTO.PayloadCase.ROUND_FINISHED) {
                 roundEncountered++;
             }
             if (roundEncountered == numberOfRounds) {

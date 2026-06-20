@@ -22,7 +22,7 @@ public abstract class AbstractConnectionProvider implements ConnectionProvider {
     @NonNull
     private final PublishSubject<LifecycleEvent> lifecycleStream;
     @NonNull
-    private final PublishSubject<String> messagesStream;
+    private final PublishSubject<byte[]> messagesStream;
 
     public AbstractConnectionProvider() {
         lifecycleStream = PublishSubject.create();
@@ -31,7 +31,7 @@ public abstract class AbstractConnectionProvider implements ConnectionProvider {
 
     @NonNull
     @Override
-    public Observable<String> messages() {
+    public Observable<byte[]> messages() {
         return messagesStream.startWith(initSocket().toObservable());
     }
 
@@ -65,12 +65,12 @@ public abstract class AbstractConnectionProvider implements ConnectionProvider {
 
     @NonNull
     @Override
-    public Completable send(String stompMessage) {
+    public Completable send(byte[] stompMessage) {
         return Completable.fromCallable(() -> {
             if (getSocket() == null) {
                 throw new IllegalStateException("Not connected");
             } else {
-                Log.d(TAG, "Send STOMP message: " + stompMessage);
+                Log.d(TAG, "Send STOMP frame: " + stompMessage.length + " bytes");
                 rawSend(stompMessage);
                 return null;
             }
@@ -82,12 +82,12 @@ public abstract class AbstractConnectionProvider implements ConnectionProvider {
      * <p>
      * For example:
      * <pre>
-     * webSocket.send(stompMessage);
+     * webSocket.send(ByteString.of(stompMessage));
      * </pre>
      *
-     * @param stompMessage message to send
+     * @param stompMessage raw STOMP frame bytes to send
      */
-    protected abstract void rawSend(String stompMessage);
+    protected abstract void rawSend(byte[] stompMessage);
 
     /**
      * Get socket object.
@@ -106,8 +106,8 @@ public abstract class AbstractConnectionProvider implements ConnectionProvider {
         lifecycleStream.onNext(lifecycleEvent);
     }
 
-    protected void emitMessage(String stompMessage) {
-        Log.d(TAG, "Receive STOMP message: " + stompMessage);
+    protected void emitMessage(byte[] stompMessage) {
+        Log.d(TAG, "Receive STOMP frame: " + stompMessage.length + " bytes");
         messagesStream.onNext(stompMessage);
     }
 

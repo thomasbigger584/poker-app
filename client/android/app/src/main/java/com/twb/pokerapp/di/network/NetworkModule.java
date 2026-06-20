@@ -17,8 +17,7 @@ import com.twb.pokerapp.data.auth.AuthService;
 import com.twb.pokerapp.data.auth.TokenAuthenticator;
 import com.twb.pokerapp.data.retrofit.api.interceptor.AuthInterceptor;
 import com.twb.pokerapp.data.retrofit.api.interceptor.GlobalErrorInterceptor;
-import com.twb.pokerapp.data.retrofit.gson.ServerMessageDeserializer;
-import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
+import com.twb.pokerapp.data.retrofit.protobuf.ProtoConverterFactory;
 import com.twb.pokerapp.di.network.qualifiers.Authenticated;
 import com.twb.pokerapp.di.network.qualifiers.Unauthenticated;
 
@@ -89,6 +88,8 @@ public class NetworkModule {
         var protocol = authConfiguration.isHttpsRequired() ? "https://" : "http://";
         return new Retrofit.Builder()
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                // Proto first (handles protobuf Message bodies); Gson remains for anything else.
+                .addConverterFactory(ProtoConverterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .client(okHttpClient)
                 .baseUrl(protocol + API_BASE_URL)
@@ -101,6 +102,10 @@ public class NetworkModule {
                 .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .writeTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                // Ask the server for binary protobuf on every REST call (content negotiation).
+                .addInterceptor(chain -> chain.proceed(chain.request().newBuilder()
+                        .header("Accept", "application/x-protobuf")
+                        .build()))
                 .addInterceptor(loggingInterceptor)
                 .cache(cache);
     }
@@ -126,7 +131,6 @@ public class NetworkModule {
         });
         gsonBuilder.registerTypeAdapter(LocalDateTime.class, (JsonDeserializer<LocalDateTime>) (json, typeOfT, context) ->
                 LocalDateTime.parse(json.getAsString()));
-        gsonBuilder.registerTypeAdapter(ServerMessageDTO.class, new ServerMessageDeserializer());
         if (BuildConfig.DEBUG) {
             gsonBuilder.setPrettyPrinting();
         }

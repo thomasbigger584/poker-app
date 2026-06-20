@@ -1,6 +1,6 @@
 package com.twb.pokerapp.service.game.thread.dto;
 
-import com.twb.pokerapp.web.websocket.message.server.payload.PlayerTurnDTO;
+import com.twb.pokerapp.proto.PlayerTurnDTO;
 
 /**
  * The player turn currently being awaited on a game thread, captured when the {@code PLAYER_TURN}

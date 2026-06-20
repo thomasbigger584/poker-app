@@ -7,8 +7,8 @@ import com.twb.pokerapp.domain.Round;
 import com.twb.pokerapp.repository.BettingRoundRepository;
 import com.twb.pokerapp.repository.RoundRepository;
 import com.twb.pokerapp.service.game.exception.GamePlayerLogException;
+import com.twb.pokerapp.service.game.thread.dto.PlayerActionCommand;
 import com.twb.pokerapp.service.idempotency.IdempotencyService;
-import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Propagation;
@@ -32,36 +32,36 @@ public abstract class GamePlayerActionService {
     private IdempotencyService idempotencyService;
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public void playerAction(PlayerSession playerSession, GameThread gameThread, CreatePlayerActionDTO createDto) {
-        playerAction(playerSession, gameThread, createDto, true);
+    public void playerAction(PlayerSession playerSession, GameThread gameThread, PlayerActionCommand command) {
+        playerAction(playerSession, gameThread, command, true);
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public void playerAction(PlayerSession playerSession, GameThread gameThread, CreatePlayerActionDTO createDto, boolean enforceIdempotency) {
+    public void playerAction(PlayerSession playerSession, GameThread gameThread, PlayerActionCommand command, boolean enforceIdempotency) {
         if (gameThread.isStopping()) {
-            log.warn("Game Thread is stopping so ignoring player action {} for user {}", createDto.getAction(), playerSession.getUser().getUsername());
+            log.warn("Game Thread is stopping so ignoring player action {} for user {}", command.getAction(), playerSession.getUser().getUsername());
             return;
         }
-        log.debug("Player Action: {} - {}", playerSession.getUser().getUsername(), createDto);
+        log.debug("Player Action: {} - {}", playerSession.getUser().getUsername(), command);
 
         var table = getThrowPlayerErrorLog(Optional.ofNullable(playerSession.getPokerTable()), playerSession, "Table Not Found");
         var round = getThrowPlayerLog(roundRepository.findCurrentByTableId(table.getId()), playerSession, "Round Not Found");
         if (enforceIdempotency) {
-            checkIdempotency(playerSession, round, createDto);
+            checkIdempotency(playerSession, round, command);
         }
         var bettingRound = getThrowPlayerLog(bettingRoundRepository.findCurrentByTableId(table.getId()), playerSession, "Betting Round Not Found");
-        var playerAction = onPlayerAction(playerSession, bettingRound, gameThread, createDto);
+        var playerAction = onPlayerAction(playerSession, bettingRound, gameThread, command);
         gameThread.onPostPlayerAction(playerAction);
     }
 
-    private void checkIdempotency(PlayerSession playerSession, Round round, CreatePlayerActionDTO createDto) {
-        if (idempotencyService.isActionIdempotent(playerSession.getId(), round.getId(), createDto.getAction())) {
+    private void checkIdempotency(PlayerSession playerSession, Round round, PlayerActionCommand command) {
+        if (idempotencyService.isActionIdempotent(playerSession.getId(), round.getId(), command.getAction())) {
             throw new GamePlayerLogException(playerSession, "You already made action in this round recently");
         }
-        idempotencyService.recordAction(playerSession.getId(), round.getId(), createDto.getAction());
+        idempotencyService.recordAction(playerSession.getId(), round.getId(), command.getAction());
     }
 
     public abstract void onExecuteAutoAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread);
 
-    protected abstract PlayerAction onPlayerAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread, CreatePlayerActionDTO createDto);
+    protected abstract PlayerAction onPlayerAction(PlayerSession playerSession, BettingRound bettingRound, GameThread gameThread, PlayerActionCommand command);
 }

@@ -11,6 +11,7 @@ import com.twb.stomplib.dto.StompMessage;
 import com.twb.stomplib.pathmatcher.PathMatcher;
 import com.twb.stomplib.pathmatcher.SimplePathMatcher;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -147,14 +148,30 @@ public class StompClient {
     }
 
     public Completable send(String destination) {
-        return send(destination, null);
+        return send(destination, (String) null);
     }
 
     public Completable send(String destination, String data) {
         return send(new StompMessage(
                 StompCommand.SEND,
                 Collections.singletonList(new StompHeader(StompHeader.DESTINATION, destination)),
-                data));
+                data == null ? null : data.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    /**
+     * Send a binary body (e.g. protobuf). Adds {@code content-length} so the server reads the exact
+     * bytes (binary bodies may contain NUL/newline) and tags {@code content-type} as
+     * {@code application/octet-stream} — the single binary content type used across the wire (the
+     * server emits it outbound and the Spring test client requires it for binary framing).
+     */
+    public Completable send(String destination, byte[] data) {
+        var headers = new ArrayList<StompHeader>();
+        headers.add(new StompHeader(StompHeader.DESTINATION, destination));
+        if (data != null) {
+            headers.add(new StompHeader(StompHeader.CONTENT_TYPE, "application/octet-stream"));
+            headers.add(new StompHeader(StompHeader.CONTENT_LENGTH, String.valueOf(data.length)));
+        }
+        return send(new StompMessage(StompCommand.SEND, headers, data));
     }
 
     public Completable send(@NonNull StompMessage stompMessage) {
@@ -168,7 +185,7 @@ public class StompClient {
 
     @SuppressLint("CheckResult")
     private void sendHeartBeat(@NonNull String pingMessage) {
-        var completable = connectionProvider.send(pingMessage);
+        var completable = connectionProvider.send(pingMessage.getBytes(StandardCharsets.UTF_8));
         var connectionComplete = getConnectionStream()
                 .filter(isConnected -> isConnected)
                 .firstElement().ignoreElement();

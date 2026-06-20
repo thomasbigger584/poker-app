@@ -1,14 +1,12 @@
 package com.twb.pokerapp.testutils.game.player;
 
-import com.twb.pokerapp.domain.enumeration.ConnectionType;
+import com.twb.pokerapp.mapper.enumeration.ConnectionTypes;
+import com.twb.pokerapp.proto.ConnectionType;
+import com.twb.pokerapp.proto.CreateBotConnectionDTO;
+import com.twb.pokerapp.proto.CreatePlayerActionDTO;
+import com.twb.pokerapp.proto.ServerMessageDTO;
 import com.twb.pokerapp.testutils.game.GameLatches;
 import com.twb.pokerapp.testutils.http.message.ServerMessageConverter;
-import com.twb.pokerapp.web.exception.validation.ValidationDTO;
-import com.twb.pokerapp.web.websocket.message.client.CreateBotConnectionDTO;
-import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
-import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
-import com.twb.pokerapp.web.websocket.message.server.payload.ErrorMessageDTO;
-import com.twb.pokerapp.web.websocket.message.server.payload.LogMessageDTO;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -16,12 +14,10 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpHeaders;
 import org.springframework.messaging.simp.stomp.*;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
-import org.springframework.web.socket.sockjs.client.SockJsClient;
-import org.springframework.web.socket.sockjs.client.Transport;
-import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -85,13 +81,19 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     public void connect(BigDecimal buyInAmount) throws InterruptedException {
         log.debug("Connecting {} to {}", params.getUsername(), params.getTable().getId());
         var url = URI.create(CONNECTION_URL);
+        var bearerToken = BEARER_PREFIX + getAccessToken();
+
+        // Authenticate the native WebSocket handshake itself (Spring Security gates /looping on the
+        // USER role), then repeat the token on the STOMP CONNECT frame for WebSocketAuthChannelInterceptor.
         var headers = new WebSocketHttpHeaders();
+        headers.add(HttpHeaders.AUTHORIZATION, bearerToken);
+
         var stompHeaders = new StompHeaders();
         stompHeaders.setHost("/");
 
-        stompHeaders.add(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + getAccessToken());
-        stompHeaders.put(HEADER_CONNECTION_TYPE, Collections.singletonList(getConnectionType().toString()));
-        if (getConnectionType() == ConnectionType.PLAYER && buyInAmount != null) {
+        stompHeaders.add(HttpHeaders.AUTHORIZATION, bearerToken);
+        stompHeaders.put(HEADER_CONNECTION_TYPE, Collections.singletonList(ConnectionTypes.toWire(getConnectionType())));
+        if (getConnectionType() == ConnectionType.CONNECTION_TYPE_PLAYER && buyInAmount != null) {
             stompHeaders.put(HEADER_BUYIN_AMOUNT, Collections.singletonList(buyInAmount.toString()));
         }
 
@@ -148,7 +150,7 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     @Override
     public void afterConnected(StompSession session, @NonNull StompHeaders connectedHeaders) {
         this.session = session;
-        var tableId = params.getTable().getId().toString();
+        var tableId = params.getTable().getId();
 
         // 1. Initial State Sync (Triggers @SubscribeMapping in TableWebSocketController)
         var appTopic = GAME_APP_SUBSCRIBE.formatted(tableId);
@@ -231,16 +233,23 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
             receivedMessages.add(message);
 
             var gameLatch = params.getLatches().gameLatch();
-            if (message.getPayload() instanceof ErrorMessageDTO errorDto) {
-                GameLatches.countdown(gameLatch);
-                return;
-            } else if (message.getPayload() instanceof LogMessageDTO logDto) {
-                log.debug("{} received log message: {}", params.getUsername(), logDto.getMessage());
-                return;
-            } else if (message.getPayload() instanceof ValidationDTO validationDto) {
-                log.debug("{} received validation message: {}", params.getUsername(), validationDto.getFields());
-                GameLatches.countdown(gameLatch);
-                return;
+            switch (message.getPayloadCase()) {
+                case ERROR -> {
+                    GameLatches.countdown(gameLatch);
+                    return;
+                }
+                case LOG -> {
+                    log.debug("{} received log message: {}", params.getUsername(), message.getLog().getMessage());
+                    return;
+                }
+                case VALIDATION -> {
+                    log.debug("{} received validation message: {}", params.getUsername(), message.getValidation().getFieldsList());
+                    GameLatches.countdown(gameLatch);
+                    return;
+                }
+                default -> {
+                    // fall through to game-specific handling
+                }
             }
             handleMessage(headers, message);
         } catch (Exception e) {
@@ -254,9 +263,10 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
     }
 
     public void sendBotConnected(UUID botUserId, BigDecimal buyInAmount) {
-        var createDto = new CreateBotConnectionDTO();
-        createDto.setBotUserId(botUserId);
-        createDto.setBuyInAmount(buyInAmount);
+        var createDto = CreateBotConnectionDTO.newBuilder()
+                .setBotUserId(botUserId.toString())
+                .setBuyInAmount(buyInAmount.toPlainString())
+                .build();
         send(SEND_BOT_CONNECTED.formatted(params.getTable().getId()), createDto);
     }
 
@@ -270,6 +280,9 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
         var headers = new StompHeaders();
         headers.setDestination(destination);
         headers.setReceipt("receipt-" + params.getUsername() + "-send-" + UUID.randomUUID());
+        // octet-stream forces a binary WebSocket frame (see ProtobufMessageConverter) so the binary
+        // protobuf body is not UTF-8-mangled by text framing.
+        headers.setContentType(MimeTypeUtils.APPLICATION_OCTET_STREAM);
 
         var receiptable = session.send(headers, dto);
         receiptable.addReceiptTask(() -> log.debug("Receipt received for user {} destination {}", params.getUsername(), destination));
@@ -289,16 +302,14 @@ public abstract class AbstractTestUser implements StompSessionHandler, StompFram
 
     @NotNull
     private WebSocketStompClient createClient() {
-        var transports = new ArrayList<Transport>(1);
-        transports.add(new WebSocketTransport(new StandardWebSocketClient()));
-        var sockJsClient = new SockJsClient(transports);
-
+        // Native WebSocket (no SockJS): the server endpoint carries raw binary protobuf STOMP
+        // frames, which SockJS's text-only transport would force into base64.
         var taskScheduler = new ThreadPoolTaskScheduler();
         taskScheduler.setPoolSize(5);
         taskScheduler.setThreadNamePrefix("stomp-test-heartbeat-");
         taskScheduler.initialize();
 
-        var stompClient = new WebSocketStompClient(sockJsClient);
+        var stompClient = new WebSocketStompClient(new StandardWebSocketClient());
         stompClient.setTaskScheduler(taskScheduler);
 
         // 0 means client will NOT expect heartbeats FROM the server (more stable for testing).

@@ -1,8 +1,10 @@
 package com.twb.pokerapp.domain;
 
 
-import com.twb.pokerapp.domain.enumeration.ConnectionType;
-import com.twb.pokerapp.domain.enumeration.SessionState;
+import com.twb.pokerapp.domain.converter.ConnectionTypeConverter;
+import com.twb.pokerapp.domain.converter.SessionStateConverter;
+import com.twb.pokerapp.proto.ConnectionType;
+import com.twb.pokerapp.proto.SessionState;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -53,11 +55,11 @@ public class PlayerSession extends Auditable {
     private BigDecimal funds;
 
     @NotNull
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = SessionStateConverter.class)
     @Column(name = "session_state")
     private SessionState sessionState;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = ConnectionTypeConverter.class)
     @Column(name = "connection_type")
     private ConnectionType connectionType;
 

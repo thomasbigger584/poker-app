@@ -4,19 +4,15 @@ import android.util.Log;
 
 import androidx.annotation.MainThread;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.twb.pokerapp.BuildConfig;
 import com.twb.pokerapp.data.auth.AuthConfiguration;
 import com.twb.pokerapp.data.auth.AuthEventBus;
 import com.twb.pokerapp.data.auth.AuthService;
-import com.twb.pokerapp.data.websocket.message.client.SendBotConnectedDTO;
-import com.twb.pokerapp.data.websocket.message.client.SendChatMessageDTO;
-import com.twb.pokerapp.data.websocket.message.client.SendPlayerActionDTO;
-import com.twb.pokerapp.data.websocket.message.server.ServerMessageDTO;
-import com.twb.pokerapp.data.websocket.message.server.enumeration.ServerMessageType;
 import com.twb.pokerapp.di.network.qualifiers.Authenticated;
+import com.twb.pokerapp.proto.CreateBotConnectionDTO;
+import com.twb.pokerapp.proto.CreateChatMessageDTO;
+import com.twb.pokerapp.proto.CreatePlayerActionDTO;
+import com.twb.pokerapp.proto.ServerMessageDTO;
 import com.twb.stomplib.dto.LifecycleEvent;
 import com.twb.stomplib.dto.StompHeader;
 import com.twb.stomplib.stomp.Stomp;
@@ -57,7 +53,6 @@ public class WebSocketClient {
     private final AuthService authService;
     private final AuthConfiguration authConfiguration;
     private final OkHttpClient okHttpClient;
-    private final Gson gson;
 
     private StompClient stompClient;
     private CompositeDisposable compositeDisposable;
@@ -65,12 +60,10 @@ public class WebSocketClient {
     @Inject
     public WebSocketClient(AuthService authService,
                            AuthConfiguration authConfiguration,
-                           @Authenticated OkHttpClient okHttpClient,
-                           Gson gson) {
+                           @Authenticated OkHttpClient okHttpClient) {
         this.authService = authService;
         this.authConfiguration = authConfiguration;
         this.okHttpClient = okHttpClient;
-        this.gson = gson;
     }
 
 
@@ -120,7 +113,8 @@ public class WebSocketClient {
 
     private void connectInternal(String accessToken, UUID tableId, WebSocketListener listener, String connectionType, Double buyInAmount, boolean reconnect) {
         var protocol = authConfiguration.isHttpsRequired() ? "wss://" : "ws://";
-        var websocketUrl = protocol + BuildConfig.API_BASE_URL + WEBSOCKET_ENDPOINT + "/websocket";
+        // Native WebSocket endpoint (no SockJS "/websocket" suffix) so frames carry binary protobuf.
+        var websocketUrl = protocol + BuildConfig.API_BASE_URL + WEBSOCKET_ENDPOINT;
 
         stompClient = Stomp.over(Stomp.ConnectionProvider.OKHTTP, websocketUrl, null, okHttpClient);
 
@@ -210,22 +204,12 @@ public class WebSocketClient {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(stompMessage -> {
-                    var jsonObject = gson.fromJson(stompMessage.getPayload(), JsonObject.class);
-                    var type = ServerMessageType.valueOf(jsonObject.get("type").getAsString());
-                    var timestamp = jsonObject.get("timestamp").getAsLong();
-                    var payloadElement = jsonObject.get("payload");
-                    
-                    JsonObject rawPayload = null;
-                    if (payloadElement != null && payloadElement.isJsonObject()) {
-                        rawPayload = payloadElement.getAsJsonObject();
+                    var bytes = stompMessage.getPayloadBytes();
+                    if (bytes == null) {
+                        return;
                     }
-
-                    var message = new ServerMessageDTO<>(type, rawPayload, timestamp);
-                    var payloadClass = type.getPayloadClass();
-                    if (payloadClass != null && rawPayload != null) {
-                        message.setPayload(gson.fromJson(rawPayload, payloadClass));
-                    }
-                    listener.onMessage(message);
+                    // Binary protobuf envelope — parse directly, no JSON / type lookup.
+                    listener.onMessage(ServerMessageDTO.parseFrom(bytes));
                 }, throwable -> {
                     Log.e(TAG, "Subscription error on topic: " + topic, throwable);
                     listener.onSubscribeError(throwable);
@@ -252,19 +236,19 @@ public class WebSocketClient {
     // WebSocket Send Methods
     // ----------------------------------------------------------------
 
-    public void sendChatMessage(UUID tableId, SendChatMessageDTO dto, SendListener listener) {
+    public void sendChatMessage(UUID tableId, CreateChatMessageDTO dto, SendListener listener) {
         var destination = String.format(Locale.getDefault(), SEND_ENDPOINT_PREFIX + SEND_CHAT_MESSAGE, tableId);
-        sendMessage(destination, gson.toJson(dto), listener);
+        sendMessage(destination, dto.toByteArray(), listener);
     }
 
-    public void sendPlayerAction(UUID tableId, SendPlayerActionDTO dto, SendListener listener) {
+    public void sendPlayerAction(UUID tableId, CreatePlayerActionDTO dto, SendListener listener) {
         var destination = String.format(Locale.getDefault(), SEND_ENDPOINT_PREFIX + SEND_PLAYER_ACTION, tableId);
-        sendMessage(destination, gson.toJson(dto), listener);
+        sendMessage(destination, dto.toByteArray(), listener);
     }
 
-    public void sendBotConnection(UUID tableId, SendBotConnectedDTO dto, SendListener listener) {
+    public void sendBotConnection(UUID tableId, CreateBotConnectionDTO dto, SendListener listener) {
         var destination = String.format(Locale.getDefault(), SEND_ENDPOINT_PREFIX + SEND_BOT_CONNECTED, tableId);
-        sendMessage(destination, gson.toJson(dto), listener);
+        sendMessage(destination, dto.toByteArray(), listener);
     }
 
     /**
@@ -274,13 +258,13 @@ public class WebSocketClient {
      */
     public void sendDisconnectPlayer(UUID tableId, SendListener listener) {
         var destination = String.format(Locale.getDefault(), SEND_ENDPOINT_PREFIX + SEND_DISCONNECT_PLAYER, tableId);
-        sendMessage(destination, "{}", listener);
+        sendMessage(destination, new byte[0], listener);
     }
 
     // WebSocket Send Helper Methods
     // ----------------------------------------------------------------
 
-    private void sendMessage(String destination, String message, SendListener listener) {
+    private void sendMessage(String destination, byte[] message, SendListener listener) {
         if (stompClient == null || compositeDisposable == null) {
             listener.onSendFailure(new IllegalStateException("WebSocket is not connected"));
             return;
@@ -318,7 +302,7 @@ public class WebSocketClient {
 
         void onFailedServerHeartbeat(LifecycleEvent event);
 
-        void onMessage(ServerMessageDTO<?> message);
+        void onMessage(ServerMessageDTO message);
 
         void onSubscribeError(Throwable throwable);
     }

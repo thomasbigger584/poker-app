@@ -2,8 +2,8 @@ package com.twb.pokerapp.service.user;
 
 import com.twb.pokerapp.domain.BotUser;
 import com.twb.pokerapp.domain.enumeration.Persona;
-import com.twb.pokerapp.dto.appuser.AppUserDTO;
 import com.twb.pokerapp.mapper.UserMapper;
+import com.twb.pokerapp.proto.AppUserDTO;
 import com.twb.pokerapp.repository.BotUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

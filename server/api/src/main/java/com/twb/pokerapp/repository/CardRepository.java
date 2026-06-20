@@ -16,8 +16,8 @@ public interface CardRepository extends JpaRepository<Card, UUID> {
             SELECT c
             FROM Card c
             WHERE c.round.id = :roundId
-            AND (c.cardType <> com.twb.pokerapp.domain.enumeration.CardType.PLAYER_CARD_1
-                OR c.cardType <> com.twb.pokerapp.domain.enumeration.CardType.PLAYER_CARD_2)
+            AND (c.cardType <> com.twb.pokerapp.proto.CardType.CARD_TYPE_PLAYER_CARD_1
+                OR c.cardType <> com.twb.pokerapp.proto.CardType.CARD_TYPE_PLAYER_CARD_2)
             """)
     List<Card> findCommunityCardsForRound(@Param("roundId") UUID roundId);
 

@@ -1,6 +1,7 @@
 package com.twb.pokerapp.domain;
 
-import com.twb.pokerapp.domain.enumeration.GameType;
+import com.twb.pokerapp.domain.converter.GameTypeConverter;
+import com.twb.pokerapp.proto.GameType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -31,7 +32,7 @@ public class PokerTable extends Auditable {
     private String name;
 
     @NotNull
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = GameTypeConverter.class)
     @Column(name = "game_type")
     private GameType gameType;
 

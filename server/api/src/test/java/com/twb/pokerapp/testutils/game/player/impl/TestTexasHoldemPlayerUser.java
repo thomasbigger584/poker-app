@@ -1,11 +1,9 @@
 package com.twb.pokerapp.testutils.game.player.impl;
 
-import com.twb.pokerapp.domain.enumeration.ConnectionType;
+import com.twb.pokerapp.proto.ConnectionType;
+import com.twb.pokerapp.proto.ServerMessageDTO;
 import com.twb.pokerapp.testutils.game.player.AbstractTestUser;
 import com.twb.pokerapp.testutils.game.player.TestUserParams;
-import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
-import com.twb.pokerapp.web.websocket.message.server.ServerMessageType;
-import com.twb.pokerapp.web.websocket.message.server.payload.PlayerTurnDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 
@@ -18,8 +16,8 @@ public class TestTexasHoldemPlayerUser extends AbstractTestUser {
 
     @Override
     protected void handleMessage(StompHeaders headers, ServerMessageDTO message) {
-        if (message.getType() == ServerMessageType.PLAYER_TURN) {
-            var playerTurn = (PlayerTurnDTO) message.getPayload();
+        if (message.getPayloadCase() == ServerMessageDTO.PayloadCase.PLAYER_TURN) {
+            var playerTurn = message.getPlayerTurn();
             if (playerTurn.getPlayerSession()
                     .getUser().getUsername().equals(params.getUsername())) {
                 var turnHandler = params.getTurnHandler();
@@ -38,6 +36,6 @@ public class TestTexasHoldemPlayerUser extends AbstractTestUser {
 
     @Override
     protected ConnectionType getConnectionType() {
-        return ConnectionType.PLAYER;
+        return ConnectionType.CONNECTION_TYPE_PLAYER;
     }
 }

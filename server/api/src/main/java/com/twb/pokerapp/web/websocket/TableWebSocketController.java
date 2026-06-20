@@ -1,16 +1,14 @@
 package com.twb.pokerapp.web.websocket;
 
-import com.twb.pokerapp.domain.enumeration.ConnectionType;
+import com.twb.pokerapp.mapper.ProtoConvert;
+import com.twb.pokerapp.proto.*;
 import com.twb.pokerapp.service.game.TableGameService;
+import com.twb.pokerapp.service.game.thread.dto.PlayerActionCommand;
+import com.twb.pokerapp.web.exception.ValidationException;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
-import com.twb.pokerapp.web.websocket.message.client.CreateBotConnectionDTO;
-import com.twb.pokerapp.web.websocket.message.client.CreateChatMessageDTO;
-import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
-import com.twb.pokerapp.web.websocket.message.server.ServerMessageDTO;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
 import com.twb.pokerapp.web.websocket.session.DisconnectGraceService;
 import com.twb.pokerapp.web.websocket.session.SessionService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -28,6 +26,8 @@ import java.util.UUID;
 @Controller
 @RequiredArgsConstructor
 public class TableWebSocketController {
+
+    private static final int CHAT_MESSAGE_MAX_LENGTH = 50;
 
     // 1. Logic for Initial Subscription (Spring Intercepted)
     // Client subscribes to: /app/loops.{tableId}
@@ -87,11 +87,18 @@ public class TableWebSocketController {
     @MessageMapping(INBOUND_MESSAGE_PREFIX + SEND_BOT_CONNECTED)
     public void onBotConnected(StompHeaderAccessor headerAccessor,
                                @DestinationVariable(TABLE_ID) UUID tableId,
-                               @Payload @Valid CreateBotConnectionDTO botConnection) {
-        log.debug(">>>> onBotConnected - Table: {}, BotUser: {}, BuyIn: {}",
-                tableId, botConnection.getBotUserId(), botConnection.getBuyInAmount());
+                               @Payload CreateBotConnectionDTO botConnection) {
+        var botUserId = botConnection.getBotUserId();
+        if (botUserId.isEmpty()) {
+            throw new ValidationException("botUserId", "Bot User ID cannot be null");
+        }
+        var buyInAmount = ProtoConvert.bigDecimal(botConnection.getBuyInAmount());
+        if (buyInAmount == null) {
+            throw new ValidationException("buyInAmount", "Buy-In amount cannot be null");
+        }
+        log.debug(">>>> onBotConnected - Table: {}, BotUser: {}, BuyIn: {}", tableId, botUserId, buyInAmount);
 
-        tableGameService.onBotConnected(tableId, botConnection.getBotUserId(), botConnection.getBuyInAmount());
+        tableGameService.onBotConnected(tableId, UUID.fromString(botUserId), buyInAmount);
         dispatcher.sendReceipt(headerAccessor);
     }
 
@@ -102,9 +109,13 @@ public class TableWebSocketController {
     public void sendChatMessage(Principal principal,
                                 StompHeaderAccessor headerAccessor,
                                 @DestinationVariable(TABLE_ID) UUID tableId,
-                                @Payload @Valid CreateChatMessageDTO message) {
+                                @Payload CreateChatMessageDTO message) {
+        var text = message.getMessage();
+        if (text.isBlank() || text.length() > CHAT_MESSAGE_MAX_LENGTH) {
+            throw new ValidationException("message", "Chat Message must be between 1 and 50 characters");
+        }
 
-        var chatMessage = messageFactory.chatMessage(principal.getName(), message.getMessage());
+        var chatMessage = messageFactory.chatMessage(principal.getName(), text);
         // dispatcher.send should use /topic/loops.{tableId} internally
         dispatcher.send(tableId, chatMessage);
         dispatcher.sendReceipt(headerAccessor);
@@ -117,9 +128,17 @@ public class TableWebSocketController {
     public void sendPlayerAction(Principal principal,
                                  StompHeaderAccessor headerAccessor,
                                  @DestinationVariable(TABLE_ID) UUID tableId,
-                                 @Payload @Valid CreatePlayerActionDTO action) {
+                                 @Payload CreatePlayerActionDTO action) {
+        var actionType = action.getAction();
+        if (action.getActionValue() <= 0) {
+            throw new ValidationException("action", "Action cannot be null");
+        }
+        var amount = ProtoConvert.bigDecimal(action.getAmount());
+        if (amount != null && amount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new ValidationException("amount", "Amount provided must be positive or zero");
+        }
 
-        tableGameService.onPlayerAction(tableId, principal.getName(), action);
+        tableGameService.onPlayerAction(tableId, principal.getName(), new PlayerActionCommand(actionType, amount));
         dispatcher.sendReceipt(headerAccessor);
     }
 
@@ -141,7 +160,7 @@ public class TableWebSocketController {
     // *****************************************************************************************
 
     private ConnectionType getConnectionType(StompHeaderAccessor headerAccessor) {
-        return sessionService.getConnectionType(headerAccessor).orElse(ConnectionType.LISTENER);
+        return sessionService.getConnectionType(headerAccessor).orElse(ConnectionType.CONNECTION_TYPE_LISTENER);
     }
 
     private BigDecimal getBuyInAmount(StompHeaderAccessor headerAccessor) {

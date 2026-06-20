@@ -3,8 +3,8 @@ package com.twb.pokerapp.service;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.PokerTable;
 import com.twb.pokerapp.domain.Round;
-import com.twb.pokerapp.domain.enumeration.RoundState;
 import com.twb.pokerapp.mapper.RoundMapper;
+import com.twb.pokerapp.proto.RoundState;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.RoundRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,19 +26,19 @@ public class RoundService {
     @Transactional(propagation = Propagation.MANDATORY)
     public void reset() {
         repository.findAllCurrent()
-                .forEach(round -> setState(round, RoundState.FAILED));
+                .forEach(round -> setState(round, RoundState.ROUND_STATE_FAILED));
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
     public void reset(UUID tableId) {
         repository.findCurrentByTableId(tableId)
-                .ifPresent(round -> setState(round, RoundState.FAILED));
+                .ifPresent(round -> setState(round, RoundState.ROUND_STATE_FAILED));
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
     public Round create(PokerTable table, List<PlayerSession> playerSessions) {
         var round = new Round();
-        round.setRoundState(RoundState.WAITING_FOR_PLAYERS);
+        round.setRoundState(RoundState.ROUND_STATE_WAITING_FOR_PLAYERS);
         round.setPokerTable(table);
         round.setPlayerSessions(playerSessions);
         round = repository.save(round);

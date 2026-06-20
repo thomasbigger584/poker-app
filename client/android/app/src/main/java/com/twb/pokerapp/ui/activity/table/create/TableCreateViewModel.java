@@ -5,9 +5,10 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.twb.pokerapp.R;
-import com.twb.pokerapp.data.model.dto.table.CreateTableDTO;
-import com.twb.pokerapp.data.model.dto.table.TableDTO;
+import com.twb.pokerapp.proto.CreateTableDTO;
+import com.twb.pokerapp.proto.TableDTO;
 import com.twb.pokerapp.data.repository.TableRepository;
+import com.twb.pokerapp.util.Protos;
 
 import javax.inject.Inject;
 
@@ -98,16 +99,18 @@ public class TableCreateViewModel extends ViewModel {
             return;
         }
 
-        var createTableDTO = new CreateTableDTO();
-        createTableDTO.setName(name);
-        createTableDTO.setGameType(gameType);
-        createTableDTO.setSpeedMultiplier(speedMultiplier);
-        createTableDTO.setTotalRounds(totalRounds);
-        createTableDTO.setMinPlayers(minPlayers);
-        createTableDTO.setMaxPlayers(maxPlayers);
-        createTableDTO.setMinBuyin(minBuyIn);
-        createTableDTO.setMaxBuyin(maxBuyIn);
+        var builder = CreateTableDTO.newBuilder()
+                .setName(name)
+                .setGameType(Protos.gameType(gameType))
+                .setSpeedMultiplier(speedMultiplier)
+                .setMinPlayers(minPlayers)
+                .setMaxPlayers(maxPlayers)
+                .setMinBuyin(Protos.moneyStr(minBuyIn))
+                .setMaxBuyin(Protos.moneyStr(maxBuyIn));
+        if (totalRounds != null) {
+            builder.setTotalRounds(totalRounds);
+        }
 
-        repository.createTable(createTableDTO);
+        repository.createTable(builder.build());
     }
 }

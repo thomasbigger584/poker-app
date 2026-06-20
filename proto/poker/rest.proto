@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package poker;
+
+import "poker/enums.proto";
+import "poker/domain.proto";
+
+option java_package = "com.twb.pokerapp.proto";
+option java_multiple_files = true;
+option java_outer_classname = "RestProto";
+
+// =====================================================================
+// REST requests / responses.
+//
+// Bodies exchanged over the REST API that are not themselves core domain
+// messages. The *ListResponse wrappers exist because Spring's protobuf
+// converter needs a single Message body, not a bare repeated field.
+// =====================================================================
+
+// POST /api/poker-table
+message CreateTableDTO {
+  string name = 1;
+  GameType game_type = 2;
+  optional double speed_multiplier = 3;
+  optional int32 total_rounds = 4;
+  int32 min_players = 5;
+  int32 max_players = 6;
+  string min_buyin = 7; // BigDecimal
+  string max_buyin = 8; // BigDecimal
+}
+
+// POST /api/app-user/deposit, POST /api/app-user/withdraw
+message UserAmountDTO {
+  string amount = 1; // BigDecimal
+}
+
+// GET /api/poker-table (element of AvailableTableListResponse)
+message AvailableTableDTO {
+  TableDTO table = 1;
+  int32 players_connected = 2;
+  bool current_user_connected = 3;
+  optional ConnectionType current_user_connection_type = 4;
+  optional int64 reconnect_millis_remaining = 5;
+}
+
+// GET /api/poker-table
+message AvailableTableListResponse {
+  repeated AvailableTableDTO tables = 1;
+}
+
+// GET /api/app-user/bots
+message AppUserListResponse {
+  repeated AppUserDTO users = 1;
+}
+
+// GET /api/transaction-history/current
+message TransactionHistoryListResponse {
+  repeated TransactionHistoryDTO transactions = 1;
+}
+
+// Body for non-validation error responses (404, 500, ...).
+message ApiErrorDTO {
+  int32 status = 1;
+  string message = 2;
+}

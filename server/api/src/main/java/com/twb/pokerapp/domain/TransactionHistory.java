@@ -1,6 +1,7 @@
 package com.twb.pokerapp.domain;
 
-import com.twb.pokerapp.domain.enumeration.TransactionHistoryType;
+import com.twb.pokerapp.domain.converter.TransactionHistoryTypeConverter;
+import com.twb.pokerapp.proto.TransactionHistoryType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -31,7 +32,7 @@ public class TransactionHistory extends Auditable {
     private BigDecimal amount;
 
     @NotNull
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = TransactionHistoryTypeConverter.class)
     @Column(name = "type")
     private TransactionHistoryType type;
 

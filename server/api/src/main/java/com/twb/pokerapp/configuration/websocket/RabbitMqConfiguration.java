@@ -2,11 +2,14 @@ package com.twb.pokerapp.configuration.websocket;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -25,15 +28,6 @@ public class RabbitMqConfiguration implements WebSocketMessageBrokerConfigurer {
 
     @Value("${app.websocket.allowed-origins:*}")
     private String allowedOrigins;
-
-    @Value("${app.websocket.stream-limit-mb:1}")
-    private int streamLimitMb;
-
-    @Value("${app.websocket.http-message-cache-size:1000}")
-    private int httpMessageCacheSize;
-
-    @Value("${app.websocket.disconnect-delay-secs:1}")
-    private int disconnectDelaySecs;
 
     /**
      * Heartbeat Interval (20 seconds).
@@ -81,12 +75,22 @@ public class RabbitMqConfiguration implements WebSocketMessageBrokerConfigurer {
         /*
          * WebSocket Handshake Endpoint:
          * The initial connection URL used by the client (ws://host:port/looping).
+         *
+         * Native WebSocket (no SockJS): SockJS is a text-only transport and would force the
+         * protobuf payload into base64/text framing. A native endpoint lets STOMP frames carry
+         * raw binary protobuf bodies.
          */
         registry.addEndpoint("/looping")
-                .setAllowedOriginPatterns(allowedOrigins.split(","))
-                .withSockJS()
-                .setStreamBytesLimit(streamLimitMb * 1024 * 1024)
-                .setHttpMessageCacheSize(httpMessageCacheSize)
-                .setDisconnectDelay(disconnectDelaySecs * 1000L);
+                .setAllowedOriginPatterns(allowedOrigins.split(","));
+    }
+
+    /**
+     * Registers the binary-protobuf converter for STOMP payloads (inbound {@code @Payload} parsing
+     * and outbound {@code convertAndSend}), keeping the default converters as well.
+     */
+    @Override
+    public boolean configureMessageConverters(List<MessageConverter> messageConverters) {
+        messageConverters.add(0, new ProtobufMessageConverter());
+        return true;
     }
 }

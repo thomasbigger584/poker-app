@@ -1,6 +1,7 @@
 package com.twb.pokerapp.domain;
 
-import com.twb.pokerapp.domain.enumeration.HandType;
+import com.twb.pokerapp.domain.converter.HandTypeConverter;
+import com.twb.pokerapp.proto.HandType;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -26,7 +27,7 @@ public class Hand extends Auditable {
     private UUID id;
 
     @Nullable
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = HandTypeConverter.class)
     @Column(name = "hand_type")
     private HandType handType;
 

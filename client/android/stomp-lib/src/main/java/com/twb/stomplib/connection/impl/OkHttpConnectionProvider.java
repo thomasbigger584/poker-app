@@ -4,6 +4,7 @@ import com.twb.stomplib.dto.LifecycleEvent;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -61,12 +62,13 @@ public class OkHttpConnectionProvider extends AbstractConnectionProvider {
 
                     @Override
                     public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
-                        emitMessage(text);
+                        emitMessage(text.getBytes(StandardCharsets.UTF_8));
                     }
 
                     @Override
                     public void onMessage(@NotNull WebSocket webSocket, @NotNull ByteString bytes) {
-                        emitMessage(bytes.utf8());
+                        // Keep raw bytes — the body may be binary protobuf (utf8() would corrupt it).
+                        emitMessage(bytes.toByteArray());
                     }
 
                     @Override
@@ -93,8 +95,9 @@ public class OkHttpConnectionProvider extends AbstractConnectionProvider {
     }
 
     @Override
-    protected void rawSend(String stompMessage) {
-        openSocket.send(stompMessage);
+    protected void rawSend(byte[] stompMessage) {
+        // Send as a binary WebSocket frame so binary STOMP bodies survive intact.
+        openSocket.send(ByteString.of(stompMessage));
     }
 
     @Nullable

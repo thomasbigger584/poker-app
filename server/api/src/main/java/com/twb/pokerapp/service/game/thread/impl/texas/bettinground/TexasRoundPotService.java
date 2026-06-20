@@ -4,7 +4,7 @@ import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.Round;
 import com.twb.pokerapp.domain.RoundPot;
-import com.twb.pokerapp.domain.enumeration.ActionType;
+import com.twb.pokerapp.proto.ActionType;
 import com.twb.pokerapp.repository.*;
 import com.twb.pokerapp.service.BettingRoundService;
 import com.twb.pokerapp.service.game.thread.GameLogService;
@@ -69,7 +69,7 @@ public class TexasRoundPotService {
             if (action.getAmount() != null) {
                 playerTotalBets.merge(playerId, action.getAmount(), BigDecimal::add);
             }
-            if (action.getActionType() == ActionType.FOLD) {
+            if (action.getActionType() == ActionType.ACTION_TYPE_FOLD) {
                 playerFoldedStatus.put(playerId, true);
             }
         }

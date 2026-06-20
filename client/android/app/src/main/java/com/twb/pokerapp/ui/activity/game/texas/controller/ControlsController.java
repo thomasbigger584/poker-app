@@ -13,8 +13,8 @@ import androidx.gridlayout.widget.GridLayout;
 
 import com.twb.pokerapp.R;
 import com.twb.pokerapp.databinding.ActivityGameTexasBinding;
-import com.twb.pokerapp.data.model.enumeration.ActionType;
-import com.twb.pokerapp.data.websocket.message.server.payload.PlayerTurnDTO;
+import com.twb.pokerapp.proto.PlayerTurnDTO;
+import com.twb.pokerapp.util.Protos;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,34 +54,31 @@ public class ControlsController {
     }
 
     private void showActionTypeButtons(PlayerTurnDTO playerTurn) {
-        try {
-            for (var action : playerTurn.getNextActions()) {
-                var actionType = ActionType.valueOf(action);
-                switch (actionType) {
-                    case CHECK:
-                        setVisible(binding.checkButton);
-                        break;
-                    case BET:
-                        setVisible(binding.betButton);
-                        break;
-                    case CALL:
-                        binding.callButton.setText(callLabel(playerTurn));
-                        setVisible(binding.callButton);
-                        break;
-                    case RAISE:
-                        setVisible(binding.raiseButton);
-                        break;
-                    case ALL_IN:
-                        binding.allInButton.setText(allInLabel(playerTurn));
-                        setVisible(binding.allInButton);
-                        break;
-                    case FOLD:
-                        setVisible(binding.foldButton);
-                        break;
-                }
+        for (var action : playerTurn.getNextActionsList()) {
+            switch (action) {
+                case ACTION_TYPE_CHECK:
+                    setVisible(binding.checkButton);
+                    break;
+                case ACTION_TYPE_BET:
+                    setVisible(binding.betButton);
+                    break;
+                case ACTION_TYPE_CALL:
+                    binding.callButton.setText(callLabel(playerTurn));
+                    setVisible(binding.callButton);
+                    break;
+                case ACTION_TYPE_RAISE:
+                    setVisible(binding.raiseButton);
+                    break;
+                case ACTION_TYPE_ALL_IN:
+                    binding.allInButton.setText(allInLabel(playerTurn));
+                    setVisible(binding.allInButton);
+                    break;
+                case ACTION_TYPE_FOLD:
+                    setVisible(binding.foldButton);
+                    break;
+                default:
+                    break;
             }
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid action type: " + e.getMessage());
         }
     }
 
@@ -89,21 +86,20 @@ public class ControlsController {
     private CharSequence callLabel(PlayerTurnDTO playerTurn) {
         var context = binding.getRoot().getContext();
         var amountToCall = playerTurn.getAmountToCall();
-        if (amountToCall == null) {
+        if (amountToCall.isEmpty()) {
             return context.getString(R.string.call);
         }
-        return context.getString(R.string.call_with_amount_format, amountToCall);
+        return context.getString(R.string.call_with_amount_format, Protos.money(amountToCall));
     }
 
     /** "ALL IN ($150.00)" using the player's own remaining stack, otherwise just "ALL IN". */
     private CharSequence allInLabel(PlayerTurnDTO playerTurn) {
         var context = binding.getRoot().getContext();
-        var playerSession = playerTurn.getPlayerSession();
-        var funds = (playerSession == null) ? null : playerSession.getFunds();
-        if (funds == null) {
+        var funds = playerTurn.getPlayerSession().getFunds();
+        if (funds.isEmpty()) {
             return context.getString(R.string.all_in);
         }
-        return context.getString(R.string.all_in_with_amount_format, funds);
+        return context.getString(R.string.all_in_with_amount_format, Protos.money(funds));
     }
 
     private void updateGridSpan() {

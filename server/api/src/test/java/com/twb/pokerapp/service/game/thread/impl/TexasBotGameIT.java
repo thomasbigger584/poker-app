@@ -2,11 +2,7 @@ package com.twb.pokerapp.service.game.thread.impl;
 
 import com.twb.pokerapp.domain.AppUser;
 import com.twb.pokerapp.domain.Card;
-import com.twb.pokerapp.domain.enumeration.CardType;
-import com.twb.pokerapp.domain.enumeration.GameType;
-import com.twb.pokerapp.domain.enumeration.RoundState;
-import com.twb.pokerapp.dto.table.CreateTableDTO;
-import com.twb.pokerapp.dto.table.TableDTO;
+import com.twb.pokerapp.proto.*;
 import com.twb.pokerapp.testutils.TestEnvironment;
 import com.twb.pokerapp.testutils.game.GameLatches;
 import com.twb.pokerapp.testutils.game.player.TestUserParams;
@@ -121,7 +117,7 @@ class TexasBotGameIT {
 
         var rounds = sqlClient.getRounds();
         assertFalse(rounds.isEmpty(), "Expected at least one round to be played");
-        assertTrue(rounds.stream().anyMatch(round -> round.getRoundState() == RoundState.FINISHED),
+        assertTrue(rounds.stream().anyMatch(round -> round.getRoundState() == RoundState.ROUND_STATE_FINISHED),
                 "Expected a round to reach the FINISHED state");
 
         // The round can only progress if the bots took their turns, so actions must have been recorded.
@@ -148,7 +144,7 @@ class TexasBotGameIT {
                 var holeCardTypes = hand.getCards().stream()
                         .map(Card::getCardType)
                         .collect(Collectors.toSet());
-                assertEquals(Set.of(CardType.PLAYER_CARD_1, CardType.PLAYER_CARD_2), holeCardTypes,
+                assertEquals(Set.of(CardType.CARD_TYPE_PLAYER_CARD_1, CardType.CARD_TYPE_PLAYER_CARD_2), holeCardTypes,
                         "Expected bot " + botUsername + " to be dealt exactly two hole cards");
             }
         }
@@ -159,15 +155,16 @@ class TexasBotGameIT {
     // *****************************************************************************************
 
     private TableDTO createTable(int minPlayers) throws Exception {
-        var createDto = new CreateTableDTO();
-        createDto.setName(UUID.randomUUID().toString());
-        createDto.setGameType(GameType.TEXAS_HOLDEM);
-        createDto.setSpeedMultiplier(2.0);
-        createDto.setTotalRounds(1);
-        createDto.setMinPlayers(minPlayers);
-        createDto.setMaxPlayers(6);
-        createDto.setMinBuyin(BigDecimal.valueOf(1_000));
-        createDto.setMaxBuyin(BigDecimal.valueOf(10_000));
+        var createDto = CreateTableDTO.newBuilder()
+                .setName(UUID.randomUUID().toString())
+                .setGameType(GameType.GAME_TYPE_TEXAS_HOLDEM)
+                .setSpeedMultiplier(2.0)
+                .setTotalRounds(1)
+                .setMinPlayers(minPlayers)
+                .setMaxPlayers(6)
+                .setMinBuyin(BigDecimal.valueOf(1_000).toPlainString())
+                .setMaxBuyin(BigDecimal.valueOf(10_000).toPlainString())
+                .build();
 
         var response = env.getAdminRestClient().post(TableDTO.class, createDto, "/poker-table");
         assertEquals(HttpStatus.CREATED.value(), response.httpResponse().statusCode());

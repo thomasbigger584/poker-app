@@ -1,6 +1,6 @@
 package com.twb.pokerapp.service.idempotency;
 
-import com.twb.pokerapp.domain.enumeration.ActionType;
+import com.twb.pokerapp.proto.ActionType;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;

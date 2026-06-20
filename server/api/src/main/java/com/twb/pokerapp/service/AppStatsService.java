@@ -1,6 +1,6 @@
 package com.twb.pokerapp.service;
 
-import com.twb.pokerapp.domain.enumeration.ConnectionType;
+import com.twb.pokerapp.proto.ConnectionType;
 import com.twb.pokerapp.repository.BettingRoundRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
 import com.twb.pokerapp.repository.RoundRepository;
@@ -30,8 +30,8 @@ public class AppStatsService {
     public void logAppStats() {
         var activeThreads = threadManager.getActiveThreadCount();
         var connectedUsers = userRegistry.getUserCount();
-        var connectedPlayers = playerSessionRepository.countConnected(ConnectionType.PLAYER);
-        var connectedListeners = playerSessionRepository.countConnected(ConnectionType.LISTENER);
+        var connectedPlayers = playerSessionRepository.countConnected(ConnectionType.CONNECTION_TYPE_PLAYER);
+        var connectedListeners = playerSessionRepository.countConnected(ConnectionType.CONNECTION_TYPE_LISTENER);
         var tableCount = tableRepository.count();
         var roundCount = roundRepository.count();
         var bettingRoundCount = bettingRoundRepository.count();

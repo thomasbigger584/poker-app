@@ -1,9 +1,9 @@
 package com.twb.pokerapp.web.rest;
 
-import com.twb.pokerapp.domain.enumeration.GameType;
-import com.twb.pokerapp.dto.table.AvailableTableDTO;
-import com.twb.pokerapp.dto.table.CreateTableDTO;
-import com.twb.pokerapp.dto.table.TableDTO;
+import com.twb.pokerapp.proto.AvailableTableListResponse;
+import com.twb.pokerapp.proto.CreateTableDTO;
+import com.twb.pokerapp.proto.GameType;
+import com.twb.pokerapp.proto.TableDTO;
 import com.twb.pokerapp.testutils.TestEnvironment;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -47,13 +46,14 @@ class TableResourceIT {
     @Test
     void testCreateAndFetchTable() throws Throwable {
         // given
-        var createDto = new CreateTableDTO();
-        createDto.setName(UUID.randomUUID().toString());
-        createDto.setGameType(GameType.TEXAS_HOLDEM);
-        createDto.setMinPlayers(2);
-        createDto.setMaxPlayers(6);
-        createDto.setMinBuyin(BigDecimal.valueOf(100));
-        createDto.setMaxBuyin(BigDecimal.valueOf(10_000));
+        var createDto = CreateTableDTO.newBuilder()
+                .setName(UUID.randomUUID().toString())
+                .setGameType(GameType.GAME_TYPE_TEXAS_HOLDEM)
+                .setMinPlayers(2)
+                .setMaxPlayers(6)
+                .setMinBuyin(BigDecimal.valueOf(100).toPlainString())
+                .setMaxBuyin(BigDecimal.valueOf(10_000).toPlainString())
+                .build();
 
         // when
         var adminRestClient = env.getAdminRestClient();
@@ -63,19 +63,19 @@ class TableResourceIT {
         assertEquals(HttpStatus.CREATED.value(), createResponse.httpResponse().statusCode());
 
         var createdTableDto = createResponse.resultBody();
-        assertNotNull(createdTableDto.getId());
+        assertFalse(createdTableDto.getId().isEmpty());
         assertEquals(createDto.getName(), createdTableDto.getName());
         assertEquals(createDto.getGameType(), createdTableDto.getGameType());
         assertEquals(createDto.getMinPlayers(), createdTableDto.getMinPlayers());
         assertEquals(createDto.getMaxPlayers(), createdTableDto.getMaxPlayers());
-        assertEquals(0, createDto.getMinBuyin().compareTo(createdTableDto.getMinBuyin()));
-        assertEquals(0, createDto.getMaxBuyin().compareTo(createdTableDto.getMaxBuyin()));
+        assertEquals(0, new BigDecimal(createDto.getMinBuyin()).compareTo(new BigDecimal(createdTableDto.getMinBuyin())));
+        assertEquals(0, new BigDecimal(createDto.getMaxBuyin()).compareTo(new BigDecimal(createdTableDto.getMaxBuyin())));
 
-        var getResponse = adminRestClient.get(AvailableTableDTO[].class, ENDPOINT);
+        var getResponse = adminRestClient.get(AvailableTableListResponse.class, ENDPOINT);
         assertEquals(HttpStatus.OK.value(), getResponse.httpResponse().statusCode());
 
-        var tables = getResponse.resultBody();
-        var createdTableFetchedOpt = Arrays.stream(tables)
+        var tables = getResponse.resultBody().getTablesList();
+        var createdTableFetchedOpt = tables.stream()
                 .filter(availableTableDto -> availableTableDto.getTable().getId().equals(createdTableDto.getId())).findFirst();
         assertTrue(createdTableFetchedOpt.isPresent());
 
@@ -87,7 +87,7 @@ class TableResourceIT {
         assertEquals(createdTableDto.getGameType(), createdTableFetched.getGameType());
         assertEquals(createdTableDto.getMinPlayers(), createdTableFetched.getMinPlayers());
         assertEquals(createdTableDto.getMaxPlayers(), createdTableFetched.getMaxPlayers());
-        assertEquals(0, createdTableDto.getMinBuyin().compareTo(createdTableFetched.getMinBuyin()));
-        assertEquals(0, createdTableDto.getMaxBuyin().compareTo(createdTableFetched.getMaxBuyin()));
+        assertEquals(0, new BigDecimal(createdTableDto.getMinBuyin()).compareTo(new BigDecimal(createdTableFetched.getMinBuyin())));
+        assertEquals(0, new BigDecimal(createdTableDto.getMaxBuyin()).compareTo(new BigDecimal(createdTableFetched.getMaxBuyin())));
     }
 }

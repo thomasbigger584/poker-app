@@ -1,6 +1,5 @@
 package com.twb.pokerapp.di.network;
 
-import com.google.gson.Gson;
 import com.twb.pokerapp.data.auth.AuthConfiguration;
 import com.twb.pokerapp.data.auth.AuthService;
 import com.twb.pokerapp.data.websocket.WebSocketClient;
@@ -22,8 +21,7 @@ public class WebSocketModule {
     @Singleton
     public WebSocketClient webSocketClient(AuthService authService,
                                            AuthConfiguration authConfiguration,
-                                           @Authenticated OkHttpClient okHttpClient,
-                                           Gson gson) {
-        return new WebSocketClient(authService, authConfiguration, okHttpClient, gson);
+                                           @Authenticated OkHttpClient okHttpClient) {
+        return new WebSocketClient(authService, authConfiguration, okHttpClient);
     }
 }

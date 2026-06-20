@@ -1,6 +1,6 @@
 package com.twb.pokerapp.service.game.thread.impl.blackjack;
 
-import com.twb.pokerapp.domain.enumeration.RoundState;
+import com.twb.pokerapp.proto.RoundState;
 import com.twb.pokerapp.service.game.thread.GameThread;
 import com.twb.pokerapp.service.game.thread.GameThreadParams;
 import lombok.extern.slf4j.Slf4j;

@@ -3,12 +3,13 @@ package com.twb.pokerapp.service.player;
 import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.PlayerAction;
 import com.twb.pokerapp.domain.PlayerSession;
-import com.twb.pokerapp.domain.enumeration.ActionType;
 import com.twb.pokerapp.mapper.PlayerActionMapper;
+import com.twb.pokerapp.mapper.enumeration.ActionFlow;
+import com.twb.pokerapp.proto.ActionType;
 import com.twb.pokerapp.repository.PlayerActionRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
+import com.twb.pokerapp.service.game.thread.dto.PlayerActionCommand;
 import com.twb.pokerapp.service.game.thread.impl.texas.dto.NextActionsDTO;
-import com.twb.pokerapp.web.websocket.message.client.CreatePlayerActionDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -28,7 +29,7 @@ public class PlayerActionService {
     private final PlayerActionMapper mapper;
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public PlayerAction create(PlayerSession playerSession, BettingRound bettingRound, CreatePlayerActionDTO createDto) {
+    public PlayerAction create(PlayerSession playerSession, BettingRound bettingRound, PlayerActionCommand createDto) {
         var amount = createDto.getAmount();
         if (amount != null && amount.compareTo(BigDecimal.ZERO) > 0) {
             playerSession.setFunds(playerSession.getFunds().subtract(amount));
@@ -43,7 +44,7 @@ public class PlayerActionService {
 
         playerAction = repository.save(playerAction);
 
-        if (playerAction.getActionType() == ActionType.FOLD) {
+        if (playerAction.getActionType() == ActionType.ACTION_TYPE_FOLD) {
             playerSession.setActive(false);
             playerSessionRepository.save(playerSession);
         }
@@ -53,16 +54,16 @@ public class PlayerActionService {
 
     @Transactional(propagation = Propagation.MANDATORY, readOnly = true)
     public NextActionsDTO getNextActions(PlayerSession playerSession, List<PlayerAction> prevPlayerActions) {
-        var nextActions = ActionType.getDefaultActions();
+        var nextActions = ActionFlow.defaultActions();
         var amountToCall = BigDecimal.ZERO;
         if (!prevPlayerActions.isEmpty()) {
             var previousPlayerAction = prevPlayerActions.getFirst();
             var previousPlayerActionType = previousPlayerAction.getActionType();
-            nextActions = previousPlayerActionType.getNextActions();
+            nextActions = ActionFlow.nextActions(previousPlayerActionType);
             amountToCall = getAmountToCall(playerSession, prevPlayerActions);
         }
         if (amountToCall.compareTo(playerSession.getFunds()) > 0) {
-            nextActions = ActionType.getAllInActions();
+            nextActions = ActionFlow.allInActions();
         }
         return new NextActionsDTO(amountToCall, nextActions);
     }
@@ -80,7 +81,7 @@ public class PlayerActionService {
     public boolean isAggressive(PlayerAction playerAction) {
         var bettingRound = playerAction.getBettingRound();
         var actionType = playerAction.getActionType();
-        var isAggressive = actionType.isAggressive();
+        var isAggressive = ActionFlow.isAggressive(actionType);
 
         // If All-In, we must check if it was a Raise (Aggressive) or a Call (Passive)
         // by comparing the amount against the max bet of other players.
@@ -92,7 +93,7 @@ public class PlayerActionService {
         // 4. Player A Calls 200 (Total: 300).
         // 5. Player B goes All-In for 400 Total (Delta: 300).
 
-        if (!isAggressive && actionType == ActionType.ALL_IN) {
+        if (!isAggressive && actionType == ActionType.ACTION_TYPE_ALL_IN) {
             var actions = repository.findPlayerActionsNotFolded(bettingRound.getId());
             var playerContributions = getPlayerContributions(actions);
 

@@ -4,9 +4,9 @@ import com.twb.pokerapp.domain.BettingRound;
 import com.twb.pokerapp.domain.BotUser;
 import com.twb.pokerapp.domain.PlayerSession;
 import com.twb.pokerapp.domain.Round;
-import com.twb.pokerapp.domain.enumeration.BettingRoundState;
-import com.twb.pokerapp.domain.enumeration.ConnectionType;
-import com.twb.pokerapp.domain.enumeration.SessionState;
+import com.twb.pokerapp.proto.BettingRoundState;
+import com.twb.pokerapp.proto.ConnectionType;
+import com.twb.pokerapp.proto.SessionState;
 import com.twb.pokerapp.repository.BettingRoundRepository;
 import com.twb.pokerapp.repository.PlayerActionRepository;
 import com.twb.pokerapp.repository.PlayerSessionRepository;
@@ -27,7 +27,6 @@ import com.twb.pokerapp.service.game.thread.impl.texas.dto.NextActionsDTO;
 import com.twb.pokerapp.service.player.PlayerActionService;
 import com.twb.pokerapp.web.websocket.message.MessageDispatcher;
 import com.twb.pokerapp.web.websocket.message.server.ServerMessageFactory;
-import com.twb.pokerapp.web.websocket.message.server.payload.PlayerTurnDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -143,7 +142,7 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
             var bettingRoundOpt = bettingRoundRepository.findById(bettingRound.getId());
             bettingRoundOpt.ifPresent(br -> {
                 this.round = texasRoundPotService.reconcilePots(round, br);
-                this.bettingRound = bettingRoundService.setState(br, BettingRoundState.FINISHED);
+                this.bettingRound = bettingRoundService.setState(br, BettingRoundState.BETTING_ROUND_STATE_FINISHED);
                 var roundPots = this.round.getRoundPots();
                 afterCommit(() -> dispatcher.send(params.getTable(), messageFactory.bettingRoundUpdated(round, br, roundPots)));
             });
@@ -284,7 +283,7 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
         dispatcher.send(params, turnMessage);
         // Capture the live turn so a client reconnecting mid-turn is re-served the action buttons /
         // countdown (with the remaining wait) instead of being stuck until the auto-fold timeout.
-        gameThread.setActiveTurn(new ActiveTurnDTO((PlayerTurnDTO) turnMessage.getPayload(), System.currentTimeMillis()));
+        gameThread.setActiveTurn(new ActiveTurnDTO(turnMessage.getPlayerTurn(), System.currentTimeMillis()));
         waitPlayerTurn(params, gameThread, currentPlayer);
     }
 
@@ -326,8 +325,8 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
     private boolean isActionable(PlayerSession playerSession) {
         return Boolean.TRUE.equals(playerSession.getActive()) &&
                 playerSession.getFunds() != null && playerSession.getFunds().compareTo(BigDecimal.ZERO) > 0
-                && playerSession.getSessionState() == SessionState.CONNECTED
-                && playerSession.getConnectionType() == ConnectionType.PLAYER;
+                && playerSession.getSessionState() == SessionState.SESSION_STATE_CONNECTED
+                && playerSession.getConnectionType() == ConnectionType.CONNECTION_TYPE_PLAYER;
     }
 
     private List<PlayerSession> getActivePlayers(Round round) {
@@ -349,7 +348,7 @@ public class TexasPlayerTurnService implements GamePlayerTurnService {
         // instant their turn comes up instead of waiting out the turn timer. The in-memory copy in
         // the betting rotation can be stale, so re-read the current state by id.
         var current = playerSessionRepository.findById(playerSession.getId()).orElse(null);
-        if (current == null || current.getSessionState() != SessionState.CONNECTED) {
+        if (current == null || current.getSessionState() != SessionState.SESSION_STATE_CONNECTED) {
             return true;
         }
         // Registry check still covers a passive socket drop, where the DB session stays CONNECTED

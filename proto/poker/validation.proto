@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package poker;
+
+option java_package = "com.twb.pokerapp.proto";
+option java_multiple_files = true;
+option java_outer_classname = "ValidationProto";
+
+// =====================================================================
+// Validation — shared by REST error responses and the WebSocket
+// VALIDATION message. Carries the field-level messages that previously
+// came from bean-validation annotations on the request DTOs.
+// =====================================================================
+
+message ValidationFieldDTO {
+  string field = 1;
+  string message = 2;
+}
+
+message ValidationDTO {
+  repeated ValidationFieldDTO fields = 1;
+}

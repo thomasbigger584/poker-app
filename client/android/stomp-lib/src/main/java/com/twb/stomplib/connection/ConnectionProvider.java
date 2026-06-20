@@ -7,16 +7,16 @@ import io.reactivex.Observable;
 
 public interface ConnectionProvider {
     /**
-     * Subscribe this for receive stomp messages
+     * Subscribe this for receive stomp messages (raw frame bytes — bodies may be binary).
      */
-    Observable<String> messages();
+    Observable<byte[]> messages();
 
     /**
      * Sending stomp messages via you ConnectionProvider.
      * onError if not connected or error detected will be called, or onCompleted id sending started
      * TODO: send messages with ACK
      */
-    Completable send(String stompMessage);
+    Completable send(byte[] stompMessage);
 
     /**
      * Subscribe this for receive #LifecycleEvent events

@@ -1,11 +1,21 @@
 package com.twb.pokerapp.mapper;
 
 import com.twb.pokerapp.domain.Round;
-import com.twb.pokerapp.dto.round.RoundDTO;
-import org.mapstruct.Mapper;
+import com.twb.pokerapp.proto.RoundDTO;
+import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring", uses = {RoundPotMapper.class})
-public interface RoundMapper {
+@Component
+public class RoundMapper {
 
-    RoundDTO modelToDto(Round model);
+    public RoundDTO modelToDto(Round model) {
+        if (model == null) {
+            return null;
+        }
+        var builder = RoundDTO.newBuilder()
+                .setId(ProtoConvert.uuidStr(model.getId()));
+        if (model.getRoundState() != null) {
+            builder.setRoundState(model.getRoundState());
+        }
+        return builder.build();
+    }
 }

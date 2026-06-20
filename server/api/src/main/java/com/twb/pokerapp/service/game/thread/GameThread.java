@@ -1,9 +1,10 @@
 package com.twb.pokerapp.service.game.thread;
 
 import com.twb.pokerapp.domain.*;
-import com.twb.pokerapp.domain.enumeration.BettingRoundState;
-import com.twb.pokerapp.domain.enumeration.ConnectionType;
-import com.twb.pokerapp.domain.enumeration.RoundState;
+import com.twb.pokerapp.service.game.round.RoundProgression;
+import com.twb.pokerapp.proto.BettingRoundState;
+import com.twb.pokerapp.proto.ConnectionType;
+import com.twb.pokerapp.proto.RoundState;
 import com.twb.pokerapp.service.game.exception.GameInterruptedException;
 import com.twb.pokerapp.service.game.exception.RoundInterruptedException;
 import com.twb.pokerapp.service.game.thread.annotation.CallerThread;
@@ -149,7 +150,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
         if (roundOpt.isPresent()) {
             var round = roundOpt.get();
             this.roundId = round.getId();
-            if (round.getRoundState() != RoundState.WAITING_FOR_PLAYERS) {
+            if (round.getRoundState() != RoundState.ROUND_STATE_WAITING_FOR_PLAYERS) {
                 throw new GameInterruptedException("Cannot start an existing new round not in the WAITING_FOR_PLAYERS state");
             }
         } else {
@@ -178,7 +179,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                 throw new GameInterruptedException("Only bots connected to table so stopping");
             }
             var playerPlayerUsers = connectedPlayers.stream()
-                    .filter(playerSession -> playerSession.getConnectionType() == ConnectionType.PLAYER)
+                    .filter(playerSession -> playerSession.getConnectionType() == ConnectionType.CONNECTION_TYPE_PLAYER)
                     .filter(playerSession -> playerSession.getFunds() != null && playerSession.getFunds().compareTo(BigDecimal.ZERO) > 0)
                     .toList();
             var connectedUsers = userWebsocketService.getConnectedUsers(table);
@@ -227,9 +228,9 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     }
 
     private void runRound() {
-        var roundState = RoundState.INIT_DEAL;
+        var roundState = RoundState.ROUND_STATE_INIT_DEAL;
         saveRoundState(roundState);
-        while (roundState != RoundState.FINISHED) {
+        while (roundState != RoundState.ROUND_STATE_FINISHED) {
             checkRoundInterrupted();
             try {
                 initBettingRound(roundState);
@@ -238,8 +239,8 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
             } catch (RoundInterruptedException e) {
                 log.debug(e.getMessage());
                 interruptRound.set(false);
-                if (roundState != RoundState.EVAL) {
-                    roundState = RoundState.EVAL;
+                if (roundState != RoundState.ROUND_STATE_EVAL) {
+                    roundState = RoundState.ROUND_STATE_EVAL;
                 }
             }
             saveRoundState(roundState);
@@ -247,7 +248,7 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
     }
 
     private void initBettingRound(RoundState roundState) {
-        var bettingRoundTypeOpt = roundState.getBettingRoundType();
+        var bettingRoundTypeOpt = RoundProgression.bettingRoundType(roundState);
         bettingRoundTypeOpt.ifPresent(bettingRoundType ->
                 bettingRoundService.create(table.getId(), bettingRoundType));
     }
@@ -269,14 +270,14 @@ public abstract class GameThread extends BaseGameThread implements Thread.Uncaug
                 roundOpt.ifPresent(round -> {
                     var bettingRoundOpt = bettingRoundRepository.findCurrentByRoundId(roundId);
                     bettingRoundOpt.ifPresent(bettingRound -> {
-                        if (bettingRound.getState() != BettingRoundState.FINISHED) {
-                            var thisBettingRound = bettingRoundService.setState(bettingRound, BettingRoundState.FINISHED);
+                        if (bettingRound.getState() != BettingRoundState.BETTING_ROUND_STATE_FINISHED) {
+                            var thisBettingRound = bettingRoundService.setState(bettingRound, BettingRoundState.BETTING_ROUND_STATE_FINISHED);
                             var roundPots = round.getRoundPots();
                             afterCommit(() -> dispatcher.send(table, messageFactory.bettingRoundUpdated(round, thisBettingRound, roundPots)));
                         }
                     });
-                    if (round.getRoundState() != RoundState.FINISHED) {
-                        roundService.setState(round, RoundState.FINISHED);
+                    if (round.getRoundState() != RoundState.ROUND_STATE_FINISHED) {
+                        roundService.setState(round, RoundState.ROUND_STATE_FINISHED);
                     }
                     var winners = roundWinnerRepository.findByRound(round.getId());
                     afterCommit(() -> dispatcher.send(table, messageFactory.roundFinished(winners)));

@@ -1,11 +1,32 @@
 package com.twb.pokerapp.mapper;
 
 import com.twb.pokerapp.domain.PlayerAction;
-import com.twb.pokerapp.dto.playeraction.PlayerActionDTO;
-import org.mapstruct.Mapper;
+import com.twb.pokerapp.proto.PlayerActionDTO;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring",
-        uses = {PlayerSessionMapper.class, BettingRoundMapper.class})
-public interface PlayerActionMapper {
-    PlayerActionDTO modelToDto(PlayerAction model);
+@Component
+@RequiredArgsConstructor
+public class PlayerActionMapper {
+    private final PlayerSessionMapper playerSessionMapper;
+    private final BettingRoundMapper bettingRoundMapper;
+
+    public PlayerActionDTO modelToDto(PlayerAction model) {
+        if (model == null) {
+            return null;
+        }
+        var builder = PlayerActionDTO.newBuilder()
+                .setId(ProtoConvert.uuidStr(model.getId()))
+                .setAmount(ProtoConvert.money(model.getAmount()));
+        if (model.getActionType() != null) {
+            builder.setActionType(model.getActionType());
+        }
+        if (model.getPlayerSession() != null) {
+            builder.setPlayerSession(playerSessionMapper.modelToDto(model.getPlayerSession()));
+        }
+        if (model.getBettingRound() != null) {
+            builder.setBettingRound(bettingRoundMapper.modelToDto(model.getBettingRound()));
+        }
+        return builder.build();
+    }
 }

@@ -12,8 +12,9 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.handshake.ServerHandshake;
 
 import java.net.URI;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -83,8 +84,16 @@ public class WebSocketsConnectionProvider extends AbstractConnectionProvider {
 
             @Override
             public void onMessage(String message) {
-                Log.d(TAG, "onMessage: " + message);
-                emitMessage(message);
+                Log.d(TAG, "onMessage (text): " + message);
+                emitMessage(message.getBytes(StandardCharsets.UTF_8));
+            }
+
+            @Override
+            public void onMessage(ByteBuffer bytes) {
+                // Keep raw bytes — the body may be binary protobuf.
+                var raw = new byte[bytes.remaining()];
+                bytes.get(raw);
+                emitMessage(raw);
             }
 
             @Override
@@ -120,7 +129,8 @@ public class WebSocketsConnectionProvider extends AbstractConnectionProvider {
     }
 
     @Override
-    protected void rawSend(String stompMessage) {
+    protected void rawSend(byte[] stompMessage) {
+        // Send as a binary WebSocket frame so binary STOMP bodies survive intact.
         mWebSocketClient.send(stompMessage);
     }
 

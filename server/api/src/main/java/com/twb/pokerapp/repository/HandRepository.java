@@ -31,8 +31,8 @@ public interface HandRepository extends JpaRepository<Hand, UUID> {
             SELECT DISTINCT h.playerSession.position
             FROM Hand h
             WHERE h.round.pokerTable.id = :tableId
-            AND h.round.roundState <> com.twb.pokerapp.domain.enumeration.RoundState.FINISHED
-            AND h.round.roundState <> com.twb.pokerapp.domain.enumeration.RoundState.FAILED
+            AND h.round.roundState <> com.twb.pokerapp.proto.RoundState.ROUND_STATE_FINISHED
+            AND h.round.roundState <> com.twb.pokerapp.proto.RoundState.ROUND_STATE_FAILED
             AND h.playerSession.position IS NOT NULL
             """)
     List<Integer> findOccupiedPositionsInCurrentRound(@Param("tableId") UUID tableId);

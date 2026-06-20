@@ -26,8 +26,11 @@ public class SecurityConfiguration {
                 // public endpoint
                 .requestMatchers("/public", "/public/**").permitAll()
 
-                // websocket endpoints
-                .requestMatchers("/looping").hasAuthority(USER)
+                // websocket endpoints — the native WebSocket handshake carries the JWT in its
+                // Authorization header and is authenticated exactly like the REST endpoints (USER
+                // role -> ROLE_user); the STOMP CONNECT frame is additionally validated by
+                // WebSocketAuthChannelInterceptor.
+                .requestMatchers("/looping").hasRole(USER)
                 .requestMatchers("/looping/**").permitAll()
 
                 //admin endpoints
