@@ -1,9 +1,14 @@
 name: 🛠️ Flutter CI
 
-# Fast feedback on pull requests touching the Flutter client: static analysis,
-# unit tests, and a debug build to catch compile errors. Single Linux runner —
-# the full multi-platform build only runs on the master pre-release pipeline
-# (see flutter-release.yml).
+# Pull-request validation for the Flutter client. A fast analyze + test gate
+# runs first; if it passes, every platform is compiled (debug) on its own free
+# GitHub-hosted runner so platform-specific breakage is caught BEFORE merge —
+# in particular the web compiler (dart2js/wasm) and the desktop/iOS native
+# builds, none of which an Android APK build would exercise.
+#
+# Unlike the release workflow these builds are NOT continue-on-error: any
+# platform failing fails the PR check. fail-fast is off so you see every
+# platform's result in one run.
 
 on:
   pull_request:
@@ -16,12 +21,12 @@ env:
   FLUTTER_VERSION: "3.44.2"
 
 jobs:
-  build:
+  # Cheap, platform-independent checks. Gates the (expensive) platform builds.
+  analyze:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./client/flutter
-
     steps:
       - name: 📋 Checkout code
         uses: actions/checkout@v4
@@ -42,5 +47,81 @@ jobs:
       - name: 🧪 Test
         run: flutter test
 
-      - name: 🏗️ Build Debug APK
+  # Compile every platform on its respective runner. Mirrors the release matrix
+  # but uses debug builds (faster) and skips packaging — this only proves each
+  # platform builds.
+  build:
+    needs: analyze
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: web
+            os: ubuntu-latest
+          - target: apk
+            os: ubuntu-latest
+          - target: linux
+            os: ubuntu-latest
+          - target: macos
+            os: macos-latest
+          - target: ios
+            os: macos-latest
+          - target: windows
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: ./client/flutter
+    steps:
+      - name: 📋 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐦 Set up Flutter ${{ env.FLUTTER_VERSION }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: 🐧 Install Linux desktop build dependencies
+        if: matrix.target == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+
+      - name: 📦 Resolve dependencies
+        run: flutter pub get
+
+      - name: 🌐 Build Web
+        if: matrix.target == 'web'
+        run: |
+          flutter config --enable-web
+          flutter build web
+
+      - name: 🤖 Build Android APK
+        if: matrix.target == 'apk'
         run: flutter build apk --debug
+
+      - name: 🐧 Build Linux Desktop
+        if: matrix.target == 'linux'
+        run: |
+          flutter config --enable-linux-desktop
+          flutter build linux --debug
+
+      - name: 🍏 Build macOS Desktop
+        if: matrix.target == 'macos'
+        run: |
+          flutter config --enable-macos-desktop
+          flutter build macos --debug
+
+      - name: 🍎 Build iOS (unsigned)
+        if: matrix.target == 'ios'
+        run: flutter build ios --debug --no-codesign
+
+      - name: 🪟 Build Windows Desktop
+        if: matrix.target == 'windows'
+        run: |
+          flutter config --enable-windows-desktop
+          flutter build windows --debug
