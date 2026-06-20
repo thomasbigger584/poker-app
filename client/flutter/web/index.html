@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="TWB Poker - cross-platform Flutter client">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="TWB Poker">
+  <meta name="theme-color" content="#04140A">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>TWB Poker</title>
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    body { background-color: #04140A; }
+    #loading {
+      position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(circle at 50% 35%, #1E6B30, #0A2412 55%, #04140A);
+    }
+    #loading .chip {
+      width: 84px; height: 84px; border-radius: 50%;
+      background: linear-gradient(135deg, #FFD24A, #C8961E);
+      display: flex; align-items: center; justify-content: center;
+      color: #04140A; font-size: 42px; font-weight: 900;
+      box-shadow: 0 0 40px rgba(200, 150, 30, 0.45);
+      animation: pulse 1.4s ease-in-out infinite;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+  </style>
+</head>
+<body>
+  <div id="loading"><div class="chip">&spades;</div></div>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
