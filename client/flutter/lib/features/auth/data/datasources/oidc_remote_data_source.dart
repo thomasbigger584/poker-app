@@ -102,6 +102,11 @@ class OidcRemoteDataSource {
         options: const FlutterWebAuth2Options(
           preferEphemeral: false,
           timeout: 300,
+          // Linux/Windows only: use the loopback HttpServer + system browser
+          // (the v3 behaviour this code is built around — callbackUrlScheme is
+          // `http://localhost:<port>`) instead of the in-app webview. Keeps the
+          // registered Keycloak redirect URIs valid. No effect on mobile/web/macOS.
+          useWebview: false,
         ),
       );
     } on PlatformException catch (e) {

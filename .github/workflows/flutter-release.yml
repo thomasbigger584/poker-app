@@ -96,10 +96,18 @@ jobs:
       - name: 🐧 Install Linux desktop build dependencies
         if: matrix.target == 'linux'
         working-directory: .
+        # Native deps for the Linux desktop plugins:
+        #  - libsecret-1-dev      → flutter_secure_storage_linux
+        #  - libwebkit2gtk-4.1-dev / libsoup-3.0-dev → desktop_webview_window
+        #    (pulled transitively by flutter_web_auth_2 v5). It MUST use the
+        #    webkit2gtk-4.1 / libsoup-3.0 path; the 4.0/libsoup-2.4 fallback
+        #    mismatches `g_date_time_get_seconds(soup_cookie_get_expires(...))`
+        #    and fails to compile.
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+            clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev \
+            libsecret-1-dev libwebkit2gtk-4.1-dev libsoup-3.0-dev
 
       - name: 📦 Resolve dependencies
         run: flutter pub get

@@ -63,4 +63,3 @@ app.*.map.json
 /linux/flutter/generated_plugins.cmake
 
 # Web (if you compile for browser later)
-/lib/generated_plugin_registrant.dart
