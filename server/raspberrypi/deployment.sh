@@ -43,8 +43,10 @@ ensure_prerequisites() {
 
   export DEBIAN_FRONTEND=noninteractive
 
-  # CLI tools the deploy + worker rely on (all in the default Debian repos).
-  REQUIRED_PKGS=(git curl jq unzip ca-certificates gzip findutils)
+  # CLI tools the worker relies on (all in the default Debian repos). Images are
+  # built in CI, so the Pi needs no build/web tooling — just git (pull configs),
+  # curl + jq (Tailscale API cleanup) and Docker (below).
+  REQUIRED_PKGS=(git curl jq ca-certificates)
   MISSING_PKGS=()
   for pkg in "${REQUIRED_PKGS[@]}"; do
     dpkg -s "$pkg" >/dev/null 2>&1 || MISSING_PKGS+=("$pkg")
@@ -194,48 +196,18 @@ else
     echo "💾 WIPE_DB_DATA=\$WIPE_DB_DATA -> keeping existing Postgres volume '$DB_VOLUME'."
 fi
 
+# Images (api, nginx, keycloak, rabbitmq) are built on a native ARM64 GitHub
+# runner and pushed straight into this box's Docker (docker save | ssh docker
+# load over Tailscale) BEFORE this script runs — the Pi never builds anything.
+# --no-build makes a missing image a hard error instead of silently building
+# here; public images (postgres/pgadmin/tailscale) are still pulled as needed.
 if [ "\$CURRENT_HASH" == "\$DEPLOYED_HASH" ]; then
-    echo "⏩ No code changes detected (\$CURRENT_HASH). Skipping build..."
-    docker compose up -d
+    echo "⏩ No code change since last deploy (\$CURRENT_HASH)."
 else
-    echo "🏗️ Code changes detected (\$DEPLOYED_HASH -> \$CURRENT_HASH). Rebuilding..."
-
-    # ---- Fetch the prebuilt Flutter web bundle (no Flutter SDK on the Pi) ----
-    # Flutter ships no official ARM64 Linux SDK, so we don't compile web on the
-    # Pi. The flutter-release workflow builds it on x86_64 and attaches it to a
-    # flutter-<version> pre-release; we take the newest one that has a web asset
-    # and unzip it where the nginx Dockerfile expects it (server/nginx/web-dist).
-    echo "🌐 Resolving latest Flutter web bundle from GitHub pre-releases..."
-    WEB_DIST_DIR="$SERVER_DIR/nginx/web-dist"
-    WEB_ZIP_URL=\$(curl -fsSL "https://api.github.com/repos/thomasbigger584/poker-app/releases" \
-        | jq -r 'map(select(.prerelease and (.tag_name|startswith("flutter-"))))
-                 | map(.assets[]? | select(.name|test("flutter-web")) | .browser_download_url)
-                 | first // empty')
-
-    if [ -z "\$WEB_ZIP_URL" ]; then
-        echo "❌ Error: no Flutter web asset found in any flutter-* pre-release."
-        exit 1
-    fi
-
-    echo "⬇️  Downloading web bundle: \$WEB_ZIP_URL"
-    rm -rf "\$WEB_DIST_DIR"
-    mkdir -p "\$WEB_DIST_DIR"
-    curl -fsSL "\$WEB_ZIP_URL" -o "\$WEB_DIST_DIR/web.zip" || { echo "❌ Error: failed to download web bundle."; exit 1; }
-    unzip -q -o "\$WEB_DIST_DIR/web.zip" -d "\$WEB_DIST_DIR" || { echo "❌ Error: failed to unzip web bundle (is 'unzip' installed?)."; exit 1; }
-    rm -f "\$WEB_DIST_DIR/web.zip"
-
-    if [ ! -f "\$WEB_DIST_DIR/web/index.html" ]; then
-        echo "❌ Error: web bundle is missing web/index.html after unzip."
-        exit 1
-    fi
-
-    # Pre-compress text assets so nginx serves them via gzip_static (-9, kept
-    # alongside the originals) — parity with the old in-image Flutter build.
-    find "\$WEB_DIST_DIR/web" -type f \( -name '*.js' -o -name '*.wasm' -o -name '*.json' -o -name '*.css' -o -name '*.html' -o -name '*.ttf' -o -name '*.otf' -o -name '*.svg' \) -exec gzip -9 -k -f {} +
-    echo "✅ Web bundle ready at \$WEB_DIST_DIR/web"
-
-    docker compose up --build -d
+    echo "📦 Code updated (\$DEPLOYED_HASH -> \$CURRENT_HASH)."
 fi
+echo "🚀 Starting stack with prebuilt images (no build on the Pi)..."
+docker compose up -d --no-build
 
 EXIT_CODE=\$?
 set -e

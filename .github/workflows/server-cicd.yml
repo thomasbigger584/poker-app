@@ -27,18 +27,18 @@ jobs:
             api:
               - 'server/api/**'
 
-  build:
+  # Build every server image on the native ARM64 runner (so they run as-is on the
+  # Raspberry Pi — Flutter/Docker arch must match), run the test suite, then — on
+  # push to master — ship the images straight into the Pi's Docker over Tailscale
+  # (docker save | ssh docker load) and trigger the deploy. The Pi never builds.
+  build-and-deploy:
     needs: changes
-    if: needs.changes.outputs.api == 'true'
     runs-on: ubuntu-24.04-arm
     steps:
       - name: 📋 Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: 💻 Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       - name: 🔨 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -50,36 +50,57 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: 🐳 Build Docker Images (API & RabbitMQ)
+      # Bake the Flutter web client into the nginx image here (not on the Pi).
+      # The flutter-release workflow attaches the web bundle to a flutter-<ver>
+      # pre-release; take the newest one that has a web asset. Authenticated to
+      # the public releases API to lift the unauthenticated rate limit.
+      - name: 🌐 Fetch Flutter web bundle
+        working-directory: ./server/nginx
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          docker compose build rabbitmq api
+          set -euo pipefail
+          echo "Resolving latest flutter-web pre-release asset..."
+          URL=$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" \
+                 "https://api.github.com/repos/${{ github.repository }}/releases" \
+            | jq -r 'map(select(.prerelease and (.tag_name|startswith("flutter-"))))
+                     | map(.assets[]? | select(.name|test("flutter-web")) | .browser_download_url)
+                     | first // empty')
+          if [ -z "$URL" ]; then
+            echo "::error::No flutter-web asset found in any flutter-* pre-release."
+            exit 1
+          fi
+          echo "Downloading $URL"
+          rm -rf web-dist && mkdir -p web-dist
+          curl -fsSL "$URL" -o web-dist/web.zip
+          unzip -q -o web-dist/web.zip -d web-dist
+          rm -f web-dist/web.zip
+          test -f web-dist/web/index.html
+          # Pre-compress text assets for nginx gzip_static (kept alongside originals).
+          find web-dist/web -type f \( -name '*.js' -o -name '*.wasm' -o -name '*.json' -o -name '*.css' -o -name '*.html' -o -name '*.ttf' -o -name '*.otf' -o -name '*.svg' \) -exec gzip -9 -k -f {} +
+
+      - name: 🐳 Build all server images
         working-directory: ./server
+        run: docker compose build nginx api keycloak rabbitmq
 
       - name: ⚙️ Make mvnw executable
+        if: needs.changes.outputs.api == 'true'
         run: chmod +x ./mvnw
         working-directory: ./server/api
 
       - name: 🏗️ Test with Maven
+        if: needs.changes.outputs.api == 'true'
         run: ./mvnw --no-transfer-progress clean verify -P run-tests
         working-directory: ./server/api
         env:
           POKERAPP_LOG_LEVEL: INFO
 
-  # Ensure this is running on raspberry pi:
-  #  sudo tailscale up --ssh --advertise-tags=tag:raspberrypi --hostname=raspberrypi --force-reauth
-  deploy:
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    needs: [changes, build]
-    if: >-
-      always() &&
-      github.event_name == 'push' &&
-      github.ref_name == 'master' &&
-      (needs.build.result == 'success' || needs.build.result == 'skipped') &&
-      !cancelled()
-    steps:
+      # ----- Deploy (push to master only) -------------------------------------
+      # Pi prerequisite (one-time):
+      #  sudo tailscale up --ssh --advertise-tags=tag:raspberrypi --hostname=raspberrypi --force-reauth
       - name: 🌐 Connect to Tailscale
         id: tailscale
+        if: github.event_name == 'push' && github.ref_name == 'master'
         uses: tailscale/github-action@v4
         continue-on-error: true
         with:
@@ -88,7 +109,22 @@ jobs:
           tags: tag:ci
           ping: raspberrypi
 
+      # Stream the freshly built images straight into the Pi's Docker. `docker
+      # load` auto-decompresses the gzip stream; piping over SSH avoids scp/SFTP
+      # (Tailscale SSH + OpenSSH 9 scp pitfalls) and needs no temp file.
+      - name: 🚚 Ship images to the Pi (docker load over Tailscale)
+        if: github.event_name == 'push' && github.ref_name == 'master' && steps.tailscale.outcome == 'success'
+        continue-on-error: true
+        run: |
+          docker save \
+            com.twb.pokerapp/api \
+            com.twb.pokerapp/nginx \
+            com.twb.pokerapp/keycloak \
+            com.twb.pokerapp/rabbitmq \
+            | gzip | ssh -o StrictHostKeyChecking=no tbigg@raspberrypi 'docker load'
+
       - name: 🚀 Execute Remote Deployment Script
-        if: steps.tailscale.outcome == 'success'
+        if: github.event_name == 'push' && github.ref_name == 'master' && steps.tailscale.outcome == 'success'
+        continue-on-error: true
         run: |
           ssh -o StrictHostKeyChecking=no tbigg@raspberrypi "sudo bash /home/tbigg/poker-app/server/raspberrypi/deployment.sh"
