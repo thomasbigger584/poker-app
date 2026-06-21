@@ -11,6 +11,9 @@ on:
       - "server/**"
       - ".github/workflows/server-pr.yml"
 
+permissions:
+  contents: read
+
 jobs:
   changes:
     runs-on: ubuntu-latest
