@@ -464,6 +464,9 @@ obj/
 #########################################################################################################################################################################################
 # Specific App related ignores
 
+# Flutter web bundle downloaded at deploy time by the Raspberry Pi deploy
+# script (server/raspberrypi/deployment.sh) — never committed.
+/server/nginx/web-dist/
 
 # Re-allow .idea folder structure where runConfigurations might exist
 !**/.idea/

@@ -29,6 +29,66 @@ SERVICE_NAME="poker-app.service"
 LOG_FILE="$REAL_HOME/poker-deploy.log"
 VERSION_FILE="$REAL_HOME/.poker-deploy-version"
 
+# --- PREREQUISITES ---
+# Debian-based only (Raspbian is a Debian flavour) for stability. Installs only
+# what's missing, so re-runs are cheap. Runs here in the root setup phase — the
+# generated worker runs as $REAL_USER and can't apt-get.
+ensure_prerequisites() {
+  echo "🔧 Checking prerequisites..."
+
+  if ! command -v apt-get >/dev/null 2>&1; then
+    echo "❌ Unsupported OS: this script targets Debian-based systems only (apt-get not found)."
+    exit 1
+  fi
+
+  export DEBIAN_FRONTEND=noninteractive
+
+  # CLI tools the worker relies on (all in the default Debian repos). Images are
+  # built in CI, so the Pi needs no build/web tooling — just git (pull configs),
+  # curl + jq (Tailscale API cleanup) and Docker (below).
+  REQUIRED_PKGS=(git curl jq ca-certificates)
+  MISSING_PKGS=()
+  for pkg in "${REQUIRED_PKGS[@]}"; do
+    dpkg -s "$pkg" >/dev/null 2>&1 || MISSING_PKGS+=("$pkg")
+  done
+  if [ ${#MISSING_PKGS[@]} -gt 0 ]; then
+    echo "📦 Installing missing packages: ${MISSING_PKGS[*]}"
+    apt-get update -y
+    apt-get install -y --no-install-recommends "${MISSING_PKGS[@]}"
+  else
+    echo "✅ Base packages present: ${REQUIRED_PKGS[*]}"
+  fi
+
+  # Docker Engine — install via Docker's official script only if absent.
+  if ! command -v docker >/dev/null 2>&1; then
+    echo "🐳 Docker not found. Installing via the official get.docker.com script..."
+    curl -fsSL https://get.docker.com | sh
+  else
+    echo "✅ Docker present: $(docker --version)"
+  fi
+
+  # Compose v2 plugin (`docker compose ...`). get.docker.com bundles it; this
+  # covers a pre-existing Docker installed without the plugin.
+  if ! docker compose version >/dev/null 2>&1; then
+    echo "📦 Installing docker-compose-plugin..."
+    apt-get install -y docker-compose-plugin \
+      || { echo "❌ Could not install the Docker Compose v2 plugin — install it manually."; exit 1; }
+  else
+    echo "✅ Docker Compose present: $(docker compose version | head -n1)"
+  fi
+
+  # Make sure Docker is up and the deploy user can reach it (the systemd unit
+  # below runs with Group=docker).
+  systemctl enable --now docker >/dev/null 2>&1 || true
+  if ! id -nG "$REAL_USER" | grep -qw docker; then
+    echo "👤 Adding $REAL_USER to the 'docker' group..."
+    usermod -aG docker "$REAL_USER"
+  fi
+
+  echo "✅ All prerequisites satisfied."
+}
+ensure_prerequisites
+
 echo "🛠️ Orchestrating setup for $REAL_USER..."
 
 # 2. Cleanup old service (Idempotency)
@@ -136,13 +196,23 @@ else
     echo "💾 WIPE_DB_DATA=\$WIPE_DB_DATA -> keeping existing Postgres volume '$DB_VOLUME'."
 fi
 
+# Images (api, nginx, keycloak, rabbitmq) are built on a native ARM64 GitHub
+# runner and pushed straight into this box's Docker (docker save | ssh docker
+# load over Tailscale) BEFORE this script runs — the Pi never builds anything.
+# --no-build makes a missing image a hard error instead of silently building
+# here; public images (postgres/pgadmin/tailscale) are still pulled as needed.
 if [ "\$CURRENT_HASH" == "\$DEPLOYED_HASH" ]; then
-    echo "⏩ No code changes detected (\$CURRENT_HASH). Skipping build..."
-    docker compose up -d
+    echo "⏩ No code change since last deploy (\$CURRENT_HASH)."
 else
-    echo "🏗️ Code changes detected (\$DEPLOYED_HASH -> \$CURRENT_HASH). Rebuilding..."
-    docker compose up --build -d
+    echo "📦 Code updated (\$DEPLOYED_HASH -> \$CURRENT_HASH)."
 fi
+# docker load (run by CI just before this script) re-points each image tag to
+# the newly pushed image, so the old one becomes dangling. --force-recreate then
+# rebuilds every container from those current tags, guaranteeing a stale
+# container can't keep running an old image. The dangling old images are cleaned
+# up by the 'docker system prune -f' below.
+echo "🚀 Starting stack with prebuilt images (no build on the Pi)..."
+docker compose up -d --no-build --force-recreate
 
 EXIT_CODE=\$?
 set -e

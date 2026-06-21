@@ -1,0 +1,96 @@
+name: 🔁 Server CI (PR)
+
+# Pull-request validation for the server: build every image on the native ARM64
+# runner (same arch as the Pi) and run the test suite. PRs NEVER deploy — that
+# happens on merge to master via server-master.yml. The build/test jobs below are
+# intentionally mirrored in server-master.yml (which adds the deploy steps).
+on:
+  pull_request:
+    branches: [ "master" ]
+    paths:
+      - "server/**"
+      - ".github/workflows/server-pr.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+    steps:
+      - name: 📋 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            api:
+              - 'server/api/**'
+
+  build:
+    needs: changes
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: 📋 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔨 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: ☕ Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      # Bake the Flutter web client into the nginx image (not on the Pi). The
+      # flutter-release workflow attaches the web bundle to a flutter-<ver>
+      # pre-release; take the newest one that has a web asset. Authenticated to
+      # the public releases API to lift the unauthenticated rate limit.
+      - name: 🌐 Fetch Flutter web bundle
+        working-directory: ./server/nginx
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          echo "Resolving latest flutter-web pre-release asset..."
+          URL=$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" \
+                 "https://api.github.com/repos/${{ github.repository }}/releases" \
+            | jq -r 'map(select(.prerelease and (.tag_name|startswith("flutter-"))))
+                     | map(.assets[]? | select(.name|test("flutter-web")) | .browser_download_url)
+                     | first // empty')
+          if [ -z "$URL" ]; then
+            echo "::error::No flutter-web asset found in any flutter-* pre-release."
+            exit 1
+          fi
+          echo "Downloading $URL"
+          rm -rf web-dist && mkdir -p web-dist
+          curl -fsSL "$URL" -o web-dist/web.zip
+          unzip -q -o web-dist/web.zip -d web-dist
+          rm -f web-dist/web.zip
+          test -f web-dist/web/index.html
+          # Pre-compress text assets for nginx gzip_static (kept alongside originals).
+          find web-dist/web -type f \( -name '*.js' -o -name '*.wasm' -o -name '*.json' -o -name '*.css' -o -name '*.html' -o -name '*.ttf' -o -name '*.otf' -o -name '*.svg' \) -exec gzip -9 -k -f {} +
+
+      - name: 🐳 Build all server images
+        working-directory: ./server
+        run: docker compose build nginx api keycloak rabbitmq
+
+      - name: ⚙️ Make mvnw executable
+        if: needs.changes.outputs.api == 'true'
+        run: chmod +x ./mvnw
+        working-directory: ./server/api
+
+      - name: 🏗️ Test with Maven
+        if: needs.changes.outputs.api == 'true'
+        run: ./mvnw --no-transfer-progress clean verify -P run-tests
+        working-directory: ./server/api
+        env:
+          POKERAPP_LOG_LEVEL: INFO

@@ -1,0 +1,137 @@
+name: 🚀 Server CD (Deploy)
+
+permissions:
+  contents: read
+  packages: read
+
+# Merges to master build, test, and deploy. Images are built on the native ARM64
+# runner (same arch as the Pi), shipped into the Pi's Docker over Tailscale
+# (docker save | ssh docker load), and the remote deploy is triggered — the Pi
+# never builds. Pull requests do NOT deploy; they run server-pr.yml (build +
+# test only). The changes/build steps below mirror server-pr.yml.
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - "server/**"
+      - ".github/workflows/server-master.yml"
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+    steps:
+      - name: 📋 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            api:
+              - 'server/api/**'
+
+  build-and-deploy:
+    needs: changes
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: 📋 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔨 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: ☕ Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      # Bake the Flutter web client into the nginx image (not on the Pi). The
+      # flutter-release workflow attaches the web bundle to a flutter-<ver>
+      # pre-release; take the newest one that has a web asset. Authenticated to
+      # the public releases API to lift the unauthenticated rate limit.
+      - name: 🌐 Fetch Flutter web bundle
+        working-directory: ./server/nginx
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          echo "Resolving latest flutter-web pre-release asset..."
+          URL=$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" \
+                 "https://api.github.com/repos/${{ github.repository }}/releases" \
+            | jq -r 'map(select(.prerelease and (.tag_name|startswith("flutter-"))))
+                     | map(.assets[]? | select(.name|test("flutter-web")) | .browser_download_url)
+                     | first // empty')
+          if [ -z "$URL" ]; then
+            echo "::error::No flutter-web asset found in any flutter-* pre-release."
+            exit 1
+          fi
+          echo "Downloading $URL"
+          rm -rf web-dist && mkdir -p web-dist
+          curl -fsSL "$URL" -o web-dist/web.zip
+          unzip -q -o web-dist/web.zip -d web-dist
+          rm -f web-dist/web.zip
+          test -f web-dist/web/index.html
+          # Pre-compress text assets for nginx gzip_static (kept alongside originals).
+          find web-dist/web -type f \( -name '*.js' -o -name '*.wasm' -o -name '*.json' -o -name '*.css' -o -name '*.html' -o -name '*.ttf' -o -name '*.otf' -o -name '*.svg' \) -exec gzip -9 -k -f {} +
+
+      - name: 🐳 Build all server images
+        working-directory: ./server
+        run: docker compose build nginx api keycloak rabbitmq
+
+      - name: ⚙️ Make mvnw executable
+        if: needs.changes.outputs.api == 'true'
+        run: chmod +x ./mvnw
+        working-directory: ./server/api
+
+      - name: 🏗️ Test with Maven
+        if: needs.changes.outputs.api == 'true'
+        run: ./mvnw --no-transfer-progress clean verify -P run-tests
+        working-directory: ./server/api
+        env:
+          POKERAPP_LOG_LEVEL: INFO
+
+      # ----- Deploy -----------------------------------------------------------
+      # Pi prerequisite (one-time):
+      #  sudo tailscale up --ssh --advertise-tags=tag:raspberrypi --hostname=raspberrypi --force-reauth
+      - name: 🌐 Connect to Tailscale
+        id: tailscale
+        uses: tailscale/github-action@v4
+        continue-on-error: true
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+          ping: raspberrypi
+
+      # Stream the freshly built images straight into the Pi's Docker. `docker
+      # load` auto-decompresses the gzip stream and re-points each image tag to
+      # the new image; piping over SSH avoids scp/SFTP (Tailscale SSH + OpenSSH 9
+      # scp pitfalls) and needs no temp file.
+      - name: 🚚 Ship images to the Pi (docker load over Tailscale)
+        id: ship
+        if: steps.tailscale.outcome == 'success'
+        continue-on-error: true
+        run: |
+          docker save \
+            com.twb.pokerapp/api \
+            com.twb.pokerapp/nginx \
+            com.twb.pokerapp/keycloak \
+            com.twb.pokerapp/rabbitmq \
+            | gzip | ssh -o StrictHostKeyChecking=no tbigg@raspberrypi 'docker load'
+
+      # Only runs if the image load above succeeded, so we never bring the stack
+      # up against a stale/half-loaded image set. Sync the Pi's checkout to the
+      # just-pushed commit FIRST so it runs the latest deployment.sh / compose
+      # files / configs, then hand off (the worker re-syncs too).
+      - name: 🚀 Sync repo & run deployment script
+        if: steps.ship.outcome == 'success'
+        continue-on-error: true
+        run: |
+          ssh -o StrictHostKeyChecking=no tbigg@raspberrypi "cd /home/tbigg/poker-app && git fetch origin master && git checkout -B master && git reset --hard FETCH_HEAD && git clean -fd && sudo bash server/raspberrypi/deployment.sh"
