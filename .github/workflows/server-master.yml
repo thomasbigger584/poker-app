@@ -1,5 +1,9 @@
 name: 🚀 Server CD (Deploy)
 
+permissions:
+  contents: read
+  packages: read
+
 # Merges to master build, test, and deploy. Images are built on the native ARM64
 # runner (same arch as the Pi), shipped into the Pi's Docker over Tailscale
 # (docker save | ssh docker load), and the remote deploy is triggered — the Pi
