@@ -51,7 +51,7 @@ jobs:
 
       - name: 🧬 Generate protobuf Dart types
         shell: bash
-        run: ./tool/gen_protos.sh
+        run: bash tool/gen_protos.sh
 
       - name: 📦 Resolve dependencies
         run: flutter pub get
@@ -109,7 +109,7 @@ jobs:
 
       - name: 🧬 Generate protobuf Dart types
         shell: bash
-        run: ./tool/gen_protos.sh
+        run: bash tool/gen_protos.sh
 
       # macos-latest defaults to Xcode 16.4 (macOS 15.5 SDK), but connectivity_plus
       # references the macOS/iOS 26 SDK symbol `NWPath.isUltraConstrained` (guarded
