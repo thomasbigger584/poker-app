@@ -24,7 +24,7 @@ class SplashPage extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: const [
-                AppLogo(size: 120),
+                AppLogo(size: 204),
                 SizedBox(height: 56),
                 SizedBox(
                   width: 30,

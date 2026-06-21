@@ -49,16 +49,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const AppLogo(size: 104),
-                    const SizedBox(height: 48),
-                    Text(
-                      'Welcome back',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w800,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
+                    const AppLogo(size: 184),
+                    const SizedBox(height: 40),
                     const Text(
                       'Sign in to take your seat at the table.',
                       textAlign: TextAlign.center,
