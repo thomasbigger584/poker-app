@@ -29,6 +29,64 @@ SERVICE_NAME="poker-app.service"
 LOG_FILE="$REAL_HOME/poker-deploy.log"
 VERSION_FILE="$REAL_HOME/.poker-deploy-version"
 
+# --- PREREQUISITES ---
+# Debian-based only (Raspbian is a Debian flavour) for stability. Installs only
+# what's missing, so re-runs are cheap. Runs here in the root setup phase — the
+# generated worker runs as $REAL_USER and can't apt-get.
+ensure_prerequisites() {
+  echo "🔧 Checking prerequisites..."
+
+  if ! command -v apt-get >/dev/null 2>&1; then
+    echo "❌ Unsupported OS: this script targets Debian-based systems only (apt-get not found)."
+    exit 1
+  fi
+
+  export DEBIAN_FRONTEND=noninteractive
+
+  # CLI tools the deploy + worker rely on (all in the default Debian repos).
+  REQUIRED_PKGS=(git curl jq unzip ca-certificates gzip findutils)
+  MISSING_PKGS=()
+  for pkg in "${REQUIRED_PKGS[@]}"; do
+    dpkg -s "$pkg" >/dev/null 2>&1 || MISSING_PKGS+=("$pkg")
+  done
+  if [ ${#MISSING_PKGS[@]} -gt 0 ]; then
+    echo "📦 Installing missing packages: ${MISSING_PKGS[*]}"
+    apt-get update -y
+    apt-get install -y --no-install-recommends "${MISSING_PKGS[@]}"
+  else
+    echo "✅ Base packages present: ${REQUIRED_PKGS[*]}"
+  fi
+
+  # Docker Engine — install via Docker's official script only if absent.
+  if ! command -v docker >/dev/null 2>&1; then
+    echo "🐳 Docker not found. Installing via the official get.docker.com script..."
+    curl -fsSL https://get.docker.com | sh
+  else
+    echo "✅ Docker present: $(docker --version)"
+  fi
+
+  # Compose v2 plugin (`docker compose ...`). get.docker.com bundles it; this
+  # covers a pre-existing Docker installed without the plugin.
+  if ! docker compose version >/dev/null 2>&1; then
+    echo "📦 Installing docker-compose-plugin..."
+    apt-get install -y docker-compose-plugin \
+      || { echo "❌ Could not install the Docker Compose v2 plugin — install it manually."; exit 1; }
+  else
+    echo "✅ Docker Compose present: $(docker compose version | head -n1)"
+  fi
+
+  # Make sure Docker is up and the deploy user can reach it (the systemd unit
+  # below runs with Group=docker).
+  systemctl enable --now docker >/dev/null 2>&1 || true
+  if ! id -nG "$REAL_USER" | grep -qw docker; then
+    echo "👤 Adding $REAL_USER to the 'docker' group..."
+    usermod -aG docker "$REAL_USER"
+  fi
+
+  echo "✅ All prerequisites satisfied."
+}
+ensure_prerequisites
+
 echo "🛠️ Orchestrating setup for $REAL_USER..."
 
 # 2. Cleanup old service (Idempotency)
@@ -141,6 +199,41 @@ if [ "\$CURRENT_HASH" == "\$DEPLOYED_HASH" ]; then
     docker compose up -d
 else
     echo "🏗️ Code changes detected (\$DEPLOYED_HASH -> \$CURRENT_HASH). Rebuilding..."
+
+    # ---- Fetch the prebuilt Flutter web bundle (no Flutter SDK on the Pi) ----
+    # Flutter ships no official ARM64 Linux SDK, so we don't compile web on the
+    # Pi. The flutter-release workflow builds it on x86_64 and attaches it to a
+    # flutter-<version> pre-release; we take the newest one that has a web asset
+    # and unzip it where the nginx Dockerfile expects it (server/nginx/web-dist).
+    echo "🌐 Resolving latest Flutter web bundle from GitHub pre-releases..."
+    WEB_DIST_DIR="$SERVER_DIR/nginx/web-dist"
+    WEB_ZIP_URL=\$(curl -fsSL "https://api.github.com/repos/thomasbigger584/poker-app/releases" \
+        | jq -r 'map(select(.prerelease and (.tag_name|startswith("flutter-"))))
+                 | map(.assets[]? | select(.name|test("flutter-web")) | .browser_download_url)
+                 | first // empty')
+
+    if [ -z "\$WEB_ZIP_URL" ]; then
+        echo "❌ Error: no Flutter web asset found in any flutter-* pre-release."
+        exit 1
+    fi
+
+    echo "⬇️  Downloading web bundle: \$WEB_ZIP_URL"
+    rm -rf "\$WEB_DIST_DIR"
+    mkdir -p "\$WEB_DIST_DIR"
+    curl -fsSL "\$WEB_ZIP_URL" -o "\$WEB_DIST_DIR/web.zip" || { echo "❌ Error: failed to download web bundle."; exit 1; }
+    unzip -q -o "\$WEB_DIST_DIR/web.zip" -d "\$WEB_DIST_DIR" || { echo "❌ Error: failed to unzip web bundle (is 'unzip' installed?)."; exit 1; }
+    rm -f "\$WEB_DIST_DIR/web.zip"
+
+    if [ ! -f "\$WEB_DIST_DIR/web/index.html" ]; then
+        echo "❌ Error: web bundle is missing web/index.html after unzip."
+        exit 1
+    fi
+
+    # Pre-compress text assets so nginx serves them via gzip_static (-9, kept
+    # alongside the originals) — parity with the old in-image Flutter build.
+    find "\$WEB_DIST_DIR/web" -type f \( -name '*.js' -o -name '*.wasm' -o -name '*.json' -o -name '*.css' -o -name '*.html' -o -name '*.ttf' -o -name '*.otf' -o -name '*.svg' \) -exec gzip -9 -k -f {} +
+    echo "✅ Web bundle ready at \$WEB_DIST_DIR/web"
+
     docker compose up --build -d
 fi
 

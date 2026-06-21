@@ -1,6 +1,7 @@
 # Dockerfile-scoped ignore (BuildKit). The build context is the repo root, but
-# this image only needs the Flutter web client sources and this nginx module.
-# Everything else is excluded to keep the context — and the build — thin.
+# this image only needs the nginx module (config, branding, and the prebuilt
+# Flutter web bundle in server/nginx/web-dist). Everything else is excluded to
+# keep the context — and the build — thin.
 #
 # NOTE: when present, BuildKit uses this file INSTEAD of the root .dockerignore,
 # so the exclusions there (notably `client`) are intentionally not inherited.
@@ -20,16 +21,7 @@ server/rabbitmq
 server/tailscale
 **/target
 
-# Other clients
+# Clients — the Flutter web bundle is downloaded prebuilt into
+# server/nginx/web-dist (see the Dockerfile), so no client sources are needed.
 client/android
-
-# Flutter: keep the sources, drop build output and the non-web platform folders.
-client/flutter/build
-client/flutter/.dart_tool
-client/flutter/.flutter-plugins-dependencies
-client/flutter/android
-client/flutter/ios
-client/flutter/linux
-client/flutter/macos
-client/flutter/windows
-client/flutter/test
+client/flutter
