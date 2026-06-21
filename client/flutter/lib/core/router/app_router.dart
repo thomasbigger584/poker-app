@@ -10,6 +10,7 @@ import '../../features/game/presentation/game_launch_args.dart';
 import '../../features/game/presentation/pages/game_page.dart';
 import '../../features/tables/presentation/pages/table_connect_page.dart';
 import '../../features/tables/presentation/pages/table_create_page.dart';
+import '../../features/stats/presentation/pages/stats_page.dart';
 import '../../features/tables/presentation/pages/table_list_page.dart';
 import '../../features/transactions/presentation/pages/transaction_history_page.dart';
 import '../../features/user/presentation/pages/funds_page.dart';
@@ -76,11 +77,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.stats,
         name: AppRoutes.statsName,
-        builder: (_, _) => const ComingSoonPage(
-          title: 'Player Stats',
-          icon: Icons.bar_chart_rounded,
-          message: 'Hands played, win rate and biggest pots will show up here.',
-        ),
+        builder: (_, _) => const StatsPage(),
       ),
       GoRoute(
         path: AppRoutes.achievements,

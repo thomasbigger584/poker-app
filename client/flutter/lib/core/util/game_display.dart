@@ -28,6 +28,30 @@ abstract final class GameDisplay {
         ConnectionType.CONNECTION_TYPE_LISTENER => 'Viewer',
         _ => 'Unknown',
       };
+
+  static String handType(HandType type) => switch (type) {
+        HandType.HAND_TYPE_ROYAL_FLUSH => 'Royal Flush',
+        HandType.HAND_TYPE_STRAIGHT_FLUSH => 'Straight Flush',
+        HandType.HAND_TYPE_FOUR_OF_A_KIND => 'Four of a Kind',
+        HandType.HAND_TYPE_FULL_HOUSE => 'Full House',
+        HandType.HAND_TYPE_FLUSH => 'Flush',
+        HandType.HAND_TYPE_STRAIGHT => 'Straight',
+        HandType.HAND_TYPE_THREE_OF_A_KIND => 'Three of a Kind',
+        HandType.HAND_TYPE_TWO_PAIR => 'Two Pair',
+        HandType.HAND_TYPE_PAIR => 'Pair',
+        HandType.HAND_TYPE_HIGH_CARD => 'High Card',
+        _ => '—',
+      };
+
+  static String actionType(ActionType type) => switch (type) {
+        ActionType.ACTION_TYPE_CHECK => 'Check',
+        ActionType.ACTION_TYPE_BET => 'Bet',
+        ActionType.ACTION_TYPE_CALL => 'Call',
+        ActionType.ACTION_TYPE_RAISE => 'Raise',
+        ActionType.ACTION_TYPE_FOLD => 'Fold',
+        ActionType.ACTION_TYPE_ALL_IN => 'All-in',
+        _ => '—',
+      };
 }
 
 /// Presentation helpers for transaction history rows.
