@@ -84,6 +84,16 @@ jobs:
           channel: stable
           cache: true
 
+      # macos-latest defaults to Xcode 16.4 (macOS 15.5 SDK), but connectivity_plus
+      # references the macOS/iOS 26 SDK symbol `NWPath.isUltraConstrained` (guarded
+      # only at runtime via #available, so it must exist at compile time). The image
+      # already ships Xcode 26.x — select it so the Apple (macOS + iOS) builds compile.
+      - name: 🍎 Select Xcode 26 (macOS/iOS 26 SDK)
+        if: runner.os == 'macOS'
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
       - name: 🐧 Install Linux desktop build dependencies
         if: matrix.target == 'linux'
         # Native deps for the Linux desktop plugins:
