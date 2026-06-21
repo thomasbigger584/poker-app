@@ -17,6 +17,9 @@ on:
       - "client/flutter/**"
       - ".github/workflows/flutter-ci.yml"
 
+permissions:
+  contents: read
+
 env:
   FLUTTER_VERSION: "3.44.2"
 
