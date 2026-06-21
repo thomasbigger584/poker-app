@@ -1,0 +1,322 @@
+name: 🚀 Flutter Release
+
+# Builds the Flutter client for every platform a free GitHub-hosted runner can
+# produce, then gathers whatever succeeded into a SINGLE pre-release. Each
+# platform builds independently (continue-on-error), so a failure on one (e.g.
+# an unsigned iOS build) never blocks the others — the release simply contains
+# the artefacts that built successfully.
+#
+# Platform → runner matrix:
+#   ubuntu-latest  → web bundle, Android APK, Linux desktop
+#   macos-latest   → macOS app, iOS app (unsigned)
+#   windows-latest → Windows desktop
+#
+# Tags are namespaced `flutter-<date>` (intentionally no "v") so this workflow's
+# cleanup and the Android workflow's cleanup never prune each other's releases.
+
+on:
+  push:
+    branches: [ "master" ]
+    paths:
+      - "client/flutter/**"
+      - ".github/workflows/flutter-release.yml"
+
+permissions:
+  contents: read
+
+env:
+  FLUTTER_VERSION: "3.44.2"
+
+jobs:
+  # -------------------------------------------------------------------------
+  # One source of truth for the tag / version, shared by every build job (for
+  # artefact filenames) and the release job (for the tag + title).
+  # -------------------------------------------------------------------------
+  meta:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      release_tag: ${{ steps.meta.outputs.release_tag }}
+      release_name: ${{ steps.meta.outputs.release_name }}
+      short_sha: ${{ steps.meta.outputs.short_sha }}
+    steps:
+      - name: 📋 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🏷️ Get Release Metadata
+        id: meta
+        run: |
+          VERSION="$(date +'%Y.%m.%d-%H%M')"
+          RELEASE_TAG="flutter-${VERSION}"
+          SHORT_SHA="$(git rev-parse --short HEAD)"
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "release_tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          echo "release_name=🚀 Poker App Flutter (${RELEASE_TAG})" >> "$GITHUB_OUTPUT"
+          echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
+
+  # -------------------------------------------------------------------------
+  # Fan out one build per (platform, runner). continue-on-error keeps a single
+  # platform failure from failing the workflow or skipping the release job.
+  # -------------------------------------------------------------------------
+  build:
+    needs: meta
+    continue-on-error: true
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: web
+            os: ubuntu-latest
+          - target: apk
+            os: ubuntu-latest
+          - target: linux
+            os: ubuntu-latest
+          - target: macos
+            os: macos-latest
+          - target: ios
+            os: macos-latest
+          - target: windows
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: ./client/flutter
+    env:
+      VERSION: ${{ needs.meta.outputs.version }}
+    steps:
+      - name: 📋 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🐦 Set up Flutter ${{ env.FLUTTER_VERSION }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      # macos-latest defaults to Xcode 16.4 (macOS 15.5 SDK), but connectivity_plus
+      # references the macOS/iOS 26 SDK symbol `NWPath.isUltraConstrained` (guarded
+      # only at runtime via #available, so it must exist at compile time). The image
+      # already ships Xcode 26.x — select it so the Apple (macOS + iOS) builds compile.
+      - name: 🍎 Select Xcode 26 (macOS/iOS 26 SDK)
+        if: runner.os == 'macOS'
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: 🐧 Install Linux desktop build dependencies
+        if: matrix.target == 'linux'
+        working-directory: .
+        # Native deps for the Linux desktop plugins:
+        #  - libsecret-1-dev      → flutter_secure_storage_linux
+        #  - libwebkit2gtk-4.1-dev / libsoup-3.0-dev → desktop_webview_window
+        #    (pulled transitively by flutter_web_auth_2 v5). It MUST use the
+        #    webkit2gtk-4.1 / libsoup-3.0 path; the 4.0/libsoup-2.4 fallback
+        #    mismatches `g_date_time_get_seconds(soup_cookie_get_expires(...))`
+        #    and fails to compile.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev \
+            libsecret-1-dev libwebkit2gtk-4.1-dev libsoup-3.0-dev
+
+      - name: 📦 Resolve dependencies
+        run: flutter pub get
+
+      # ----- Per-platform build + package (writes one file into dist/) -------
+
+      - name: 🌐 Build Web
+        if: matrix.target == 'web'
+        shell: bash
+        run: |
+          flutter config --enable-web
+          flutter build web --release
+          mkdir -p dist
+          ( cd build && zip -r -q "../dist/poker-app-flutter-web-${VERSION}.zip" web )
+
+      - name: 🤖 Build Android APK
+        if: matrix.target == 'apk'
+        shell: bash
+        run: |
+          flutter build apk --release
+          mkdir -p dist
+          mv build/app/outputs/flutter-apk/app-release.apk \
+            "dist/poker-app-flutter-${VERSION}.apk"
+
+      - name: 🐧 Build Linux Desktop
+        if: matrix.target == 'linux'
+        shell: bash
+        run: |
+          flutter config --enable-linux-desktop
+          flutter build linux --release
+          mkdir -p dist
+          tar -czf "dist/poker-app-flutter-linux-x64-${VERSION}.tar.gz" \
+            -C build/linux/x64/release/bundle .
+
+      - name: 🍏 Build macOS Desktop
+        if: matrix.target == 'macos'
+        shell: bash
+        run: |
+          flutter config --enable-macos-desktop
+          flutter build macos --release
+          mkdir -p dist
+          ( cd build/macos/Build/Products/Release \
+            && zip -r -q -y \
+              "$GITHUB_WORKSPACE/client/flutter/dist/poker-app-flutter-macos-${VERSION}.zip" \
+              *.app )
+
+      - name: 🍎 Build iOS (unsigned)
+        if: matrix.target == 'ios'
+        shell: bash
+        run: |
+          # No Apple signing certs in CI, so produce an unsigned .app. It is not
+          # installable as-is (must be re-signed), but proves the build is green.
+          flutter build ios --release --no-codesign
+          mkdir -p dist
+          ( cd build/ios/iphoneos \
+            && zip -r -q -y \
+              "$GITHUB_WORKSPACE/client/flutter/dist/poker-app-flutter-ios-unsigned-${VERSION}.zip" \
+              Runner.app )
+
+      - name: 🪟 Build Windows Desktop
+        if: matrix.target == 'windows'
+        shell: pwsh
+        run: |
+          flutter config --enable-windows-desktop
+          flutter build windows --release
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Compress-Archive -Path "build/windows/x64/runner/Release/*" `
+            -DestinationPath "dist/poker-app-flutter-windows-x64-$env:VERSION.zip" -Force
+
+      - name: ⬆️ Upload ${{ matrix.target }} artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-${{ matrix.target }}
+          path: client/flutter/dist/
+          if-no-files-found: warn
+          retention-days: 7
+
+  # -------------------------------------------------------------------------
+  # Collect every artefact that built and publish them under one pre-release.
+  # Runs even if some build jobs failed (if: always()).
+  # -------------------------------------------------------------------------
+  release:
+    needs: [meta, build]
+    if: always() && needs.meta.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: 📋 Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ⬇️ Download All Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: 📜 Generate Release Notes
+        id: notes
+        run: |
+          FILTER_PATH="client/flutter"
+          END_SHA="HEAD"
+          # Most recent *Flutter* release tag (ignores Android `v...` tags).
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 --match 'flutter-*' ${END_SHA}^ 2>/dev/null || echo "not_found")
+
+          if [ "$PREVIOUS_TAG" = "not_found" ]; then
+            LOG_RANGE="--root"
+            MAX_COUNT="--max-count=10"
+            LOG_RANGE_INFO="Last few commits (Initial Release)"
+          else
+            LOG_RANGE="$PREVIOUS_TAG..$END_SHA"
+            MAX_COUNT=""
+            LOG_RANGE_INFO="\`$PREVIOUS_TAG\`...\`$END_SHA\`"
+          fi
+
+          # git log (hash + subject + author), de-duplicated on subject via awk.
+          COMMIT_HISTORY=$(git log $MAX_COUNT $LOG_RANGE --pretty=format:'%h %s - *%an*' -- $FILTER_PATH | \
+            awk '
+            {
+                hash = $1;
+                message = substr($0, length(hash) + 2);
+                match(message, /\*.*\*/)
+                author = substr(message, RSTART, RLENGTH)
+                subject = substr(message, 1, RSTART - 4)
+
+                if (!(subject in seen)) {
+                    print "* `" hash "` " subject " " author
+                    seen[subject] = 1;
+                }
+            }
+          ')
+
+          # Bullet list of the artefacts that actually built this run.
+          if [ -d artifacts ] && [ -n "$(ls -A artifacts 2>/dev/null)" ]; then
+            ARTIFACT_LIST=$(cd artifacts && for f in *; do echo "* \`$f\`"; done)
+          else
+            ARTIFACT_LIST="_No artefacts built in this run._"
+          fi
+
+          {
+            echo "## ✨ Release Overview"
+            echo ""
+            echo "Multi-platform pre-release of the Flutter client, triggered by changes to \`client/flutter\` on \`master\`. Each platform is built on its respective free GitHub-hosted runner; only the builds that succeeded are attached below."
+            echo ""
+            echo "***"
+            echo ""
+            echo "## 📦 Artefacts in This Build"
+            echo ""
+            echo "$ARTIFACT_LIST"
+            echo ""
+            echo "> ℹ️ The iOS build is **unsigned** (no Apple certs in CI) and must be re-signed before it can be installed. The Android APK is **debug-signed**. Desktop builds are unsigned."
+            echo ""
+            echo "***"
+            echo ""
+            echo "## 📝 Changes Included in This Build"
+            echo "Log range: $LOG_RANGE_INFO"
+            echo ""
+            if [ -z "$COMMIT_HISTORY" ]; then
+              echo "_No new commits were detected in this range that affected \`$FILTER_PATH\`._"
+            else
+              echo "$COMMIT_HISTORY"
+            fi
+            echo ""
+            echo "***"
+            echo ""
+            echo "## 🔎 Build Details"
+            echo ""
+            echo "* **Source Commit:** \`${{ needs.meta.outputs.short_sha }}\`"
+            echo "* **Target Branch:** \`${{ github.ref_name }}\`"
+            echo "* **Flutter:** \`${{ env.FLUTTER_VERSION }}\`"
+          } > release_body.txt
+
+          echo "RELEASE_BODY<<EOF" >> "$GITHUB_OUTPUT"
+          cat release_body.txt >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: 📦 Create Pre-Release and Upload Artefacts
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.meta.outputs.release_tag }}
+          name: ${{ needs.meta.outputs.release_name }}
+          prerelease: true
+          body: ${{ steps.notes.outputs.RELEASE_BODY }}
+          files: artifacts/*
+          fail_on_unmatched_files: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🗑️ Cleanup Older Flutter Releases
+        uses: dev-drprasad/delete-older-releases@v0.3.4 # Not Maintained
+        with:
+          keep_latest: 3
+          delete_tags: false
+          delete_prerelease_only: true
+          delete_tag_pattern: flutter-
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

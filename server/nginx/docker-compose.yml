@@ -1,11 +1,17 @@
 name: 'nginx'
 services:
   nginx-base:
-    image: nginx:alpine
+    image: com.twb.pokerapp/nginx
+    build:
+      # Repo root so the Flutter client (client/flutter, a sibling of server/) is
+      # inside the build context. See Dockerfile + Dockerfile.dockerignore.
+      context: ../..
+      dockerfile: server/nginx/Dockerfile
     container_name: nginx
+    # Config, dashboard and the Flutter web build are baked into the image for an
+    # immutable, production-ready container — rebuild to deploy content changes.
+    # Only the TLS certs (rotated by tailscale-cert-renewer) stay a volume.
     volumes:
-      - ./conf.d:/etc/nginx/conf.d:ro
-      - ./html:/usr/share/nginx/html:ro
       - tailscale_certs:/etc/nginx/certs:ro
     command: >
       /bin/sh -c "while true; do sleep 12h; nginx -s reload; done & nginx -g 'daemon off;'"

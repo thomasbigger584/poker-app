@@ -53,7 +53,41 @@ updates:
         patterns:
           - "org.assertj*"
           - "org.awaitility*"
-  # - package-ecosystem: "gradle"
-  #   directory: "/client/android"
-  #   schedule:
-  #     interval: "weekly"
+
+  - package-ecosystem: "pub"
+    directory: "/client/flutter"
+    schedule:
+      interval: "daily"
+    groups:
+      # 1. State Management
+      riverpod:
+        patterns:
+          - "*riverpod*"
+
+      # 2. Auth & Security
+      auth-security:
+        patterns:
+          - "flutter_web_auth_2*"
+          - "flutter_secure_storage*"
+          - "crypto"
+          - "jwt_decoder"
+
+      # 3. Networking
+      networking:
+        patterns:
+          - "dio"
+          - "connectivity_plus"
+
+      # 4. Platform Integration
+      platform-integration:
+        patterns:
+          - "permission_handler"
+          - "url_launcher"
+          - "app_settings"
+          - "android_intent_plus"
+
+      # 5. Dev & Lint Tooling
+      dev-tooling:
+        patterns:
+          - "flutter_lints"
+          - "flutter_launcher_icons"
