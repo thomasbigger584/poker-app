@@ -62,4 +62,15 @@ app.*.map.json
 /linux/flutter/generated_plugin_registrant.h
 /linux/flutter/generated_plugins.cmake
 
+# Generated protobuf Dart types ARE committed: Flutter has no build-time code
+# generation step, so the checked-in output is what compiles. Re-include them
+# even though the repo-root .gitignore ignores any `gen/` directory.
+# Regenerate with tool/gen_protos.sh after changing proto/poker/*.proto.
+!lib/core/proto/gen/
+!lib/core/proto/gen/**
+
+# Vendored protoc toolchain is NOT committed — it's a large, platform-specific
+# binary. tool/gen_protos.sh downloads it (see that script's header).
+tool/protoc/
+
 # Web (if you compile for browser later)

@@ -27,11 +27,17 @@ abstract final class DioClient {
 
   /// Authenticated client for REST API calls — attaches the bearer token and
   /// refreshes on 401. (Used by feature repositories such as the table list.)
+  ///
+  /// REST bodies are binary protobuf: the backend serves both wire formats from
+  /// the same generated types and picks by `Accept` (see `ProtobufWebConfig`).
+  /// We ask for `application/x-protobuf`; per-request [ResponseType.bytes] is set
+  /// by [ProtoApi].
   static Dio authenticated({
     required TokenProvider tokenProvider,
     required Future<void> Function() onUnauthorized,
   }) {
     final dio = Dio(_baseOptions(baseUrl: AppConfig.apiBaseUrl));
+    dio.options.headers['Accept'] = 'application/x-protobuf';
     dio.interceptors.add(AuthInterceptor(
       tokenProvider: tokenProvider,
       onUnauthorized: onUnauthorized,
