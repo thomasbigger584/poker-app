@@ -19,7 +19,7 @@ on:
     branches: [ "master" ]
     paths:
       - "client/flutter/**"
-      - ".github/workflows/flutter-release.yml"
+      - ".github/workflows/flutter-master.yml"
 
 permissions:
   contents: read
