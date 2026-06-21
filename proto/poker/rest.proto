@@ -63,3 +63,42 @@ message ApiErrorDTO {
   int32 status = 1;
   string message = 2;
 }
+
+// GET /api/stats/current — aggregated lifetime statistics for the current
+// player, computed from read-only aggregate queries over the gameplay tables
+// (hands, round winners, player actions, transactions). All monetary fields are
+// BigDecimal-as-string; counts are int32; rates are 0..1 doubles.
+message PlayerStatsDTO {
+  // --- Bankroll -------------------------------------------------------------
+  string current_funds = 1;       // PhysicalUser.total_funds
+  string total_winnings = 2;      // sum of round winnings (RoundWinner.amount)
+  string biggest_pot_won = 3;     // largest single round win
+  string total_wagered = 4;       // sum of all chips committed (PlayerAction.amount)
+  string total_buy_ins = 5;       // sum of BUYIN transactions
+  string total_cash_outs = 6;     // sum of CASHOUT transactions
+  string net_table_profit = 7;    // total_cash_outs - total_buy_ins
+
+  // --- Volume / performance -------------------------------------------------
+  int32 hands_played = 8;         // rounds the player was dealt into (Hand count)
+  int32 rounds_won = 9;           // distinct rounds won
+  double win_rate = 10;           // rounds_won / hands_played (0..1)
+  int32 tables_joined = 11;       // distinct tables sat at
+
+  // --- Action breakdown (aggression) ---------------------------------------
+  int32 checks = 12;
+  int32 bets = 13;
+  int32 calls = 14;
+  int32 raises = 15;
+  int32 folds = 16;
+  int32 all_ins = 17;
+  double aggression_factor = 18;  // (bets + raises) / calls
+
+  // --- Highlights -----------------------------------------------------------
+  HandType best_hand = 19;        // best hand ever made (UNSPECIFIED if none)
+  ActionType favorite_action = 20;// most-used action (UNSPECIFIED if none)
+  string member_since = 21;       // account creation time (ISO-8601)
+}
+
+message PlayerStatsResponse {
+  PlayerStatsDTO stats = 1;
+}

@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/network/api_exception.dart';
+import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/util/money.dart';
 import '../../../../core/widgets/alert_modal_dialog.dart';
 import '../../../auth/domain/entities/auth_state.dart';
 import '../../../auth/domain/entities/user_profile.dart';
 import '../../../auth/presentation/auth_providers.dart';
+import '../../../user/presentation/user_providers.dart';
 
 /// Side navigation drawer (burger menu) — ports the Android `TableListActivity`
-/// drawer: profile header + Stats / Transactions / Achievements / Leaderboards,
-/// plus Reset Funds and Logout.
+/// drawer: profile header with live funds, the feature destinations, plus
+/// Reset Funds and Logout.
 class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
 
@@ -17,40 +22,46 @@ class AppDrawer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authControllerProvider);
     final user = auth is Authenticated ? auth.user : null;
+    final funds = ref.watch(currentUserProvider).value?.totalFunds;
 
     return Drawer(
       child: Column(
         children: [
-          _DrawerHeader(user: user),
+          _DrawerHeader(user: user, funds: funds),
           Expanded(
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
                 _DrawerItem(
-                  icon: Icons.bar_chart_rounded,
-                  label: 'Player Stats',
-                  onTap: () => _comingSoon(context, 'Player Stats'),
+                  icon: Icons.account_balance_wallet_rounded,
+                  label: 'Funds',
+                  onTap: () => _go(context, AppRoutes.fundsName),
                 ),
                 _DrawerItem(
                   icon: Icons.receipt_long_rounded,
                   label: 'Transaction History',
-                  onTap: () => _comingSoon(context, 'Transaction History'),
+                  onTap: () => _go(context, AppRoutes.transactionsName),
+                ),
+                _DrawerItem(
+                  icon: Icons.bar_chart_rounded,
+                  label: 'Player Stats',
+                  onTap: () => _go(context, AppRoutes.statsName),
                 ),
                 _DrawerItem(
                   icon: Icons.emoji_events_rounded,
                   label: 'Achievements',
-                  onTap: () => _comingSoon(context, 'Achievements'),
+                  onTap: () => _go(context, AppRoutes.achievementsName),
                 ),
                 _DrawerItem(
                   icon: Icons.leaderboard_rounded,
                   label: 'Leaderboards',
-                  onTap: () => _comingSoon(context, 'Leaderboards'),
+                  onTap: () => _go(context, AppRoutes.leaderboardsName),
                 ),
                 const Divider(indent: 16, endIndent: 16),
                 _DrawerItem(
-                  icon: Icons.account_balance_wallet_rounded,
+                  icon: Icons.restart_alt_rounded,
                   label: 'Reset Funds',
-                  onTap: () => _comingSoon(context, 'Reset Funds'),
+                  onTap: () => _confirmResetFunds(context, ref),
                 ),
               ],
             ),
@@ -68,11 +79,37 @@ class AppDrawer extends ConsumerWidget {
     );
   }
 
-  void _comingSoon(BuildContext context, String feature) {
+  void _go(BuildContext context, String routeName) {
     Navigator.of(context).pop(); // close drawer
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(SnackBar(content: Text('$feature — coming soon')));
+    context.pushNamed(routeName);
+  }
+
+  Future<void> _confirmResetFunds(BuildContext context, WidgetRef ref) async {
+    // Capture the messenger (lives above the drawer) before any async gap.
+    final messenger = ScaffoldMessenger.of(context);
+    Navigator.of(context).pop(); // close drawer
+    final confirmed = await AlertModalDialog.show(
+      context,
+      type: AlertModalType.warning,
+      title: 'Reset funds?',
+      message: 'This returns your balance to the starting amount. '
+          'Existing transactions are kept in your history.',
+      confirmText: 'Reset',
+    );
+    if (confirmed != true) return;
+
+    try {
+      final user = await ref.read(currentUserProvider.notifier).resetFunds();
+      messenger
+        ..clearSnackBars()
+        ..showSnackBar(SnackBar(
+          content: Text('Funds reset to ${Money.compact(user.totalFunds)}.'),
+        ));
+    } on ApiException catch (e) {
+      messenger
+        ..clearSnackBars()
+        ..showSnackBar(SnackBar(content: Text(e.message)));
+    }
   }
 
   Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
@@ -90,15 +127,17 @@ class AppDrawer extends ConsumerWidget {
 }
 
 class _DrawerHeader extends StatelessWidget {
-  const _DrawerHeader({this.user});
+  const _DrawerHeader({this.user, this.funds});
 
   final UserProfile? user;
+  final String? funds;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 28, 20, 24),
+      padding:
+          EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 28, 20, 24),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -125,7 +164,7 @@ class _DrawerHeader extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              const _FundsChip(amount: null),
+              _FundsChip(funds: funds),
             ],
           ),
           const SizedBox(height: 16),
@@ -141,7 +180,8 @@ class _DrawerHeader extends StatelessWidget {
           if (user?.email != null)
             Text(
               user!.email!,
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13),
+              style:
+                  TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13),
               overflow: TextOverflow.ellipsis,
             ),
         ],
@@ -151,9 +191,10 @@ class _DrawerHeader extends StatelessWidget {
 }
 
 class _FundsChip extends StatelessWidget {
-  const _FundsChip({this.amount});
+  const _FundsChip({this.funds});
 
-  final num? amount;
+  /// BigDecimal-as-string total funds, or null while loading.
+  final String? funds;
 
   @override
   Widget build(BuildContext context) {
@@ -169,7 +210,7 @@ class _FundsChip extends StatelessWidget {
           const Icon(Icons.toll_rounded, color: AppColors.gold, size: 16),
           const SizedBox(width: 6),
           Text(
-            amount == null ? '—' : amount!.toStringAsFixed(0),
+            funds == null ? '—' : Money.compact(funds),
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w700,

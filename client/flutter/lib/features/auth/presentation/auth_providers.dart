@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/dio_client.dart';
+import '../../../core/network/proto_api.dart';
 import '../data/datasources/auth_token_store.dart';
 import '../data/datasources/oidc_remote_data_source.dart';
 import '../data/repositories/auth_repository_impl.dart';
@@ -38,3 +39,8 @@ final authedDioProvider = Provider<Dio>((ref) {
         ref.read(authControllerProvider.notifier).onUnauthorized(),
   );
 });
+
+/// Protobuf-over-HTTP API client shared by all feature repositories.
+final protoApiProvider = Provider<ProtoApi>(
+  (ref) => ProtoApi(ref.watch(authedDioProvider)),
+);

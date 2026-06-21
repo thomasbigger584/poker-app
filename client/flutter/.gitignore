@@ -62,4 +62,14 @@ app.*.map.json
 /linux/flutter/generated_plugin_registrant.h
 /linux/flutter/generated_plugins.cmake
 
+# Generated protobuf Dart types are NOT committed. Run tool/gen_protos.sh once
+# after cloning (and after any change to proto/poker/*.proto) to regenerate
+# them — the script downloads protoc and the Dart plugin automatically.
+# (The repo-root .gitignore already ignores any `gen/` dir; kept explicit here.)
+lib/core/proto/gen/
+
+# Vendored protoc toolchain is NOT committed — large, platform-specific binary;
+# tool/gen_protos.sh downloads it on demand.
+tool/protoc/
+
 # Web (if you compile for browser later)
