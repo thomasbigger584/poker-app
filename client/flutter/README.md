@@ -86,6 +86,35 @@ The default backend is on a **Tailscale** tailnet — you must be connected to t
 tailnet (and the server must be up) for login to succeed; otherwise the
 Tailscale gate will (correctly) block the app.
 
+### Linux desktop prerequisites
+
+The Linux desktop build links a few native libraries. **`webkit2gtk-4.1` is the
+one that trips people up:** `flutter_web_auth_2` pulls in `desktop_webview_window`,
+whose CMake needs the `webkit2gtk-4.1` (libsoup **3**) path. If only the older
+`webkit2gtk-4.0` (libsoup **2**) is installed, CMake silently falls back to it and
+the build fails with:
+
+```
+desktop_webview_window/linux/webview_window.cc:292:
+  error: no matching function for call to 'g_date_time_get_seconds'
+```
+
+`libsecret` is likewise required by `flutter_secure_storage`. Install the dev
+packages for your distro:
+
+```sh
+# Arch / CachyOS
+sudo pacman -S --needed base-devel cmake ninja pkgconf gtk3 webkit2gtk-4.1 libsecret
+
+# Debian / Ubuntu
+sudo apt-get install -y clang cmake ninja-build pkg-config liblzma-dev \
+  libgtk-3-dev libsecret-1-dev libwebkit2gtk-4.1-dev libsoup-3.0-dev
+```
+
+If a build already failed before installing these, run `flutter clean` first so
+CMake re-detects `webkit2gtk-4.1` instead of reusing the cached fallback. (CI
+installs the equivalent `-dev` packages automatically, so this is local-dev only.)
+
 ### Per-platform OAuth redirect
 
 `flutter_web_auth_2` captures the OAuth redirect differently per platform, all
