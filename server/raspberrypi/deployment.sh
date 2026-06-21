@@ -206,8 +206,13 @@ if [ "\$CURRENT_HASH" == "\$DEPLOYED_HASH" ]; then
 else
     echo "📦 Code updated (\$DEPLOYED_HASH -> \$CURRENT_HASH)."
 fi
+# docker load (run by CI just before this script) re-points each image tag to
+# the newly pushed image, so the old one becomes dangling. --force-recreate then
+# rebuilds every container from those current tags, guaranteeing a stale
+# container can't keep running an old image. The dangling old images are cleaned
+# up by the 'docker system prune -f' below.
 echo "🚀 Starting stack with prebuilt images (no build on the Pi)..."
-docker compose up -d --no-build
+docker compose up -d --no-build --force-recreate
 
 EXIT_CODE=\$?
 set -e
