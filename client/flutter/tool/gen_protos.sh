@@ -17,21 +17,34 @@
 set -euo pipefail
 
 PROTOC_VERSION="29.3"
+# Pin the Dart plugin so generated code matches the `protobuf` runtime pinned in
+# pubspec.yaml (protoc_plugin 25.x → protobuf 6.x). Bump both together.
+PROTOC_PLUGIN_VERSION="25.0.0"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FLUTTER_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 PROTO_ROOT="$(cd "${FLUTTER_DIR}/../../proto" && pwd)"
 OUT_DIR="${FLUTTER_DIR}/lib/core/proto/gen"
 
-# protoc discovers the Dart plugin via PATH; pub global installs it here.
-PUB_BIN="${PUB_CACHE:-$HOME/.pub-cache}/bin"
-export PATH="${PUB_BIN}:${PATH}"
+# protoc discovers the Dart plugin via PATH; `pub global` installs it under the
+# pub cache, whose location varies by platform (and PUB_CACHE override). Add
+# every known candidate so `protoc-gen-dart` is found on Linux/macOS/Windows CI.
+for _cand in \
+  "${PUB_CACHE:-}/bin" \
+  "${HOME}/.pub-cache/bin" \
+  "${LOCALAPPDATA:-}/Pub/Cache/bin" \
+  "${APPDATA:-}/Pub/Cache/bin"; do
+  if [[ "${_cand}" != "/bin" && ":${PATH}:" != *":${_cand}:"* ]]; then
+    PATH="${_cand}:${PATH}"
+  fi
+done
+export PATH
 
 # --- Ensure the Dart plugin (protoc-gen-dart) is installed -------------------
 ensure_dart_plugin() {
   if command -v protoc-gen-dart >/dev/null 2>&1; then return; fi
-  echo "protoc-gen-dart not found — activating protoc_plugin..."
-  dart pub global activate protoc_plugin >/dev/null
+  echo "protoc-gen-dart not found — activating protoc_plugin ${PROTOC_PLUGIN_VERSION}..."
+  dart pub global activate protoc_plugin "${PROTOC_PLUGIN_VERSION}" >/dev/null
 }
 
 # --- Ensure a protoc binary is available, downloading if needed --------------

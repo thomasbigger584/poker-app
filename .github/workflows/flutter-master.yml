@@ -96,6 +96,18 @@ jobs:
           channel: stable
           cache: true
 
+      # The generated protobuf Dart types are NOT committed (see
+      # client/flutter/tool/gen_protos.sh) — regenerate them before building.
+      - name: 🧬 Set up protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          version: "29.x"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🧬 Generate protobuf Dart types
+        shell: bash
+        run: ./tool/gen_protos.sh
+
       # macos-latest defaults to Xcode 16.4 (macOS 15.5 SDK), but connectivity_plus
       # references the macOS/iOS 26 SDK symbol `NWPath.isUltraConstrained` (guarded
       # only at runtime via #available, so it must exist at compile time). The image
