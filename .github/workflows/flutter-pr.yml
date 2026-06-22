@@ -34,24 +34,11 @@ jobs:
       - name: 📋 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🐦 Set up Flutter ${{ env.FLUTTER_VERSION }}
-        uses: subosito/flutter-action@v2
+      - name: 🐦🧬 Set up Flutter & protobuf
+        uses: ./.github/actions/setup-flutter
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-          cache: true
-
-      # The generated protobuf Dart types are NOT committed (see
-      # client/flutter/tool/gen_protos.sh) — regenerate them before analyze/build.
-      - name: 🧬 Set up protoc
-        uses: arduino/setup-protoc@v3
-        with:
-          version: "29.x"
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 🧬 Generate protobuf Dart types
-        shell: bash
-        run: bash tool/gen_protos.sh
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 📦 Resolve dependencies
         run: flutter pub get
@@ -92,24 +79,11 @@ jobs:
       - name: 📋 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🐦 Set up Flutter ${{ env.FLUTTER_VERSION }}
-        uses: subosito/flutter-action@v2
+      - name: 🐦🧬 Set up Flutter & protobuf
+        uses: ./.github/actions/setup-flutter
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-          cache: true
-
-      # The generated protobuf Dart types are NOT committed (see
-      # client/flutter/tool/gen_protos.sh) — regenerate them before analyze/build.
-      - name: 🧬 Set up protoc
-        uses: arduino/setup-protoc@v3
-        with:
-          version: "29.x"
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 🧬 Generate protobuf Dart types
-        shell: bash
-        run: bash tool/gen_protos.sh
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       # macos-latest defaults to Xcode 16.4 (macOS 15.5 SDK), but connectivity_plus
       # references the macOS/iOS 26 SDK symbol `NWPath.isUltraConstrained` (guarded

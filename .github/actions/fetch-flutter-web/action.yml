@@ -1,0 +1,40 @@
+name: Fetch Flutter web bundle
+description: >
+  Resolves the newest flutter-* pre-release that carries a flutter-web asset,
+  downloads it into server/nginx/web-dist/web, and pre-compresses the text
+  assets for nginx gzip_static. The bundle is baked into the nginx image by
+  server/nginx/Dockerfile (the Pi never builds Flutter).
+
+inputs:
+  github-token:
+    description: Token for the releases API (lifts the unauthenticated rate limit).
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: 🌐 Fetch Flutter web bundle
+      shell: bash
+      working-directory: ./server/nginx
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        set -euo pipefail
+        echo "Resolving latest flutter-web pre-release asset..."
+        URL=$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" \
+               "https://api.github.com/repos/${{ github.repository }}/releases" \
+          | jq -r 'map(select(.prerelease and (.tag_name|startswith("flutter-"))))
+                   | map(.assets[]? | select(.name|test("flutter-web")) | .browser_download_url)
+                   | first // empty')
+        if [ -z "$URL" ]; then
+          echo "::error::No flutter-web asset found in any flutter-* pre-release."
+          exit 1
+        fi
+        echo "Downloading $URL"
+        rm -rf web-dist && mkdir -p web-dist
+        curl -fsSL "$URL" -o web-dist/web.zip
+        unzip -q -o web-dist/web.zip -d web-dist
+        rm -f web-dist/web.zip
+        test -f web-dist/web/index.html
+        # Pre-compress text assets for nginx gzip_static (kept alongside originals).
+        find web-dist/web -type f \( -name '*.js' -o -name '*.wasm' -o -name '*.json' -o -name '*.css' -o -name '*.html' -o -name '*.ttf' -o -name '*.otf' -o -name '*.svg' \) -exec gzip -9 -k -f {} +
