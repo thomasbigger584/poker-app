@@ -9,32 +9,70 @@ permissions:
 # (docker save | ssh docker load), and the remote deploy is triggered — the Pi
 # never builds. Pull requests do NOT deploy; they run server-pr.yml (build +
 # test only). The changes/build steps below mirror server-pr.yml.
+#
+# Two triggers, ONE deploy pipeline (the Pi runs both the API and the Flutter web
+# bundle, which is baked into the nginx image):
+#   1. push to master under server/**         → redeploy after a backend change.
+#   2. the Flutter Release workflow completing → redeploy after a *web* change.
+# Without (2) a Flutter-only change publishes a new web bundle as a release asset
+# but nothing rebuilds the nginx image with it, so the deployed site stays stale.
+# workflow_run (rather than adding client/flutter/** to the push paths) runs us
+# AFTER the new bundle is published, so the "Fetch Flutter web bundle" step picks
+# up the fresh asset instead of racing the in-flight Flutter build.
 on:
   push:
     branches: [ "master" ]
     paths:
       - "server/**"
       - ".github/workflows/server-master.yml"
+  workflow_run:
+    workflows: [ "🚀 Flutter Release" ]
+    types: [ completed ]
+    branches: [ "master" ]
+  # Manual redeploy — e.g. to re-bake the latest published web bundle into nginx
+  # and ship it to the Pi without a new commit.
+  workflow_dispatch:
+
+# Serialize deploys so a backend push and a Flutter-release-triggered run can't
+# ship to the Pi at the same time. Queue rather than cancel — cancelling mid
+# `docker load`/deploy could leave a half-loaded image set on the Pi.
+concurrency:
+  group: pi-deploy
+  cancel-in-progress: false
 
 jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      api: ${{ steps.filter.outputs.api }}
+      api: ${{ steps.decide.outputs.api }}
     steps:
       - name: 📋 Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      # Only meaningful for a server push; a workflow_run (Flutter) trigger has no
+      # diff base, and by definition the backend didn't change there.
       - uses: dorny/paths-filter@v3
         id: filter
+        if: github.event_name == 'push'
         with:
           filters: |
             api:
               - 'server/api/**'
+      - name: 🧭 Decide whether to run API tests
+        id: decide
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "api=${{ steps.filter.outputs.api }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "api=false" >> "$GITHUB_OUTPUT"   # Flutter-only redeploy: skip backend tests.
+          fi
 
   build-and-deploy:
     needs: changes
+    # A server push or manual run always deploys; a Flutter Release only deploys
+    # if it succeeded (so we never ship off a half-built / missing web bundle).
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-24.04-arm
     steps:
       - name: 📋 Checkout
