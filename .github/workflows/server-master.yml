@@ -44,29 +44,16 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      api: ${{ steps.decide.outputs.api }}
+      api: ${{ steps.detect.outputs.api }}
     steps:
       - name: 📋 Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      # Only meaningful for a server push; a workflow_run (Flutter) trigger has no
-      # diff base, and by definition the backend didn't change there.
-      - uses: dorny/paths-filter@v3
-        id: filter
-        if: github.event_name == 'push'
-        with:
-          filters: |
-            api:
-              - 'server/api/**'
-      - name: 🧭 Decide whether to run API tests
-        id: decide
-        run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
-            echo "api=${{ steps.filter.outputs.api }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "api=false" >> "$GITHUB_OUTPUT"   # Flutter-only redeploy: skip backend tests.
-          fi
+      # api=true only on a server push; a workflow_run (Flutter) / dispatch run has
+      # no diff base and the backend didn't change there → api=false (skip tests).
+      - uses: ./.github/actions/detect-api-changes
+        id: detect
 
   build-and-deploy:
     needs: changes
@@ -90,34 +77,13 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      # Bake the Flutter web client into the nginx image (not on the Pi). The
-      # flutter-release workflow attaches the web bundle to a flutter-<ver>
-      # pre-release; take the newest one that has a web asset. Authenticated to
-      # the public releases API to lift the unauthenticated rate limit.
+      # Bake the Flutter web client into the nginx image (not on the Pi). On a
+      # workflow_run trigger this picks up the bundle the just-finished Flutter
+      # Release published.
       - name: 🌐 Fetch Flutter web bundle
-        working-directory: ./server/nginx
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          echo "Resolving latest flutter-web pre-release asset..."
-          URL=$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" \
-                 "https://api.github.com/repos/${{ github.repository }}/releases" \
-            | jq -r 'map(select(.prerelease and (.tag_name|startswith("flutter-"))))
-                     | map(.assets[]? | select(.name|test("flutter-web")) | .browser_download_url)
-                     | first // empty')
-          if [ -z "$URL" ]; then
-            echo "::error::No flutter-web asset found in any flutter-* pre-release."
-            exit 1
-          fi
-          echo "Downloading $URL"
-          rm -rf web-dist && mkdir -p web-dist
-          curl -fsSL "$URL" -o web-dist/web.zip
-          unzip -q -o web-dist/web.zip -d web-dist
-          rm -f web-dist/web.zip
-          test -f web-dist/web/index.html
-          # Pre-compress text assets for nginx gzip_static (kept alongside originals).
-          find web-dist/web -type f \( -name '*.js' -o -name '*.wasm' -o -name '*.json' -o -name '*.css' -o -name '*.html' -o -name '*.ttf' -o -name '*.otf' -o -name '*.svg' \) -exec gzip -9 -k -f {} +
+        uses: ./.github/actions/fetch-flutter-web
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 🐳 Build all server images
         working-directory: ./server

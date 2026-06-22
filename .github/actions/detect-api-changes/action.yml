@@ -1,0 +1,32 @@
+name: Detect API changes
+description: >
+  Outputs api=true when server/api/** changed on this push/PR (so the backend
+  test suite runs), and api=false for events with no diff base (workflow_run /
+  workflow_dispatch), where the backend by definition did not change. Requires
+  the repo to already be checked out with fetch-depth 0.
+
+outputs:
+  api:
+    description: "'true' if server/api/** changed; otherwise 'false'."
+    value: ${{ steps.decide.outputs.api }}
+
+runs:
+  using: composite
+  steps:
+    - uses: dorny/paths-filter@v3
+      id: filter
+      if: github.event_name == 'pull_request' || github.event_name == 'push'
+      with:
+        filters: |
+          api:
+            - 'server/api/**'
+
+    - name: 🧭 Decide whether to run API tests
+      id: decide
+      shell: bash
+      run: |
+        if [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ github.event_name }}" = "push" ]; then
+          echo "api=${{ steps.filter.outputs.api }}" >> "$GITHUB_OUTPUT"
+        else
+          echo "api=false" >> "$GITHUB_OUTPUT"   # no diff base (workflow_run/dispatch)
+        fi

@@ -1,0 +1,40 @@
+name: Set up Flutter & generate protobuf
+description: >
+  Installs the pinned Flutter SDK and protoc, then regenerates the Dart protobuf
+  types (which are NOT committed — see client/flutter/tool/gen_protos.sh) so
+  analyze/test/build have them. Used by every Flutter workflow/job.
+
+inputs:
+  flutter-version:
+    description: Flutter SDK version to install.
+    required: true
+  github-token:
+    description: Token for arduino/setup-protoc (raises the download rate limit).
+    required: true
+  working-directory:
+    description: Flutter project dir; gen_protos.sh runs here.
+    required: false
+    default: ./client/flutter
+
+runs:
+  using: composite
+  steps:
+    - name: 🐦 Set up Flutter ${{ inputs.flutter-version }}
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ inputs.flutter-version }}
+        channel: stable
+        cache: true
+
+    - name: 🧬 Set up protoc
+      uses: arduino/setup-protoc@v3
+      with:
+        version: "29.x"
+        repo-token: ${{ inputs.github-token }}
+
+    # Job `defaults.run.working-directory` does NOT propagate into composite
+    # action steps, so the dir is set explicitly here.
+    - name: 🧬 Generate protobuf Dart types
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: bash tool/gen_protos.sh
