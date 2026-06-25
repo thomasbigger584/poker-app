@@ -97,20 +97,30 @@ class _TableList extends StatelessWidget {
   Widget build(BuildContext context) {
     if (tables.isEmpty) return const _EmptyState();
 
-    return ListView.separated(
-      // AlwaysScrollable so pull-to-refresh works even with a short list.
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
-      itemCount: tables.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 10),
-      itemBuilder: (context, index) {
-        final entry = tables[index];
-        return TableListItem(
-          entry: entry,
-          onConnect: () => onConnect(entry),
-          onReconnect: () => onReconnect(entry),
-        );
-      },
+    // Leave room for the transparent (extended) app bar at the top.
+    final topInset = kToolbarHeight + 12;
+
+    return Center(
+      // Cap the content width so cards don't stretch edge-to-edge on web /
+      // tablet / desktop — a centered column reads as a proper lobby.
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 760),
+        child: ListView.separated(
+          // AlwaysScrollable so pull-to-refresh works even with a short list.
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.fromLTRB(16, topInset, 16, 28),
+          itemCount: tables.length,
+          separatorBuilder: (_, _) => const SizedBox(height: 14),
+          itemBuilder: (context, index) {
+            final entry = tables[index];
+            return TableListItem(
+              entry: entry,
+              onConnect: () => onConnect(entry),
+              onReconnect: () => onReconnect(entry),
+            );
+          },
+        ),
+      ),
     );
   }
 }
