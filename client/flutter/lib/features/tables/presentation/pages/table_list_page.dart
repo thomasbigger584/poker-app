@@ -7,6 +7,7 @@ import '../../../../core/proto/gen/poker/enums.pb.dart';
 import '../../../../core/proto/gen/poker/rest.pb.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/util/responsive.dart';
 import '../../../../core/widgets/felt_background.dart';
 import '../../../game/presentation/game_launch_args.dart';
 import '../tables_providers.dart';
@@ -100,27 +101,21 @@ class _TableList extends StatelessWidget {
     // Leave room for the transparent (extended) app bar at the top.
     final topInset = kToolbarHeight + 12;
 
-    return Center(
-      // Cap the content width so cards don't stretch edge-to-edge on web /
-      // tablet / desktop — a centered column reads as a proper lobby.
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 760),
-        child: ListView.separated(
-          // AlwaysScrollable so pull-to-refresh works even with a short list.
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.fromLTRB(16, topInset, 16, 28),
-          itemCount: tables.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 14),
-          itemBuilder: (context, index) {
-            final entry = tables[index];
-            return TableListItem(
-              entry: entry,
-              onConnect: () => onConnect(entry),
-              onReconnect: () => onReconnect(entry),
-            );
-          },
-        ),
-      ),
+    // Reflow into 1/2/3 columns of cards as the window grows, capped so the
+    // lobby never sprawls edge-to-edge on a desktop / ultrawide display.
+    return AdaptiveCardGrid(
+      itemCount: tables.length,
+      maxContentWidth: 1180,
+      maxColumns: 3,
+      padding: EdgeInsets.fromLTRB(16, topInset, 16, 28),
+      itemBuilder: (context, index) {
+        final entry = tables[index];
+        return TableListItem(
+          entry: entry,
+          onConnect: () => onConnect(entry),
+          onReconnect: () => onReconnect(entry),
+        );
+      },
     );
   }
 }

@@ -6,6 +6,7 @@ import '../../../../core/proto/gen/poker/domain.pb.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/util/game_display.dart';
 import '../../../../core/util/money.dart';
+import '../../../../core/util/responsive.dart';
 import '../../../../core/widgets/felt_background.dart';
 import '../../data/transaction_repository.dart';
 import '../transactions_providers.dart';
@@ -25,46 +26,54 @@ class TransactionHistoryPage extends ConsumerWidget {
       appBar: AppBar(title: const Text('Transaction History')),
       body: FeltBackground(
         child: SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                child: Row(
-                  children: [
-                    for (final v in TransactionView.values)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: ChoiceChip(
-                          label: Text(v.label),
-                          selected: view == v,
-                          onSelected: (_) => ref
-                              .read(transactionViewProvider.notifier)
-                              .select(v),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: RefreshIndicator(
-                  onRefresh: () =>
-                      ref.refresh(transactionHistoryProvider.future),
-                  child: historyAsync.when(
-                    skipLoadingOnRefresh: true,
-                    data: (items) => _HistoryList(items: items),
-                    error: (error, _) => _ErrorState(
-                      message: error is ApiException
-                          ? error.message
-                          : 'Could not load history.',
-                      onRetry: () =>
-                          ref.invalidate(transactionHistoryProvider),
+          // Centre + cap the content so chips and rows align and don't stretch
+          // edge-to-edge on desktop / web.
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1000),
+              child: Column(
+                children: [
+                  Padding(
+                    // Top pad clears the transparent (extended) app bar.
+                    padding: const EdgeInsets.fromLTRB(16, kToolbarHeight + 8, 16, 4),
+                    child: Row(
+                      children: [
+                        for (final v in TransactionView.values)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: ChoiceChip(
+                              label: Text(v.label),
+                              selected: view == v,
+                              onSelected: (_) => ref
+                                  .read(transactionViewProvider.notifier)
+                                  .select(v),
+                            ),
+                          ),
+                      ],
                     ),
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
                   ),
-                ),
+                  Expanded(
+                    child: RefreshIndicator(
+                      onRefresh: () =>
+                          ref.refresh(transactionHistoryProvider.future),
+                      child: historyAsync.when(
+                        skipLoadingOnRefresh: true,
+                        data: (items) => _HistoryList(items: items),
+                        error: (error, _) => _ErrorState(
+                          message: error is ApiException
+                              ? error.message
+                              : 'Could not load history.',
+                          onRetry: () =>
+                              ref.invalidate(transactionHistoryProvider),
+                        ),
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -96,11 +105,14 @@ class _HistoryList extends StatelessWidget {
       );
     }
 
-    return ListView.separated(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+    // One column on phones, two on wider screens — uses the horizontal space
+    // instead of stretching each row across the whole window.
+    return AdaptiveCardGrid(
       itemCount: items.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 8),
+      maxContentWidth: 1000,
+      maxColumns: 2,
+      spacing: 10,
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
       itemBuilder: (context, i) => _TransactionTile(item: items[i]),
     );
   }
