@@ -7,6 +7,7 @@ import '../../../../core/proto/gen/poker/enums.pb.dart';
 import '../../../../core/proto/gen/poker/rest.pb.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/util/responsive.dart';
 import '../../../../core/widgets/felt_background.dart';
 import '../../../game/presentation/game_launch_args.dart';
 import '../tables_providers.dart';
@@ -97,12 +98,16 @@ class _TableList extends StatelessWidget {
   Widget build(BuildContext context) {
     if (tables.isEmpty) return const _EmptyState();
 
-    return ListView.separated(
-      // AlwaysScrollable so pull-to-refresh works even with a short list.
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+    // Leave room for the transparent (extended) app bar at the top.
+    final topInset = kToolbarHeight + 12;
+
+    // Reflow into 1/2/3 columns of cards as the window grows, capped so the
+    // lobby never sprawls edge-to-edge on a desktop / ultrawide display.
+    return AdaptiveCardGrid(
       itemCount: tables.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 10),
+      maxContentWidth: 1180,
+      maxColumns: 3,
+      padding: EdgeInsets.fromLTRB(16, topInset, 16, 28),
       itemBuilder: (context, index) {
         final entry = tables[index];
         return TableListItem(

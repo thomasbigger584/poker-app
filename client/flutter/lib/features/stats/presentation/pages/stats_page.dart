@@ -7,6 +7,7 @@ import '../../../../core/proto/gen/poker/rest.pb.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/util/game_display.dart';
 import '../../../../core/util/money.dart';
+import '../../../../core/util/responsive.dart';
 import '../../../../core/widgets/felt_background.dart';
 import '../stats_providers.dart';
 
@@ -54,81 +55,166 @@ class _StatsDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
-      children: [
-        _ProfitHero(stats: stats),
-        const SizedBox(height: 22),
-        if (!_hasPlayed) const _NoGamesNote(),
-        const _SectionTitle('Performance'),
-        const SizedBox(height: 10),
-        _StatGrid(
-          tiles: [
-            _Stat('Hands played', '${stats.handsPlayed}',
-                Icons.style_rounded),
-            _Stat('Rounds won', '${stats.roundsWon}',
-                Icons.emoji_events_rounded),
-            _Stat('Win rate', _percent(stats.winRate),
-                Icons.percent_rounded),
-            _Stat('Tables joined', '${stats.tablesJoined}',
-                Icons.table_bar_rounded),
-          ],
-        ),
-        const SizedBox(height: 22),
-        const _SectionTitle('Bankroll'),
-        const SizedBox(height: 10),
-        _StatGrid(
-          tiles: [
-            _Stat('Total winnings', Money.compact(stats.totalWinnings),
-                Icons.trending_up_rounded,
-                accent: AppColors.success),
-            _Stat('Biggest pot', Money.compact(stats.biggestPotWon),
-                Icons.savings_rounded, accent: AppColors.gold),
-            _Stat('Total wagered', Money.compact(stats.totalWagered),
-                Icons.casino_rounded),
-            _Stat('Buy-ins', Money.compact(stats.totalBuyIns),
-                Icons.login_rounded),
-            _Stat('Cash-outs', Money.compact(stats.totalCashOuts),
-                Icons.logout_rounded),
-            _Stat('Current chips', Money.compact(stats.currentFunds),
-                Icons.toll_rounded, accent: AppColors.gold),
-          ],
-        ),
-        const SizedBox(height: 22),
-        const _SectionTitle('Highlights'),
-        const SizedBox(height: 10),
-        Row(
+    // Clears the transparent (extended) app bar at the top.
+    final topInset = kToolbarHeight + 12;
+
+    final performance = _Section(
+      title: 'Performance',
+      child: _StatGrid(
+        tiles: [
+          _Stat('Hands played', '${stats.handsPlayed}', Icons.style_rounded),
+          _Stat('Rounds won', '${stats.roundsWon}',
+              Icons.emoji_events_rounded),
+          _Stat('Win rate', _percent(stats.winRate), Icons.percent_rounded),
+          _Stat('Tables joined', '${stats.tablesJoined}',
+              Icons.table_bar_rounded),
+        ],
+      ),
+    );
+
+    final bankroll = _Section(
+      title: 'Bankroll',
+      child: _StatGrid(
+        tiles: [
+          _Stat('Total winnings', Money.compact(stats.totalWinnings),
+              Icons.trending_up_rounded, accent: AppColors.success),
+          _Stat('Biggest pot', Money.compact(stats.biggestPotWon),
+              Icons.savings_rounded, accent: AppColors.gold),
+          _Stat('Total wagered', Money.compact(stats.totalWagered),
+              Icons.casino_rounded),
+          _Stat('Buy-ins', Money.compact(stats.totalBuyIns),
+              Icons.login_rounded),
+          _Stat('Cash-outs', Money.compact(stats.totalCashOuts),
+              Icons.logout_rounded),
+          _Stat('Current chips', Money.compact(stats.currentFunds),
+              Icons.toll_rounded, accent: AppColors.gold),
+        ],
+      ),
+    );
+
+    final highlights = _Section(
+      title: 'Highlights',
+      child: Row(
+        children: [
+          Expanded(
+            child: _HighlightCard(
+              icon: Icons.auto_awesome_rounded,
+              label: 'Best hand',
+              value: GameDisplay.handType(stats.bestHand),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _HighlightCard(
+              icon: Icons.bolt_rounded,
+              label: 'Favourite move',
+              value:
+                  stats.favoriteAction == ActionType.ACTION_TYPE_UNSPECIFIED
+                      ? '—'
+                      : GameDisplay.actionType(stats.favoriteAction),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    final playStyle = _Section(
+      title: 'Play style',
+      child: _ActionBreakdown(stats: stats),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = Breakpoints.isExpanded(constraints.maxWidth);
+
+        // Wide screens split the sections into two panes so the dashboard
+        // fills the width instead of running down a single tall ribbon.
+        final Widget body = wide
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _ProfitHero(stats: stats),
+                  const SizedBox(height: 22),
+                  if (!_hasPlayed) const _NoGamesNote(),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          children: [
+                            performance,
+                            const SizedBox(height: 22),
+                            bankroll,
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 22),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            highlights,
+                            const SizedBox(height: 22),
+                            playStyle,
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _ProfitHero(stats: stats),
+                  const SizedBox(height: 22),
+                  if (!_hasPlayed) const _NoGamesNote(),
+                  performance,
+                  const SizedBox(height: 22),
+                  bankroll,
+                  const SizedBox(height: 22),
+                  highlights,
+                  const SizedBox(height: 22),
+                  playStyle,
+                ],
+              );
+
+        return ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.fromLTRB(16, topInset, 16, 28),
           children: [
-            Expanded(
-              child: _HighlightCard(
-                icon: Icons.auto_awesome_rounded,
-                label: 'Best hand',
-                value: GameDisplay.handType(stats.bestHand),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _HighlightCard(
-                icon: Icons.bolt_rounded,
-                label: 'Favourite move',
-                value: stats.favoriteAction ==
-                        ActionType.ACTION_TYPE_UNSPECIFIED
-                    ? '—'
-                    : GameDisplay.actionType(stats.favoriteAction),
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1100),
+                child: body,
               ),
             ),
           ],
-        ),
-        const SizedBox(height: 22),
-        const _SectionTitle('Play style'),
-        const SizedBox(height: 10),
-        _ActionBreakdown(stats: stats),
-      ],
+        );
+      },
     );
   }
 
   static String _percent(double rate) => '${(rate * 100).toStringAsFixed(1)}%';
+}
+
+/// A titled dashboard section — gold caption above its content.
+class _Section extends StatelessWidget {
+  const _Section({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionTitle(title),
+        const SizedBox(height: 10),
+        child,
+      ],
+    );
+  }
 }
 
 class _ProfitHero extends StatelessWidget {
