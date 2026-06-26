@@ -52,7 +52,7 @@ dependencies:
   # unchanged and the webview is compiled-but-unused on desktop.
   flutter_web_auth_2: ^5.0.0
   crypto: ^3.0.7
-  connectivity_plus: ^7.1.1
+  connectivity_plus: ^7.2.0
   permission_handler: ^12.0.3
   url_launcher: ^6.3.2
   app_settings: ^7.0.0
