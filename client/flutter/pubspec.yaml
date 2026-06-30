@@ -36,7 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_riverpod: ^3.3.2
   go_router: ^17.3.0
-  dio: ^5.9.2
+  dio: ^5.10.0
   # Runtime for the Dart types generated from proto/poker/*.proto.
   # Regenerate the types with tool/gen_protos.sh (see that script's header).
   # Pin to the major matching the installed protoc-gen-dart (protoc_plugin).
@@ -52,7 +52,7 @@ dependencies:
   # unchanged and the webview is compiled-but-unused on desktop.
   flutter_web_auth_2: ^5.0.0
   crypto: ^3.0.7
-  connectivity_plus: ^7.1.1
+  connectivity_plus: ^7.2.0
   permission_handler: ^12.0.3
   url_launcher: ^6.3.2
   app_settings: ^7.0.0
