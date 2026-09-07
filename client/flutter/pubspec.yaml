@@ -35,7 +35,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   flutter_riverpod: ^3.3.2
-  go_router: ^17.3.0
+  go_router: ^18.0.1
   dio: ^5.9.2
   # Runtime for the Dart types generated from proto/poker/*.proto.
   # Regenerate the types with tool/gen_protos.sh (see that script's header).
