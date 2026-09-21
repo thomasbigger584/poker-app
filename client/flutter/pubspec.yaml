@@ -43,14 +43,14 @@ dependencies:
   protobuf: ^6.0.0
   # Int64 support used by generated code for proto int64 fields.
   fixnum: ^1.1.1
-  flutter_secure_storage: ^10.3.1
+  flutter_secure_storage: ^11.2.0
   # v5 is required for modern Flutter: v3.x still ships the removed Android v1
   # embedding (`Registrar`) and won't compile. v5 transitively pulls
   # desktop_webview_window (needs webkit2gtk-4.1 — see the Linux CI deps), but we
   # keep the desktop login on the system browser + loopback server by passing
   # `useWebview: false` (see OidcRemoteDataSource), so Keycloak redirect URIs are
   # unchanged and the webview is compiled-but-unused on desktop.
-  flutter_web_auth_2: ^5.0.0
+  flutter_web_auth_2: ^5.1.0
   crypto: ^3.0.7
   connectivity_plus: ^7.1.1
   permission_handler: ^12.0.3
